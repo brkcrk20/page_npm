@@ -101,7 +101,6 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
 
 export default function HomePage() {
 
-   const categories: CategoryInfo[] = useMemo(() => {
     // 1. Get counts of breeds that are in the pet listings
     const countsByType = pets.reduce((acc, pet) => {
         const { type, breed } = pet;
@@ -129,7 +128,7 @@ export default function HomePage() {
       });
     };
     
-    const allCategories: CategoryInfo[] = [
+    const categories: CategoryInfo[] = [
       {
         type: 'Dog',
         title: 'Köpekler',
@@ -166,9 +165,6 @@ export default function HomePage() {
         breeds: processBreeds(allOtherBreeds, countsByType.Other),
       },
     ];
-
-    return allCategories;
-  }, []);
 
   return (
     <div className="bg-secondary/50">
