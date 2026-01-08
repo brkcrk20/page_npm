@@ -19,7 +19,7 @@ export function PetCard({ pet }: PetCardProps) {
         <div className="relative overflow-hidden aspect-square">
           {isSecure && (
             <div className="absolute top-0 left-0 z-10 w-32 h-32 overflow-hidden">
-              <div className="absolute top-4 -left-10 transform -rotate-45 bg-red-600 text-center text-white font-semibold py-1 w-40">
+              <div className="absolute top-4 -left-10 transform -rotate-45 bg-red-600 text-center text-white font-semibold py-1 w-40 text-xs">
                 <ShieldCheck className="w-3 h-3 inline-block mr-1" />
                 Güvenli
               </div>
@@ -39,15 +39,15 @@ export function PetCard({ pet }: PetCardProps) {
             </div>
           )}
         </div>
-        <CardContent className="p-3">
+        <CardContent className="p-2">
           <div>
-            <h3 className="text-base font-semibold truncate mb-2 group-hover:text-primary transition-colors">{pet.name}</h3>
-            <div className="text-sm text-center space-y-1">
+            <h3 className="text-base font-semibold truncate mb-1 group-hover:text-primary transition-colors">{pet.name}</h3>
+            <div className="text-xs text-center space-y-0.5">
                 <p className="text-primary font-semibold">{pet.age}</p>
                 <p className="font-bold text-gray-800">{pet.breed}</p>
             </div>
           </div>
-          <div className="flex items-center justify-center text-sm text-muted-foreground mt-2">
+          <div className="flex items-center justify-center text-xs text-muted-foreground mt-1">
             <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
             <span className="truncate">{pet.location}</span>
           </div>
