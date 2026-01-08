@@ -70,9 +70,6 @@ const HeaderContent = React.memo(function HeaderContent() {
   };
   
   const renderFilters = () => {
-    if (pathname === '/login' || pathname === '/kayit') {
-      return null;
-    }
     if (pathname === '/veteriner') {
       return <VetSearchFilters pageType="vet" />;
     }
@@ -99,6 +96,8 @@ const HeaderContent = React.memo(function HeaderContent() {
     }
     return <SearchFilters />;
   };
+
+  const showCategoriesAndFilters = pathname !== '/login' && pathname !== '/kayit';
 
   return (
     <>
@@ -222,34 +221,36 @@ const HeaderContent = React.memo(function HeaderContent() {
           </Sheet>
         </div>
       </header>
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto">
-          <div className="w-full pt-2">
-            <div className="grid w-full grid-cols-5 md:grid-cols-9 h-auto p-1 bg-muted rounded-md text-muted-foreground">
-              {serviceCategories.map((service) => {
-                const isActive = pathname === service.href;
+      {showCategoriesAndFilters && (
+        <div className="bg-white shadow-sm border-b">
+          <div className="container mx-auto">
+            <div className="w-full">
+              <div className="grid w-full grid-cols-5 md:grid-cols-9 h-auto p-1 bg-muted rounded-md text-muted-foreground">
+                {serviceCategories.map((service) => {
+                  const isActive = pathname === service.href;
 
-                return (
-                  <Link
-                    href={service.href}
-                    key={service.label}
-                    className={cn(
-                      'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-col gap-1 h-auto text-center hover:text-primary',
-                      isActive
-                        ? 'bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))]'
-                        : ''
-                    )}
-                  >
-                    <service.icon className="w-5 h-5 transition-colors" />
-                    <span className="text-xs font-medium hidden sm:block">{service.label}</span>
-                  </Link>
-                );
-              })}
+                  return (
+                    <Link
+                      href={service.href}
+                      key={service.label}
+                      className={cn(
+                        'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-col gap-1 h-auto text-center hover:text-primary',
+                        isActive
+                          ? 'bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))]'
+                          : ''
+                      )}
+                    >
+                      <service.icon className="w-5 h-5 transition-colors" />
+                      <span className="text-xs font-medium hidden sm:block">{service.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
+            {renderFilters()}
           </div>
-          {renderFilters()}
         </div>
-      </div>
+      )}
     </>
   );
 });
