@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import React, { useState, useMemo } from 'react';
+import type { Pet } from "@/lib/data";
 
 type BreedInfo = {
   name: string;
@@ -107,34 +108,41 @@ export default function HomePage() {
       return acc;
     }, {} as Record<Pet['type'], Record<string, { count: number; image: string }>>);
 
+    const processBreeds = (breedData: Record<string, { count: number; image: string }> | undefined) => {
+      if (!breedData) return [];
+      return Object.entries(breedData)
+        .map(([name, { count, image }]) => ({ name, count, image }))
+        .sort((a, b) => b.count - a.count);
+    };
+
     const allCategories: CategoryInfo[] = [
       {
         type: 'Dog',
         title: 'Köpekler',
         Icon: Dog,
         color: 'text-orange-500',
-        breeds: breedsByType.Dog ? Object.entries(breedsByType.Dog).map(([name, { count, image }]) => ({ name, count, image })) : [],
+        breeds: processBreeds(breedsByType.Dog),
       },
       {
         type: 'Cat',
         title: 'Kediler',
         Icon: Cat,
         color: 'text-red-400',
-        breeds: breedsByType.Cat ? Object.entries(breedsByType.Cat).map(([name, { count, image }]) => ({ name, count, image })) : [],
+        breeds: processBreeds(breedsByType.Cat),
       },
       {
         type: 'Bird',
         title: 'Kuşlar',
         Icon: Bird,
         color: 'text-sky-400',
-        breeds: breedsByType.Bird ? Object.entries(breedsByType.Bird).map(([name, { count, image }]) => ({ name, count, image })) : [],
+        breeds: processBreeds(breedsByType.Bird),
       },
       {
         type: 'Other',
         title: 'Diğer',
         Icon: Fish,
         color: 'text-blue-400',
-        breeds: breedsByType.Other ? Object.entries(breedsByType.Other).map(([name, { count, image }]) => ({ name, count, image })) : [],
+        breeds: processBreeds(breedsByType.Other),
       },
     ];
 
