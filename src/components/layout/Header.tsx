@@ -222,7 +222,7 @@ const HeaderContent = React.memo(function HeaderContent() {
         </div>
       </header>
       {showCategoriesAndFilters && (
-        <div className="bg-white shadow-sm border-b">
+        <div className="bg-white shadow-sm border-b py-2">
           <div className="container mx-auto">
             <div className="w-full">
               <div className="grid w-full grid-cols-5 md:grid-cols-9 h-auto p-1 bg-muted rounded-md text-muted-foreground">
