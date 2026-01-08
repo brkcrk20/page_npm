@@ -1,15 +1,27 @@
 'use client';
 
-import { HeartHandshake } from 'lucide-react';
+import { HeartHandshake, PlusCircle } from 'lucide-react';
 import { PetCard } from '@/components/PetCard';
-import { pets } from '@/lib/data'; // Assuming you might want to show some pets here as examples
+import { pets } from '@/lib/data';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { useUser } from '@/firebase';
 
 export default function MatingPage() {
+  const { user } = useUser();
   // In a real scenario, you would fetch pets available for mating
   const matingPets = pets.filter(p => p.listingType === 'Sale').slice(0, 4); // Example filter
-  
+
   return (
     <div className="container mx-auto py-12">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold font-headline">Eş Arayanlar</h1>
+        <Button asChild>
+          <Link href={user ? "/es-arayanlar/yeni" : "/login"}>
+            <PlusCircle className="mr-2 h-4 w-4" /> İlan Ekle
+          </Link>
+        </Button>
+      </div>
       {matingPets.length > 0 ? (
         <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
           {matingPets.map((pet) => (
