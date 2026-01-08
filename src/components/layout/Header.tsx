@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, PawPrint } from 'lucide-react';
+import { Menu, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
@@ -9,9 +9,10 @@ import { usePathname } from 'next/navigation';
 import React from 'react';
 
 const navLinks = [
-  { href: '/', label: 'Anasayfa' },
   { href: '/listings', label: 'İlanlar' },
   { href: '/services', label: 'Hizmetler' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/guvenlik', label: 'Güvenlik' },
 ];
 
 export function Header() {
@@ -19,11 +20,13 @@ export function Header() {
   const [isSheetOpen, setSheetOpen] = React.useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-6 flex items-center space-x-2">
-          <PawPrint className="h-6 w-6 text-primary" />
-          <span className="font-bold font-headline">PatiBul Global</span>
+          <div className="bg-primary p-1 rounded-md">
+            <Heart className="h-6 w-6 text-primary-foreground fill-white" />
+          </div>
+          <span className="font-bold text-xl text-primary">PatibulGlobal</span>
         </Link>
 
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
@@ -41,11 +44,9 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex flex-1 items-center justify-end space-x-2">
-          <Button variant="ghost" asChild className="hidden md:inline-flex">
-            <Link href="/login">Giriş Yap</Link>
-          </Button>
-          <Button asChild className="hidden md:inline-flex">
+        <div className="flex flex-1 items-center justify-end space-x-4">
+          <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary hidden md:inline-flex">Giriş</Link>
+          <Button asChild>
             <Link href="/listings/new">İlan Ver</Link>
           </Button>
         </div>

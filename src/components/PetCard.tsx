@@ -15,17 +15,17 @@ export function PetCard({ pet }: PetCardProps) {
   const image = PlaceHolderImages.find((img) => img.id === pet.image);
 
   return (
-    <Card className="flex flex-col overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-xl">
+    <Card className="flex flex-col overflow-hidden transition-transform duration-300 hover:shadow-xl group bg-white">
       <CardHeader className="p-0 relative">
         <Link href={`/listings/${pet.id}`}>
-          <div className="aspect-[3/2] w-full">
+          <div className="aspect-[4/3] w-full overflow-hidden">
             {image ? (
               <Image
                 src={image.imageUrl}
                 alt={pet.name}
                 width={600}
-                height={400}
-                className="object-cover w-full h-full"
+                height={450}
+                className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-110"
                 data-ai-hint={image.imageHint}
               />
             ) : (
@@ -35,23 +35,26 @@ export function PetCard({ pet }: PetCardProps) {
             )}
           </div>
         </Link>
-        {pet.listingType === 'Adoption' ? (
-          <Badge className="absolute top-2 right-2 bg-accent text-accent-foreground">Yuva Arıyor</Badge>
-        ) : (
-           <Badge variant="secondary" className="absolute top-2 right-2">Satılık</Badge>
+        {pet.badge && (
+          <Badge className="absolute top-2 left-2" variant={pet.badge === 'Bireysel' ? 'default' : 'secondary'}>
+            {pet.badge}
+          </Badge>
         )}
       </CardHeader>
-      <CardContent className="p-4 flex-grow">
-        <h3 className="text-lg font-bold font-headline">{pet.name}</h3>
+      <CardContent className="p-3 flex-grow">
+        <h3 className="text-lg font-bold">{pet.name}</h3>
         <p className="text-sm text-muted-foreground">{pet.breed}</p>
-      </CardContent>
-      <CardFooter className="p-4 pt-0 flex justify-between items-center">
-        <div className="flex items-center text-sm text-muted-foreground">
+        <div className="flex items-center text-sm text-muted-foreground mt-1">
           <MapPin className="h-4 w-4 mr-1" />
           <span>{pet.location}</span>
         </div>
+      </CardContent>
+      <CardFooter className="p-3 pt-0 flex justify-between items-center">
+        <span className={`font-bold ${pet.listingType === 'Adoption' ? 'text-green-600' : 'text-blue-600'}`}>
+          {pet.listingType === 'Adoption' ? 'Ücretsiz' : 'Ücretli'}
+        </span>
         <Button asChild size="sm" variant="outline">
-          <Link href={`/listings/${pet.id}`}>Detaylar</Link>
+          <Link href={`/listings/${pet.id}`}>İncele</Link>
         </Button>
       </CardFooter>
     </Card>

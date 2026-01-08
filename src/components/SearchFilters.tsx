@@ -10,37 +10,44 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search } from 'lucide-react';
-import { Card, CardContent } from './ui/card';
 
 export function SearchFilters() {
   return (
-    <Card className="mb-8">
-      <CardContent className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Anahtar kelime (örn. uslu, oyuncu)" className="pl-9"/>
-          </div>
-
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Türe Göre" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="dog">Köpek</SelectItem>
-              <SelectItem value="cat">Kedi</SelectItem>
-              <SelectItem value="bird">Kuş</SelectItem>
-              <SelectItem value="other">Diğer</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Input placeholder="Konum (örn. Istanbul)" />
-          
-          <Button className="w-full">
-            <Search className="mr-2 h-4 w-4" /> Filtrele
-          </Button>
+    <div className="mb-8 bg-white p-4 rounded-lg shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <div className="relative lg:col-span-2">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Ne arıyorsun? (Irk, isim...)" className="pl-9 h-12" />
         </div>
-      </CardContent>
-    </Card>
+
+        <Select>
+          <SelectTrigger className="h-12">
+            <SelectValue placeholder="Tüm Türler" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="dog">Köpek</SelectItem>
+            <SelectItem value="cat">Kedi</SelectItem>
+            <SelectItem value="bird">Kuş</SelectItem>
+            <SelectItem value="other">Diğer</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <Select>
+          <SelectTrigger className="h-12">
+            <SelectValue placeholder="Tüm Şehirler" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="istanbul">İstanbul</SelectItem>
+            <SelectItem value="ankara">Ankara</SelectItem>
+            <SelectItem value="izmir">İzmir</SelectItem>
+            <SelectItem value="bursa">Bursa</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button className="w-full h-12 text-base">
+          Bul
+        </Button>
+      </div>
+    </div>
   );
 }
