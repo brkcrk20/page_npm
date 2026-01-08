@@ -12,28 +12,48 @@ import {
 import { Search } from 'lucide-react';
 
 interface VetSearchFiltersProps {
-  isHotelPage?: boolean;
+  pageType: 'vet' | 'hotel' | 'trainer';
 }
 
-export function VetSearchFilters({ isHotelPage = false }: VetSearchFiltersProps) {
-  const vetServices = [
-    { value: 'acil', label: '7/24 Acil' },
-    { value: 'cerrahi', label: 'Cerrahi' },
-    { value: 'asi', label: 'Aşı' },
-    { value: 'muayene', label: 'Muayene' },
-    { value: 'laboratuvar', label: 'Laboratuvar' },
-  ];
+export function VetSearchFilters({ pageType }: VetSearchFiltersProps) {
+  const pageConfig = {
+    vet: {
+      placeholder: "Klinik adı veya anahtar kelime...",
+      servicesPlaceholder: "Tüm Hizmetler",
+      buttonText: "Veteriner Bul",
+      services: [
+        { value: 'acil', label: '7/24 Acil' },
+        { value: 'cerrahi', label: 'Cerrahi' },
+        { value: 'asi', label: 'Aşı' },
+        { value: 'muayene', label: 'Muayene' },
+        { value: 'laboratuvar', label: 'Laboratuvar' },
+      ],
+    },
+    hotel: {
+      placeholder: "Otel adı veya anahtar kelime...",
+      servicesPlaceholder: "Tüm Olanaklar",
+      buttonText: "Otel Bul",
+      services: [
+        { value: 'gozetim', label: '7/24 Gözetim' },
+        { value: 'mama', label: 'Özel Mama' },
+        { value: 'klima', label: 'Klimalı Odalar' },
+        { value: 'oyun-alani', label: 'Oyun Alanı' },
+      ],
+    },
+    trainer: {
+      placeholder: "Eğitmen adı veya uzmanlık alanı...",
+      servicesPlaceholder: "Tüm Eğitimler",
+      buttonText: "Eğitmen Bul",
+      services: [
+        { value: 'itaat', label: 'Temel İtaat' },
+        { value: 'davranis', label: 'Davranış Düzeltme' },
+        { value: 'grup', label: 'Grup Dersleri' },
+        { value: 'koruma', label: 'Koruma Eğitimi' },
+      ],
+    }
+  };
 
-  const hotelServices = [
-    { value: 'gozetim', label: '7/24 Gözetim' },
-    { value: 'mama', label: 'Özel Mama' },
-    { value: 'klima', label: 'Klimalı Odalar' },
-    { value: 'oyun-alani', label: 'Oyun Alanı' },
-  ];
-
-  const services = isHotelPage ? hotelServices : vetServices;
-  const placeholder = isHotelPage ? "Otel adı veya anahtar kelime..." : "Klinik adı veya anahtar kelime...";
-  const buttonText = isHotelPage ? "Otel Bul" : "Veteriner Bul";
+  const { placeholder, servicesPlaceholder, buttonText, services } = pageConfig[pageType];
 
 
   return (
@@ -59,7 +79,7 @@ export function VetSearchFilters({ isHotelPage = false }: VetSearchFiltersProps)
         
         <Select>
           <SelectTrigger className="h-9">
-            <SelectValue placeholder={isHotelPage ? "Tüm Olanaklar" : "Tüm Hizmetler"} />
+            <SelectValue placeholder={servicesPlaceholder} />
           </SelectTrigger>
           <SelectContent>
             {services.map((service) => (

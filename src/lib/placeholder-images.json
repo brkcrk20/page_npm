@@ -75,7 +75,7 @@
     {
       "id": "listing-new-hero",
       "description": "A collection of different pets together.",
-      "imageUrl": "https://images.unsplash.com/photo-1689326464018-7e5ac5b2d9b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXRzJTIwZ3JvdXB8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1689326464018-7e5ac5b2d9b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXRzJTIwZ3JvdXB8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "pets group"
     },
     {
@@ -89,6 +89,12 @@
       "description": "A dog relaxing in a pet hotel.",
       "imageUrl": "https://images.unsplash.com/photo-1579227576924-91a58e3532ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXQlMjBob3RlbHxlbnwwfHx8fDE3NjgyNzI0MDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "pet hotel"
+    },
+    {
+      "id": "trainer-hero",
+      "description": "A person training a dog to sit.",
+      "imageUrl": "https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxkb2clMjB0cmFpbmluZ3xlbnwwfHx8fDE3NjgyNzI0MDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dog training"
     }
   ]
 }

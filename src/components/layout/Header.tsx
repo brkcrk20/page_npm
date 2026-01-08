@@ -7,7 +7,7 @@ import {
   LogOut,
   Stethoscope,
   Building,
-  Medal,
+  Award,
   Scissors,
   Car,
   PersonStanding,
@@ -43,7 +43,7 @@ const serviceCategories = [
   { icon: Heart, label: 'Sahiplendirme', href: '/' },
   { icon: Stethoscope, label: 'Veteriner', href: '/veteriner' },
   { icon: Building, label: 'Pet Oteli', href: '/pet-oteli' },
-  { icon: Medal, label: 'Eğitmen', href: '/services?category=Trainer' },
+  { icon: Award, label: 'Eğitmen', href: '/egitmen' },
   { icon: Scissors, label: 'Pet Kuaför', href: '/services?category=Groomer' },
   { icon: ShoppingCart, label: 'Petshop', href: '/services?category=Petshop' },
   { icon: Car, label: 'Pet Taksi', href: '/services?category=Pet%20Taxi' },
@@ -70,11 +70,13 @@ function HeaderContent() {
   
   const renderFilters = () => {
     if (pathname === '/veteriner') {
-      return <VetSearchFilters />;
+      return <VetSearchFilters pageType="vet" />;
     }
     if (pathname === '/pet-oteli') {
-      // For now, re-using VetSearchFilters but it can be a new component PetHotelSearchFilters
-      return <VetSearchFilters isHotelPage={true} />;
+      return <VetSearchFilters pageType="hotel" />;
+    }
+    if (pathname === '/egitmen') {
+      return <VetSearchFilters pageType="trainer" />;
     }
     return <SearchFilters />;
   };
@@ -197,6 +199,7 @@ function HeaderContent() {
             <div className="grid w-full grid-cols-4 md:grid-cols-8 h-auto p-1 bg-muted rounded-md text-muted-foreground">
               {serviceCategories.map((service) => {
                 const serviceCategoryValue = service.href.includes('?category=') ? service.href.split('?category=')[1] : '';
+                
                 const isActive = (pathname === service.href) || 
                                  (pathname === '/' && service.href === '/') ||
                                  (pathname.startsWith('/services') && service.href.startsWith('/services') && currentCategory && decodeURIComponent(serviceCategoryValue) === currentCategory);
@@ -229,10 +232,11 @@ function HeaderContent() {
 
 export function Header() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // This is a bit of a hack to make sure the key of HeaderContent changes
-  // when the path changes. This forces a re-render of the component
+  // when the path or search params change. This forces a re-render of the component
   // and all its children, which is necessary to update the active category
   // and filters.
-  return <HeaderContent key={pathname} />;
+  return <HeaderContent key={pathname + searchParams.toString()} />;
 }
