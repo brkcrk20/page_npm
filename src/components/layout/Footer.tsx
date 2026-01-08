@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import { PawPrint, Twitter, Instagram, Facebook } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -26,6 +29,18 @@ export function Footer() {
               <Facebook />
             </Link>
           </div>
+        </div>
+        <div className="mt-8 pt-8 border-t border-border/50 flex flex-col items-center justify-center space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+            <p className="text-sm text-muted-foreground">Geliştirme Amaçlı Girişler:</p>
+            <Button variant="outline" size="sm" onClick={() => alert('Admin olarak giriş yapılıyor...')}>
+                Admin Girişi
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => alert('Premium üye olarak giriş yapılıyor...')}>
+                Premium Üye Girişi
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => alert('Normal üye olarak giriş yapılıyor...')}>
+                Normal Üye Girişi
+            </Button>
         </div>
       </div>
     </footer>
