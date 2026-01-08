@@ -39,13 +39,13 @@
     {
       "id": "pet-6",
       "description": "A colorful budgerigar bird.",
-      "imageUrl": "https://images.unsplash.com/photo-1583840024136-64e17a1f9c56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxidWRnZXJpZ2FyJTIwYmlyZHxlbnwwfHx8fDE3Njc4NjA2NDF8MA&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1583840024136-64e17a1f9c56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxidWRnZXJpZ2FyJTIwYmlyZHxlbnwwfHx8fDE3Njc4NjA2NDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "budgerigar bird"
     },
     {
       "id": "pet-7",
       "description": "A black and white cat in a box.",
-      "imageUrl": "https://images.unsplash.com/photo-1580558606302-50a9b010800e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjYXQlMjBib3h8ZW58MHx8fHwxNzY3ODY2OTM2fDA&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1580558606302-50a9b010800e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjYXQlMjBib3h8ZW58MHx8fHwxNzY3ODY2OTM2fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "cat box"
     },
     {
@@ -68,14 +68,14 @@
     },
     {
       "id": "register-hero",
-      "description": "A person playing with a dog.",
-      "imageUrl": "https://images.unsplash.com/photo-1577447278822-37801be21738?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGVyc29uJTIwZG9nfGVufDB8fHx8MTc2Nzc4MzE1M3ww&ixlib-rb-4.1.0&q=80&w=1080",
-      "imageHint": "person dog"
+      "description": "A cute French Bulldog.",
+      "imageUrl": "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxM3x8cGV0fGVufDB8fHx8MTc2Nzg3NjE4Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "french bulldog"
     },
     {
       "id": "listing-new-hero",
       "description": "A collection of different pets together.",
-      "imageUrl": "https://images.unsplash.com/photo-1689326464018-7e5ac5b2d9b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXRzJTIwZ3JvdXB8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1689326464018-7e5ac5b2d9b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXRzJTIwZ3JvdXB8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "pets group"
     },
     {
@@ -87,7 +87,7 @@
     {
       "id": "pethotel-hero",
       "description": "A dog relaxing in a pet hotel.",
-      "imageUrl": "https://images.unsplash.com/photo-1579227576924-91a58e3532ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXQlMjBob3RlbHxlbnwwfHx8fDE3NjgyNzI0MDB8MA&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1579227576924-91a58e3532ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXQlMjBob3RlbHxlbnwwfHx8fDE3NjgyNzI0MDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "pet hotel"
     },
     {
@@ -99,19 +99,19 @@
     {
       "id": "groomer-hero",
       "description": "A fluffy dog after a grooming session.",
-      "imageUrl": "https://images.unsplash.com/photo-1719464454959-9cf304ef4774?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkb2clMjBncm9vbWluZ3xlbnwwfHx8fDE3Njc4NjkxOTl8MA&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1719464454959-9cf304ef4774?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkb2clMjBncm9vbWluZ3xlbnwwfHx8fDE3Njc4NjkxOTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "dog grooming"
     },
     {
       "id": "petshop-hero",
       "description": "A well-stocked pet shop aisle.",
-      "imageUrl": "https://images.unsplash.com/photo-1522278998341-b5f6c88eb7da?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXQlMjBzaG9wfGVufDB8fHx8MTc2ODI3MjQwMHww&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1522278998341-b5f6c88eb7da?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXQlMjBzaG9wfGVufDB8fHx8MTc2ODI3MjQwMHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "pet shop"
     },
     {
       "id": "pet-taxi-hero",
       "description": "A dog looking out of a car window.",
-      "imageUrl": "https://images.unsplash.com/photo-1519592317156-7125c5d24af2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxkb2clMjBjYXJ8ZW58MHx8fHwxNzY3ODcxODk2fDA&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1519592317156-7125c5d24af2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxkb2clMjBjYXJ8ZW58MHx8fHwxNzY3ODcxODk2fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "dog car"
     },
     {
