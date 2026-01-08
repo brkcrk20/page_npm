@@ -32,7 +32,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { SearchFilters } from '../SearchFilters';
 
 const navLinks = [
-  { href: '/listings', label: 'İlanlar' },
+  { href: '/', label: 'İlanlar' },
   { href: '/services', label: 'Hizmetler' },
   { href: '/blog', label: 'Blog' },
   { href: '/guvenlik', label: 'Güvenlik' },
@@ -185,9 +185,8 @@ export function Header() {
             <div className="grid w-full grid-cols-4 md:grid-cols-8 h-auto p-1 bg-muted rounded-md text-muted-foreground">
               {serviceCategories.map((service) => {
                 const serviceCategoryValue = service.href.split('?category=')[1] ?? '';
-                const isActive = (pathname === service.href && !currentCategory && service.href !== '/services') ||
-                                 (pathname === '/' && service.href === '/') ||
-                                 (pathname === '/listings' && service.href === '/listings') ||
+                const isActive = (pathname === '/' && service.href === '/') ||
+                                 (pathname === service.href && service.href !== '/') ||
                                  (pathname === '/services' && currentCategory && decodeURIComponent(serviceCategoryValue) === currentCategory);
 
                 return (
