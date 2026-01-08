@@ -104,7 +104,7 @@ export function Header() {
           )}
 
           <Button asChild>
-            <Link href="/listings/new">İlan Ver</Link>
+            <Link href={user ? "/listings/new" : "/login"}>İlan Ver</Link>
           </Button>
         </div>
 
@@ -132,7 +132,7 @@ export function Header() {
               ))}
               <div className="border-t pt-4 flex flex-col space-y-2">
                  <Button asChild onClick={() => setSheetOpen(false)}>
-                    <Link href="/listings/new">İlan Ver</Link>
+                    <Link href={user ? "/listings/new" : "/login"}>İlan Ver</Link>
                   </Button>
                 {user ? (
                    <Button variant="outline" onClick={() => {handleLogout(); setSheetOpen(false);}}>
