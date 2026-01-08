@@ -9,17 +9,6 @@ export default function RegisterPage() {
 
   return (
      <div className="w-full lg:grid lg:min-h-[calc(100vh-4rem)] lg:grid-cols-2 xl:min-h-[calc(100vh-4rem)]">
-       <div className="hidden bg-muted lg:block relative">
-        {registerImage && (
-          <Image
-            src={registerImage.imageUrl}
-            alt={registerImage.description}
-            data-ai-hint={registerImage.imageHint}
-            fill
-            className="object-cover"
-          />
-        )}
-      </div>
       <div className="flex items-center justify-center py-12">
         <Card className="w-full max-w-md mx-4 border-0 shadow-none sm:border sm:shadow-sm">
           <CardHeader className="text-center space-y-2">
@@ -36,6 +25,17 @@ export default function RegisterPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+       <div className="hidden bg-muted lg:block relative">
+        {registerImage && (
+          <Image
+            src={registerImage.imageUrl}
+            alt={registerImage.description}
+            data-ai-hint={registerImage.imageHint}
+            fill
+            className="object-cover"
+          />
+        )}
       </div>
     </div>
   );
