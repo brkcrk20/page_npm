@@ -104,24 +104,21 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
 const blogPosts = [
   {
     id: 1,
-    title: "Köpeğiniz İçin En İyi 5 Yaz Aktivitesi",
-    category: "Eğitim",
-    image: "https://picsum.photos/seed/dog-summer/600/400",
-    imageHint: "dog summer activity",
+    title: "Köpekler İçin Doğru Mama Seçimi: Sağlıklı Bir Yaşamın Temeli",
+    category: "Beslenme",
+    excerpt: "Köpeğinizin yaşına, ırkına ve aktivite seviyesine en uygun mamayı nasıl seçeceğinizi öğrenin. Tahıllı ve tahılsız mamalar arasındaki farklar, protein kaynaklarının önemi ve porsiyon kontrolü hakkında bilmeniz gereken her şey bu rehberde. Sağlıklı bir beslenme planı, dostunuzun uzun ve mutlu bir yaşam sürmesinin anahtarıdır.",
   },
   {
     id: 2,
-    title: "Kedilerde Tüy Dökülmesini Azaltmanın Yolları",
-    category: "Bakım",
-    image: "https://picsum.photos/seed/cat-grooming/600/400",
-    imageHint: "cat grooming",
+    title: "Kedi Tuvalet Eğitimi: Sabır ve Doğru Tekniklerle Başarıya Ulaşın",
+    category: "Eğitim",
+    excerpt: "Yeni bir yavru kediye veya yetişkin bir kediye tuvalet eğitimi vermek göz korkutucu olabilir. Bu makalede, doğru tuvalet kabı ve kum seçimi, kedinizi tuvalete alıştırma yöntemleri, olası kazaları önleme ve sık karşılaşılan sorunlara yönelik pratik çözümler bulacaksınız. Pozitif pekiştirme ile bu süreci stressiz hale getirin.",
   },
   {
     id: 3,
-    title: "Evcil Hayvanınızla Güvenli Seyahat İpuçları",
-    category: "Sağlık",
-    image: "https://picsum.photos/seed/pet-travel/600/400",
-    imageHint: "pet travel",
+    title: "Evcil Hayvanlarda Tüy Dökülmesi: Nedenleri ve Etkili Çözüm Yolları",
+    category: "Bakım",
+    excerpt: "Mevsimsel tüy dökülmesi normal olsa da, aşırı dökülme bir sağlık sorununun işareti olabilir. Beslenme, stres, alerjiler ve parazitler gibi tüy dökülmesine neden olan faktörleri keşfedin. Doğru tarama teknikleri, uygun bakım ürünleri ve besin takviyeleri ile tüy dökülmesini nasıl kontrol altına alabileceğinizi öğrenin.",
   },
 ];
 
@@ -252,20 +249,12 @@ export default function HomePage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {blogPosts.map((post) => (
-                  <Card key={post.id} className="overflow-hidden group transition-shadow hover:shadow-xl">
-                     <div className="relative aspect-video">
-                        <Image
-                            src={post.image}
-                            alt={post.title}
-                            fill
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
-                            data-ai-hint={post.imageHint}
-                        />
-                     </div>
-                     <CardContent className="p-4">
-                        <Badge variant="secondary" className="mb-2">{post.category}</Badge>
-                        <h3 className="text-lg font-bold font-headline leading-tight mb-4 group-hover:text-primary transition-colors">{post.title}</h3>
-                        <Button asChild size="sm">
+                  <Card key={post.id} className="overflow-hidden group transition-shadow hover:shadow-xl flex flex-col">
+                     <CardContent className="p-6 flex flex-col flex-grow">
+                        <Badge variant="secondary" className="mb-2 self-start">{post.category}</Badge>
+                        <h3 className="text-lg font-bold font-headline leading-tight mb-2 group-hover:text-primary transition-colors">{post.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-4 flex-grow">{post.excerpt}</p>
+                        <Button asChild size="sm" className="mt-auto self-start">
                             <Link href="#">Devamını Oku <ArrowRight className="ml-1 w-4 h-4" /></Link>
                         </Button>
                      </CardContent>
