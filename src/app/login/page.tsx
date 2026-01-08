@@ -19,7 +19,7 @@ export default function LoginPage() {
             <LoginForm />
              <div className="mt-4 text-center text-sm">
               Hesabın yok mu?{' '}
-              <Link href="/register" className="underline font-semibold text-primary">
+              <Link href="/kayit" className="underline font-semibold text-primary">
                 Kayıt Ol
               </Link>
             </div>

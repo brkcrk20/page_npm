@@ -70,6 +70,9 @@ function HeaderContent() {
   };
   
   const renderFilters = () => {
+    if (pathname === '/login' || pathname === '/kayit') {
+      return null;
+    }
     if (pathname === '/veteriner') {
       return <VetSearchFilters pageType="vet" />;
     }
@@ -158,7 +161,7 @@ function HeaderContent() {
                         <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
                       </Button>
                       <Button variant="outline" asChild className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-white/20 hover:text-white">
-                        <Link href="/register">
+                        <Link href="/kayit">
                           <UserPlus className="mr-2 h-4 w-4" />
                           Kayıt Ol
                         </Link>
@@ -209,7 +212,7 @@ function HeaderContent() {
                         <Link href="/login">Giriş Yap</Link>
                       </Button>
                       <Button variant="secondary" asChild onClick={() => setSheetOpen(false)}>
-                        <Link href="/register">Kayıt Ol</Link>
+                        <Link href="/kayit">Kayıt Ol</Link>
                       </Button>
                     </>
                   )}
