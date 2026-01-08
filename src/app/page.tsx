@@ -67,7 +67,7 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <ul className="space-y-3 max-h-60 overflow-y-auto pr-2">
+          <ul className="space-y-3 pr-2">
             {filteredBreeds.map((breed) => (
               <li key={breed.name}>
                 <Link href="#" className="flex items-center justify-between text-muted-foreground hover:text-primary group">
@@ -248,7 +248,7 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-8">
                     {blogPosts.map((post) => (
-                        <div key={post.id} className="bg-white p-6 rounded-lg shadow-sm">
+                        <div key={post.id}>
                            <Badge variant="secondary" className="mb-2 self-start">{post.category}</Badge>
                            <h3 className="text-2xl font-bold font-headline leading-tight text-primary mb-4">
                                {post.title}
