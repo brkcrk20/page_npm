@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { Checkbox } from '@/components/ui/checkbox';
-import React, from 'react';
+import React from 'react';
 import { useAuth } from '@/firebase';
 import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 import { useRouter } from 'next/navigation';
