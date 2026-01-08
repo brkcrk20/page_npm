@@ -40,7 +40,7 @@ const navLinks = [
 
 const serviceCategories = [
   { icon: Heart, label: 'Sahiplendirme', href: '/' },
-  { icon: Stethoscope, label: 'Veteriner', href: '/services?category=Veterinarian' },
+  { icon: Stethoscope, label: 'Veteriner', href: '/veteriner' },
   { icon: Building, label: 'Pet Oteli', href: '/services?category=Pet%20Hotel' },
   { icon: Medal, label: 'Eğitmen', href: '/services?category=Trainer' },
   { icon: Scissors, label: 'Pet Kuaför', href: '/services?category=Groomer' },
@@ -186,8 +186,8 @@ export function Header() {
               {serviceCategories.map((service) => {
                 const serviceCategoryValue = service.href.split('?category=')[1] ?? '';
                 const isActive = (pathname === '/' && service.href === '/') ||
-                                 (pathname === service.href && service.href !== '/') ||
-                                 (pathname === '/services' && currentCategory && decodeURIComponent(serviceCategoryValue) === currentCategory);
+                                 (pathname === service.href) ||
+                                 (pathname.startsWith('/services') && service.href.startsWith('/services') && currentCategory && decodeURIComponent(serviceCategoryValue) === currentCategory);
 
                 return (
                   <Link
