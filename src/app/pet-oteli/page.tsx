@@ -21,27 +21,10 @@ export default function PetHotelPage() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'pethotel-hero') ?? { imageUrl: 'https://picsum.photos/seed/pethotel-hero/1200/400', description: 'Cozy pet hotel interior', imageHint: 'pet hotel' };
 
   return (
-    <div>
-      <section className="relative w-full h-64 bg-primary/10">
-        <Image
-          src={heroImage.imageUrl}
-          alt={heroImage.description}
-          data-ai-hint={heroImage.imageHint}
-          fill
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20" />
-        <div className="relative container mx-auto h-full flex flex-col items-start justify-end text-white pb-12">
-          <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight">
-            Pet Otelleri
-          </h1>
-          <p className="mt-2 max-w-2xl text-lg text-primary-foreground/80">
-            Siz tatildeyken dostlarınızın konforu ve mutluluğu için en iyi oteller.
-          </p>
+    <div className="container mx-auto py-12">
+        <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold font-headline">Pet Otelleri</h1>
         </div>
-      </section>
-
-      <div className="container mx-auto py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {petHotelServices.map((service) => (
             <Card key={service.id} className="flex flex-col hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden">
@@ -95,7 +78,6 @@ export default function PetHotelPage() {
             <p className="text-muted-foreground">Lütfen daha sonra tekrar kontrol edin.</p>
           </div>
         )}
-      </div>
     </div>
   );
 }
