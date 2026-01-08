@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import React, { useState, useMemo } from 'react';
 import type { Pet } from "@/lib/data";
-import { allDogBreeds, allCatBreeds } from "@/lib/breeds";
+import { allDogBreeds, allCatBreeds, allBirdBreeds, allOtherBreeds } from "@/lib/breeds";
 
 type BreedInfo = {
   name: string;
@@ -128,18 +128,6 @@ export default function HomePage() {
       });
     };
     
-    // Fallback for breeds in data.ts but not in the static list
-    const otherBreeds = pets
-      .filter(p => p.type === 'Other' || p.type === 'Bird')
-      .reduce((acc, pet) => {
-          if (!acc[pet.breed]) {
-              acc[pet.breed] = 0;
-          }
-          acc[pet.breed]++;
-          return acc;
-      }, {} as Record<string, number>);
-
-
     const allCategories: CategoryInfo[] = [
       {
         type: 'Dog',
@@ -160,14 +148,14 @@ export default function HomePage() {
         title: 'Kuşlar',
         Icon: Bird,
         color: 'text-sky-400',
-        breeds: processBreeds(Object.keys(pets.filter(p => p.type === 'Bird').reduce((acc, p) => ({...acc, [p.breed]: 1}), {})), countsByType.Bird),
+        breeds: processBreeds(allBirdBreeds, countsByType.Bird),
       },
       {
         type: 'Other',
         title: 'Diğer',
         Icon: Fish,
         color: 'text-blue-400',
-        breeds: processBreeds(Object.keys(pets.filter(p => p.type === 'Other').reduce((acc, p) => ({...acc, [p.breed]: 1}), {})), countsByType.Other),
+        breeds: processBreeds(allOtherBreeds, countsByType.Other),
       },
     ];
 

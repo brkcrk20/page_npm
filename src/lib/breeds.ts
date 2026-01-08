@@ -79,7 +79,24 @@ export const allCatBreeds = [
   'Munchkin Kedisi',
   'Ragdoll Kedisi',
   'Sarman Kedi',
-  'Tekir', // Keep Tekir as it is present in data
-  'Siyam', // Keep Siyam as it is present in data
-  'Van Kedisi' // Keep Van Kedisi as it is present in data
+  'Tekir',
+  'Siyam',
+  'Van Kedisi'
+];
+
+export const allBirdBreeds = [
+    "Muhabbet Kuşu",
+    "Sultan Papağanı",
+    "Papağan",
+    "Kanarya",
+    "Hint Bülbülü",
+    "Cennet Papağanı",
+    "Forpus Papağanı"
+];
+
+export const allOtherBreeds = [
+    "Japon Balığı",
+    "Hamster",
+    "Tavşan",
+    "Guineapig"
 ];
