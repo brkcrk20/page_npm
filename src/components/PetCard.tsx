@@ -15,7 +15,7 @@ export function PetCard({ pet }: PetCardProps) {
 
   return (
     <Link href={`/listings/${pet.id}`} className="group block">
-      <Card className="flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-xl bg-white h-auto border-orange-200 hover:border-primary">
+      <Card className="flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-xl bg-white h-full border-orange-200 hover:border-primary">
         <div className="relative overflow-hidden">
           {isSecure && (
             <div className="absolute top-0 left-0 z-10 w-32 h-32 overflow-hidden">
