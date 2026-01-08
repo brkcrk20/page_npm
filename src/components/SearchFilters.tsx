@@ -13,16 +13,16 @@ import { Search } from 'lucide-react';
 
 export function SearchFilters() {
   return (
-    <div className="bg-white py-4 shadow-sm border-b">
+    <div className="bg-white py-3 shadow-sm border-b">
       <div className="container mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
           <div className="relative lg:col-span-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Ne arıyorsun? (Irk, isim...)" className="pl-9 h-12" />
+            <Input placeholder="Ne arıyorsun? (Irk, isim...)" className="pl-9 h-10" />
           </div>
 
           <Select>
-            <SelectTrigger className="h-12">
+            <SelectTrigger className="h-10">
               <SelectValue placeholder="Tüm Türler" />
             </SelectTrigger>
             <SelectContent>
@@ -34,7 +34,7 @@ export function SearchFilters() {
           </Select>
           
           <Select>
-            <SelectTrigger className="h-12">
+            <SelectTrigger className="h-10">
               <SelectValue placeholder="Tüm Şehirler" />
             </SelectTrigger>
             <SelectContent>
@@ -45,7 +45,7 @@ export function SearchFilters() {
             </SelectContent>
           </Select>
 
-          <Button className="w-full h-12 text-base">
+          <Button className="w-full h-10 text-base">
             Bul
           </Button>
         </div>

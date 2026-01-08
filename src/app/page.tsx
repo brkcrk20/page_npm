@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { SearchFilters } from "@/components/SearchFilters";
 
 const serviceCategories = [
   { icon: Heart, label: "Sahiplendirme", color: "text-red-500" },
@@ -38,6 +39,7 @@ const serviceCategories = [
 export default function HomePage() {
   return (
     <div className="bg-secondary/50">
+       <SearchFilters />
       <div className="container mx-auto py-4">
         <div className="bg-white rounded-lg shadow-sm mb-8">
               <div className="grid grid-cols-4 sm:grid-cols-8 gap-4 p-4">
