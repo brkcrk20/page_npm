@@ -12,7 +12,7 @@ import {
 import { Search } from 'lucide-react';
 
 interface VetSearchFiltersProps {
-  pageType: 'vet' | 'hotel' | 'trainer' | 'groomer' | 'petshop' | 'pet_taksi';
+  pageType: 'vet' | 'hotel' | 'trainer' | 'groomer' | 'petshop' | 'pet_taksi' | 'walker';
 }
 
 export function VetSearchFilters({ pageType }: VetSearchFiltersProps) {
@@ -82,6 +82,17 @@ export function VetSearchFilters({ pageType }: VetSearchFiltersProps) {
         { value: 'sehirlerarasi', label: 'Şehirlerarası' },
         { value: 'klimali', label: 'Klimalı Araç' },
         { value: 'buyuk-kopek', label: 'Büyük Köpek Kabulü' },
+      ],
+    },
+    walker: {
+      placeholder: "Gezdirici adı veya bölge...",
+      servicesPlaceholder: "Tüm Hizmetler",
+      buttonText: "Gezdirici Bul",
+      services: [
+        { value: 'grup', label: 'Grup Gezdirme' },
+        { value: 'gps', label: 'GPS Takibi' },
+        { value: 'egitimli', label: 'Eğitimli Gezdirici' },
+        { value: 'saatlik', label: 'Saatlik Hizmet' },
       ],
     }
   };

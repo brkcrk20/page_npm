@@ -14,7 +14,7 @@ export type Pet = {
 export type Service = {
   id:string;
   name: string;
-  type: 'Veterinarian' | 'Pet Hotel' | 'Trainer' | 'Groomer' | 'Pet Taxi' | 'Petshop';
+  type: 'Veterinarian' | 'Pet Hotel' | 'Trainer' | 'Groomer' | 'Pet Taxi' | 'Petshop' | 'Walker';
   location: string;
   contact: string;
 };
@@ -181,5 +181,19 @@ export const services: Service[] = [
     type: 'Groomer',
     location: 'Karşıyaka, Izmir',
     contact: '0232 987 65 43',
+  },
+  {
+    id: '10',
+    name: 'Gezgin Patiler',
+    type: 'Walker',
+    location: 'Kadıköy, Istanbul',
+    contact: '0533 111 22 33',
+  },
+  {
+    id: '11',
+    name: 'Ankara Dost Gezdirme',
+    type: 'Walker',
+    location: 'Çankaya, Ankara',
+    contact: '0544 555 66 77',
   },
 ];
