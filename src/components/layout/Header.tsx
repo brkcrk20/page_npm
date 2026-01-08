@@ -39,7 +39,7 @@ const navLinks = [
 ];
 
 const serviceCategories = [
-  { icon: Heart, label: 'Sahiplendirme', href: '/listings' },
+  { icon: Heart, label: 'Sahiplendirme', href: '/' },
   { icon: Stethoscope, label: 'Veteriner', href: '/services?category=Veterinarian' },
   { icon: Building, label: 'Pet Oteli', href: '/services?category=Pet%20Hotel' },
   { icon: Medal, label: 'Eğitmen', href: '/services?category=Trainer' },
@@ -184,8 +184,11 @@ export function Header() {
           <div className="w-full pt-4">
             <div className="grid w-full grid-cols-4 md:grid-cols-8 h-auto p-1 bg-muted rounded-md text-muted-foreground">
               {serviceCategories.map((service) => {
-                const serviceCategory = service.href.split('?category=')[1];
-                const isActive = (pathname === service.href && !serviceCategory) || (pathname === '/services' && decodeURIComponent(serviceCategory || '') === currentCategory) || (pathname === '/listings' && service.href === '/listings');
+                const serviceCategoryValue = service.href.split('?category=')[1] ?? '';
+                const isActive = (pathname === service.href && !currentCategory && service.href !== '/services') ||
+                                 (pathname === '/' && service.href === '/') ||
+                                 (pathname === '/listings' && service.href === '/listings') ||
+                                 (pathname === '/services' && currentCategory && decodeURIComponent(serviceCategoryValue) === currentCategory);
 
                 return (
                   <Link
