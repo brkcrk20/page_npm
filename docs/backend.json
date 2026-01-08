@@ -1,0 +1,229 @@
+{
+  "entities": {
+    "PetListing": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PetListing",
+      "type": "object",
+      "description": "Represents a pet listing for adoption, sale, or services.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PetListing entity."
+        },
+        "species": {
+          "type": "string",
+          "description": "The species of the pet (e.g., dog, cat, bird)."
+        },
+        "breed": {
+          "type": "string",
+          "description": "The breed of the pet (e.g., Labrador, Siamese)."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the pet."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the pet and its characteristics."
+        },
+        "age": {
+          "type": "number",
+          "description": "The age of the pet in months or years."
+        },
+        "location": {
+          "type": "string",
+          "description": "The location where the pet is available (e.g., city, state)."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the pet's image.",
+          "format": "uri"
+        },
+        "listingType": {
+          "type": "string",
+          "description": "The type of listing (e.g., adoption, sale, service)."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the pet, if applicable."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N PetListing)"
+        },
+        "isFeatured": {
+          "type": "boolean",
+          "description": "Indicates if the listing is featured or 'Yıldızlı'."
+        }
+      },
+      "required": [
+        "id",
+        "species",
+        "breed",
+        "name",
+        "description",
+        "location",
+        "imageUrl",
+        "listingType",
+        "userId"
+      ]
+    },
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user profile within the PatiBul Global application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "The username of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The phone number of the user."
+        },
+        "location": {
+          "type": "string",
+          "description": "The location of the user."
+        },
+        "favoritePetIds": {
+          "type": "array",
+          "description": "References to PetListings that the user has marked as favorites. (Relationship: UserProfile N:N PetListing)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email"
+      ]
+    },
+    "Service": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Service",
+      "type": "object",
+      "description": "Represents a pet-related service listed in the directory.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Service entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the service provider."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of service offered (e.g., veterinarian, pet hotel, trainer)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the services offered."
+        },
+        "address": {
+          "type": "string",
+          "description": "The address of the service provider."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The phone number of the service provider."
+        },
+        "websiteUrl": {
+          "type": "string",
+          "description": "The website URL of the service provider.",
+          "format": "uri"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Service)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "type",
+        "description",
+        "address",
+        "phoneNumber"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile data. Uses path-based ownership for private user data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/petListings/{petListingId}",
+        "definition": {
+          "entityName": "PetListing",
+          "schema": {
+            "$ref": "#/backend/entities/PetListing"
+          },
+          "description": "Stores pet listings created by the user. Denormalizes userId from the parent UserProfile to enable authorization independence. This enables atomic operations.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (owner of the pet listing)."
+            },
+            {
+              "name": "petListingId",
+              "description": "The unique identifier of the pet listing."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/services/{serviceId}",
+        "definition": {
+          "entityName": "Service",
+          "schema": {
+            "$ref": "#/backend/entities/Service"
+          },
+          "description": "Stores service listings created by the user. Denormalizes userId from the parent UserProfile to enable authorization independence. This enables atomic operations.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (owner of the service listing)."
+            },
+            {
+              "name": "serviceId",
+              "description": "The unique identifier of the service listing."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability for the PatiBul Global application. It leverages denormalization and structural segregation to avoid complex security rules and enable efficient data retrieval. User profiles and their associated data (pet listings, services) are organized under user-specific paths to enforce clear ownership. Favoriting functionality is implemented using arrays within the user profile.  The structure avoids 'get()' calls in security rules for authorization, enabling atomic operations. Segregation of data with differing access needs is achieved by storing user-specific data under `/users/{userId}` and potentially public data (if any in the future) in separate collections."
+  }
+}

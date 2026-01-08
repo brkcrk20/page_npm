@@ -1,0 +1,146 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. All data is private to the user who created it, and there are no publicly accessible collections. This ensures maximum privacy and control for users over their own information.
+ *
+ * Data Structure: The data is organized hierarchically. All user-specific content, such as profiles, pet listings, and service listings, is nested under a top-level `/users` collection, with each user's data contained within their own document tree (e.g., /users/{userId}/...). This structure inherently links data to its owner.
+ *
+ * Key Security Decisions:
+ * - No Public Data: By default, no data is readable or writable by the public or other authenticated users. Access is restricted to the data owner.
+ * - User Listing Disabled: To protect user privacy, it is not possible to query or list all documents in the `/users` collection.
+ * - Path-Based Security: Authorization is primarily determined by the `{userId}` wildcard in the document path, ensuring that a user can only access documents within their own data tree.
+ *
+ * Denormalization for Authorization: To create performant and secure rules, this model relies on denormalization. Subcollection documents (like PetListing and Service) must contain a `userId` field that mirrors the `{userId}` from the path. This avoids costly and slow `get()` calls in security rules, allowing for simpler, more robust validation.
+ *
+ * Structural Segregation: The design uses separate collections for different data types (e.g., `petListings`, `services`) nested under the user's path. This cleanly segregates data and simplifies access control, as all data within a user's tree inherits the same ownership principle.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user's UID matches the provided userId from the path.
+     * Ensures a user can only access their own data.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * For update and delete operations, confirms the document exists AND the user is the owner.
+     * This prevents modifying or deleting non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * On create, validates that the UserProfile's internal `id` field matches the document's path ID.
+     * Enforces relational integrity between the path and the data payload.
+     */
+    function hasValidUserProfileData(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * On update, ensures the UserProfile's internal `id` field cannot be changed.
+     * Prevents re-assigning the profile to a different user path.
+     */
+    function isUserProfileIdImmutable() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * On create, validates that a new PetListing's internal `userId` field matches its owner's path.
+     * Enforces the ownership link at the moment of creation.
+     */
+    function hasValidPetListingData(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * On update, ensures a PetListing's `userId` ownership field cannot be changed.
+     * Prevents a listing from being transferred to another user.
+     */
+    function isPetListingOwnerImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+    
+    /**
+     * On create, validates that a new Service's internal `userId` field matches its owner's path.
+     * Enforces the ownership link at the moment of creation.
+     */
+    function hasValidServiceData(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * On update, ensures a Service's `userId` ownership field cannot be changed.
+     * Prevents a service listing from being transferred to another user.
+     */
+    function isServiceOwnerImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    // ----------------------------------------------------------------------
+    // Collection Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Manages user profile documents. Only the owner can read or write their own profile.
+     * @path /users/{userId}
+     * @allow (get) A signed-in user (uid: 'user123') retrieving their own profile at /users/user123.
+     * @deny (list) Any user attempting to query the /users collection to get a list of all users.
+     * @deny (update) A signed-in user (uid: 'user456') trying to modify another user's profile at /users/user123.
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && hasValidUserProfileData(userId);
+      allow update: if isExistingOwner(userId) && isUserProfileIdImmutable();
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Manages the pet listings created by a specific user. Only the owner can manage their listings.
+       * @path /users/{userId}/petListings/{petListingId}
+       * @allow (create) A signed-in user (uid: 'user123') creating a new pet listing at /users/user123/petListings/pet_abc.
+       * @allow (list) A signed-in user (uid: 'user123') querying all of their own listings under /users/user123/petListings.
+       * @deny (get) A signed-in user (uid: 'user456') trying to read a listing from /users/user123/petListings/pet_abc.
+       * @principle Enforces document ownership within a user-specific subcollection.
+       */
+      match /petListings/{petListingId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidPetListingData(userId);
+        allow update: if isExistingOwner(userId) && isPetListingOwnerImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Manages the service listings created by a specific user. Only the owner can manage their listings.
+       * @path /users/{userId}/services/{serviceId}
+       * @allow (create) A signed-in user (uid: 'user123') creating a new service listing at /users/user123/services/service_xyz.
+       * @allow (list) A signed-in user (uid: 'user123') querying all of their own services under /users/user123/services.
+       * @deny (delete) A signed-in user (uid: 'user456') trying to delete a service from /users/user123/services/service_xyz.
+       * @principle Enforces document ownership within a user-specific subcollection.
+       */
+      match /services/{serviceId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidServiceData(userId);
+        allow update: if isExistingOwner(userId) && isServiceOwnerImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+  }
+}
