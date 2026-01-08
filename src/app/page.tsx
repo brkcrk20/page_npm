@@ -119,12 +119,13 @@ export default function HomePage() {
         name: breedName,
         count: breedCounts?.[breedName] || 0,
       }));
-      // Sort by count descending, then alphabetically
+      // Sort by count descending, then alphabetically using a specific locale
       return breedInfo.sort((a, b) => {
         if (b.count !== a.count) {
           return b.count - a.count;
         }
-        return a.name.localeCompare(b.name);
+        // Using 'en' locale to ensure consistent sorting on server and client
+        return a.name.localeCompare(b.name, 'en');
       });
     };
     
