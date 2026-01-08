@@ -311,7 +311,7 @@ export function RegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Firma Ünvanı <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input placeholder="PatiBul Global A.Ş." {...field} disabled={isLoading} /></FormControl>
+                  <FormControl><Input placeholder="Ciraks A.Ş." {...field} disabled={isLoading} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}

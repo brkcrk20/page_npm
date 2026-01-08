@@ -26,7 +26,6 @@ import Image from "next/image";
 import React, { useState, useMemo } from 'react';
 import type { Pet } from "@/lib/data";
 import { allDogBreeds, allCatBreeds, allBirdBreeds, allAquariumBreeds, allOtherBreeds } from "@/lib/breeds";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 type BreedInfo = {
@@ -235,11 +234,11 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-             <div>
-                <div className="flex justify-between items-center mb-4">
+             <div className="space-y-8">
+                <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <BookText className="w-6 h-6" />
-                        <h2 className="text-2xl font-bold">PatiBul Blog</h2>
+                        <h2 className="text-2xl font-bold">Ciraks Blog</h2>
                     </div>
                     <Button variant="link" asChild className="text-primary">
                         <Link href="/blog">

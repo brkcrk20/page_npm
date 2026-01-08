@@ -107,7 +107,7 @@ const HeaderContent = React.memo(function HeaderContent() {
             <div className="bg-white p-1 rounded-md">
               <Heart className="h-6 w-6 text-primary fill-primary" />
             </div>
-            <span className="font-bold text-xl">PatibulGlobal</span>
+            <span className="font-bold text-xl">Ciraks</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
