@@ -50,7 +50,7 @@ const serviceCategories = [
   { icon: PersonStanding, label: 'Gezdirici', href: '/services?category=Walker' },
 ];
 
-export function Header() {
+function HeaderContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
@@ -66,6 +66,17 @@ export function Header() {
   const getInitials = (email?: string | null) => {
     if (!email) return 'U';
     return email.charAt(0).toUpperCase();
+  };
+  
+  const renderFilters = () => {
+    if (pathname === '/veteriner') {
+      return <VetSearchFilters />;
+    }
+    if (pathname === '/pet-oteli') {
+      // For now, re-using VetSearchFilters but it can be a new component PetHotelSearchFilters
+      return <VetSearchFilters isHotelPage={true} />;
+    }
+    return <SearchFilters />;
   };
 
   return (
@@ -188,7 +199,7 @@ export function Header() {
                 const serviceCategoryValue = service.href.split('?category=')[1] ?? '';
                 const isActive = (pathname === '/' && service.href === '/') ||
                                  (pathname === service.href) ||
-                                 (pathname.startsWith('/services') && service.href.startsWith('/services') && currentCategory && decodeURIComponent(serviceCategoryValue) === currentCategory) || (pathname === '/pet-oteli' && service.href === '/pet-oteli');
+                                 (pathname.startsWith('/services') && service.href.startsWith('/services') && currentCategory && decodeURIComponent(serviceCategoryValue) === currentCategory);
 
                 return (
                   <Link
@@ -208,9 +219,20 @@ export function Header() {
               })}
             </div>
           </div>
-          {pathname === '/veteriner' || pathname === '/pet-oteli' ? <VetSearchFilters /> : <SearchFilters />}
+          {renderFilters()}
         </div>
       </div>
     </>
   );
+}
+
+
+export function Header() {
+  const pathname = usePathname();
+
+  // This is a bit of a hack to make sure the key of HeaderContent changes
+  // when the path changes. This forces a re-render of the component
+  // and all its children, which is necessary to update the active category
+  // and filters.
+  return <HeaderContent key={pathname} />;
 }
