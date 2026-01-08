@@ -39,7 +39,7 @@ const serviceCategories = [
 export default function HomePage() {
   return (
     <div className="bg-secondary/50">
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-4">
         <SearchFilters />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <aside className="col-span-1">
