@@ -11,8 +11,9 @@ export function Footer() {
             <PawPrint className="h-6 w-6 text-primary" />
             <span className="font-bold font-headline">Ciraks</span>
           </div>
-          <div className="text-center md:text-left text-sm text-muted-foreground mb-4 md:mb-0">
-            &copy; {year} Ciraks. Tüm hakları saklıdır.
+          <div className="text-center md:text-left text-sm text-muted-foreground mb-4 md:mb-0 space-x-4">
+            <span>&copy; {year} Ciraks. Tüm hakları saklıdır.</span>
+            <Link href="/admin" className="hover:text-primary underline">Admin</Link>
           </div>
           <div className="flex space-x-4">
             <Link href="#" className="text-muted-foreground hover:text-primary">
