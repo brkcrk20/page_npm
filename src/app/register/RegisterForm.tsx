@@ -32,7 +32,7 @@ const individualSchema = z.object({
   email: z.string().email({ message: 'Geçerli bir e-posta adresi girin.' }),
   phone: z.string().min(10, { message: 'Geçerli bir telefon numarası girin.' }),
   password: z.string().min(6, { message: 'Şifre en az 6 karakter olmalıdır.' }),
-  verificationCode: z.string().min(4, { message: "Doğrulama kodu en az 4 karakter olmalıdır." }),
+  robotCheck: z.boolean().refine(val => val === true, { message: "Lütfen robot olmadığınızı doğrulayın." }),
   agreement: z.boolean().refine(val => val === true, { message: "Üyelik sözleşmesini kabul etmelisiniz." }),
 });
 
@@ -48,7 +48,7 @@ const corporateSchema = z.object({
   taxNo: z.string().min(10, { message: 'Vergi numarası 10 veya 11 haneli olmalıdır.' }),
   taxOffice: z.string().min(2, { message: 'Vergi dairesi gereklidir.' }),
   companyAddress: z.string().min(10, { message: 'Firma adresi gereklidir.' }),
-  verificationCode: z.string().min(4, { message: "Doğrulama kodu en az 4 karakter olmalıdır." }),
+  robotCheck: z.boolean().refine(val => val === true, { message: "Lütfen robot olmadığınızı doğrulayın." }),
   agreement: z.boolean().refine(val => val === true, { message: "Üyelik sözleşmesini kabul etmelisiniz." }),
 });
 
@@ -71,7 +71,7 @@ export function RegisterForm() {
       email: '',
       phone: '',
       password: '',
-      verificationCode: '',
+      robotCheck: false,
       agreement: false,
     },
   });
@@ -107,23 +107,28 @@ export function RegisterForm() {
     }
   }
 
-  const renderVerificationCodeInput = () => (
+  const renderRobotCheck = () => (
     <FormField
-      control={form.control}
-      name="verificationCode"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Doğrulama Kodu</FormLabel>
-          <FormControl>
-             <Input placeholder="1234" {...field} disabled={isLoading} maxLength={4} />
-          </FormControl>
-           <FormDescription>
-                Telefona gelen 4 haneli kodu girin.
-              </FormDescription>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+        control={form.control}
+        name="robotCheck"
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+            <FormControl>
+              <Checkbox
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                disabled={isLoading}
+              />
+            </FormControl>
+            <div className="space-y-1 leading-none">
+              <FormLabel>
+                Ben robot değilim
+              </FormLabel>
+            </div>
+             <FormMessage />
+          </FormItem>
+        )}
+      />
   );
   
   const renderAgreementCheckbox = () => (
@@ -218,7 +223,7 @@ export function RegisterForm() {
                 </FormItem>
               )}
             />
-            {renderVerificationCodeInput()}
+            {renderRobotCheck()}
             {renderAgreementCheckbox()}
           </TabsContent>
 
@@ -346,7 +351,7 @@ export function RegisterForm() {
                 </FormItem>
               )}
             />
-            {renderVerificationCodeInput()}
+            {renderRobotCheck()}
             {renderAgreementCheckbox()}
           </TabsContent>
           
