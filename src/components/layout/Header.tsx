@@ -16,7 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import React from 'react';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -51,10 +51,12 @@ const serviceCategories = [
 
 export function Header() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
-  const activeCategory = 'adoption'; // This could be dynamic
+  
+  const currentCategory = searchParams.get('category');
 
   const handleLogout = () => {
     signOut(auth);
@@ -179,21 +181,26 @@ export function Header() {
         <div className="container mx-auto">
           <div className="w-full pt-4">
             <div className="grid w-full grid-cols-4 md:grid-cols-8 h-auto p-1 bg-muted rounded-md text-muted-foreground">
-              {serviceCategories.map((service) => (
-                <Link
-                  href={service.href}
-                  key={service.label}
-                  className={cn(
-                    'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-col gap-1 h-auto text-center hover:text-primary',
-                    activeCategory === service.href.split('=')[1]
-                      ? 'bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))]'
-                      : ''
-                  )}
-                >
-                  <service.icon className="w-5 h-5 transition-colors" />
-                  <span className="text-xs font-medium hidden sm:block">{service.label}</span>
-                </Link>
-              ))}
+              {serviceCategories.map((service) => {
+                const serviceCategory = service.href.split('=')[1];
+                const isActive = (pathname === service.href && !serviceCategory) || (pathname === '/services' && serviceCategory === currentCategory) || (pathname === '/listings' && service.href === '/listings');
+
+                return (
+                  <Link
+                    href={service.href}
+                    key={service.label}
+                    className={cn(
+                      'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-col gap-1 h-auto text-center hover:text-primary',
+                      isActive
+                        ? 'bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))]'
+                        : ''
+                    )}
+                  >
+                    <service.icon className="w-5 h-5 transition-colors" />
+                    <span className="text-xs font-medium hidden sm:block">{service.label}</span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
           <SearchFilters />
