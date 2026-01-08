@@ -96,46 +96,49 @@ export default function HomePage() {
 
    const categories: CategoryInfo[] = useMemo(() => {
     const breedsByType = pets.reduce((acc, pet) => {
-      if (!acc[pet.type]) {
-        acc[pet.type] = {};
+      const { type, breed, image } = pet;
+      if (!acc[type]) {
+        acc[type] = {};
       }
-      if (!acc[pet.type][pet.breed]) {
-        acc[pet.type][pet.breed] = { count: 0, image: pet.image };
+      if (!acc[type][breed]) {
+        acc[type][breed] = { count: 0, image: image };
       }
-      acc[pet.type][pet.breed].count++;
+      acc[type][breed].count++;
       return acc;
-    }, {} as Record<string, Record<string, { count: number; image: string }>>);
+    }, {} as Record<Pet['type'], Record<string, { count: number; image: string }>>);
 
-    return [
+    const allCategories: CategoryInfo[] = [
       {
         type: 'Dog',
         title: 'Köpekler',
         Icon: Dog,
         color: 'text-orange-500',
-        breeds: Object.entries(breedsByType['Dog'] || {}).map(([name, { count, image }]) => ({ name, count, image })),
+        breeds: breedsByType.Dog ? Object.entries(breedsByType.Dog).map(([name, { count, image }]) => ({ name, count, image })) : [],
       },
       {
         type: 'Cat',
         title: 'Kediler',
         Icon: Cat,
         color: 'text-red-400',
-        breeds: Object.entries(breedsByType['Cat'] || {}).map(([name, { count, image }]) => ({ name, count, image })),
+        breeds: breedsByType.Cat ? Object.entries(breedsByType.Cat).map(([name, { count, image }]) => ({ name, count, image })) : [],
       },
       {
         type: 'Bird',
         title: 'Kuşlar',
         Icon: Bird,
         color: 'text-sky-400',
-        breeds: Object.entries(breedsByType['Bird'] || {}).map(([name, { count, image }]) => ({ name, count, image })),
+        breeds: breedsByType.Bird ? Object.entries(breedsByType.Bird).map(([name, { count, image }]) => ({ name, count, image })) : [],
       },
       {
         type: 'Other',
-        title: 'Balıklar',
+        title: 'Diğer',
         Icon: Fish,
         color: 'text-blue-400',
-        breeds: Object.entries(breedsByType['Other'] || {}).map(([name, { count, image }]) => ({ name, count, image })),
+        breeds: breedsByType.Other ? Object.entries(breedsByType.Other).map(([name, { count, image }]) => ({ name, count, image })) : [],
       },
-    ].filter(c => c.breeds.length > 0);
+    ];
+
+    return allCategories.filter(c => c.breeds.length > 0);
   }, []);
 
   return (
