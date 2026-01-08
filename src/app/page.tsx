@@ -45,8 +45,8 @@ export default function HomePage() {
           <Tabs defaultValue="adoption" className="w-full pt-4">
             <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 h-auto">
               {serviceCategories.map((service) => (
-                 <TabsTrigger key={service.value} value={service.value} className="flex flex-col items-center justify-center text-center gap-2 h-auto py-2 px-1">
-                    <service.icon className="w-5 h-5" />
+                 <TabsTrigger key={service.value} value={service.value} className="flex flex-col items-center justify-center text-center gap-1 h-auto py-2 px-1">
+                    <service.icon className="w-5 h-5 transition-colors" />
                     <span className="text-xs font-medium hidden sm:block">{service.label}</span>
                 </TabsTrigger>
               ))}
