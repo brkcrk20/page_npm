@@ -52,7 +52,7 @@ const serviceCategories = [
   { icon: PersonStanding, label: 'Gezdirici', href: '/gezdirici' },
 ];
 
-function HeaderContent() {
+const HeaderContent = React.memo(function HeaderContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
@@ -252,7 +252,7 @@ function HeaderContent() {
       </div>
     </>
   );
-}
+});
 
 
 export function Header() {
