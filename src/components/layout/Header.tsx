@@ -1,12 +1,24 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, Heart } from 'lucide-react';
+import { Menu, Heart, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import React from 'react';
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+
 
 const navLinks = [
   { href: '/listings', label: 'İlanlar' },
@@ -18,6 +30,18 @@ const navLinks = [
 export function Header() {
   const pathname = usePathname();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+
+  const handleLogout = () => {
+    signOut(auth);
+  };
+  
+  const getInitials = (email?: string | null) => {
+    if (!email) return 'U';
+    return email.charAt(0).toUpperCase();
+  }
+
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
@@ -45,7 +69,40 @@ export function Header() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-4">
-          <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary hidden md:inline-flex">Giriş</Link>
+          {!isUserLoading && (
+            <>
+              {user ? (
+                 <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
+                        <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.displayName ?? 'Kullanıcı'}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Çıkış Yap</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary hidden md:inline-flex">Giriş</Link>
+              )}
+            </>
+          )}
+
           <Button asChild>
             <Link href="/listings/new">İlan Ver</Link>
           </Button>
@@ -77,12 +134,20 @@ export function Header() {
                  <Button asChild onClick={() => setSheetOpen(false)}>
                     <Link href="/listings/new">İlan Ver</Link>
                   </Button>
-                <Button variant="outline" asChild onClick={() => setSheetOpen(false)}>
-                  <Link href="/login">Giriş Yap</Link>
-                </Button>
-                <Button variant="secondary" asChild onClick={() => setSheetOpen(false)}>
-                  <Link href="/register">Kayıt Ol</Link>
-                </Button>
+                {user ? (
+                   <Button variant="outline" onClick={() => {handleLogout(); setSheetOpen(false);}}>
+                    Çıkış Yap
+                  </Button>
+                ): (
+                  <>
+                  <Button variant="outline" asChild onClick={() => setSheetOpen(false)}>
+                    <Link href="/login">Giriş Yap</Link>
+                  </Button>
+                  <Button variant="secondary" asChild onClick={() => setSheetOpen(false)}>
+                    <Link href="/register">Kayıt Ol</Link>
+                  </Button>
+                  </>
+                )}
               </div>
             </nav>
           </SheetContent>

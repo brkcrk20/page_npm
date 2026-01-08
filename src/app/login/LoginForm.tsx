@@ -15,7 +15,10 @@ import {
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { Checkbox } from '@/components/ui/checkbox';
-import React from 'react';
+import React, from 'react';
+import { useAuth } from '@/firebase';
+import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Geçerli bir e-posta adresi girin.' }),
@@ -24,6 +27,9 @@ const formSchema = z.object({
 });
 
 export function LoginForm() {
+  const auth = useAuth();
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,13 +40,13 @@ export function LoginForm() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    // TODO: Implement login logic
+    initiateEmailSignIn(auth, values.email, values.password);
+    router.push('/');
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" id="login-form" noValidate>
         <FormField
           control={form.control}
           name="email"
