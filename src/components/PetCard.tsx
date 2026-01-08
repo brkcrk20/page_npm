@@ -4,7 +4,6 @@ import type { Pet } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 interface PetCardProps {
   pet: Pet;
@@ -12,7 +11,7 @@ interface PetCardProps {
 
 export function PetCard({ pet }: PetCardProps) {
   const image = PlaceHolderImages.find((img) => img.id === pet.image);
-  const isSecure = pet.badge === 'Ruhsatlı'; // Example logic for the badge
+  const isSecure = pet.badge === 'Ruhsatlı';
 
   return (
     <Link href={`/listings/${pet.id}`} className="group block">
