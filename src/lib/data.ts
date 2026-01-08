@@ -14,7 +14,7 @@ export type Pet = {
 export type Service = {
   id:string;
   name: string;
-  type: 'Veterinarian' | 'Pet Hotel' | 'Trainer' | 'Groomer' | 'Pet Taxi';
+  type: 'Veterinarian' | 'Pet Hotel' | 'Trainer' | 'Groomer' | 'Pet Taxi' | 'Petshop';
   location: string;
   contact: string;
 };
@@ -153,6 +153,13 @@ export const services: Service[] = [
     type: 'Pet Taxi',
     location: 'Muratpaşa, Antalya',
     contact: '0242 777 88 99',
+  },
+   {
+    id: '9',
+    name: 'MamaDostum Petshop',
+    type: 'Petshop',
+    location: 'Beşiktaş, Istanbul',
+    contact: '0212 111 22 33',
   },
   {
     id: '6',

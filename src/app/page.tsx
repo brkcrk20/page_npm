@@ -20,38 +20,50 @@ import {
   PersonStanding,
   Mail,
   ArrowRight,
+  ShoppingCart,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SearchFilters } from "@/components/SearchFilters";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 const serviceCategories = [
-  { icon: Heart, label: "Sahiplendirme", value: "adoption" },
-  { icon: Stethoscope, label: "Veteriner", value: "vet" },
-  { icon: Building, label: "Pet Oteli", value: "hotel" },
-  { icon: Medal, label: "Eğitmen", value: "trainer" },
-  { icon: Scissors, label: "Pet Kuaför", value: "groomer" },
-  { icon: Car, label: "Pet Taksi", value: "taxi" },
-  { icon: PersonStanding, label: "Gezdirici", value: "walker" },
-  { icon: Mail, label: "Pati Asistanı", value: "assistant" },
+  { icon: Heart, label: "Sahiplendirme", href: "/listings?category=adoption" },
+  { icon: Stethoscope, label: "Veteriner", href: "/services?category=vet" },
+  { icon: Building, label: "Pet Oteli", href: "/services?category=hotel" },
+  { icon: Medal, label: "Eğitmen", href: "/services?category=trainer" },
+  { icon: Scissors, label: "Pet Kuaför", href: "/services?category=groomer" },
+  { icon: ShoppingCart, label: "Petshop", href: "/services?category=petshop" },
+  { icon: Car, label: "Pet Taksi", href: "/services?category=taxi" },
+  { icon: PersonStanding, label: "Gezdirici", href: "/services?category=walker" },
 ];
 
 export default function HomePage() {
+  const activeCategory = 'adoption'; // This could be dynamic based on query params in a real scenario
+
   return (
     <div className="bg-secondary/50">
        <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto">
-          <Tabs defaultValue="adoption" className="w-full pt-4">
-            <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 h-auto">
+           <div className="w-full pt-4">
+            <div className="grid w-full grid-cols-4 md:grid-cols-8 h-auto p-1 bg-muted rounded-md text-muted-foreground">
               {serviceCategories.map((service) => (
-                 <TabsTrigger key={service.value} value={service.value} className="flex flex-col items-center justify-center text-center gap-1 h-auto py-2 px-1">
+                 <Link 
+                    href={service.href} 
+                    key={service.label} 
+                    className={cn(
+                      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-col gap-1 h-auto text-center hover:text-primary",
+                      activeCategory === service.href.split('=')[1] 
+                        ? 'bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))]' 
+                        : ''
+                    )}
+                  >
                     <service.icon className="w-5 h-5 transition-colors" />
                     <span className="text-xs font-medium hidden sm:block">{service.label}</span>
-                </TabsTrigger>
+                </Link>
               ))}
-            </TabsList>
-          </Tabs>
+            </div>
+          </div>
           <SearchFilters />
         </div>
       </div>

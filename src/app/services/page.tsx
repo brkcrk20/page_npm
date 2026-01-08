@@ -5,7 +5,8 @@ import {
   Scissors,
   Car,
   Phone,
-  MapPin
+  MapPin,
+  ShoppingCart
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { services } from "@/lib/data";
@@ -17,6 +18,7 @@ const serviceIcons: { [key: string]: ReactNode } = {
   Trainer: <Medal />,
   Groomer: <Scissors />,
   'Pet Taxi': <Car />,
+  Petshop: <ShoppingCart />,
 };
 
 export default function ServicesPage() {
