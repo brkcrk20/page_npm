@@ -18,7 +18,6 @@ import {
   Scissors,
   Car,
   PersonStanding,
-  Mail,
   ArrowRight,
   ShoppingCart,
 } from "lucide-react";
@@ -125,7 +124,7 @@ export default function HomePage() {
               </Accordion>
             </div>
           </aside>
-          <main className="col-span-3">
+          <main className="col-span-3 space-y-12">
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Yıldızlı İlanlar</h2>
@@ -137,6 +136,21 @@ export default function HomePage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 {pets.slice(0, 6).map((pet) => (
+                  <PetCard key={pet.id} pet={pet} />
+                ))}
+              </div>
+            </div>
+             <div>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Son Yüklenen İlanlar</h2>
+                <Button variant="link" asChild className="text-primary">
+                  <Link href="/listings">
+                    Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                {pets.slice(2, 8).map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
                 ))}
               </div>
