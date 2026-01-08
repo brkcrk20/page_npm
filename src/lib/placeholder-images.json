@@ -62,9 +62,9 @@
     },
     {
       "id": "login-hero",
-      "description": "A person hugging a cat.",
-      "imageUrl": "https://images.unsplash.com/photo-1705040530043-12777d352a11?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxwZXJzb24lMjBjYXR8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "person cat"
+      "description": "A cute toy poodle.",
+      "imageUrl": "https://images.unsplash.com/photo-1625760492002-15adf1fe003e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxUT1klMjBQT09ETEV8ZW58MHx8fHwxNzY3ODYyNTk1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "toy poodle"
     },
     {
       "id": "register-hero",
