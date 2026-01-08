@@ -11,61 +11,14 @@ import {
   Cat,
   Bird,
   Fish,
-  Heart,
-  Stethoscope,
-  Building,
-  Medal,
-  Scissors,
-  Car,
-  PersonStanding,
   ArrowRight,
-  ShoppingCart,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { SearchFilters } from "@/components/SearchFilters";
-import { cn } from "@/lib/utils";
-
-const serviceCategories = [
-  { icon: Heart, label: "Sahiplendirme", href: "/listings?category=adoption" },
-  { icon: Stethoscope, label: "Veteriner", href: "/services?category=vet" },
-  { icon: Building, label: "Pet Oteli", href: "/services?category=hotel" },
-  { icon: Medal, label: "Eğitmen", href: "/services?category=trainer" },
-  { icon: Scissors, label: "Pet Kuaför", href: "/services?category=groomer" },
-  { icon: ShoppingCart, label: "Petshop", href: "/services?category=petshop" },
-  { icon: Car, label: "Pet Taksi", href: "/services?category=taxi" },
-  { icon: PersonStanding, label: "Gezdirici", href: "/services?category=walker" },
-];
 
 export default function HomePage() {
-  const activeCategory = 'adoption'; // This could be dynamic based on query params in a real scenario
-
   return (
     <div className="bg-secondary/50">
-       <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto">
-           <div className="w-full pt-4">
-            <div className="grid w-full grid-cols-4 md:grid-cols-8 h-auto p-1 bg-muted rounded-md text-muted-foreground">
-              {serviceCategories.map((service) => (
-                 <Link 
-                    href={service.href} 
-                    key={service.label} 
-                    className={cn(
-                      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-col gap-1 h-auto text-center hover:text-primary",
-                      activeCategory === service.href.split('=')[1] 
-                        ? 'bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))]' 
-                        : ''
-                    )}
-                  >
-                    <service.icon className="w-5 h-5 transition-colors" />
-                    <span className="text-xs font-medium hidden sm:block">{service.label}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-          <SearchFilters />
-        </div>
-      </div>
       <div className="container mx-auto py-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <aside className="col-span-1">
@@ -134,7 +87,7 @@ export default function HomePage() {
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
                 {pets.slice(0, 8).map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
                 ))}
@@ -149,7 +102,7 @@ export default function HomePage() {
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
                 {pets.slice(2, 6).map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
                 ))}

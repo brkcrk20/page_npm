@@ -1,7 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, Heart, LogOut } from 'lucide-react';
+import {
+  Menu,
+  Heart,
+  LogOut,
+  Stethoscope,
+  Building,
+  Medal,
+  Scissors,
+  Car,
+  PersonStanding,
+  ShoppingCart,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
@@ -16,9 +27,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-
+import { SearchFilters } from '../SearchFilters';
 
 const navLinks = [
   { href: '/listings', label: 'İlanlar' },
@@ -27,21 +38,32 @@ const navLinks = [
   { href: '/guvenlik', label: 'Güvenlik' },
 ];
 
+const serviceCategories = [
+  { icon: Heart, label: 'Sahiplendirme', href: '/listings?category=adoption' },
+  { icon: Stethoscope, label: 'Veteriner', href: '/services?category=vet' },
+  { icon: Building, label: 'Pet Oteli', href: '/services?category=hotel' },
+  { icon: Medal, label: 'Eğitmen', href: '/services?category=trainer' },
+  { icon: Scissors, label: 'Pet Kuaför', href: '/services?category=groomer' },
+  { icon: ShoppingCart, label: 'Petshop', href: '/services?category=petshop' },
+  { icon: Car, label: 'Pet Taksi', href: '/services?category=taxi' },
+  { icon: PersonStanding, label: 'Gezdirici', href: '/services?category=walker' },
+];
+
 export function Header() {
   const pathname = usePathname();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const activeCategory = 'adoption'; // This could be dynamic
 
   const handleLogout = () => {
     signOut(auth);
   };
-  
+
   const getInitials = (email?: string | null) => {
     if (!email) return 'U';
     return email.charAt(0).toUpperCase();
-  }
-
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
@@ -72,7 +94,7 @@ export function Header() {
           {!isUserLoading && (
             <>
               {user ? (
-                 <DropdownMenu>
+                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-9 w-9">
@@ -104,7 +126,7 @@ export function Header() {
           )}
 
           <Button asChild>
-            <Link href={user ? "/listings/new" : "/login"}>İlan Ver</Link>
+            <Link href={user ? '/listings/new' : '/login'}>İlan Ver</Link>
           </Button>
         </div>
 
@@ -131,27 +153,51 @@ export function Header() {
                 </Link>
               ))}
               <div className="border-t pt-4 flex flex-col space-y-2">
-                 <Button asChild onClick={() => setSheetOpen(false)}>
-                    <Link href={user ? "/listings/new" : "/login"}>İlan Ver</Link>
-                  </Button>
+                <Button asChild onClick={() => setSheetOpen(false)}>
+                  <Link href={user ? '/listings/new' : '/login'}>İlan Ver</Link>
+                </Button>
                 {user ? (
-                   <Button variant="outline" onClick={() => {handleLogout(); setSheetOpen(false);}}>
+                  <Button variant="outline" onClick={() => { handleLogout(); setSheetOpen(false); }}>
                     Çıkış Yap
                   </Button>
-                ): (
+                ) : (
                   <>
-                  <Button variant="outline" asChild onClick={() => setSheetOpen(false)}>
-                    <Link href="/login">Giriş Yap</Link>
-                  </Button>
-                  <Button variant="secondary" asChild onClick={() => setSheetOpen(false)}>
-                    <Link href="/register">Kayıt Ol</Link>
-                  </Button>
+                    <Button variant="outline" asChild onClick={() => setSheetOpen(false)}>
+                      <Link href="/login">Giriş Yap</Link>
+                    </Button>
+                    <Button variant="secondary" asChild onClick={() => setSheetOpen(false)}>
+                      <Link href="/register">Kayıt Ol</Link>
+                    </Button>
                   </>
                 )}
               </div>
             </nav>
           </SheetContent>
         </Sheet>
+      </div>
+      <div className="bg-white shadow-sm border-b">
+        <div className="container mx-auto">
+          <div className="w-full pt-4">
+            <div className="grid w-full grid-cols-4 md:grid-cols-8 h-auto p-1 bg-muted rounded-md text-muted-foreground">
+              {serviceCategories.map((service) => (
+                <Link
+                  href={service.href}
+                  key={service.label}
+                  className={cn(
+                    'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-col gap-1 h-auto text-center hover:text-primary',
+                    activeCategory === service.href.split('=')[1]
+                      ? 'bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))]'
+                      : ''
+                  )}
+                >
+                  <service.icon className="w-5 h-5 transition-colors" />
+                  <span className="text-xs font-medium hidden sm:block">{service.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+          <SearchFilters />
+        </div>
       </div>
     </header>
   );
