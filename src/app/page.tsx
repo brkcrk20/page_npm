@@ -41,6 +41,18 @@ export default function HomePage() {
     <div className="bg-secondary/50">
       <div className="container mx-auto py-4">
         <SearchFilters />
+        <div className="bg-white rounded-lg shadow-sm mb-8">
+              <div className="grid grid-cols-4 sm:grid-cols-8 gap-4 p-4">
+                {serviceCategories.map((service) => (
+                  <div key={service.label} className="flex flex-col items-center justify-center text-center gap-2">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gray-100 ${service.color}`}>
+                      <service.icon className="w-6 h-6" />
+                    </div>
+                    <span className="text-xs font-medium text-muted-foreground">{service.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <aside className="col-span-1">
             <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -99,19 +111,6 @@ export default function HomePage() {
             </div>
           </aside>
           <main className="col-span-3">
-            <div className="bg-white rounded-lg shadow-sm mb-8">
-              <div className="grid grid-cols-4 sm:grid-cols-8 gap-4 p-4">
-                {serviceCategories.map((service) => (
-                  <div key={service.label} className="flex flex-col items-center justify-center text-center gap-2">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gray-100 ${service.color}`}>
-                      <service.icon className="w-6 h-6" />
-                    </div>
-                    <span className="text-xs font-medium text-muted-foreground">{service.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Yıldızlı İlanlar</h2>
