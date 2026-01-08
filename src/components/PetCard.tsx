@@ -3,7 +3,7 @@ import Link from 'next/link';
 import type { Pet } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardContent } from '@/components/ui/card';
-import { MapPin } from 'lucide-react';
+import { MapPin, ShieldCheck } from 'lucide-react';
 
 interface PetCardProps {
   pet: Pet;
@@ -16,14 +16,22 @@ export function PetCard({ pet }: PetCardProps) {
   return (
     <Link href={`/listings/${pet.id}`} className="group block">
       <Card className="flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-xl bg-white h-full border-orange-200 hover:border-primary">
-        <div className="relative">
-          <div className="aspect-[4/3] w-full overflow-hidden">
+        <div className="relative overflow-hidden">
+          {isSecure && (
+            <div className="absolute top-0 left-0 z-10">
+              <div className="absolute top-2 -left-8 transform -rotate-45 bg-red-600 text-center text-white font-semibold py-1 w-32">
+                <ShieldCheck className="w-4 h-4 inline-block mr-1" />
+                Güvenli
+              </div>
+            </div>
+          )}
+          <div className="aspect-square w-full overflow-hidden">
             {image ? (
               <Image
                 src={image.imageUrl}
                 alt={pet.name}
                 width={600}
-                height={450}
+                height={600}
                 className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-110"
                 data-ai-hint={image.imageHint}
               />
@@ -33,14 +41,6 @@ export function PetCard({ pet }: PetCardProps) {
               </div>
             )}
           </div>
-          {isSecure && (
-             <div className="absolute top-0 right-0 z-10">
-                <div className="relative py-1 px-4 bg-red-600 text-white text-xs font-bold uppercase -mr-2 mt-2">
-                    GÜVENLİ ÜYE
-                    <div className="absolute top-full right-0 w-0 h-0 border-t-8 border-t-red-800 border-l-8 border-l-transparent"></div>
-                </div>
-            </div>
-          )}
         </div>
         <CardContent className="p-3 flex-grow flex flex-col justify-between">
           <div>
