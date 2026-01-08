@@ -107,6 +107,12 @@
       "description": "A well-stocked pet shop aisle.",
       "imageUrl": "https://images.unsplash.com/photo-1522278998341-b5f6c88eb7da?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXQlMjBzaG9wfGVufDB8fHx8MTc2ODI3MjQwMHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "pet shop"
+    },
+    {
+      "id": "pet-taxi-hero",
+      "description": "A dog looking out of a car window.",
+      "imageUrl": "https://images.unsplash.com/photo-1519592317156-7125c5d24af2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxkb2clMjBjYXJ8ZW58MHx8fHwxNzY3ODcxODk2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dog car"
     }
   ]
 }

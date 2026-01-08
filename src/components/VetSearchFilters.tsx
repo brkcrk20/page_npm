@@ -12,7 +12,7 @@ import {
 import { Search } from 'lucide-react';
 
 interface VetSearchFiltersProps {
-  pageType: 'vet' | 'hotel' | 'trainer' | 'groomer' | 'petshop';
+  pageType: 'vet' | 'hotel' | 'trainer' | 'groomer' | 'petshop' | 'pet_taksi';
 }
 
 export function VetSearchFilters({ pageType }: VetSearchFiltersProps) {
@@ -71,6 +71,17 @@ export function VetSearchFilters({ pageType }: VetSearchFiltersProps) {
         { value: 'oyuncak', label: 'Oyuncaklar' },
         { value: 'aksesuar', label: 'Aksesuarlar' },
         { value: 'bakim', label: 'Bakım Ürünleri' },
+      ],
+    },
+    pet_taksi: {
+      placeholder: "Firma adı veya rota...",
+      servicesPlaceholder: "Tüm Seçenekler",
+      buttonText: "Taksi Bul",
+      services: [
+        { value: 'acil', label: '7/24 Hizmet' },
+        { value: 'sehirlerarasi', label: 'Şehirlerarası' },
+        { value: 'klimali', label: 'Klimalı Araç' },
+        { value: 'buyuk-kopek', label: 'Büyük Köpek Kabulü' },
       ],
     }
   };

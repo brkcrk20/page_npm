@@ -34,7 +34,6 @@ import { VetSearchFilters } from '../VetSearchFilters';
 
 const navLinks = [
   { href: '/', label: 'İlanlar' },
-  { href: '/services', label: 'Hizmetler' },
   { href: '/blog', label: 'Blog' },
   { href: '/guvenlik', label: 'Güvenlik' },
 ];
@@ -46,7 +45,7 @@ const serviceCategories = [
   { icon: Award, label: 'Eğitmen', href: '/egitmen' },
   { icon: Scissors, label: 'Pet Kuaför', href: '/pet_kuafor' },
   { icon: ShoppingCart, label: 'Petshop', href: '/petshop' },
-  { icon: Car, label: 'Pet Taksi', href: '/services?category=Pet%20Taxi' },
+  { icon: Car, label: 'Pet Taksi', href: '/pet_taksi' },
   { icon: PersonStanding, label: 'Gezdirici', href: '/services?category=Walker' },
 ];
 
@@ -83,6 +82,9 @@ function HeaderContent() {
     }
     if (pathname === '/petshop') {
       return <VetSearchFilters pageType="petshop" />;
+    }
+    if (pathname === '/pet_taksi') {
+      return <VetSearchFilters pageType="pet_taksi" />;
     }
     return <SearchFilters />;
   };
