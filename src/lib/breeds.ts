@@ -96,10 +96,22 @@ export const allBirdBreeds = [
 
 export const allAquariumBreeds = [
     "Japon Balığı",
+    "Lepistes",
+    "Beta",
+    "Melek Balığı",
+    "Ciklet",
+    "Vatoz",
+    "Neon Tetra",
+    "Discus",
+    "Moli",
+    "Kılıçkuyruk",
+    "Karides"
 ];
 
 export const allOtherBreeds = [
     "Hamster",
     "Tavşan",
-    "Guineapig"
+    "Guineapig",
+    "Kaplumbağa",
+    "Iguana"
 ];
