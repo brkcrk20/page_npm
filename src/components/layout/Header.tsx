@@ -39,14 +39,14 @@ const navLinks = [
 ];
 
 const serviceCategories = [
-  { icon: Heart, label: 'Sahiplendirme', href: '/listings?category=adoption' },
-  { icon: Stethoscope, label: 'Veteriner', href: '/services?category=vet' },
-  { icon: Building, label: 'Pet Oteli', href: '/services?category=hotel' },
-  { icon: Medal, label: 'Eğitmen', href: '/services?category=trainer' },
-  { icon: Scissors, label: 'Pet Kuaför', href: '/services?category=groomer' },
-  { icon: ShoppingCart, label: 'Petshop', href: '/services?category=petshop' },
-  { icon: Car, label: 'Pet Taksi', href: '/services?category=taxi' },
-  { icon: PersonStanding, label: 'Gezdirici', href: '/services?category=walker' },
+  { icon: Heart, label: 'Sahiplendirme', href: '/listings' },
+  { icon: Stethoscope, label: 'Veteriner', href: '/services?category=Veterinarian' },
+  { icon: Building, label: 'Pet Oteli', href: '/services?category=Pet%20Hotel' },
+  { icon: Medal, label: 'Eğitmen', href: '/services?category=Trainer' },
+  { icon: Scissors, label: 'Pet Kuaför', href: '/services?category=Groomer' },
+  { icon: ShoppingCart, label: 'Petshop', href: '/services?category=Petshop' },
+  { icon: Car, label: 'Pet Taksi', href: '/services?category=Pet%20Taxi' },
+  { icon: PersonStanding, label: 'Gezdirici', href: '/services?category=Walker' },
 ];
 
 export function Header() {
