@@ -23,11 +23,11 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import React, { useState, useMemo } from 'react';
 import type { Pet } from "@/lib/data";
+import { allDogBreeds, allCatBreeds } from "@/lib/breeds";
 
 type BreedInfo = {
   name: string;
   count: number;
-  image: string;
 };
 
 type CategoryInfo = {
@@ -85,6 +85,11 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
                 </Link>
               </li>
             ))}
+             {filteredBreeds.length === 0 && (
+                <li className="text-center text-sm text-muted-foreground py-4">
+                    Sonuç bulunamadı.
+                </li>
+            )}
           </ul>
         </div>
       </AccordionContent>
@@ -96,24 +101,44 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
 export default function HomePage() {
 
    const categories: CategoryInfo[] = useMemo(() => {
-    const breedsByType = pets.reduce((acc, pet) => {
-      const { type, breed, image } = pet;
-      if (!acc[type]) {
-        acc[type] = {};
-      }
-      if (!acc[type][breed]) {
-        acc[type][breed] = { count: 0, image: image };
-      }
-      acc[type][breed].count++;
-      return acc;
-    }, {} as Record<Pet['type'], Record<string, { count: number; image: string }>>);
+    // 1. Get counts of breeds that are in the pet listings
+    const countsByType = pets.reduce((acc, pet) => {
+        const { type, breed } = pet;
+        if (!acc[type]) acc[type] = {};
+        if (!acc[type][breed]) acc[type][breed] = 0;
+        acc[type][breed]++;
+        return acc;
+    }, {} as Record<Pet['type'], Record<string, number>>);
 
-    const processBreeds = (breedData: Record<string, { count: number; image: string }> | undefined) => {
-      if (!breedData) return [];
-      return Object.entries(breedData)
-        .map(([name, { count, image }]) => ({ name, count, image }))
-        .sort((a, b) => b.count - a.count);
+    // 2. Function to merge static breed list with dynamic counts
+    const processBreeds = (
+      allBreeds: string[], 
+      breedCounts: Record<string, number> | undefined
+    ): BreedInfo[] => {
+      const breedInfo = allBreeds.map(breedName => ({
+        name: breedName,
+        count: breedCounts?.[breedName] || 0,
+      }));
+      // Sort by count descending, then alphabetically
+      return breedInfo.sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        }
+        return a.name.localeCompare(b.name);
+      });
     };
+    
+    // Fallback for breeds in data.ts but not in the static list
+    const otherBreeds = pets
+      .filter(p => p.type === 'Other' || p.type === 'Bird')
+      .reduce((acc, pet) => {
+          if (!acc[pet.breed]) {
+              acc[pet.breed] = 0;
+          }
+          acc[pet.breed]++;
+          return acc;
+      }, {} as Record<string, number>);
+
 
     const allCategories: CategoryInfo[] = [
       {
@@ -121,32 +146,32 @@ export default function HomePage() {
         title: 'Köpekler',
         Icon: Dog,
         color: 'text-orange-500',
-        breeds: processBreeds(breedsByType.Dog),
+        breeds: processBreeds(allDogBreeds, countsByType.Dog),
       },
       {
         type: 'Cat',
         title: 'Kediler',
         Icon: Cat,
         color: 'text-red-400',
-        breeds: processBreeds(breedsByType.Cat),
+        breeds: processBreeds(allCatBreeds, countsByType.Cat),
       },
       {
         type: 'Bird',
         title: 'Kuşlar',
         Icon: Bird,
         color: 'text-sky-400',
-        breeds: processBreeds(breedsByType.Bird),
+        breeds: processBreeds(Object.keys(pets.filter(p => p.type === 'Bird').reduce((acc, p) => ({...acc, [p.breed]: 1}), {})), countsByType.Bird),
       },
       {
         type: 'Other',
         title: 'Diğer',
         Icon: Fish,
         color: 'text-blue-400',
-        breeds: processBreeds(breedsByType.Other),
+        breeds: processBreeds(Object.keys(pets.filter(p => p.type === 'Other').reduce((acc, p) => ({...acc, [p.breed]: 1}), {})), countsByType.Other),
       },
     ];
 
-    return allCategories.filter(c => c.breeds.length > 0);
+    return allCategories;
   }, []);
 
   return (
