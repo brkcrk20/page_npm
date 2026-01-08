@@ -1,3 +1,6 @@
+
+'use client';
+
 import { PetCard } from "@/components/PetCard";
 import { pets } from "@/lib/data";
 import {
@@ -12,68 +15,139 @@ import {
   Bird,
   Fish,
   ArrowRight,
+  Search
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Image from "next/image";
+import React, { useState, useMemo } from 'react';
+
+type BreedInfo = {
+  name: string;
+  count: number;
+  image: string;
+};
+
+type CategoryInfo = {
+  type: 'Dog' | 'Cat' | 'Bird' | 'Other';
+  breeds: BreedInfo[];
+  Icon: React.ElementType;
+  color: string;
+  title: string;
+};
+
+const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredBreeds = category.breeds.filter(breed =>
+    breed.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <AccordionItem value={category.type.toLowerCase()}>
+      <AccordionTrigger className="font-bold">
+        <div className={`flex items-center gap-2 ${category.color}`}>
+          <category.Icon /> {category.title}
+        </div>
+      </AccordionTrigger>
+      <AccordionContent>
+        <div className="space-y-4 pl-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Cins ara..."
+              className="pl-8 h-9"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <ul className="space-y-3 max-h-60 overflow-y-auto pr-2">
+            {filteredBreeds.map((breed) => (
+              <li key={breed.name}>
+                <Link href="#" className="flex items-center justify-between text-muted-foreground hover:text-primary group">
+                  <div className="flex items-center gap-3">
+                     <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                       <Image 
+                         src={`https://picsum.photos/seed/${breed.name.replace(/\s/g, '-')}/40/40`} 
+                         alt={breed.name}
+                         fill
+                         className="object-cover"
+                       />
+                     </div>
+                     <span className="text-sm font-medium group-hover:underline">{breed.name}</span>
+                  </div>
+                  <span className="text-xs bg-secondary group-hover:bg-primary/20 text-secondary-foreground group-hover:text-primary font-semibold px-2 py-0.5 rounded-full">
+                    {breed.count}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </AccordionContent>
+    </AccordionItem>
+  );
+};
+
 
 export default function HomePage() {
+
+   const categories: CategoryInfo[] = useMemo(() => {
+    const breedsByType = pets.reduce((acc, pet) => {
+      if (!acc[pet.type]) {
+        acc[pet.type] = {};
+      }
+      if (!acc[pet.type][pet.breed]) {
+        acc[pet.type][pet.breed] = { count: 0, image: pet.image };
+      }
+      acc[pet.type][pet.breed].count++;
+      return acc;
+    }, {} as Record<string, Record<string, { count: number; image: string }>>);
+
+    return [
+      {
+        type: 'Dog',
+        title: 'Köpekler',
+        Icon: Dog,
+        color: 'text-orange-500',
+        breeds: Object.entries(breedsByType['Dog'] || {}).map(([name, { count, image }]) => ({ name, count, image })),
+      },
+      {
+        type: 'Cat',
+        title: 'Kediler',
+        Icon: Cat,
+        color: 'text-red-400',
+        breeds: Object.entries(breedsByType['Cat'] || {}).map(([name, { count, image }]) => ({ name, count, image })),
+      },
+      {
+        type: 'Bird',
+        title: 'Kuşlar',
+        Icon: Bird,
+        color: 'text-sky-400',
+        breeds: Object.entries(breedsByType['Bird'] || {}).map(([name, { count, image }]) => ({ name, count, image })),
+      },
+      {
+        type: 'Other',
+        title: 'Balıklar',
+        Icon: Fish,
+        color: 'text-blue-400',
+        breeds: Object.entries(breedsByType['Other'] || {}).map(([name, { count, image }]) => ({ name, count, image })),
+      },
+    ].filter(c => c.breeds.length > 0);
+  }, []);
+
   return (
     <div className="bg-secondary/50">
       <div className="container mx-auto py-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <aside className="col-span-1">
             <div className="bg-white p-4 rounded-lg shadow-sm">
-              <Accordion type="multiple" defaultValue={["dogs", "cats"]}>
-                <AccordionItem value="dogs">
-                  <AccordionTrigger className="font-bold">
-                    <div className="flex items-center gap-2">
-                      <Dog className="text-orange-500" /> Köpekler
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <ul className="space-y-2 pl-4">
-                      <li><Link href="#" className="text-muted-foreground hover:text-primary">Fransız Bulldog</Link></li>
-                      <li><Link href="#" className="text-muted-foreground hover:text-primary">Golden Retriever</Link></li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="cats">
-                  <AccordionTrigger className="font-bold">
-                    <div className="flex items-center gap-2">
-                      <Cat className="text-red-400" /> Kediler
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                     <ul className="space-y-2 pl-4">
-                      <li><Link href="#" className="text-muted-foreground hover:text-primary">Scottish Fold</Link></li>
-                      <li><Link href="#" className="text-muted-foreground hover:text-primary">Tekir</Link></li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="birds">
-                  <AccordionTrigger className="font-bold">
-                    <div className="flex items-center gap-2">
-                      <Bird className="text-sky-400" /> Kuşlar
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                     <ul className="space-y-2 pl-4">
-                      <li><Link href="#" className="text-muted-foreground hover:text-primary">Muhabbet Kuşu</Link></li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="fish">
-                  <AccordionTrigger className="font-bold">
-                    <div className="flex items-center gap-2">
-                      <Fish className="text-blue-400" /> Balıklar
-                    </div>
-                  </AccordionTrigger>
-                   <AccordionContent>
-                     <ul className="space-y-2 pl-4">
-                      <li><Link href="#" className="text-muted-foreground hover:text-primary">Japon Balığı</Link></li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
+              <Accordion type="multiple" defaultValue={["dog", "cat"]}>
+                 {categories.map((cat) => (
+                    <CategoryFilter key={cat.type} category={cat} />
+                 ))}
               </Accordion>
             </div>
           </aside>
@@ -82,7 +156,7 @@ export default function HomePage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Yıldızlı İlanlar</h2>
                 <Button variant="link" asChild className="text-primary">
-                  <Link href="/listings">
+                  <Link href="/">
                     Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
                   </Link>
                 </Button>
@@ -97,7 +171,7 @@ export default function HomePage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Son Yüklenen İlanlar</h2>
                 <Button variant="link" asChild className="text-primary">
-                  <Link href="/listings">
+                  <Link href="/">
                     Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
                   </Link>
                 </Button>
