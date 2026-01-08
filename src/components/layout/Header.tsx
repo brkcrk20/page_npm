@@ -12,6 +12,7 @@ import {
   Car,
   PersonStanding,
   ShoppingCart,
+  HeartHandshake,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -40,6 +41,7 @@ const navLinks = [
 
 const serviceCategories = [
   { icon: Heart, label: 'Sahiplendirme', href: '/' },
+  { icon: HeartHandshake, label: 'Eş Arayanlar', href: '/es-arayanlar' },
   { icon: Stethoscope, label: 'Veteriner', href: '/veteriner' },
   { icon: Building, label: 'Pet Oteli', href: '/pet-oteli' },
   { icon: Award, label: 'Eğitmen', href: '/egitmen' },
@@ -87,6 +89,9 @@ function HeaderContent() {
     }
     if (pathname === '/gezdirici') {
       return <VetSearchFilters pageType="walker" />;
+    }
+    if (pathname === '/es-arayanlar') {
+      return <SearchFilters />;
     }
     return <SearchFilters />;
   };
@@ -208,7 +213,7 @@ function HeaderContent() {
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto">
           <div className="w-full pt-4">
-            <div className="grid w-full grid-cols-4 md:grid-cols-8 h-auto p-1 bg-muted rounded-md text-muted-foreground">
+            <div className="grid w-full grid-cols-5 md:grid-cols-9 h-auto p-1 bg-muted rounded-md text-muted-foreground">
               {serviceCategories.map((service) => {
                 const isActive = pathname === service.href;
 
