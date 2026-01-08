@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Toaster } from '@/components/ui/toaster';
+import { SearchFilters } from '@/components/SearchFilters';
 
 export const metadata: Metadata = {
   title: 'PatiBul Global - Find Your Best Friend',
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
         <div className="relative flex min-h-dvh flex-col">
           <Header />
+          <SearchFilters />
           <main className="flex-1">{children}</main>
           <Footer />
         </div>

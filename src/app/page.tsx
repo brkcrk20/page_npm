@@ -1,6 +1,5 @@
 import { PetCard } from "@/components/PetCard";
 import { pets } from "@/lib/data";
-import { SearchFilters } from "@/components/SearchFilters";
 import {
   Accordion,
   AccordionContent,
@@ -40,7 +39,6 @@ export default function HomePage() {
   return (
     <div className="bg-secondary/50">
       <div className="container mx-auto py-4">
-        <SearchFilters />
         <div className="bg-white rounded-lg shadow-sm mb-8">
               <div className="grid grid-cols-4 sm:grid-cols-8 gap-4 p-4">
                 {serviceCategories.map((service) => (
