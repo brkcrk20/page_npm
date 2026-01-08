@@ -56,7 +56,6 @@ function HeaderContent() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   
-  const currentCategory = searchParams.get('category');
 
   const handleLogout = () => {
     signOut(auth);
@@ -94,13 +93,13 @@ function HeaderContent() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-white">
+      <header className="sticky top-0 z-50 w-full border-b bg-primary text-primary-foreground">
         <div className="container flex h-16 items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <div className="bg-primary p-1 rounded-md">
-              <Heart className="h-6 w-6 text-primary-foreground fill-white" />
+            <div className="bg-white p-1 rounded-md">
+              <Heart className="h-6 w-6 text-primary fill-primary" />
             </div>
-            <span className="font-bold text-xl text-primary">PatibulGlobal</span>
+            <span className="font-bold text-xl">PatibulGlobal</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
@@ -109,8 +108,8 @@ function HeaderContent() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  'transition-colors hover:text-primary',
-                  pathname === link.href ? 'text-primary' : 'text-muted-foreground'
+                  'transition-colors hover:text-white/80',
+                  pathname === link.href ? 'text-white font-semibold' : 'text-primary-foreground/80'
                 )}
               >
                 {link.label}
@@ -124,10 +123,10 @@ function HeaderContent() {
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-white/20">
                         <Avatar className="h-9 w-9">
                           <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-                          <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+                          <AvatarFallback className="bg-primary-foreground text-primary">{getInitials(user.email)}</AvatarFallback>
                         </Avatar>
                       </Button>
                     </DropdownMenuTrigger>
@@ -148,19 +147,21 @@ function HeaderContent() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary hidden md:inline-flex">Giriş</Link>
+                  <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white hidden md:inline-flex">
+                    <Link href="/login" className="text-sm font-medium">Giriş</Link>
+                  </Button>
                 )}
               </>
             )}
 
-            <Button asChild>
+            <Button asChild variant="secondary">
               <Link href={user ? '/listings/new' : '/login'}>İlan Ver</Link>
             </Button>
           </div>
 
           <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" className="md:hidden">
+              <Button variant="ghost" className="md:hidden hover:bg-white/20">
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle Menu</span>
               </Button>
