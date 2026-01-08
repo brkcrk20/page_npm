@@ -24,16 +24,17 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SearchFilters } from "@/components/SearchFilters";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const serviceCategories = [
-  { icon: Heart, label: "Sahiplendirme", color: "text-red-500" },
-  { icon: Stethoscope, label: "Veteriner", color: "text-blue-500" },
-  { icon: Building, label: "Pet Oteli", color: "text-yellow-500" },
-  { icon: Medal, label: "Eğitmen", color: "text-green-500" },
-  { icon: Scissors, label: "Pet Kuaför", color: "text-purple-500" },
-  { icon: Car, label: "Pet Taksi", color: "text-indigo-500" },
-  { icon: PersonStanding, label: "Gezdirici", color: "text-cyan-500" },
-  { icon: Mail, label: "Pati Asistanı", color: "text-pink-500" },
+  { icon: Heart, label: "Sahiplendirme", value: "adoption" },
+  { icon: Stethoscope, label: "Veteriner", value: "vet" },
+  { icon: Building, label: "Pet Oteli", value: "hotel" },
+  { icon: Medal, label: "Eğitmen", value: "trainer" },
+  { icon: Scissors, label: "Pet Kuaför", value: "groomer" },
+  { icon: Car, label: "Pet Taksi", value: "taxi" },
+  { icon: PersonStanding, label: "Gezdirici", value: "walker" },
+  { icon: Mail, label: "Pati Asistanı", value: "assistant" },
 ];
 
 export default function HomePage() {
@@ -41,17 +42,17 @@ export default function HomePage() {
     <div className="bg-secondary/50">
        <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto">
+          <Tabs defaultValue="adoption" className="w-full pt-4">
+            <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 h-auto">
+              {serviceCategories.map((service) => (
+                 <TabsTrigger key={service.value} value={service.value} className="flex flex-col items-center justify-center text-center gap-2 h-auto py-2 px-1">
+                    <service.icon className="w-5 h-5" />
+                    <span className="text-xs font-medium hidden sm:block">{service.label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
           <SearchFilters />
-          <div className="grid grid-cols-4 sm:grid-cols-8 gap-4 p-4">
-            {serviceCategories.map((service) => (
-              <div key={service.label} className="flex flex-col items-center justify-center text-center gap-2">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gray-100 ${service.color}`}>
-                  <service.icon className="w-6 h-6" />
-                </div>
-                <span className="text-xs font-medium text-muted-foreground">{service.label}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
       <div className="container mx-auto py-4">
