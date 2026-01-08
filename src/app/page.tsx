@@ -135,15 +135,10 @@ export default function HomePage() {
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
-                {pets.slice(0, 5).map((pet) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                {pets.slice(0, 6).map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
                 ))}
-              </div>
-            </div>
-             <div className="mt-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
-                 <PetCard key={pets[6].id} pet={pets[6]} />
               </div>
             </div>
           </main>
