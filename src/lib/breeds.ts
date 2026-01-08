@@ -67,6 +67,7 @@ export const allDogBreeds = [
 export const allCatBreeds = [
   'British Shorthair',
   'Scottish Fold',
+  'Tekir',
   'British Longhair',
   'Maine Coon',
   'Sfenks Kedisi',
@@ -79,7 +80,6 @@ export const allCatBreeds = [
   'Munchkin Kedisi',
   'Ragdoll Kedisi',
   'Sarman Kedi',
-  'Tekir',
   'Siyam',
   'Van Kedisi'
 ];
@@ -94,8 +94,11 @@ export const allBirdBreeds = [
     "Forpus Papağanı"
 ];
 
-export const allOtherBreeds = [
+export const allAquariumBreeds = [
     "Japon Balığı",
+];
+
+export const allOtherBreeds = [
     "Hamster",
     "Tavşan",
     "Guineapig"

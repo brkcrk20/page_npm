@@ -15,7 +15,8 @@ import {
   Bird,
   Fish,
   ArrowRight,
-  Search
+  Search,
+  PawPrint
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import React, { useState, useMemo } from 'react';
 import type { Pet } from "@/lib/data";
-import { allDogBreeds, allCatBreeds, allBirdBreeds, allOtherBreeds } from "@/lib/breeds";
+import { allDogBreeds, allCatBreeds, allBirdBreeds, allAquariumBreeds, allOtherBreeds } from "@/lib/breeds";
 
 type BreedInfo = {
   name: string;
@@ -31,7 +32,7 @@ type BreedInfo = {
 };
 
 type CategoryInfo = {
-  type: 'Dog' | 'Cat' | 'Bird' | 'Other';
+  type: 'Dog' | 'Cat' | 'Bird' | 'Aquarium' | 'Other';
   breeds: BreedInfo[];
   Icon: React.ElementType;
   color: string;
@@ -151,10 +152,17 @@ export default function HomePage() {
         breeds: processBreeds(allBirdBreeds, countsByType.Bird),
       },
       {
-        type: 'Other',
-        title: 'Diğer',
+        type: 'Aquarium',
+        title: 'Akvaryum Canlıları',
         Icon: Fish,
         color: 'text-blue-400',
+        breeds: processBreeds(allAquariumBreeds, countsByType.Aquarium),
+      },
+       {
+        type: 'Other',
+        title: 'Diğer',
+        Icon: PawPrint,
+        color: 'text-emerald-500',
         breeds: processBreeds(allOtherBreeds, countsByType.Other),
       },
     ];

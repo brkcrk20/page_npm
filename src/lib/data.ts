@@ -1,7 +1,7 @@
 export type Pet = {
   id: string;
   name: string;
-  type: 'Dog' | 'Cat' | 'Bird' | 'Other';
+  type: 'Dog' | 'Cat' | 'Bird' | 'Aquarium' | 'Other';
   breed: string;
   age: string;
   location: string;
@@ -107,7 +107,7 @@ export const pets: Pet[] = [
   {
     id: '6',
     name: 'Nemo',
-    type: 'Other',
+    type: 'Aquarium',
     breed: 'Japon Balığı',
     age: '1 year',
     location: 'Antalya',
