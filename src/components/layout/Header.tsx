@@ -224,7 +224,7 @@ const HeaderContent = React.memo(function HeaderContent() {
       </header>
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto">
-          <div className="w-full pt-2 pb-2">
+          <div className="w-full pt-2">
             <div className="grid w-full grid-cols-5 md:grid-cols-9 h-auto p-1 bg-muted rounded-md text-muted-foreground">
               {serviceCategories.map((service) => {
                 const isActive = pathname === service.href;
