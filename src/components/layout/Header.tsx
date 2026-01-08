@@ -13,6 +13,7 @@ import {
   PersonStanding,
   ShoppingCart,
   HeartHandshake,
+  UserPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -152,9 +153,17 @@ function HeaderContent() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white hidden md:inline-flex">
-                    <Link href="/login" className="text-sm font-medium">Giriş</Link>
-                  </Button>
+                   <div className="hidden md:flex items-center space-x-2">
+                      <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white">
+                        <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
+                      </Button>
+                      <Button variant="outline" asChild className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-white/20 hover:text-white">
+                        <Link href="/register">
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Kayıt Ol
+                        </Link>
+                      </Button>
+                   </div>
                 )}
               </>
             )}
