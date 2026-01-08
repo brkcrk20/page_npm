@@ -260,9 +260,6 @@ export default function HomePage() {
                                 <p className="text-base text-muted-foreground leading-relaxed">
                                     {post.excerpt}
                                 </p>
-                                <Button asChild size="sm" className="mt-6">
-                                    <Link href="#">Devamını Oku <ArrowRight className="ml-1 w-4 h-4" /></Link>
-                                </Button>
                             </CardContent>
                         </Card>
                     ))}
