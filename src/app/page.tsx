@@ -26,7 +26,7 @@ import Image from "next/image";
 import React, { useState, useMemo } from 'react';
 import type { Pet } from "@/lib/data";
 import { allDogBreeds, allCatBreeds, allBirdBreeds, allAquariumBreeds, allOtherBreeds } from "@/lib/breeds";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 type BreedInfo = {
@@ -236,31 +236,37 @@ export default function HomePage() {
               </div>
             </div>
              <div>
-              <div className="flex justify-between items-center mb-4">
-                 <div className="flex items-center gap-2">
-                   <BookText className="w-6 h-6" />
-                   <h2 className="text-2xl font-bold">PatiBul Blog</h2>
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-2">
+                        <BookText className="w-6 h-6" />
+                        <h2 className="text-2xl font-bold">PatiBul Blog</h2>
+                    </div>
+                    <Button variant="link" asChild className="text-primary">
+                        <Link href="/blog">
+                        Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
+                        </Link>
+                    </Button>
                 </div>
-                <Button variant="link" asChild className="text-primary">
-                  <Link href="/blog">
-                    Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
-                  </Link>
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {blogPosts.map((post) => (
-                  <Card key={post.id} className="overflow-hidden group transition-shadow hover:shadow-xl flex flex-col">
-                     <CardContent className="p-6 flex flex-col flex-grow">
-                        <Badge variant="secondary" className="mb-2 self-start">{post.category}</Badge>
-                        <h3 className="text-lg font-bold font-headline leading-tight mb-2 group-hover:text-primary transition-colors">{post.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-4 flex-grow">{post.excerpt}</p>
-                        <Button asChild size="sm" className="mt-auto self-start">
-                            <Link href="#">Devamını Oku <ArrowRight className="ml-1 w-4 h-4" /></Link>
-                        </Button>
-                     </CardContent>
-                  </Card>
-                ))}
-              </div>
+                <div className="space-y-8">
+                    {blogPosts.map((post) => (
+                        <Card key={post.id} className="overflow-hidden">
+                            <CardHeader>
+                                <Badge variant="secondary" className="mb-2 self-start">{post.category}</Badge>
+                                <h3 className="text-2xl font-bold font-headline leading-tight text-primary">
+                                    {post.title}
+                                </h3>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-base text-muted-foreground leading-relaxed">
+                                    {post.excerpt}
+                                </p>
+                                <Button asChild size="sm" className="mt-6">
+                                    <Link href="#">Devamını Oku <ArrowRight className="ml-1 w-4 h-4" /></Link>
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
             </div>
           </main>
         </div>
