@@ -155,7 +155,7 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <aside className="col-span-1">
             <div className="bg-white p-4 rounded-lg shadow-sm">
-              <Accordion type="multiple" defaultValue={["dog", "cat"]}>
+              <Accordion type="multiple" defaultValue={["dog", "cat"]} className="w-full">
                  {categories.map((cat) => (
                     <CategoryFilter key={cat.type} category={cat} />
                  ))}
