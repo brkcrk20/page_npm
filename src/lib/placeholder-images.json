@@ -83,6 +83,12 @@
       "description": "A veterinarian checking a dog's heartbeat with a stethoscope.",
       "imageUrl": "https://images.unsplash.com/photo-1583268884394-11a3b110a28c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx2ZXRlcmluYXJpYW4lMjBwZXR8ZW58MHx8fHwxNzY4MDI0NDExfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "veterinarian pet"
+    },
+    {
+      "id": "pethotel-hero",
+      "description": "A dog relaxing in a pet hotel.",
+      "imageUrl": "https://images.unsplash.com/photo-1579227576924-91a58e3532ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXQlMjBob3RlbHxlbnwwfHx8fDE3NjgyNzI0MDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pet hotel"
     }
   ]
 }

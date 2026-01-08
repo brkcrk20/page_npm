@@ -42,7 +42,7 @@ const navLinks = [
 const serviceCategories = [
   { icon: Heart, label: 'Sahiplendirme', href: '/' },
   { icon: Stethoscope, label: 'Veteriner', href: '/veteriner' },
-  { icon: Building, label: 'Pet Oteli', href: '/services?category=Pet%20Hotel' },
+  { icon: Building, label: 'Pet Oteli', href: '/pet-oteli' },
   { icon: Medal, label: 'Eğitmen', href: '/services?category=Trainer' },
   { icon: Scissors, label: 'Pet Kuaför', href: '/services?category=Groomer' },
   { icon: ShoppingCart, label: 'Petshop', href: '/services?category=Petshop' },
@@ -188,7 +188,7 @@ export function Header() {
                 const serviceCategoryValue = service.href.split('?category=')[1] ?? '';
                 const isActive = (pathname === '/' && service.href === '/') ||
                                  (pathname === service.href) ||
-                                 (pathname.startsWith('/services') && service.href.startsWith('/services') && currentCategory && decodeURIComponent(serviceCategoryValue) === currentCategory);
+                                 (pathname.startsWith('/services') && service.href.startsWith('/services') && currentCategory && decodeURIComponent(serviceCategoryValue) === currentCategory) || (pathname === '/pet-oteli' && service.href === '/pet-oteli');
 
                 return (
                   <Link
@@ -208,7 +208,7 @@ export function Header() {
               })}
             </div>
           </div>
-          {pathname === '/veteriner' ? <VetSearchFilters /> : <SearchFilters />}
+          {pathname === '/veteriner' || pathname === '/pet-oteli' ? <VetSearchFilters /> : <SearchFilters />}
         </div>
       </div>
     </>
