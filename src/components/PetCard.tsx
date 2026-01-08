@@ -15,12 +15,12 @@ export function PetCard({ pet }: PetCardProps) {
 
   return (
     <Link href={`/listings/${pet.id}`} className="group block">
-      <Card className="flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-xl bg-white h-full border-orange-200 hover:border-primary">
+      <Card className="flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-xl bg-white h-auto border-orange-200 hover:border-primary">
         <div className="relative overflow-hidden">
           {isSecure && (
-            <div className="absolute top-0 left-0 z-10">
-              <div className="absolute top-2 -left-8 transform -rotate-45 bg-red-600 text-center text-white font-semibold py-1 w-32">
-                <ShieldCheck className="w-4 h-4 inline-block mr-1" />
+            <div className="absolute top-0 left-0 z-10 w-32 h-32 overflow-hidden">
+              <div className="absolute top-4 -left-10 transform -rotate-45 bg-red-600 text-center text-white font-semibold py-1 w-40">
+                <ShieldCheck className="w-3 h-3 inline-block mr-1" />
                 Güvenli
               </div>
             </div>
