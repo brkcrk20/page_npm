@@ -1,3 +1,76 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-dog",
+      "description": "A happy dog running on a grassy field.",
+      "imageUrl": "https://images.unsplash.com/photo-1679067652135-324b9535d288?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxoYXBweSUyMGRvZ3xlbnwwfHx8fDE3Njc3OTAzMjV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "happy dog"
+    },
+    {
+      "id": "pet-1",
+      "description": "A golden retriever puppy sitting on the grass.",
+      "imageUrl": "https://images.unsplash.com/photo-1612774412771-005ed8e861d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxnb2xkZW4lMjByZXRyaWV2ZXJ8ZW58MHx8fHwxNzY3NzUwNzk0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "golden retriever"
+    },
+    {
+      "id": "pet-2",
+      "description": "A siamese cat looking at the camera.",
+      "imageUrl": "https://images.unsplash.com/photo-1621446682704-ea3755b8382b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzaWFtZXNlJTIwY2F0fGVufDB8fHx8MTc2NzczODM4Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "siamese cat"
+    },
+    {
+      "id": "pet-3",
+      "description": "A cute bulldog sitting on a wooden floor.",
+      "imageUrl": "https://images.unsplash.com/photo-1625577083736-bbf0488e0f4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Y3V0ZSUyMGJ1bGxkb2d8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cute bulldog"
+    },
+    {
+      "id": "pet-4",
+      "description": "A fluffy British Shorthair cat.",
+      "imageUrl": "https://images.unsplash.com/photo-1645437326286-d54861c8a181?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxicml0aXNoJTIwc2hvcnRoYWlyfGVufDB8fHx8MTc2Nzg2MDY0MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "british shorthair"
+    },
+    {
+      "id": "pet-5",
+      "description": "An adult German Shepherd standing alert.",
+      "imageUrl": "https://images.unsplash.com/photo-1621951714491-3cde56a9cadf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxnZXJtYW4lMjBzaGVwaGVyZHxlbnwwfHx8fDE3Njc4NjA2NDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "german shepherd"
+    },
+    {
+      "id": "pet-6",
+      "description": "A colorful budgerigar bird.",
+      "imageUrl": "https://images.unsplash.com/photo-1583840024136-64e17a1f9c56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxidWRnZXJpZ2FyJTIwYmlyZHxlbnwwfHx8fDE3Njc4NjA2NDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "budgerigar bird"
+    },
+    {
+      "id": "pet-7",
+      "description": "A white Van cat with different colored eyes.",
+      "imageUrl": "https://images.unsplash.com/photo-1722319874112-4624114317ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx2YW4lMjBjYXR8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "van cat"
+    },
+    {
+      "id": "pet-8",
+      "description": "A large Kangal dog.",
+      "imageUrl": "https://images.unsplash.com/photo-1619553204559-2591a051383d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxrYW5nYWwlMjBkb2d8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "kangal dog"
+    },
+    {
+      "id": "login-hero",
+      "description": "A person hugging a cat.",
+      "imageUrl": "https://images.unsplash.com/photo-1705040530043-12777d352a11?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxwZXJzb24lMjBjYXR8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person cat"
+    },
+    {
+      "id": "register-hero",
+      "description": "A person playing with a dog.",
+      "imageUrl": "https://images.unsplash.com/photo-1577447278822-37801be21738?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGVyc29uJTIwZG9nfGVufDB8fHx8MTc2Nzc4MzE1M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person dog"
+    },
+    {
+      "id": "listing-new-hero",
+      "description": "A collection of different pets together.",
+      "imageUrl": "https://images.unsplash.com/photo-1689326464018-7e5ac5b2d9b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXRzJTIwZ3JvdXB8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pets group"
+    }
+  ]
 }
