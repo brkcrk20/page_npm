@@ -196,9 +196,9 @@ function HeaderContent() {
           <div className="w-full pt-4">
             <div className="grid w-full grid-cols-4 md:grid-cols-8 h-auto p-1 bg-muted rounded-md text-muted-foreground">
               {serviceCategories.map((service) => {
-                const serviceCategoryValue = service.href.split('?category=')[1] ?? '';
-                const isActive = (pathname === '/' && service.href === '/') ||
-                                 (pathname === service.href) ||
+                const serviceCategoryValue = service.href.includes('?category=') ? service.href.split('?category=')[1] : '';
+                const isActive = (pathname === service.href) || 
+                                 (pathname === '/' && service.href === '/') ||
                                  (pathname.startsWith('/services') && service.href.startsWith('/services') && currentCategory && decodeURIComponent(serviceCategoryValue) === currentCategory);
 
                 return (

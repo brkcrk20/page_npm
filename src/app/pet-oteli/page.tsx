@@ -14,7 +14,7 @@ import { services } from "@/lib/data";
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { VetSearchFilters } from '@/components/VetSearchFilters'; // We can reuse or create a new one
+import { VetSearchFilters } from '@/components/VetSearchFilters';
 
 export default function PetHotelPage() {
   const petHotelServices = services.filter(s => s.type === 'Pet Hotel');
@@ -42,11 +42,6 @@ export default function PetHotelPage() {
       </section>
 
       <div className="container mx-auto py-12">
-        {/* <VetSearchFilters /> Re-using for now, can be customized for hotels */}
-        <div className="my-8">
-            <h2 className="text-2xl font-bold text-center">Öne Çıkan Pet Otelleri</h2>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {petHotelServices.map((service) => (
             <Card key={service.id} className="flex flex-col hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden">
