@@ -51,7 +51,7 @@
     {
       "id": "pet-8",
       "description": "A large Kangal dog.",
-      "imageUrl": "https://images.unsplash.com/photo-1619553204559-2591a051383d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxrYW5nYWwlMjBkb2d8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1619553204559-2591a051383d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxrYW5nYWwlMjBkb2d8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlibrb-4.1.0&q=80&w=1080",
       "imageHint": "kangal dog"
     },
     {
@@ -62,9 +62,9 @@
     },
     {
       "id": "login-hero",
-      "description": "A cute toy poodle.",
-      "imageUrl": "https://images.unsplash.com/photo-1625760492002-15adf1fe003e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxUT1klMjBQT09ETEV8ZW58MHx8fHwxNzY3ODYyNTk1fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "toy poodle"
+      "description": "A person holding a cute cat.",
+      "imageUrl": "https://images.unsplash.com/photo-1591946614720-90a587da4a36?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxQRVR8ZW58MHx8fHwxNzY3ODYyNjYyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pet"
     },
     {
       "id": "register-hero",
@@ -75,7 +75,7 @@
     {
       "id": "listing-new-hero",
       "description": "A collection of different pets together.",
-      "imageUrl": "https://images.unsplash.com/photo-1689326464018-7e5ac5b2d9b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXRzJTIwZ3JvdXB8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1689326464018-7e5ac5b2d9b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXRzJTIwZ3JvdXB8ZW58MHx8fHwxNzY3ODYwNjQxfDA&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "pets group"
     }
   ]
