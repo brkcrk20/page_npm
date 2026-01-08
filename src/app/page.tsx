@@ -249,19 +249,15 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-8">
                     {blogPosts.map((post) => (
-                        <Card key={post.id} className="overflow-hidden">
-                            <CardHeader>
-                                <Badge variant="secondary" className="mb-2 self-start">{post.category}</Badge>
-                                <h3 className="text-2xl font-bold font-headline leading-tight text-primary">
-                                    {post.title}
-                                </h3>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-base text-muted-foreground leading-relaxed">
-                                    {post.excerpt}
-                                </p>
-                            </CardContent>
-                        </Card>
+                        <div key={post.id} className="bg-white p-6 rounded-lg shadow-sm">
+                           <Badge variant="secondary" className="mb-2 self-start">{post.category}</Badge>
+                           <h3 className="text-2xl font-bold font-headline leading-tight text-primary mb-4">
+                               {post.title}
+                           </h3>
+                           <p className="text-base text-muted-foreground leading-relaxed">
+                               {post.excerpt}
+                           </p>
+                       </div>
                     ))}
                 </div>
             </div>
