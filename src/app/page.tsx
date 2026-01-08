@@ -135,7 +135,7 @@ export default function HomePage() {
                 </Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {pets.slice(0, 4).map((pet) => (
+                {pets.slice(0, 8).map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
                 ))}
               </div>
