@@ -12,7 +12,7 @@ import {
 import { Search } from 'lucide-react';
 
 interface VetSearchFiltersProps {
-  pageType: 'vet' | 'hotel' | 'trainer';
+  pageType: 'vet' | 'hotel' | 'trainer' | 'groomer';
 }
 
 export function VetSearchFilters({ pageType }: VetSearchFiltersProps) {
@@ -49,6 +49,17 @@ export function VetSearchFilters({ pageType }: VetSearchFiltersProps) {
         { value: 'davranis', label: 'Davranış Düzeltme' },
         { value: 'grup', label: 'Grup Dersleri' },
         { value: 'koruma', label: 'Koruma Eğitimi' },
+      ],
+    },
+    groomer: {
+      placeholder: "Kuaför adı veya hizmet...",
+      servicesPlaceholder: "Tüm Bakımlar",
+      buttonText: "Kuaför Bul",
+      services: [
+        { value: 'tiras', label: 'Makas Traşı' },
+        { value: 'yikama', label: 'Yıkama & Kurutma' },
+        { value: 'tirnak', label: 'Tırnak Bakımı' },
+        { value: 'goz-kulak', label: 'Göz & Kulak Temizliği' },
       ],
     }
   };

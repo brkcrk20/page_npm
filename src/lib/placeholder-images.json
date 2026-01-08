@@ -27,7 +27,7 @@
     {
       "id": "pet-4",
       "description": "A fluffy British Shorthair cat.",
-      "imageUrl": "https://images.unsplash.com/photo-1645437326286-d54861c8a181?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxicml0aXNoJTIwc2hvcnRoYWlyfGVufDB8fHx8MTc2Nzg2MDY0MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1645437326286-d54861c8a181?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxicml0aXNoJTIwc2hvcnRoYWlyfGVufDB8fHx8MTc2Nzg2MDY0MXww&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "british shorthair"
     },
     {
@@ -39,7 +39,7 @@
     {
       "id": "pet-6",
       "description": "A colorful budgerigar bird.",
-      "imageUrl": "https://images.unsplash.com/photo-1583840024136-64e17a1f9c56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxidWRnZXJpZ2FyJTIwYmlyZHxlbnwwfHx8fDE3Njc4NjA2NDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1583840024136-64e17a1f9c56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxidWRnZXJpZ2FyJTIwYmlyZHxlbnwwfHx8fDE3Njc4NjA2NDF8MA&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "budgerigar bird"
     },
     {
@@ -95,6 +95,12 @@
       "description": "A person training a dog to sit.",
       "imageUrl": "https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxkb2clMjB0cmFpbmluZ3xlbnwwfHx8fDE3NjgyNzI0MDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "dog training"
+    },
+    {
+      "id": "groomer-hero",
+      "description": "A fluffy dog after a grooming session.",
+      "imageUrl": "https://images.unsplash.com/photo-1719464454959-9cf304ef4774?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkb2clMjBncm9vbWluZ3xlbnwwfHx8fDE3Njc4NjkxOTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dog grooming"
     }
   ]
 }

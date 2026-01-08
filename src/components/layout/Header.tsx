@@ -44,7 +44,7 @@ const serviceCategories = [
   { icon: Stethoscope, label: 'Veteriner', href: '/veteriner' },
   { icon: Building, label: 'Pet Oteli', href: '/pet-oteli' },
   { icon: Award, label: 'Eğitmen', href: '/egitmen' },
-  { icon: Scissors, label: 'Pet Kuaför', href: '/services?category=Groomer' },
+  { icon: Scissors, label: 'Pet Kuaför', href: '/pet_kuafor' },
   { icon: ShoppingCart, label: 'Petshop', href: '/services?category=Petshop' },
   { icon: Car, label: 'Pet Taksi', href: '/services?category=Pet%20Taxi' },
   { icon: PersonStanding, label: 'Gezdirici', href: '/services?category=Walker' },
@@ -77,6 +77,9 @@ function HeaderContent() {
     }
     if (pathname === '/egitmen') {
       return <VetSearchFilters pageType="trainer" />;
+    }
+    if (pathname === '/pet_kuafor') {
+      return <VetSearchFilters pageType="groomer" />;
     }
     return <SearchFilters />;
   };
