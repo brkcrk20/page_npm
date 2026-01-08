@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { SearchFilters } from '../SearchFilters';
+import { VetSearchFilters } from '../VetSearchFilters';
 
 const navLinks = [
   { href: '/', label: 'İlanlar' },
@@ -207,7 +208,7 @@ export function Header() {
               })}
             </div>
           </div>
-          <SearchFilters />
+          {pathname === '/veteriner' ? <VetSearchFilters /> : <SearchFilters />}
         </div>
       </div>
     </>
