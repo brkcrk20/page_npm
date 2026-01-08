@@ -27,7 +27,7 @@
     {
       "id": "pet-4",
       "description": "A fluffy British Shorthair cat.",
-      "imageUrl": "https://images.unsplash.com/photo-1645437326286-d54861c8a181?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxicml0aXNoJTIwc2hvcnRoYWlyfGVufDB8fHx8MTc2Nzg2MDY0MXww&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1645437326286-d54861c8a181?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxicml0aXNoJTIwc2hvcnRoYWlyfGVufDB8fHx8MTc2Nzg2MDY0MXww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "british shorthair"
     },
     {
@@ -101,6 +101,12 @@
       "description": "A fluffy dog after a grooming session.",
       "imageUrl": "https://images.unsplash.com/photo-1719464454959-9cf304ef4774?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkb2clMjBncm9vbWluZ3xlbnwwfHx8fDE3Njc4NjkxOTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "dog grooming"
+    },
+    {
+      "id": "petshop-hero",
+      "description": "A well-stocked pet shop aisle.",
+      "imageUrl": "https://images.unsplash.com/photo-1522278998341-b5f6c88eb7da?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXQlMjBzaG9wfGVufDB8fHx8MTc2ODI3MjQwMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pet shop"
     }
   ]
 }
