@@ -16,7 +16,8 @@ import {
   Fish,
   ArrowRight,
   Search,
-  PawPrint
+  PawPrint,
+  BookText
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,8 @@ import Image from "next/image";
 import React, { useState, useMemo } from 'react';
 import type { Pet } from "@/lib/data";
 import { allDogBreeds, allCatBreeds, allBirdBreeds, allAquariumBreeds, allOtherBreeds } from "@/lib/breeds";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 type BreedInfo = {
   name: string;
@@ -97,6 +100,30 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
     </AccordionItem>
   );
 };
+
+const blogPosts = [
+  {
+    id: 1,
+    title: "Köpeğiniz İçin En İyi 5 Yaz Aktivitesi",
+    category: "Eğitim",
+    image: "https://picsum.photos/seed/dog-summer/600/400",
+    imageHint: "dog summer activity",
+  },
+  {
+    id: 2,
+    title: "Kedilerde Tüy Dökülmesini Azaltmanın Yolları",
+    category: "Bakım",
+    image: "https://picsum.photos/seed/cat-grooming/600/400",
+    imageHint: "cat grooming",
+  },
+  {
+    id: 3,
+    title: "Evcil Hayvanınızla Güvenli Seyahat İpuçları",
+    category: "Sağlık",
+    image: "https://picsum.photos/seed/pet-travel/600/400",
+    imageHint: "pet travel",
+  },
+];
 
 
 export default function HomePage() {
@@ -208,6 +235,41 @@ export default function HomePage() {
               <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
                 {pets.slice(2, 6).map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
+                ))}
+              </div>
+            </div>
+             <div>
+              <div className="flex justify-between items-center mb-4">
+                 <div className="flex items-center gap-2">
+                   <BookText className="w-6 h-6" />
+                   <h2 className="text-2xl font-bold">PatiBul Blog</h2>
+                </div>
+                <Button variant="link" asChild className="text-primary">
+                  <Link href="/blog">
+                    Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {blogPosts.map((post) => (
+                  <Card key={post.id} className="overflow-hidden group transition-shadow hover:shadow-xl">
+                     <div className="relative aspect-video">
+                        <Image
+                            src={post.image}
+                            alt={post.title}
+                            fill
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            data-ai-hint={post.imageHint}
+                        />
+                     </div>
+                     <CardContent className="p-4">
+                        <Badge variant="secondary" className="mb-2">{post.category}</Badge>
+                        <h3 className="text-lg font-bold font-headline leading-tight mb-4 group-hover:text-primary transition-colors">{post.title}</h3>
+                        <Button asChild size="sm">
+                            <Link href="#">Devamını Oku <ArrowRight className="ml-1 w-4 h-4" /></Link>
+                        </Button>
+                     </CardContent>
+                  </Card>
                 ))}
               </div>
             </div>
