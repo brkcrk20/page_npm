@@ -122,7 +122,7 @@ export function RegisterForm() {
             </FormControl>
             <div className="space-y-1 leading-none">
               <FormLabel>
-                Ben robot değilim
+                Ben robot değilim <span className="text-red-500">*</span>
               </FormLabel>
             </div>
              <FormMessage />
@@ -146,7 +146,7 @@ export function RegisterForm() {
             </FormControl>
             <div className="space-y-1 leading-none">
               <FormLabel>
-                <a href="/uyelik-sozlesmesi" target="_blank" className="underline hover:text-primary">Üyelik sözleşmesini</a> okudum, kabul ediyorum.
+                <a href="/uyelik-sozlesmesi" target="_blank" className="underline hover:text-primary">Üyelik sözleşmesini</a> okudum, kabul ediyorum. <span className="text-red-500">*</span>
               </FormLabel>
             </div>
              <FormMessage />
@@ -176,7 +176,7 @@ export function RegisterForm() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ad Soyad</FormLabel>
+                  <FormLabel>Ad Soyad <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="John Doe" {...field} disabled={isLoading} />
                   </FormControl>
@@ -189,7 +189,7 @@ export function RegisterForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>E-posta</FormLabel>
+                  <FormLabel>E-posta <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="email@example.com" {...field} disabled={isLoading} />
                   </FormControl>
@@ -202,7 +202,7 @@ export function RegisterForm() {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cep Telefonu</FormLabel>
+                  <FormLabel>Cep Telefonu <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="555 123 4567" {...field} disabled={isLoading} />
                   </FormControl>
@@ -215,7 +215,7 @@ export function RegisterForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Şifre</FormLabel>
+                  <FormLabel>Şifre <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} disabled={isLoading} />
                   </FormControl>
@@ -233,7 +233,7 @@ export function RegisterForm() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Adı Soyadı (Yetkili)</FormLabel>
+                  <FormLabel>Adı Soyadı (Yetkili) <span className="text-red-500">*</span></FormLabel>
                   <FormControl><Input placeholder="John Doe" {...field} disabled={isLoading} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -244,7 +244,7 @@ export function RegisterForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>E-posta Adresi</FormLabel>
+                  <FormLabel>E-posta Adresi <span className="text-red-500">*</span></FormLabel>
                   <FormControl><Input placeholder="email@example.com" {...field} disabled={isLoading} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -255,7 +255,7 @@ export function RegisterForm() {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cep Telefonu</FormLabel>
+                  <FormLabel>Cep Telefonu <span className="text-red-500">*</span></FormLabel>
                   <FormControl><Input placeholder="555 123 4567" {...field} disabled={isLoading} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -266,7 +266,7 @@ export function RegisterForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Şifre</FormLabel>
+                  <FormLabel>Şifre <span className="text-red-500">*</span></FormLabel>
                   <FormControl><Input type="password" placeholder="••••••••" {...field} disabled={isLoading} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -277,7 +277,7 @@ export function RegisterForm() {
               name="tcNo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>TC Kimlik Numarası</FormLabel>
+                  <FormLabel>TC Kimlik Numarası <span className="text-red-500">*</span></FormLabel>
                   <FormControl><Input placeholder="11111111111" {...field} disabled={isLoading} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -288,7 +288,7 @@ export function RegisterForm() {
               name="companyType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Şirket Türü</FormLabel>
+                  <FormLabel>Şirket Türü <span className="text-red-500">*</span></FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading}>
                     <FormControl>
                       <SelectTrigger>
@@ -310,7 +310,7 @@ export function RegisterForm() {
               name="companyTitle"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Firma Ünvanı</FormLabel>
+                  <FormLabel>Firma Ünvanı <span className="text-red-500">*</span></FormLabel>
                   <FormControl><Input placeholder="PatiBul Global A.Ş." {...field} disabled={isLoading} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -322,7 +322,7 @@ export function RegisterForm() {
                 name="taxNo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Vergi No</FormLabel>
+                    <FormLabel>Vergi No <span className="text-red-500">*</span></FormLabel>
                     <FormControl><Input placeholder="1234567890" {...field} disabled={isLoading} /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -333,7 +333,7 @@ export function RegisterForm() {
                 name="taxOffice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Vergi Dairesi</FormLabel>
+                    <FormLabel>Vergi Dairesi <span className="text-red-500">*</span></FormLabel>
                     <FormControl><Input placeholder="Örn: Maslak" {...field} disabled={isLoading} /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -345,7 +345,7 @@ export function RegisterForm() {
               name="companyAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Firma Adresi</FormLabel>
+                  <FormLabel>Firma Adresi <span className="text-red-500">*</span></FormLabel>
                   <FormControl><Input placeholder="Firma adresi" {...field} disabled={isLoading} /></FormControl>
                   <FormMessage />
                 </FormItem>
