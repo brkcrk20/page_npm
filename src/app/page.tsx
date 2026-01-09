@@ -34,14 +34,13 @@ const CategoryFilter = ({ category, onTriggerClick, isSelected }: { category: Ca
   );
 
   return (
-    <AccordionItem value={category.type.toLowerCase()} className="border-b-0 mb-2 rounded-md overflow-hidden data-[state=open]:shadow-lg data-[state=open]:shadow-primary/20">
+    <AccordionItem value={category.type.toLowerCase()} className="border-b-0 mb-2 rounded-xl overflow-hidden data-[state=open]:shadow-lg">
        <div className={cn(
-          "flex items-center justify-between whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 w-full",
-          "data-[state=open]:text-primary data-[state=open]:bg-background data-[state=open]:[box-shadow:0_0_8px_hsl(var(--primary))]",
-           isSelected 
-             ? "bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))]"
-             : "bg-muted text-muted-foreground hover:text-primary"
-         )}>
+        "flex items-center justify-between whitespace-nowrap text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 w-full rounded-t-xl",
+        isSelected 
+            ? "bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))] rounded-b-none"
+            : "bg-muted text-muted-foreground hover:text-primary rounded-xl"
+        )}>
           <Link href={`/${category.slug}`} className="flex items-center gap-2 font-bold p-3 flex-grow">
             <category.Icon className="transition-colors" /> {category.title}
           </Link>
