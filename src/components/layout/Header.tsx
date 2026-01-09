@@ -20,7 +20,13 @@ import {
   Shield,
   Bell,
   MessageSquare,
-  ChevronDown
+  ChevronDown,
+  Package,
+  Store,
+  ShoppingBag,
+  Star,
+  CreditCard,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -192,14 +198,74 @@ export function Header() {
                   <span>Profilim</span>
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                 <Link href="/profil#update">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profil Güncelle</span>
+                </Link>
+              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/destek">
-                <LifeBuoy className="mr-2 h-4 w-4" />
-                <span>Yardım & Destek</span>
-              </Link>
-            </DropdownMenuItem>
+             <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                    <Link href="/mesajlarim">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        <span>Mesajlarım</span>
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href="/profil/favoriler">
+                        <Heart className="mr-2 h-4 w-4" />
+                        <span>Favori İlanlarım</span>
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href="/profil/ilanlarim">
+                       <FileText className="mr-2 h-4 w-4" />
+                       <span>İlanlarım</span>
+                    </Link>
+                </DropdownMenuItem>
+             </DropdownMenuGroup>
+             <DropdownMenuSeparator />
+             <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                    <Link href="/magazalarim">
+                        <Store className="mr-2 h-4 w-4" />
+                        <span>Mağazalarım</span>
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href="/magaza-olustur">
+                        <Store className="mr-2 h-4 w-4" />
+                        <span>Mağaza Oluştur</span>
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href="/siparislerim">
+                        <ShoppingBag className="mr-2 h-4 w-4" />
+                        <span>Siparişlerim</span>
+                    </Link>
+                </DropdownMenuItem>
+             </DropdownMenuGroup>
+             <DropdownMenuSeparator />
+             <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                    <Link href="/paketler">
+                        <Package className="mr-2 h-4 w-4" />
+                        <span>Paket Satın Al</span>
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    <span>Krediniz: {userProfile?.credit ?? 0}</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
+                    <Link href="/kredi-hareketleri">
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        <span>Borç Hareketleri</span>
+                    </Link>
+                </DropdownMenuItem>
+             </DropdownMenuGroup>
             {isAdmin && (
               <>
                 <DropdownMenuSeparator />
@@ -214,7 +280,7 @@ export function Header() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Çıkış Yap</span>
+              <span>Güvenli Çıkış</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -358,3 +424,6 @@ const ListItem = React.forwardRef<
   )
 })
 ListItem.displayName = "ListItem"
+
+
+    
