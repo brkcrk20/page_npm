@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { doc, updateDoc, collection, query, getDoc, getDocs, where, collectionGroup } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, getDoc, getDocs, where, collectionGroup, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { updateProfile, signOut } from 'firebase/auth';
 import type { UserProfile, PetListing } from '@/lib/types';
@@ -97,38 +97,25 @@ function ProfileListings() {
 function FavoriteListings() {
     const { user } = useUser();
     const firestore = useFirestore();
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-    const [profileLoading, setProfileLoading] = useState(true);
-
-    useEffect(() => {
-        if (!user) {
-            setProfileLoading(false);
-            return;
-        };
-
-        const docRef = doc(firestore, 'users', user.uid);
-        getDoc(docRef).then(docSnap => {
-             if (docSnap.exists()) {
-                setUserProfile(docSnap.data() as UserProfile);
-            }
-            setProfileLoading(false);
-        });
-        
+    
+    const userProfileRef = useMemoFirebase(() => {
+        if (!user) return null;
+        return doc(firestore, 'users', user.uid);
     }, [user, firestore]);
 
-    const favoriteIds = userProfile?.favoritePetIds || [];
+    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
+    const favoriteIds = userProfile?.favoritePetIds || [];
+    
     const favoritesQuery = useMemoFirebase(() => {
         if (!firestore || favoriteIds.length === 0) return null;
-        return query(
-            collectionGroup(firestore, 'petListings'),
-            where('__name__', 'in', favoriteIds.map(id => `users/${id.split('/')[1]}/petListings/${id.split('/')[3]}`))
-        );
+        // Assuming favoritePetIds stores the full path to the pet listing document
+        return query(collectionGroup(firestore, 'petListings'), where('__name__', 'in', favoriteIds));
     }, [firestore, favoriteIds]);
 
-    const { data: favoriteListings, isLoading: listingsLoading } = useCollection<PetListing>(favoritesQuery);
+    const { data: favoriteListings, isLoading: areListingsLoading } = useCollection<PetListing>(favoritesQuery);
     
-    const isLoading = profileLoading || (favoriteIds.length > 0 && listingsLoading);
+    const isLoading = isProfileLoading || (favoriteIds.length > 0 && areListingsLoading);
 
     if (isLoading) {
         return (
@@ -188,24 +175,25 @@ export default function ProfilePage() {
     const [editModes, setEditModes] = useState<Record<string, boolean>>({});
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
-    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
     
     useEffect(() => {
         if (!isUserLoading && !user) {
             router.push('/login');
             return;
         }
-        if(user){
+        if (user) {
             const userProfileRef = doc(firestore, "users", user.uid);
-            getDoc(userProfileRef).then(docSnap => {
-                if (docSnap.exists()) {
-                    setProfileData(docSnap.data() as UserProfile);
+            const unsubscribe = onSnapshot(userProfileRef, (doc) => {
+                if (doc.exists()) {
+                    setProfileData(doc.data() as UserProfile);
                 }
                 setIsLoading(false);
-            }).catch(err => {
+            }, (err) => {
                 console.error("Failed to fetch profile data:", err);
                 setIsLoading(false);
             });
+            return () => unsubscribe();
         }
     }, [user, isUserLoading, router, firestore]);
 
@@ -219,50 +207,40 @@ export default function ProfilePage() {
     const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file || !user) return;
-    
+
+        setIsUploading(true);
         const storageRef = ref(storage, `avatars/${user.uid}/${file.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-    
-        setUploadProgress(0);
-    
-        uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                setUploadProgress(progress);
-            },
-            (error) => {
-                console.error('Upload failed:', error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Yükleme Başarısız',
-                    description: 'Profil resmi yüklenirken bir hata oluştu.',
-                });
-                setUploadProgress(null);
-            },
-            async () => {
-                try {
-                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                    const userProfileRef = doc(firestore, 'users', user.uid);
-                    await updateDoc(userProfileRef, { avatarUrl: downloadURL });
-                    await updateProfile(user, { photoURL: downloadURL });
-                    toast({
-                        title: 'Başarılı',
-                        description: 'Profil resminiz güncellendi.',
-                    });
-                } catch (error) {
-                    console.error('Profile update failed:', error);
-                    toast({
-                        variant: "destructive",
-                        title: 'Güncelleme Başarısız',
-                        description: 'Profil bilgileri güncellenirken bir hata oluştu.',
-                    });
-                } finally {
-                    setUploadProgress(null);
-                }
-            }
-        );
+        
+        try {
+            // Step 1: Upload the file
+            const uploadTask = await uploadBytesResumable(storageRef, file);
+            
+            // Step 2: Get the download URL
+            const downloadURL = await getDownloadURL(uploadTask.ref);
+
+            // Step 3: Update Firestore document
+            const userProfileRef = doc(firestore, 'users', user.uid);
+            await updateDoc(userProfileRef, { avatarUrl: downloadURL });
+
+            // Step 4: Update Auth user profile
+            await updateProfile(user, { photoURL: downloadURL });
+
+            toast({
+                title: 'Başarılı',
+                description: 'Profil resminiz güncellendi.',
+            });
+        } catch (error) {
+            console.error('Avatar upload failed:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Yükleme Başarısız',
+                description: 'Profil resmi yüklenirken bir hata oluştu.',
+            });
+        } finally {
+            setIsUploading(false);
+        }
     };
+
 
     const handleFieldUpdate = async (field: keyof UserProfile) => {
         if (!user || !fieldValues[field]) return;
@@ -272,12 +250,6 @@ export default function ProfilePage() {
             const userProfileRef = doc(firestore, "users", user.uid);
             await updateDoc(userProfileRef, { [field]: fieldValues[field] });
             
-            // Re-fetch data to show updated value
-            const updatedDoc = await getDoc(userProfileRef);
-            if (updatedDoc.exists()) {
-                setProfileData(updatedDoc.data() as UserProfile);
-            }
-
             toast({ title: "Başarılı", description: "Profil bilgileriniz güncellendi." });
             setEditModes(prev => ({ ...prev, [field]: false }));
         } catch (error) {
@@ -290,7 +262,6 @@ export default function ProfilePage() {
     
     const toggleEditMode = (field: keyof UserProfile) => {
         if (!editModes[field]) {
-            // Entering edit mode, set initial value
             setFieldValues(prev => ({ ...prev, [field]: profileData?.[field] as string || '' }));
         }
         setEditModes(prev => ({ ...prev, [field]: !prev[field] }));
@@ -310,26 +281,26 @@ export default function ProfilePage() {
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     };
 
-    const avatarUrl = user.photoURL || profileData?.avatarUrl || '';
-    const username = user.displayName || profileData?.username || 'Kullanıcı';
+    const avatarUrl = profileData?.avatarUrl || user.photoURL || '';
+    const username = profileData?.username || user.displayName || 'Kullanıcı';
 
     const InfoRow = ({ label, value, fieldName }: { label: string, value: string | undefined | null, fieldName?: keyof UserProfile }) => {
         const isEditing = fieldName && editModes[fieldName];
         const isSaving = isUpdating === fieldName;
 
         return (
-             <div className="flex items-center justify-between p-4 border-b">
-                <div className='w-1/3 text-sm text-muted-foreground'>{label}</div>
-                <div className="flex-grow text-sm font-medium">
+             <li className="flex items-center justify-between p-4 border-b last:border-b-0">
+                <span className='w-1/3 text-sm font-medium text-muted-foreground'>{label}</span>
+                <div className="flex-grow text-sm">
                      {isEditing && fieldName ? (
                         <Input
                             value={fieldValues[fieldName] || ''}
                             onChange={(e) => setFieldValues(prev => ({...prev, [fieldName]: e.target.value}))}
-                            className="h-8"
+                            className="h-9"
                             disabled={isSaving}
                         />
                     ) : (
-                        value || 'Belirtilmemiş'
+                        value || <span className="text-muted-foreground italic">Belirtilmemiş</span>
                     )}
                 </div>
                  {fieldName && (
@@ -339,14 +310,14 @@ export default function ProfilePage() {
                                 <Button size="sm" onClick={() => handleFieldUpdate(fieldName)} disabled={isSaving}>
                                     {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
                                 </Button>
-                                <Button size="sm" variant="ghost" onClick={() => toggleEditMode(fieldName)} disabled={isSaving}><X className="h-4 w-4" /></Button>
+                                <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => toggleEditMode(fieldName)} disabled={isSaving}><X className="h-4 w-4" /></Button>
                             </>
                         ) : (
-                            <Button size="sm" variant="ghost" onClick={() => toggleEditMode(fieldName)}><Edit className="h-4 w-4" /> Değiştir</Button>
+                            <Button size="sm" variant="outline" onClick={() => toggleEditMode(fieldName)}><Edit className="h-4 w-4 mr-2" /> Değiştir</Button>
                         )}
                     </div>
                 )}
-             </div>
+             </li>
         );
     };
 
@@ -364,9 +335,9 @@ export default function ProfilePage() {
                             variant="outline"
                             size="icon"
                             className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
-                            disabled={uploadProgress !== null}
+                            disabled={isUploading}
                         >
-                            {uploadProgress !== null ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                           {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
                             <span className="sr-only">Profil resmini değiştir</span>
                         </Button>
                         <input
@@ -376,11 +347,6 @@ export default function ProfilePage() {
                             className="hidden"
                             accept="image/png, image/jpeg"
                         />
-                         {uploadProgress !== null && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
-                                <Progress value={uploadProgress} className="h-1 w-16" />
-                            </div>
-                        )}
                     </div>
                     <div className="flex-grow">
                         <h1 className="text-2xl font-bold font-headline">{username}</h1>
@@ -414,10 +380,12 @@ export default function ProfilePage() {
                               <CardDescription>Hesap bilgilerinizi görüntüleyin ve düzenleyin.</CardDescription>
                           </CardHeader>
                           <CardContent className="p-0">
-                            <InfoRow label="Kullanıcı Adı" value={username} />
-                            <InfoRow label="E-posta" value={user.email} />
-                            <InfoRow label="Telefon Numarası" value={profileData?.phoneNumber} fieldName="phoneNumber" />
-                            <InfoRow label="Konum" value={profileData?.location} fieldName="location" />
+                            <ul>
+                              <InfoRow label="Kullanıcı Adı" value={username} />
+                              <InfoRow label="E-posta" value={user.email} />
+                              <InfoRow label="Telefon Numarası" value={profileData?.phoneNumber} fieldName="phoneNumber" />
+                              <InfoRow label="Konum" value={profileData?.location} fieldName="location" />
+                            </ul>
                           </CardContent>
                       </Card>
                     </TabsContent>
@@ -485,4 +453,6 @@ export default function ProfilePage() {
         </div>
     );
 }
+    
+
     
