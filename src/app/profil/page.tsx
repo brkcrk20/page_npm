@@ -353,6 +353,16 @@ export default function ProfilePage() {
             </Card>
 
             <main>
+                <div className="mb-8 flex justify-between items-start">
+                    <div>
+                        <h1 className="text-3xl font-bold font-headline">{username}</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Üyelik Tarihi: {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('tr-TR') : 'Bilinmiyor'}
+                        </p>
+                    </div>
+                    <Badge variant="outline" className="text-base">{userType}</Badge>
+                </div>
+
                 <Tabs defaultValue="info" className="w-full">
                     <TabsList className="grid w-full grid-cols-5">
                         <TabsTrigger value="info">Profil Bilgileri</TabsTrigger>
