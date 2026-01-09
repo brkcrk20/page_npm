@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { doc, updateDoc, collection, query, where } from 'firebase/firestore';
+import { doc, updateDoc, collection, query } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { updateProfile, signOut } from 'firebase/auth';
 import type { UserProfile, PetListing } from '@/lib/types';
@@ -20,6 +20,15 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { MoreHorizontal } from 'lucide-react';
 
 function ProfileListings() {
   const { user } = useUser();
@@ -69,8 +78,11 @@ function ProfileListings() {
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
       {userListings?.map((listing) => (
         <Card key={listing.id} className="overflow-hidden">
-          <div className="relative w-full aspect-square">
+          <div className="relative w-full aspect-video">
             <Image src={listing.imageUrl} alt={listing.name} fill className="object-cover" />
+             <Badge className="absolute top-2 right-2" variant={listing.isFeatured ? "default" : "secondary"}>
+                {listing.isFeatured ? "Yıldızlı" : "Normal"}
+             </Badge>
           </div>
           <CardHeader>
             <CardTitle>{listing.name}</CardTitle>
@@ -138,8 +150,8 @@ function FavoriteListings() {
   return (
      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {favoriteListings.map(pet => (
-        <Link key={pet.id} href={`/listings/${pet.id}`} className="group block">
-            <Card className="overflow-hidden">
+        <Card key={pet.id} className="overflow-hidden group">
+            <Link href={`/listings/${pet.id}`} className="block">
                 <div className="relative aspect-square">
                     <Image src={pet.imageUrl} alt={pet.name} fill className="object-cover transition-transform group-hover:scale-105" />
                 </div>
@@ -147,8 +159,14 @@ function FavoriteListings() {
                     <h3 className="font-bold text-lg truncate">{pet.name}</h3>
                     <p className="text-sm text-muted-foreground">{pet.breed}</p>
                 </CardContent>
-            </Card>
-        </Link>
+            </Link>
+             <CardContent className="p-4 pt-0">
+                <Button variant="outline" size="sm" className="w-full" onClick={() => alert('Favorilerden kaldırma henüz aktif değil.')}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Favorilerden Kaldır
+                </Button>
+            </CardContent>
+        </Card>
       ))}
     </div>
   );
@@ -247,6 +265,7 @@ export default function ProfilePage() {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           
           await updateDoc(userProfileRef, { avatarUrl: downloadURL });
+          // CRITICAL FIX: Pass the 'user' object from the hook, not the 'auth' service itself.
           await updateProfile(user, { photoURL: downloadURL });
 
           toast({
@@ -458,3 +477,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
