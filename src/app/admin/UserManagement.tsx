@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useAllUsers } from "@/firebase/firestore/admin-hooks";
-import { Loader2, ShieldAlert, MoreHorizontal, UserPlus, Trash2, Ban, UserCog, Star, FileText, X, Building, Fingerprint, Briefcase } from "lucide-react";
+import { Loader2, ShieldAlert, MoreHorizontal, UserPlus, Trash2, Ban, UserCog, Star, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,14 +27,48 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import React, { useState } from "react";
 import type { UserProfile } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+
+const addUserSchema = z.object({
+  email: z.string().email({ message: 'Geçerli bir e-posta adresi girin.' }),
+  password: z.string().min(6, { message: 'Şifre en az 6 karakter olmalıdır.' }),
+  username: z.string().min(2, { message: 'Kullanıcı adı en az 2 karakter olmalıdır.' }),
+});
+
+type AddUserFormValues = z.infer<typeof addUserSchema>;
 
 export function UserManagement() {
   const { data: users, isLoading, error } = useAllUsers();
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const auth = useAuth();
+  const firestore = useFirestore();
+
+  const form = useForm<AddUserFormValues>({
+    resolver: zodResolver(addUserSchema),
+    defaultValues: { email: '', password: '', username: '' },
+  });
 
   const handleAction = (action: string, user: UserProfile) => {
     if (action === 'View Details') {
@@ -61,6 +95,56 @@ export function UserManagement() {
     }
   };
 
+  const handleAddUserSubmit = async (values: AddUserFormValues) => {
+    form.clearErrors();
+    try {
+      // Create user in Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      // Save profile to Firestore
+      const userProfile: Omit<UserProfile, 'favoritePetIds'> = {
+        id: user.uid,
+        username: values.username,
+        email: values.email,
+        userStatus: 'standart',
+      };
+      
+      const userDocRef = doc(firestore, "users", user.uid);
+      
+      setDoc(userDocRef, userProfile).catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: userDocRef.path,
+            operation: 'create',
+            requestResourceData: userProfile
+          })
+        );
+      });
+
+      toast({
+        title: "Kullanıcı Oluşturuldu",
+        description: `${values.email} başarıyla eklendi.`,
+      });
+      setIsAddUserDialogOpen(false);
+      form.reset();
+    } catch (error: any) {
+      console.error("Add user error:", error);
+      let description = "Kullanıcı oluşturulurken bir hata oluştu.";
+      if (error.code === 'auth/email-already-in-use') {
+        form.setError('email', { message: 'Bu e-posta adresi zaten kullanılıyor.' });
+        description = "Bu e-posta adresi zaten kullanılıyor.";
+      }
+      toast({
+        variant: "destructive",
+        title: "İşlem Başarısız",
+        description: description,
+      });
+    }
+  };
+
+
   return (
     <>
       <Card>
@@ -69,10 +153,72 @@ export function UserManagement() {
               <CardTitle>Kullanıcı Yönetimi</CardTitle>
               <CardDescription>Tüm kayıtlı kullanıcıları görüntüleyin.</CardDescription>
           </div>
-          <Button onClick={() => alert('Yeni kullanıcı ekleme özelliği henüz eklenmedi.')}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Yeni Kullanıcı Ekle
-          </Button>
+          <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+            <DialogTrigger asChild>
+                <Button>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Yeni Kullanıcı Ekle
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Yeni Kullanıcı Ekle</DialogTitle>
+                    <DialogDescription>
+                        Yeni bir kullanıcı oluşturmak için formu doldurun.
+                    </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleAddUserSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>E-posta</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="kullanici@example.com" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="password"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Şifre</FormLabel>
+                                    <FormControl>
+                                        <Input type="password" placeholder="••••••••" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="username"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Kullanıcı Adı</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="kullanici123" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <DialogFooter>
+                            <Button type="button" variant="ghost" onClick={() => setIsAddUserDialogOpen(false)}>İptal</Button>
+                            <Button type="submit" disabled={form.formState.isSubmitting}>
+                                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Kullanıcı Oluştur
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent>
           {isLoading && <Loader2 className="mx-auto h-8 w-8 animate-spin" />}
