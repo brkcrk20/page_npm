@@ -41,29 +41,27 @@ export function BreedPageSidebar({
   return (
     <div className="w-full space-y-6">
         <div className="bg-secondary/50 p-4 rounded-lg">
-            <Link href={`/${categorySlug || ''}`} className="block font-bold hover:text-primary transition-colors">
-                <h2 className="font-bold">{categoryName} ({categoryCount})</h2>
+            <Link href={`/${categorySlug || ''}`} className="block font-bold hover:text-primary transition-colors text-lg mb-2">
+                {categoryName} ({categoryCount})
             </Link>
-            {breedName && categorySlug ? (
-                 <Link href={`/${categorySlug}/${breedName.toLowerCase().replace(/\s+/g, '-')}`} className="block text-primary font-semibold pl-2 hover:underline">
-                    <p>{breedName} ({breedCount})</p>
-                </Link>
-            ) : (
-                breeds && categorySlug && (
-                    <ul className="space-y-1 mt-2 pl-2 max-h-96 overflow-y-auto">
-                        {breeds.map(breed => (
-                            <li key={breed.id}>
-                                <Link href={`/${categorySlug}/${breed.slug}`} className="flex justify-between items-center text-sm text-muted-foreground hover:text-primary group">
-                                   <span>{breed.name}</span>
-                                   <div className="flex items-center gap-1">
-                                        <span className="font-semibold">{breed.count}</span>
-                                        <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1"/>
-                                   </div>
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                )
+            
+            {breeds && categorySlug && (
+                <ul className="space-y-1 mt-2 pl-2 max-h-96 overflow-y-auto">
+                    {breeds.map(breed => (
+                        <li key={breed.id}>
+                            <Link href={`/${categorySlug}/${breed.slug}`} className={cn(
+                                "flex justify-between items-center text-sm text-muted-foreground hover:text-primary group",
+                                breed.name === breedName && "text-primary font-bold"
+                            )}>
+                               <span>{breed.name}</span>
+                               <div className="flex items-center gap-1">
+                                    <span className="font-semibold">{breed.count}</span>
+                                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1"/>
+                               </div>
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
             )}
         </div>
         
