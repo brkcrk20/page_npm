@@ -8,7 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "./ui/button";
-import { Filter, ChevronRight } from "lucide-react";
+import { Filter } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -34,7 +34,6 @@ export function BreedPageSidebar({
     categoryName,
     categoryCount,
     breedName,
-    breedCount,
     breeds,
     categorySlug
 }: BreedPageSidebarProps) {
@@ -43,13 +42,16 @@ export function BreedPageSidebar({
         <div className="bg-white p-4 rounded-lg shadow-sm">
             <Link 
               href={`/${categorySlug}`} 
-              className="block font-bold text-lg mb-4 text-center p-3 rounded-lg bg-secondary hover:bg-orange-50 hover:text-orange-600 transition-all duration-200"
+              className={cn(
+                "block font-bold text-lg mb-4 text-center p-3 rounded-lg bg-secondary hover:bg-orange-50 hover:text-orange-600 transition-all duration-200",
+                !breedName && "bg-orange-100 text-orange-700"
+              )}
             >
                 {categoryName} ({categoryCount})
             </Link>
 
             {breeds && categorySlug && (
-                <ul className="space-y-2 mt-2">
+                <ul className="space-y-1">
                     {breeds.map(breed => {
                         const isActive = breed.name === breedName;
                         return (
@@ -58,19 +60,15 @@ export function BreedPageSidebar({
                                 href={`/${categorySlug}/${breed.slug}`} 
                                 className={cn(
                                     "flex justify-between items-center text-sm p-3 rounded-lg border transition-all duration-300 ease-in-out group",
-                                    "hover:shadow-lg hover:shadow-orange-200 hover:-translate-y-1",
                                     isActive 
-                                        ? "bg-orange-50 text-orange-600 font-bold border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)]"
-                                        : "text-muted-foreground border-transparent"
+                                        ? "bg-orange-50 border-orange-500 text-orange-600 font-bold shadow-[0_0_15px_rgba(249,115,22,0.5)] scale-[1.01]"
+                                        : "text-muted-foreground border-transparent hover:border-orange-200 hover:shadow-orange-100 hover:shadow-md hover:-translate-y-px"
                                 )}
                             >
                                <span className="truncate">{breed.name}</span>
-                               <div className="flex items-center gap-2">
-                                    <span className={cn("font-semibold px-2 py-0.5 rounded-full text-xs", isActive ? "bg-orange-200 text-orange-700" : "bg-secondary")}>
-                                      {breed.count}
-                                    </span>
-                                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5"/>
-                               </div>
+                               <span className={cn("font-semibold px-2 py-0.5 rounded-full text-xs", isActive ? "bg-orange-200 text-orange-700" : "bg-secondary")}>
+                                   {breed.count}
+                               </span>
                             </Link>
                         </li>
                         )
