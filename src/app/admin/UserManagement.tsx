@@ -48,7 +48,7 @@ export function UserManagement() {
     setSelectedUser(null);
   };
 
-  const getStatusVariant = (status: UserProfile['userStatus']) => {
+  const getStatusVariant = (status?: UserProfile['userStatus']) => {
     switch (status) {
       case 'premium':
         return 'default';
@@ -170,7 +170,7 @@ export function UserManagement() {
                 <div className="text-sm">
                   <h4 className="font-semibold mb-3 border-b pb-2">Kişisel Bilgiler</h4>
                   <div className="space-y-2">
-                    <p><strong>Statü:</strong> <Badge variant={getStatusVariant(selectedUser.userStatus)}>{selectedUser.userStatus || 'standart'}</Badge></p>
+                    <div><strong>Statü:</strong> <Badge variant={getStatusVariant(selectedUser.userStatus)}>{selectedUser.userStatus || 'standart'}</Badge></div>
                     <p><strong>Email:</strong> {selectedUser.email}</p>
                     <p><strong>Kullanıcı Adı:</strong> {selectedUser.username}</p>
                     <p><strong>Telefon:</strong> {selectedUser.phoneNumber || 'Belirtilmemiş'}</p>
@@ -195,14 +195,14 @@ export function UserManagement() {
                 <div className="text-sm">
                    <h4 className="font-semibold mb-3 border-b pb-2 pt-4">İlişkili Veriler</h4>
                     <div className="space-y-2">
-                       <p className="flex items-center">
+                       <div className="flex items-center">
                          <strong className="w-32">Favori İlanlar:</strong>
                          {selectedUser.favoritePetIds && selectedUser.favoritePetIds.length > 0 ? (
                           <span className="flex flex-wrap gap-1">
                             {selectedUser.favoritePetIds.map(id => <Badge key={id} variant="secondary" className="font-mono">{id}</Badge>)}
                           </span>
                         ) : 'Favori ilanı yok'}
-                       </p>
+                       </div>
                     </div>
                 </div>
               </div>
