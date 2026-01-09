@@ -27,12 +27,16 @@ export function Footer() {
         title: 'Giriş Başarılı',
         description: `${email} olarak giriş yapıldı.`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(`${userType} login failed`, error);
+      let description = 'Giriş sırasında bilinmeyen bir hata oluştu.';
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+        description = `Test kullanıcısı (${email}) bulunamadı. Lütfen Firebase Authentication panelinden oluşturun. Şifre: "password"`;
+      }
       toast({
         variant: 'destructive',
         title: 'Giriş Başarısız',
-        description: `Test kullanıcısı (${email}) bulunamadı. Lütfen Firebase Authentication panelinden oluşturun. Şifre: "password"`,
+        description: description,
       });
     }
   };
