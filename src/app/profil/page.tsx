@@ -257,6 +257,8 @@ export default function ProfilePage() {
     }
     
     const username = profileData?.name || 'Kullanıcı';
+    
+    const userType = profileData?.companyType ? 'Kurumsal Üye' : 'Bireysel Üye';
 
     const InfoRow = ({ label, value, fieldName, isEditable = true }: { label: string, value: string | undefined | null, fieldName?: keyof UserProfile, isEditable?: boolean }) => {
         const isEditing = fieldName && editModes[fieldName];
@@ -308,8 +310,6 @@ export default function ProfilePage() {
         }
     };
     
-    const userType = profileData?.companyType ? 'Kurumsal Üye' : 'Bireysel Üye';
-
     const StatItem = ({ icon, value, label }: { icon: React.ElementType, value: string, label: string }) => {
         const Icon = icon;
         return (
@@ -327,42 +327,45 @@ export default function ProfilePage() {
     return (
         <div className="container mx-auto py-12">
             <Card className="mb-8">
-                <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6">
-                    <div className="h-28 w-28 flex-shrink-0 flex items-center justify-center rounded-full bg-secondary text-primary">
-                        <UserIcon className="h-16 w-16" />
+                <CardContent className="p-6">
+                    <div className="flex flex-col md:flex-row items-center gap-6">
+                        <div className="h-28 w-28 flex-shrink-0 flex items-center justify-center rounded-full bg-secondary text-primary">
+                            <UserIcon className="h-16 w-16" />
+                        </div>
+                        <div className="flex-grow grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 text-center md:text-left w-full">
+                            <StatItem icon={FileText} value="5" label="Toplam İlan" />
+                            <StatItem icon={MessageCircle} value="12" label="Whatsapp Talebi" />
+                            <StatItem icon={Phone} value="8" label="Arama Talebi" />
+                            <StatItem icon={Eye} value="1.2k" label="Görüntülenme" />
+                        </div>
                     </div>
-                    <div className="flex-grow grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 text-center md:text-left w-full">
-                        <StatItem icon={FileText} value="5" label="Toplam İlan" />
-                        <StatItem icon={MessageCircle} value="12" label="Whatsapp Talebi" />
-                        <StatItem icon={Phone} value="8" label="Arama Talebi" />
-                        <StatItem icon={Eye} value="1.2k" label="Görüntülenme" />
-                    </div>
-                    <div className="flex flex-col sm:flex-row md:flex-col gap-3 w-full md:w-auto flex-shrink-0">
-                         <Button variant="outline" className='w-full'>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Profili Düzenle
-                        </Button>
-                        <Button asChild className='w-full'>
-                            <Link href="/listings/new">
-                                <Plus className="mr-2 h-4 w-4" />
-                                İlan Ekle
-                            </Link>
-                        </Button>
+                    <div className="border-t mt-6 pt-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div className="text-center md:text-left">
+                            <h1 className="text-2xl font-bold font-headline">{username}</h1>
+                            <p className="text-sm text-muted-foreground">
+                                Üyelik Tarihi: {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('tr-TR') : 'Bilinmiyor'}
+                            </p>
+                        </div>
+                         <div className="flex flex-col sm:flex-row md:flex-row items-center gap-3 w-full md:w-auto flex-shrink-0">
+                            <Badge variant="outline" className="text-base order-1 sm:order-none">{userType}</Badge>
+                             <div className='flex gap-3 w-full sm:w-auto'>
+                                <Button variant="outline" className='flex-1'>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Profili Düzenle
+                                </Button>
+                                <Button asChild className='flex-1'>
+                                    <Link href="/listings/new">
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        İlan Ekle
+                                    </Link>
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
 
             <main>
-                <div className="mb-8 flex justify-between items-start">
-                    <div>
-                        <h1 className="text-3xl font-bold font-headline">{username}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            Üyelik Tarihi: {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('tr-TR') : 'Bilinmiyor'}
-                        </p>
-                    </div>
-                    <Badge variant="outline" className="text-base">{userType}</Badge>
-                </div>
-
                 <Tabs defaultValue="info" className="w-full">
                     <TabsList className="grid w-full grid-cols-5">
                         <TabsTrigger value="info">Profil Bilgileri</TabsTrigger>
