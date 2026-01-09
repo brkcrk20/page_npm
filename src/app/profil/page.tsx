@@ -3,14 +3,14 @@
 import { useUser, useFirestore, useMemoFirebase, useStorage, useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { Loader2, User, FileText, Settings, Heart, Edit, Trash2, Camera, LogOut, ShieldCheck, Building, Save, X } from 'lucide-react';
+import { Loader2, User as UserIcon, FileText, Settings, Heart, Edit, Trash2, Camera, LogOut, ShieldCheck, Building, Save, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { doc, updateDoc, collection, query, where, collectionGroup, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, collectionGroup, getDoc, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { updateProfile, signOut } from 'firebase/auth';
 import type { UserProfile, PetListing } from '@/lib/types';
@@ -97,7 +97,7 @@ function ProfileListings() {
 function FavoriteListings() {
     const { user } = useUser();
     const firestore = useFirestore();
-    const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [profileLoading, setProfileLoading] = useState(true);
 
     useEffect(() => {
@@ -107,15 +107,17 @@ function FavoriteListings() {
         };
 
         const docRef = doc(firestore, 'users', user.uid);
-        getDoc(docRef).then(docSnap => {
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
-                const data = docSnap.data() as UserProfile;
-                setFavoriteIds(data.favoritePetIds || []);
+                setUserProfile(docSnap.data() as UserProfile);
             }
             setProfileLoading(false);
-        }).catch(() => setProfileLoading(false));
-
+        });
+        
+        return () => unsubscribe();
     }, [user, firestore]);
+
+    const favoriteIds = userProfile?.favoritePetIds || [];
 
     const favoritesQuery = useMemoFirebase(() => {
         if (!firestore || favoriteIds.length === 0) return null;
@@ -218,54 +220,49 @@ export default function ProfilePage() {
     const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file || !user) return;
-
+    
         const storageRef = ref(storage, `avatars/${user.uid}/${file.name}`);
         const uploadTask = uploadBytesResumable(storageRef, file);
-
+    
         setUploadProgress(0);
-
-        try {
-            uploadTask.on(
-                'state_changed',
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    setUploadProgress(progress);
-                },
-                (error) => {
-                    console.error('Upload failed:', error);
+    
+        uploadTask.on(
+            'state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                setUploadProgress(progress);
+            },
+            (error) => {
+                console.error('Upload failed:', error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Yükleme Başarısız',
+                    description: 'Profil resmi yüklenirken bir hata oluştu.',
+                });
+                setUploadProgress(null);
+            },
+            async () => {
+                try {
+                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                    const userProfileRef = doc(firestore, 'users', user.uid);
+                    await updateDoc(userProfileRef, { avatarUrl: downloadURL });
+                    await updateProfile(user, { photoURL: downloadURL });
                     toast({
-                        variant: 'destructive',
-                        title: 'Yükleme Başarısız',
-                        description: 'Profil resmi yüklenirken bir hata oluştu.',
+                        title: 'Başarılı',
+                        description: 'Profil resminiz güncellendi.',
                     });
+                } catch (error) {
+                    console.error('Profile update failed:', error);
+                    toast({
+                        variant: "destructive",
+                        title: 'Güncelleme Başarısız',
+                        description: 'Profil bilgileri güncellenirken bir hata oluştu.',
+                    });
+                } finally {
                     setUploadProgress(null);
-                },
-                async () => {
-                    try {
-                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                        const userProfileRef = doc(firestore, 'users', user.uid);
-                        await updateDoc(userProfileRef, { avatarUrl: downloadURL });
-                        await updateProfile(user, { photoURL: downloadURL });
-                        toast({
-                            title: 'Başarılı',
-                            description: 'Profil resminiz güncellendi.',
-                        });
-                    } catch (error) {
-                        console.error('Profile update failed:', error);
-                        toast({
-                            variant: "destructive",
-                            title: 'Güncelleme Başarısız',
-                            description: 'Profil bilgileri güncellenirken bir hata oluştu.',
-                        });
-                    } finally {
-                        setUploadProgress(null);
-                    }
                 }
-            );
-        } catch (e) {
-            console.error("Outer catch", e);
-            setUploadProgress(null);
-        }
+            }
+        );
     };
 
     const handleFieldUpdate = async (field: string) => {
@@ -396,7 +393,7 @@ export default function ProfilePage() {
             <main>
                 <Tabs defaultValue="info" className="w-full">
                     <TabsList className="grid w-full grid-cols-5">
-                        <TabsTrigger value="info"><User className="mr-2" />Profil Bilgileri</TabsTrigger>
+                        <TabsTrigger value="info"><UserIcon className="mr-2" />Profil Bilgileri</TabsTrigger>
                         <TabsTrigger value="listings"><FileText className="mr-2" />İlanlarım</TabsTrigger>
                         <TabsTrigger value="favorites"><Heart className="mr-2" />Favorilerim</TabsTrigger>
                         <TabsTrigger value="status"><ShieldCheck className="mr-2 h-4 w-4" />Hesap Durumu</TabsTrigger>
@@ -478,3 +475,5 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    
