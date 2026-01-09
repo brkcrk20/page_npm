@@ -44,7 +44,7 @@ export function BreedPageSidebar({
             <Link href={`/${categorySlug || ''}`} className="block font-bold hover:text-primary transition-colors text-lg mb-2">
                 {categoryName} ({categoryCount})
             </Link>
-            
+
             {breeds && categorySlug && (
                 <ul className="space-y-1 mt-2 pl-2 max-h-96 overflow-y-auto">
                     {breeds.map(breed => (
