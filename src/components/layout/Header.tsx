@@ -14,6 +14,11 @@ import {
   ShoppingCart,
   HeartHandshake,
   UserPlus,
+  User,
+  Settings,
+  LayoutGrid,
+  LifeBuoy,
+  Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -29,6 +34,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { SearchFilters } from '../SearchFilters';
@@ -58,6 +64,7 @@ export function Header() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   
+  const isAdmin = user && user.email === 'admin@patisemti.com';
 
   const handleLogout = () => {
     signOut(auth);
@@ -147,6 +154,51 @@ export function Header() {
                           </p>
                         </div>
                       </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem asChild>
+                           <Link href="/profil">
+                            <User className="mr-2 h-4 w-4" />
+                            <span>Profilim</span>
+                           </Link>
+                        </DropdownMenuItem>
+                         <DropdownMenuItem asChild>
+                           <Link href="/ilanlarim">
+                            <LayoutGrid className="mr-2 h-4 w-4" />
+                            <span>İlanlarım</span>
+                           </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                           <Link href="/favorilerim">
+                            <Heart className="mr-2 h-4 w-4" />
+                            <span>Favorilerim</span>
+                           </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                           <Link href="/ayarlar">
+                            <Settings className="mr-2 h-4 w-4" />
+                            <span>Ayarlar</span>
+                           </Link>
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                      <DropdownMenuSeparator />
+                       <DropdownMenuItem asChild>
+                           <Link href="/destek">
+                            <LifeBuoy className="mr-2 h-4 w-4" />
+                            <span>Yardım &amp; Destek</span>
+                           </Link>
+                        </DropdownMenuItem>
+                       {isAdmin && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                             <Link href="/admin">
+                              <Shield className="mr-2 h-4 w-4" />
+                              <span>Admin Paneli</span>
+                             </Link>
+                          </DropdownMenuItem>
+                        </>
+                       )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout}>
                         <LogOut className="mr-2 h-4 w-4" />
