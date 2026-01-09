@@ -23,20 +23,7 @@ export function initializeFirebase(): FirebaseServices {
     return firebaseServices;
   }
 
-  let app: FirebaseApp;
-  if (getApps().length === 0) {
-    try {
-      // Attempt to initialize via Firebase App Hosting environment variables
-      app = initializeApp();
-    } catch (e) {
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
-      }
-      app = initializeApp(firebaseConfig);
-    }
-  } else {
-    app = getApp();
-  }
+  const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
   firebaseServices = {
     firebaseApp: app,
@@ -49,7 +36,7 @@ export function initializeFirebase(): FirebaseServices {
 }
 
 export * from './provider';
-export * from './client-provider';
+// REMOVED: export * from './client-provider'; // This was causing a circular dependency
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
 export * from './non-blocking-updates';
