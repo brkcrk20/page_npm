@@ -3,7 +3,7 @@
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Loader2, User, FileText, Settings, Heart, Edit, Trash2 } from 'lucide-react';
+import { Loader2, User, FileText, Settings, Heart, Edit, Trash2, Camera } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -200,6 +200,15 @@ export default function ProfilePage() {
     if (!name) return user?.email?.charAt(0).toUpperCase() ?? 'U';
     return name.charAt(0).toUpperCase();
   };
+  
+  const handleAvatarChange = () => {
+    // This is a placeholder for the real implementation which would involve:
+    // 1. Opening a file picker.
+    // 2. Uploading the file to Firebase Storage.
+    // 3. Getting the URL.
+    // 4. Updating the user's profile in Auth and Firestore.
+    alert("Profil resmi değiştirme özelliği yakında gelecek!");
+  };
 
   const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -231,13 +240,27 @@ export default function ProfilePage() {
     alert('Hesap silme özelliği henüz tamamlanmadı. Bu işlem sunucu tarafında yapılmalıdır.');
   }
 
+  const avatarUrl = userProfile?.avatarUrl ?? user.photoURL ?? '';
+
   return (
     <div className="container mx-auto py-12">
       <div className="flex flex-col items-center space-y-4 mb-10">
-        <Avatar className="h-32 w-32 border-4 border-primary/50">
-          <AvatarImage src={user.photoURL ?? ''} alt={username} />
-          <AvatarFallback className="text-4xl bg-secondary">{getInitials(username)}</AvatarFallback>
-        </Avatar>
+        <div className="relative group">
+          <Avatar className="h-32 w-32 border-4 border-primary/50">
+            <AvatarImage src={avatarUrl} alt={username} />
+            <AvatarFallback className="text-4xl bg-secondary">{getInitials(username)}</AvatarFallback>
+          </Avatar>
+           <Button
+            onClick={handleAvatarChange}
+            variant="outline"
+            size="icon"
+            className="absolute bottom-1 right-1 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <Camera className="h-5 w-5" />
+            <span className="sr-only">Profil resmini değiştir</span>
+          </Button>
+        </div>
+
         <div className="text-center">
           <h1 className="text-3xl font-bold font-headline">{username}</h1>
           <p className="text-muted-foreground">{user.email}</p>
