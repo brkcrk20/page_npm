@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import React from 'react';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -52,9 +52,8 @@ const serviceCategories = [
   { icon: PersonStanding, label: 'Gezdirici', href: '/gezdirici' },
 ];
 
-const HeaderContent = React.memo(function HeaderContent() {
+export function Header() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
@@ -94,6 +93,7 @@ const HeaderContent = React.memo(function HeaderContent() {
     if (pathname === '/es-arayanlar') {
       return <SearchFilters />;
     }
+    // Default filters for home page and others
     return <SearchFilters />;
   };
 
@@ -253,16 +253,4 @@ const HeaderContent = React.memo(function HeaderContent() {
       )}
     </>
   );
-});
-
-
-export function Header() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  // This is a bit of a hack to make sure the key of HeaderContent changes
-  // when the path or search params change. This forces a re-render of the component
-  // and all its children, which is necessary to update the active category
-  // and filters.
-  return <HeaderContent key={pathname + searchParams.toString()} />;
 }
