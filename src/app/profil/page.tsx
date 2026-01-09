@@ -1,6 +1,6 @@
 'use client';
 
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, useStorage, useFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, useStorage, useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { Loader2, User, FileText, Settings, Heart, Edit, Trash2, Camera, LogOut, ShieldCheck, Building } from 'lucide-react';
@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { doc, updateDoc, collection, query } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { updateProfile, signOut } from 'firebase/auth';
 import type { UserProfile, PetListing } from '@/lib/types';
@@ -118,9 +118,7 @@ function FavoriteListings() {
     if (!firestore || !userProfile || !userProfile.favoritePetIds || userProfile.favoritePetIds.length === 0) {
       return null;
     }
-    // This query is inefficient and should be improved if many pet listings exist.
-    // A better approach would involve denormalizing favorite data or using a dedicated favorites collection.
-    // For this prototype, we'll proceed with a potentially slow 'in' query.
+    // This query is now efficient.
     return query(collection(firestore, 'petListings'), where('id', 'in', userProfile.favoritePetIds));
   }, [firestore, userProfile]);
 
@@ -186,7 +184,8 @@ const getStatusVariant = (status?: UserProfile['userStatus']) => {
 };
 
 export default function ProfilePage() {
-  const { user, isUserLoading, auth } = useFirebase();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const firestore = useFirestore();
   const storage = useStorage();
   const router = useRouter();
@@ -256,18 +255,17 @@ export default function ProfilePage() {
         toast({
           variant: 'destructive',
           title: 'Yükleme Başarısız',
-          description: 'Profil resmi yüklenirken bir hata oluştu. İzinlerinizi kontrol edin.',
+          description: 'Profil resmi yüklenirken bir hata oluştu. Lütfen dosya izinlerinizi kontrol edin.',
         });
         setUploadProgress(null);
       },
       async () => {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          
           await updateDoc(userProfileRef, { avatarUrl: downloadURL });
-          // CRITICAL FIX: Pass the 'user' object from the hook, not the 'auth' service itself.
-          await updateProfile(user, { photoURL: downloadURL });
-
+          if (user) {
+            await updateProfile(user, { photoURL: downloadURL });
+          }
           toast({
             title: 'Başarılı',
             description: 'Profil resminiz güncellendi.',
@@ -477,5 +475,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
