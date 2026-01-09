@@ -27,68 +27,68 @@ export default function CatchAllPage() {
   const params = useParams();
   const slugParts = Array.isArray(params.slug) ? params.slug : [params.slug];
 
-  let filteredPets = [];
+  let filteredPets = pets;
   let pageTitle = "Tüm İlanlar";
-  let categoryName = "";
-  let breedName: string | undefined = undefined;
-  let categoryCount = 0;
-  let breedCount = 0;
-  let parentCategorySlug = "";
-  
-  // Single slug part means it's a main category page
+  let category: (typeof categories)[0] | undefined;
+  let breed: (typeof allBreeds)[0] | undefined;
+  let breadcrumb: { href: string; label: string }[] = [];
+
   if (slugParts.length === 1) {
     const categorySlug = slugParts[0];
-    const category = categories.find(c => c.slug === categorySlug);
+    category = categories.find(c => c.slug === categorySlug);
     if (category) {
-        pageTitle = category.title;
-        categoryName = category.title;
-        parentCategorySlug = category.slug;
-        filteredPets = pets.filter(p => p.type === category.type);
-        categoryCount = filteredPets.length;
+      pageTitle = category.title;
+      filteredPets = pets.filter(p => p.type === category.type);
+      breadcrumb = [
+        { href: '/', label: 'Anasayfa' },
+        { href: `/${category.slug}`, label: category.title },
+      ];
     }
-  } 
-  // Two slug parts means it's a specific breed page
-  else if (slugParts.length === 2) {
+  } else if (slugParts.length === 2) {
     const [categorySlug, breedSlug] = slugParts;
-    const category = categories.find(c => c.slug === categorySlug);
-    const breed = allBreeds.find(b => b.slug === breedSlug);
+    category = categories.find(c => c.slug === categorySlug);
+    breed = allBreeds.find(b => b.slug === breedSlug);
 
     if (category && breed) {
-        pageTitle = breed.name;
-        categoryName = category.title;
-        breedName = breed.name;
-        parentCategorySlug = category.slug;
-        filteredPets = pets.filter(p => p.type === category.type && p.breed === breed.name);
-        breedCount = filteredPets.length;
-        categoryCount = pets.filter(p => p.type === category.type).length;
+      pageTitle = breed.name;
+      filteredPets = pets.filter(p => p.type === category.type && p.breed === breed.name);
+      breadcrumb = [
+        { href: '/', label: 'Anasayfa' },
+        { href: `/${category.slug}`, label: category.title },
+        { href: `/${category.slug}/${breed.slug}`, label: breed.name },
+      ];
     }
   }
+
+  const categoryName = category ? category.title : "Tüm Kategoriler";
+  const categoryCount = category ? pets.filter(p => p.type === category.type).length : pets.length;
+  const breedName = breed ? breed.name : undefined;
+  const breedCount = breed ? filteredPets.length : undefined;
 
   return (
     <div className="container mx-auto py-8">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Left Sidebar */}
         <aside className="lg:col-span-1">
           <BreedPageSidebar 
             categoryName={categoryName}
             categoryCount={categoryCount}
             breedName={breedName}
             breedCount={breedCount}
+            breeds={category?.breeds}
+            categorySlug={category?.slug}
           />
         </aside>
 
-        {/* Right Content */}
         <main className="lg:col-span-3">
           <div className="text-sm text-muted-foreground mb-4 flex items-center">
-            <Link href="/" className="hover:text-primary">Anasayfa</Link>
-            <ChevronRight className="h-4 w-4 mx-1" />
-            <Link href={`/${parentCategorySlug}`} className="hover:text-primary">{categoryName}</Link>
-             {breedName && (
-                <>
-                    <ChevronRight className="h-4 w-4 mx-1" />
-                    <span className="font-semibold text-foreground">{breedName}</span>
-                </>
-             )}
+            {breadcrumb.map((item, index) => (
+              <React.Fragment key={item.href}>
+                {index > 0 && <ChevronRight className="h-4 w-4 mx-1" />}
+                <Link href={item.href} className={index === breadcrumb.length - 1 ? "font-semibold text-foreground" : "hover:text-primary"}>
+                  {item.label}
+                </Link>
+              </React.Fragment>
+            ))}
           </div>
 
           <p className="text-sm text-muted-foreground mb-6">

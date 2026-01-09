@@ -8,7 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "./ui/button";
-import { Filter } from "lucide-react";
+import { Filter, ChevronRight } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -17,26 +17,49 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "./ui/label";
+import Link from "next/link";
+import type { BreedInfo } from "@/lib/breeds";
+import { cn } from "@/lib/utils";
 
 interface BreedPageSidebarProps {
     categoryName: string;
     categoryCount: number;
     breedName?: string;
     breedCount?: number;
+    breeds?: BreedInfo[];
+    categorySlug?: string;
 }
 
 export function BreedPageSidebar({
     categoryName,
     categoryCount,
     breedName,
-    breedCount
+    breedCount,
+    breeds,
+    categorySlug
 }: BreedPageSidebarProps) {
   return (
     <div className="w-full space-y-6">
         <div className="bg-secondary/50 p-4 rounded-lg">
             <h2 className="font-bold">{categoryName} ({categoryCount})</h2>
-            {breedName && (
+            {breedName ? (
                 <p className="text-primary font-semibold pl-2">{breedName} ({breedCount})</p>
+            ) : (
+                breeds && categorySlug && (
+                    <ul className="space-y-1 mt-2 pl-2">
+                        {breeds.slice(0, 10).map(breed => ( // Show top 10 breeds
+                            <li key={breed.id}>
+                                <Link href={`/${categorySlug}/${breed.slug}`} className="flex justify-between items-center text-sm text-muted-foreground hover:text-primary group">
+                                   <span>{breed.name}</span>
+                                   <div className="flex items-center gap-1">
+                                        <span className="font-semibold">{breed.count}</span>
+                                        <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1"/>
+                                   </div>
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                )
             )}
         </div>
         
