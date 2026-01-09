@@ -33,6 +33,17 @@ const slugify = (text: string) => {
     .replace(/--+/g, '-');
 };
 
+const translateCategory = (category: string) => {
+    switch (category) {
+        case 'Dog': return 'Köpek';
+        case 'Cat': return 'Kedi';
+        case 'Bird': return 'Kuş';
+        case 'Aquarium': return 'Akvaryum';
+        case 'Other': return 'Diğer';
+        default: return category;
+    }
+}
+
 export default function BreedPage() {
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
@@ -43,7 +54,8 @@ export default function BreedPage() {
     (pet) => slugify(pet.breed) === slug
   );
 
-  const categoryName = 'Kategoriler';
+  const categoryType = filteredPets.length > 0 ? filteredPets[0].type : '';
+  const categoryName = categoryType ? `${translateCategory(categoryType)} İlanları` : 'Tüm İlanlar';
 
   return (
     <div className="container mx-auto py-8">
@@ -51,8 +63,8 @@ export default function BreedPage() {
         {/* Left Sidebar */}
         <aside className="lg:col-span-1">
           <BreedPageSidebar 
-            categoryName={filteredPets.length > 0 ? `${filteredPets[0].type} İlanları` : 'Tüm İlanlar'}
-            categoryCount={pets.filter(p => p.type === filteredPets[0]?.type).length}
+            categoryName={categoryName}
+            categoryCount={pets.filter(p => p.type === categoryType).length}
             breedName={breedName}
             breedCount={filteredPets.length}
           />
@@ -63,7 +75,7 @@ export default function BreedPage() {
           <div className="text-sm text-muted-foreground mb-4 flex items-center">
             <Link href="/" className="hover:text-primary">Anasayfa</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
-            <span>{categoryName}</span>
+            <span>Kategoriler</span>
             <ChevronRight className="h-4 w-4 mx-1" />
             <span className="font-semibold text-foreground">{breedName}</span>
           </div>
