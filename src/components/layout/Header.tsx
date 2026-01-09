@@ -49,7 +49,6 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { SearchFilters } from '../SearchFilters';
 import { VetSearchFilters } from '../VetSearchFilters';
 import { Skeleton } from '../ui/skeleton';
-import { allDogBreeds, allCatBreeds, allBirdBreeds, allAquariumBreeds, allOtherBreeds } from '@/lib/breeds';
 
 const navLinks = [
   { href: '/', label: 'İlanlar' },
@@ -69,14 +68,7 @@ const serviceCategories = [
   { icon: PersonStanding, label: 'Gezdirici', href: '/gezdirici' },
 ];
 
-const allBreedsMap = {
-  'Köpek': allDogBreeds,
-  'Kedi': allCatBreeds,
-  'Kuş': allBirdBreeds,
-  'Akvaryum': allAquariumBreeds,
-  'Diğer': allOtherBreeds
-};
-const allCategories = ['Köpek', 'Kedi', 'Kuş', 'Akvaryum', 'Diğer'];
+const mainCategories = ['Köpek', 'Kedi', 'Kuş', 'Akvaryum', 'Diğer'];
 
 const slugify = (text: string) => {
   return text
@@ -97,7 +89,6 @@ export function Header() {
   const { user, isUserLoading } = useUser();
   const { userProfile, isLoading: isProfileLoading } = useUserProfile(user?.uid);
   const [isMounted, setIsMounted] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('Köpek');
 
   useEffect(() => {
     setIsMounted(true);
@@ -152,85 +143,91 @@ export function Header() {
 
   const renderAuthContent = () => {
     if (isLoading) {
-      return <Skeleton className="h-10 w-40" />;
-    }
-
-    if (!user) {
       return (
-        <div className="hidden md:flex items-center space-x-2">
-          <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white">
-            <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
-          </Button>
-          <Button variant="outline" asChild className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-white/20 hover:text-white">
-            <Link href="/kayit">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Kayıt Ol
-            </Link>
-          </Button>
-        </div>
+          <div className="flex items-center space-x-2">
+              <Skeleton className="h-10 w-40" />
+          </div>
       );
     }
     
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-white/20">
-            <Avatar className={cn(
-              "h-10 w-10 border-2",
-              isPremium
-                ? "border-yellow-400 ring-2 ring-yellow-400 ring-offset-2 ring-offset-primary"
-                : "border-secondary"
-            )}>
-              <AvatarImage src={''} alt={user?.displayName ?? 'User'} />
-              <AvatarFallback className="bg-primary-foreground text-primary font-bold text-lg">
-                {getInitials(user?.email)}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" forceMount>
-          <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{userProfile?.username ?? user?.displayName ?? 'Kullanıcı'}</p>
-              <p className="text-xs leading-none text-muted-foreground">
-                {user?.email}
-              </p>
-            </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem asChild>
-              <Link href="/profil">
-                <User className="mr-2 h-4 w-4" />
-                <span>Profilim</span>
+      <>
+        {!user ? (
+          <div className={cn("hidden md:flex items-center space-x-2", isLoading ? "invisible" : "")}>
+            <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white">
+              <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
+            </Button>
+            <Button variant="outline" asChild className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-white/20 hover:text-white">
+              <Link href="/kayit">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Kayıt Ol
               </Link>
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/destek">
-              <LifeBuoy className="mr-2 h-4 w-4" />
-              <span>Yardım & Destek</span>
-            </Link>
-          </DropdownMenuItem>
-          {isAdmin && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/admin">
-                  <Shield className="mr-2 h-4 w-4" />
-                  <span>Admin Paneli</span>
-                </Link>
-              </DropdownMenuItem>
-            </>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Çıkış Yap</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            </Button>
+          </div>
+        ) : (
+          <div className={cn(isLoading ? "invisible" : "")}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-white/20">
+                  <Avatar className={cn(
+                    "h-10 w-10 border-2",
+                    isPremium
+                      ? "border-yellow-400"
+                      : "border-secondary"
+                  )}>
+                    <AvatarImage src={''} alt={user?.displayName ?? 'User'} />
+                    <AvatarFallback className="bg-primary-foreground text-primary font-bold text-lg">
+                      {getInitials(user?.email)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{userProfile?.username ?? user?.displayName ?? 'Kullanıcı'}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profil">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profilim</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/destek">
+                    <LifeBuoy className="mr-2 h-4 w-4" />
+                    <span>Yardım & Destek</span>
+                  </Link>
+                </DropdownMenuItem>
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin">
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Admin Paneli</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Çıkış Yap</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+      </>
     );
   };
 
@@ -245,6 +242,28 @@ export function Header() {
             </div>
             <span className="font-bold text-xl">Patisemti</span>
           </Link>
+          
+           <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Kategoriler</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                    {mainCategories.map((category) => (
+                      <ListItem
+                        key={category}
+                        title={category}
+                        href={`/kategori/${slugify(category)}`}
+                      >
+                        {category} kategorisindeki tüm ilanları görün.
+                      </ListItem>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+
 
           <div className="flex flex-1 items-center justify-end space-x-4">
              {renderAuthContent()}
