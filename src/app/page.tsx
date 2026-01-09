@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 
-const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
+const CategoryFilter = ({ category, onTriggerClick, isSelected }: { category: CategoryInfo, onTriggerClick: (value: string) => void, isSelected: boolean }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredBreeds = category.breeds.filter(breed =>
@@ -34,17 +34,24 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
   );
 
   return (
-    <AccordionItem value={category.type.toLowerCase()}>
-       <AccordionTrigger className="font-bold flex justify-between items-center w-full hover:no-underline p-3 rounded-lg transition-all duration-200 hover:bg-orange-50 active:scale-[0.98]">
-         <Link href={`/${category.slug}`} className="flex items-center gap-2 hover:underline">
-           <div className={cn("flex items-center gap-2", category.color)}>
-            <category.Icon /> {category.title}
-          </div>
-         </Link>
+    <AccordionItem value={category.type.toLowerCase()} className="border-b-0 mb-2">
+       <AccordionTrigger 
+         onClick={() => onTriggerClick(category.type.toLowerCase())}
+         className={cn(
+          "inline-flex items-center justify-between whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 w-full hover:no-underline",
+          "data-[state=open]:text-primary data-[state=open]:[box-shadow:0_0_8px_hsl(var(--primary))] data-[state=open]:bg-background",
+           isSelected 
+             ? "bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))]"
+             : "bg-muted text-muted-foreground hover:text-primary"
+         )}
+       >
+         <div className={cn("flex items-center gap-2 font-bold", isSelected ? category.color : "")}>
+           <category.Icon /> {category.title}
+         </div>
          <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
       </AccordionTrigger>
-      <AccordionContent>
-        <div className="space-y-4 pl-2">
+      <AccordionContent className="bg-white rounded-b-lg">
+        <div className="space-y-4 p-4">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -55,10 +62,10 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-           <ul className="space-y-3 pr-2">
+           <ul className="space-y-1 max-h-60 overflow-y-auto pr-2">
             {filteredBreeds.length > 0 ? filteredBreeds.map((breed) => (
               <li key={breed.name}>
-                 <Link href={`/${category.slug}/${breed.slug}`} className="flex items-center justify-between text-muted-foreground hover:text-primary group">
+                 <Link href={`/${category.slug}/${breed.slug}`} className="flex items-center justify-between text-muted-foreground hover:text-primary group p-2 rounded-md hover:bg-secondary/50">
                   <div className="flex items-center gap-3">
                      <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                        <Image 
@@ -112,6 +119,7 @@ const blogPosts = [
 
 export default function HomePage() {
   const [shuffledFeaturedPets, setShuffledFeaturedPets] = useState<Pet[]>([]);
+  const [openAccordion, setOpenAccordion] = useState<string[]>(["dog", "cat"]);
 
   const dogPets = useMemo(() => pets.filter(p => p.type === 'Dog'), []);
   const catPets = useMemo(() => pets.filter(p => p.type === 'Cat'), []);
@@ -129,15 +137,28 @@ export default function HomePage() {
 
   const displayedFeaturedPets = shuffledFeaturedPets.length > 0 ? shuffledFeaturedPets : initialFeatured;
 
+  const handleAccordionToggle = (value: string) => {
+    setOpenAccordion(prev => 
+      prev.includes(value) 
+        ? prev.filter(item => item !== value) 
+        : [...prev, value]
+    );
+  };
+
   return (
     <div className="bg-secondary/50">
       <div className="container mx-auto py-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <aside className="col-span-1">
             <div className="bg-white p-4 rounded-lg shadow-sm">
-              <Accordion type="multiple" defaultValue={["dog", "cat"]} className="w-full">
+              <Accordion type="multiple" value={openAccordion} onValueChange={setOpenAccordion} className="w-full space-y-1">
                  {categories.map((cat) => (
-                    <CategoryFilter key={cat.type} category={cat} />
+                    <CategoryFilter 
+                      key={cat.type} 
+                      category={cat} 
+                      onTriggerClick={() => {}} 
+                      isSelected={openAccordion.includes(cat.type.toLowerCase())}
+                    />
                  ))}
               </Accordion>
             </div>
