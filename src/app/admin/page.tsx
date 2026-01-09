@@ -1,36 +1,36 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { LayoutDashboard } from "lucide-react";
+import { useUser } from '@/firebase';
+import { Loader2, ShieldOff } from 'lucide-react';
+import { AdminShell } from './AdminShell';
+
 
 export default function AdminPage() {
-  
-  const handlePasswordlessSignIn = () => {
-    // This is a placeholder for now.
-    // In a real scenario, you would implement a secure passwordless flow.
-    alert("Admin girişi başarılı! (Bu bir yer tutucudur)");
-  };
+  const { user, isUserLoading } = useUser();
 
-  return (
-    <div className="container mx-auto py-12 flex items-center justify-center min-h-[calc(100vh-18rem)]">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-            <div className="mx-auto bg-primary/10 text-primary w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                <LayoutDashboard className="w-8 h-8" />
-            </div>
-          <CardTitle className="text-3xl font-headline">Admin Paneli</CardTitle>
-          <CardDescription>Uygulama yönetimine hoş geldiniz.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center space-y-4">
-          <p className="text-sm text-center text-muted-foreground">
-            Bu bölümden ilanları, kullanıcıları ve diğer ayarları yönetebilirsiniz.
-          </p>
-          <Button onClick={handlePasswordlessSignIn} className="w-full">
-            Şifresiz Giriş Yap
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  if (isUserLoading) {
+    return (
+      <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // IMPORTANT: In a real production app, this check should be done using custom claims
+  // and enforced with Firestore security rules, not just client-side logic.
+  const isAdmin = user && user.email === 'admin@patisemti.com';
+
+  if (!isAdmin) {
+    return (
+      <div className="container mx-auto flex h-[calc(100vh-8rem)] flex-col items-center justify-center text-center">
+        <ShieldOff className="h-24 w-24 text-destructive" />
+        <h1 className="mt-6 text-3xl font-bold font-headline">Erişim Reddedildi</h1>
+        <p className="mt-2 text-lg text-muted-foreground">
+          Bu sayfayı görüntüleme yetkiniz yok.
+        </p>
+      </div>
+    );
+  }
+
+  return <AdminShell />;
 }
