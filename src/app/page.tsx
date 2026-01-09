@@ -17,7 +17,8 @@ import {
   ArrowRight,
   Search,
   PawPrint,
-  BookText
+  BookText,
+  ChevronDown
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import type { Pet } from "@/lib/data";
 import { allDogBreeds, allCatBreeds, allBirdBreeds, allAquariumBreeds, allOtherBreeds } from "@/lib/breeds";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 type BreedInfo = {
   name: string;
@@ -39,6 +41,7 @@ type CategoryInfo = {
   Icon: React.ElementType;
   color: string;
   title: string;
+  slug: string;
 };
 
 const slugify = (text: string) => {
@@ -62,10 +65,14 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
 
   return (
     <AccordionItem value={category.type.toLowerCase()}>
-      <AccordionTrigger className="font-bold">
-        <div className={`flex items-center gap-2 ${category.color}`}>
-          <category.Icon /> {category.title}
-        </div>
+      <AccordionTrigger className="font-bold flex justify-between items-center w-full hover:no-underline">
+        <Link href={`/kategori/${category.slug}`} className="flex items-center gap-2 hover:underline">
+          <div className={cn("flex items-center gap-2", category.color)}>
+            <category.Icon /> {category.title}
+          </div>
+        </Link>
+        {/* The ChevronDown is part of the trigger but outside the link */}
+        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
       </AccordionTrigger>
       <AccordionContent>
         <div className="space-y-4 pl-2">
@@ -169,6 +176,7 @@ export default function HomePage() {
       {
         type: 'Dog',
         title: 'Köpekler',
+        slug: 'kopekler',
         Icon: Dog,
         color: 'text-orange-500',
         breeds: processBreeds(allDogBreeds, countsByType.Dog),
@@ -176,6 +184,7 @@ export default function HomePage() {
       {
         type: 'Cat',
         title: 'Kediler',
+        slug: 'kediler',
         Icon: Cat,
         color: 'text-red-400',
         breeds: processBreeds(allCatBreeds, countsByType.Cat),
@@ -183,6 +192,7 @@ export default function HomePage() {
       {
         type: 'Bird',
         title: 'Kuşlar',
+        slug: 'kuslar',
         Icon: Bird,
         color: 'text-sky-400',
         breeds: processBreeds(allBirdBreeds, countsByType.Bird),
@@ -190,6 +200,7 @@ export default function HomePage() {
       {
         type: 'Aquarium',
         title: 'Akvaryum Canlıları',
+        slug: 'akvaryum-canlilari',
         Icon: Fish,
         color: 'text-blue-400',
         breeds: processBreeds(allAquariumBreeds, countsByType.Aquarium),
@@ -197,6 +208,7 @@ export default function HomePage() {
        {
         type: 'Other',
         title: 'Diğer',
+        slug: 'diger',
         Icon: PawPrint,
         color: 'text-emerald-500',
         breeds: processBreeds(allOtherBreeds, countsByType.Other),
@@ -252,7 +264,7 @@ export default function HomePage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Köpek İlanları</h2>
                 <Button variant="link" asChild className="text-primary">
-                  <Link href="/">
+                  <Link href="/kategori/kopekler">
                     Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
                   </Link>
                 </Button>
@@ -267,7 +279,7 @@ export default function HomePage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Kedi İlanları</h2>
                 <Button variant="link" asChild className="text-primary">
-                  <Link href="/">
+                  <Link href="/kategori/kediler">
                     Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
                   </Link>
                 </Button>
@@ -282,7 +294,7 @@ export default function HomePage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Kuş İlanları</h2>
                 <Button variant="link" asChild className="text-primary">
-                  <Link href="/">
+                  <Link href="/kategori/kuslar">
                     Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
                   </Link>
                 </Button>
@@ -297,7 +309,7 @@ export default function HomePage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Akvaryum Canlıları</h2>
                 <Button variant="link" asChild className="text-primary">
-                  <Link href="/">
+                  <Link href="/kategori/akvaryum-canlilari">
                     Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
                   </Link>
                 </Button>
@@ -340,9 +352,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
-
-    
-
-  
