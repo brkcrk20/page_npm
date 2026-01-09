@@ -4,7 +4,7 @@
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Loader2, LogOut, Edit, Save, X, FileText, Heart, ShieldCheck, Building, Settings, User as UserIcon, Coin, Briefcase } from 'lucide-react';
+import { Loader2, LogOut, Edit, Save, X, FileText, Heart, ShieldCheck, Building, Settings, User as UserIcon, Coins, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -331,7 +331,7 @@ export default function ProfilePage() {
                                 </Badge>
                             )}
                              <Badge variant="secondary" className="flex items-center gap-1">
-                                <Coin className="h-3 w-3" />
+                                <Coins className="h-3 w-3" />
                                 {profileData?.credit ?? 0} Kredi
                             </Badge>
                         </div>
@@ -432,5 +432,7 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    
 
     
