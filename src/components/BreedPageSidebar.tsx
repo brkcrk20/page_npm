@@ -41,9 +41,13 @@ export function BreedPageSidebar({
   return (
     <div className="w-full space-y-6">
         <div className="bg-secondary/50 p-4 rounded-lg">
-            <h2 className="font-bold">{categoryName} ({categoryCount})</h2>
-            {breedName ? (
-                <p className="text-primary font-semibold pl-2">{breedName} ({breedCount})</p>
+            <Link href={`/${categorySlug || ''}`} className="block font-bold hover:text-primary transition-colors">
+                <h2 className="font-bold">{categoryName} ({categoryCount})</h2>
+            </Link>
+            {breedName && categorySlug ? (
+                 <Link href={`/${categorySlug}/${breedName.toLowerCase().replace(/\s+/g, '-')}`} className="block text-primary font-semibold pl-2 hover:underline">
+                    <p>{breedName} ({breedCount})</p>
+                </Link>
             ) : (
                 breeds && categorySlug && (
                     <ul className="space-y-1 mt-2 pl-2 max-h-96 overflow-y-auto">
