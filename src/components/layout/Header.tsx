@@ -155,81 +155,82 @@ export function Header() {
       return <Skeleton className="h-10 w-40" />;
     }
 
-    return (
-      <>
-        <div className={cn("hidden md:flex items-center space-x-2", { 'invisible': user })}>
-            <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white">
+    if (!user) {
+      return (
+        <div className="hidden md:flex items-center space-x-2">
+          <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white">
             <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
-            </Button>
-            <Button variant="outline" asChild className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-white/20 hover:text-white">
+          </Button>
+          <Button variant="outline" asChild className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-white/20 hover:text-white">
             <Link href="/kayit">
-                <UserPlus className="mr-2 h-4 w-4" />
-                Kayıt Ol
+              <UserPlus className="mr-2 h-4 w-4" />
+              Kayıt Ol
             </Link>
-            </Button>
+          </Button>
         </div>
-        <div className={cn({ 'invisible': !user })}>
-          {user && <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-white/20">
-                <Avatar className={cn(
-                  "h-10 w-10 border-2",
-                  isPremium
-                    ? "border-yellow-400 ring-2 ring-yellow-400 ring-offset-2 ring-offset-primary"
-                    : "border-secondary"
-                )}>
-                  <AvatarImage src={''} alt={user?.displayName ?? 'User'} />
-                  <AvatarFallback className="bg-primary-foreground text-primary font-bold text-lg">
-                    {getInitials(user?.email)}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{userProfile?.username ?? user?.displayName ?? 'Kullanıcı'}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                  <Link href="/profil">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profilim</span>
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
+      );
+    }
+    
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-white/20">
+            <Avatar className={cn(
+              "h-10 w-10 border-2",
+              isPremium
+                ? "border-yellow-400 ring-2 ring-yellow-400 ring-offset-2 ring-offset-primary"
+                : "border-secondary"
+            )}>
+              <AvatarImage src={''} alt={user?.displayName ?? 'User'} />
+              <AvatarFallback className="bg-primary-foreground text-primary font-bold text-lg">
+                {getInitials(user?.email)}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">{userProfile?.username ?? user?.displayName ?? 'Kullanıcı'}</p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user?.email}
+              </p>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem asChild>
+              <Link href="/profil">
+                <User className="mr-2 h-4 w-4" />
+                <span>Profilim</span>
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/destek">
+              <LifeBuoy className="mr-2 h-4 w-4" />
+              <span>Yardım & Destek</span>
+            </Link>
+          </DropdownMenuItem>
+          {isAdmin && (
+            <>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/destek">
-                  <LifeBuoy className="mr-2 h-4 w-4" />
-                  <span>Yardım & Destek</span>
+                <Link href="/admin">
+                  <Shield className="mr-2 h-4 w-4" />
+                  <span>Admin Paneli</span>
                 </Link>
               </DropdownMenuItem>
-              {isAdmin && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin">
-                      <Shield className="mr-2 h-4 w-4" />
-                      <span>Admin Paneli</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Çıkış Yap</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>}
-        </div>
-      </>
+            </>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Çıkış Yap</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   };
 
@@ -244,69 +245,6 @@ export function Header() {
             </div>
             <span className="font-bold text-xl">Patisemti</span>
           </Link>
-
-          <NavigationMenu className="hidden md:flex">
-            <NavigationMenuList>
-              
-               <NavigationMenuItem>
-                <Link href="/" legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    İlanlar
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Kategoriler</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                    {allCategories.map((category) => (
-                      <ListItem
-                        key={category}
-                        title={category}
-                        href="#"
-                        onMouseEnter={() => setSelectedCategory(category)}
-                        onClick={() => setSelectedCategory(category)}
-                      >
-                        {allBreedsMap[category as keyof typeof allBreedsMap].slice(0, 3).join(', ')}...
-                      </ListItem>
-                    ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-
-               <NavigationMenuItem>
-                <NavigationMenuTrigger>Cinsler</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                   <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                    {(allBreedsMap[selectedCategory as keyof typeof allBreedsMap] || []).map((breed) => (
-                      <ListItem
-                        key={breed}
-                        title={breed}
-                        href={`/cins/${slugify(breed)}`}
-                      />
-                    ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-
-               <NavigationMenuItem>
-                <Link href="/blog" legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Blog
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-               <NavigationMenuItem>
-                <Link href="/guvenlik" legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Güvenlik
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-
-            </NavigationMenuList>
-          </NavigationMenu>
 
           <div className="flex flex-1 items-center justify-end space-x-4">
              {renderAuthContent()}
