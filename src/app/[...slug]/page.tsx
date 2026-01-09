@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from '@/components/ui/button';
 import { allBreeds, categories } from '@/lib/breeds';
+import React from 'react';
 
 const unslugify = (slug: string) => {
   if (!slug) return '';

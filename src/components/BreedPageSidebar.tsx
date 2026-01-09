@@ -46,8 +46,8 @@ export function BreedPageSidebar({
                 <p className="text-primary font-semibold pl-2">{breedName} ({breedCount})</p>
             ) : (
                 breeds && categorySlug && (
-                    <ul className="space-y-1 mt-2 pl-2">
-                        {breeds.slice(0, 10).map(breed => ( // Show top 10 breeds
+                    <ul className="space-y-1 mt-2 pl-2 max-h-96 overflow-y-auto">
+                        {breeds.map(breed => (
                             <li key={breed.id}>
                                 <Link href={`/${categorySlug}/${breed.slug}`} className="flex justify-between items-center text-sm text-muted-foreground hover:text-primary group">
                                    <span>{breed.name}</span>
