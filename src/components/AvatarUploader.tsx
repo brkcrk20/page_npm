@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useAuth, useFirestore, useStorage } from '@/firebase';
+import { useFirestore, useStorage } from '@/firebase';
 import { User, updateProfile } from 'firebase/auth';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -19,7 +19,6 @@ interface AvatarUploaderProps {
 export function AvatarUploader({ user }: AvatarUploaderProps) {
   const firestore = useFirestore();
   const storage = useStorage();
-  const auth = useAuth();
   const { toast } = useToast();
 
   const [isUploading, setIsUploading] = useState(false);
@@ -33,7 +32,8 @@ export function AvatarUploader({ user }: AvatarUploaderProps) {
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user || !auth.currentUser) return;
+    const currentUser = user; // Use the user prop which is always current
+    if (!file || !currentUser) return;
 
     setIsUploading(true);
 
@@ -46,16 +46,16 @@ export function AvatarUploader({ user }: AvatarUploaderProps) {
       };
       const compressedFile = await imageCompression(file, options);
 
-      const storageRef = ref(storage, `avatars/${user.uid}/profile.jpg`);
+      const storageRef = ref(storage, `avatars/${currentUser.uid}/profile.jpg`);
       await uploadBytes(storageRef, compressedFile);
       const downloadURL = await getDownloadURL(storageRef);
 
       // --- CRITICAL CHANGE: Update Auth profile FIRST ---
       // This will trigger the useUser hook and update the UI immediately and reliably.
-      await updateProfile(auth.currentUser, { photoURL: downloadURL });
+      await updateProfile(currentUser, { photoURL: downloadURL });
       
       // Update Firestore in the background. This doesn't need to block the UI update.
-      const userProfileRef = doc(firestore, 'users', user.uid);
+      const userProfileRef = doc(firestore, 'users', currentUser.uid);
       updateDoc(userProfileRef, { avatarUrl: downloadURL });
 
       toast({
