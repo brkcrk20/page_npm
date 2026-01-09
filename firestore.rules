@@ -1,16 +1,17 @@
 /**
- * Core Philosophy: This ruleset enforces a strict user-ownership model. All data is private to the user who created it, and there are no publicly accessible collections. This ensures maximum privacy and control for users over their own information.
+ * Core Philosophy: This ruleset enforces a strict user-ownership model, with a special exception for an admin role.
+ * - Standard Users: All data is private to the user who created it.
+ * - Admin User: Has read-only access across all user data for management purposes.
  *
- * Data Structure: The data is organized hierarchically. All user-specific content, such as profiles, pet listings, and service listings, is nested under a top-level `/users` collection, with each user's data contained within their own document tree (e.g., /users/{userId}/...). This structure inherently links data to its owner.
+ * Data Structure: Data is organized hierarchically under a top-level `/users` collection.
  *
  * Key Security Decisions:
- * - No Public Data: By default, no data is readable or writable by the public or other authenticated users. Access is restricted to the data owner.
- * - User Listing Disabled: To protect user privacy, it is not possible to query or list all documents in the `/users` collection.
- * - Path-Based Security: Authorization is primarily determined by the `{userId}` wildcard in the document path, ensuring that a user can only access documents within their own data tree.
+ * - Admin Read-Only Access: A designated admin user can list and read data across the entire database but cannot write outside their own data tree. This is managed via the `isAdmin()` function.
+ * - No Public Data: By default, no data is readable or writable by the public or other authenticated users.
+ * - User Listing Disabled (for non-admins): To protect user privacy, non-admin users cannot query or list all documents in the `/users` collection.
+ * - Path-Based Security: Authorization for non-admins is primarily determined by the `{userId}` wildcard in the document path.
  *
- * Denormalization for Authorization: To create performant and secure rules, this model relies on denormalization. Subcollection documents (like PetListing and Service) must contain a `userId` field that mirrors the `{userId}` from the path. This avoids costly and slow `get()` calls in security rules, allowing for simpler, more robust validation.
- *
- * Structural Segregation: The design uses separate collections for different data types (e.g., `petListings`, `services`) nested under the user's path. This cleanly segregates data and simplifies access control, as all data within a user's tree inherits the same ownership principle.
+ * Denormalization for Authorization: Subcollection documents contain a `userId` field mirroring the `{userId}` from the path. This avoids costly and slow `get()` calls in security rules, allowing for simpler, more robust validation.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -25,6 +26,14 @@ service cloud.firestore {
      */
     function isSignedIn() {
       return request.auth != null;
+    }
+
+    /**
+     * Checks if the user is the designated admin based on their email.
+     * IMPORTANT: For production, it's highly recommended to use custom claims instead of hardcoding an email.
+     */
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'admin@patisemti.com';
     }
 
     /**
@@ -96,51 +105,71 @@ service cloud.firestore {
     // ----------------------------------------------------------------------
 
     /**
-     * @description Manages user profile documents. Only the owner can read or write their own profile.
+     * @description Manages user profile documents. Only the owner can write their profile. Admin can read any profile and list all users.
      * @path /users/{userId}
-     * @allow (get) A signed-in user (uid: 'user123') retrieving their own profile at /users/user123.
-     * @deny (list) Any user attempting to query the /users collection to get a list of all users.
-     * @deny (update) A signed-in user (uid: 'user456') trying to modify another user's profile at /users/user123.
-     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     * @allow (get) An admin or the profile owner retrieving a specific profile.
+     * @allow (list) An admin querying the /users collection.
+     * @deny (list) A non-admin user attempting to list all users.
+     * @principle Grants read-only admin oversight while maintaining user-specific write controls.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow create: if isOwner(userId) && hasValidUserProfileData(userId);
       allow update: if isExistingOwner(userId) && isUserProfileIdImmutable();
       allow delete: if isExistingOwner(userId);
 
       /**
-       * @description Manages the pet listings created by a specific user. Only the owner can manage their listings.
+       * @description Manages pet listings. Only the owner can write. Admin can read all listings.
        * @path /users/{userId}/petListings/{petListingId}
-       * @allow (create) A signed-in user (uid: 'user123') creating a new pet listing at /users/user123/petListings/pet_abc.
-       * @allow (list) A signed-in user (uid: 'user123') querying all of their own listings under /users/user123/petListings.
-       * @deny (get) A signed-in user (uid: 'user456') trying to read a listing from /users/user123/petListings/pet_abc.
-       * @principle Enforces document ownership within a user-specific subcollection.
+       * @principle Inherits ownership from the user path, but allows admin read access.
        */
       match /petListings/{petListingId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) || isAdmin();
+        allow list: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && hasValidPetListingData(userId);
         allow update: if isExistingOwner(userId) && isPetListingOwnerImmutable();
         allow delete: if isExistingOwner(userId);
       }
 
       /**
-       * @description Manages the service listings created by a specific user. Only the owner can manage their listings.
+       * @description Manages service listings. Only the owner can write. Admin can read all listings.
        * @path /users/{userId}/services/{serviceId}
-       * @allow (create) A signed-in user (uid: 'user123') creating a new service listing at /users/user123/services/service_xyz.
-       * @allow (list) A signed-in user (uid: 'user123') querying all of their own services under /users/user123/services.
-       * @deny (delete) A signed-in user (uid: 'user456') trying to delete a service from /users/user123/services/service_xyz.
-       * @principle Enforces document ownership within a user-specific subcollection.
+       * @principle Inherits ownership from the user path, but allows admin read access.
        */
       match /services/{serviceId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) || isAdmin();
+        allow list: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && hasValidServiceData(userId);
         allow update: if isExistingOwner(userId) && isServiceOwnerImmutable();
         allow delete: if isExistingOwner(userId);
       }
     }
+
+    // ----------------------------------------------------------------------
+    // Collection Group Rules for Admin Access
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Allows admin to query across all pet listings in the application.
+     * @path /petListings/{petListingId}
+     * @allow (get) Admin can read any single pet listing from any user.
+     * @principle Enables global read access for admin role via collection group query.
+     */
+    match /{path=**}/petListings/{petListingId} {
+      allow get, list: if isAdmin();
+    }
+
+    /**
+     * @description Allows admin to query across all service listings in the application.
+     * @path /services/{serviceId}
+     * @allow (get) Admin can read any single service from any user.
+     * @principle Enables global read access for admin role via collection group query.
+     */
+    match /{path=**}/services/{serviceId} {
+      allow get, list: if isAdmin();
+    }
   }
 }
+
+    
