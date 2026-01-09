@@ -40,15 +40,17 @@ export function BreedPageSidebar({
   return (
     <div className="w-full space-y-6">
         <div className="bg-white p-4 rounded-lg shadow-sm">
-            <Link 
-              href={`/${categorySlug}`} 
+            <div 
               className={cn(
-                "block font-bold text-lg mb-4 text-center p-3 rounded-lg bg-secondary hover:bg-orange-50 hover:text-orange-600 transition-all duration-200",
-                !breedName && "bg-orange-100 text-orange-700"
+                "w-full p-4 mb-4 rounded-xl border font-bold flex justify-between items-center",
+                "border-orange-500 bg-orange-50 text-orange-600 shadow-[0_0_15px_rgba(249,115,22,0.5)]"
               )}
             >
-                {categoryName} ({categoryCount})
-            </Link>
+                {categoryName}
+                <span className={cn("font-semibold px-2 py-0.5 rounded-full text-xs", "bg-orange-200 text-orange-700")}>
+                    {categoryCount}
+                </span>
+            </div>
 
             {breeds && categorySlug && (
                 <ul className="space-y-1">
