@@ -35,14 +35,13 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
 
   return (
     <AccordionItem value={category.type.toLowerCase()}>
-      <AccordionTrigger className="font-bold flex justify-between items-center w-full hover:no-underline">
-        <Link href={`/${category.slug}`} className="flex items-center gap-2 hover:underline">
-          <div className={cn("flex items-center gap-2", category.color)}>
+       <AccordionTrigger className="font-bold flex justify-between items-center w-full hover:no-underline p-3 rounded-lg transition-all duration-200 hover:bg-secondary/50 active:scale-[0.98]">
+         <Link href={`/${category.slug}`} className="flex items-center gap-2 hover:underline">
+           <div className={cn("flex items-center gap-2", category.color)}>
             <category.Icon /> {category.title}
           </div>
-        </Link>
-        {/* The ChevronDown is part of the trigger but outside the link */}
-        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+         </Link>
+         <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
       </AccordionTrigger>
       <AccordionContent>
         <div className="space-y-4 pl-2">
@@ -59,7 +58,7 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
            <ul className="space-y-3 pr-2">
             {filteredBreeds.length > 0 ? filteredBreeds.map((breed) => (
               <li key={breed.name}>
-                 <Link href={`/${category.slug}/${breed.name.toLowerCase().replace(/ /g, '-')}`} className="flex items-center justify-between text-muted-foreground hover:text-primary group">
+                 <Link href={`/${category.slug}/${breed.slug}`} className="flex items-center justify-between text-muted-foreground hover:text-primary group">
                   <div className="flex items-center gap-3">
                      <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                        <Image 
