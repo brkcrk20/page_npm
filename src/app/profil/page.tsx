@@ -347,7 +347,12 @@ export default function ProfilePage() {
                             </p>
                         </div>
                          <div className="flex flex-col sm:flex-row md:flex-row items-center gap-3 w-full md:w-auto flex-shrink-0">
-                            <Badge variant="outline" className="text-base order-1 sm:order-none">{userType}</Badge>
+                             <div className="flex items-center gap-2">
+                                <Badge variant={getStatusVariant(profileData?.userStatus)} className="capitalize text-base">
+                                  {profileData?.userStatus || 'standart'}
+                                </Badge>
+                                <Badge variant="outline" className="text-base">{userType}</Badge>
+                             </div>
                              <div className='flex gap-3 w-full sm:w-auto'>
                                 <Button variant="outline" className='flex-1'>
                                     <Edit className="mr-2 h-4 w-4" />
