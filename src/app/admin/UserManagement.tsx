@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useAllUsers } from "@/firebase/firestore/admin-hooks";
-import { Loader2, ShieldAlert, MoreHorizontal, UserPlus, Trash2, Ban, UserCog } from "lucide-react";
+import { Loader2, ShieldAlert, MoreHorizontal, UserPlus, Trash2, Ban, UserCog, Star, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -80,14 +80,20 @@ export function UserManagement() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleAction('Approve', user.id)}>
-                            Kullanıcıyı Onayla
+                          <DropdownMenuItem onClick={() => handleAction('View Details', user.id)}>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Kullanıcı Bilgileri
+                          </DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => handleAction('Make Premium', user.id)}>
+                            <Star className="mr-2 h-4 w-4" />
+                            Premium Yap
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                            <DropdownMenuItem onClick={() => handleAction('Change Role', user.id)}>
                             <UserCog className="mr-2 h-4 w-4" />
                             Rolünü Değiştir
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-destructive" onClick={() => handleAction('Ban', user.id)}>
                             <Ban className="mr-2 h-4 w-4" />
                             Kullanıcıyı Yasakla
