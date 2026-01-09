@@ -36,10 +36,20 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu"
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { SearchFilters } from '../SearchFilters';
 import { VetSearchFilters } from '../VetSearchFilters';
 import { Skeleton } from '../ui/skeleton';
+import { allDogBreeds, allCatBreeds, allBirdBreeds, allAquariumBreeds, allOtherBreeds } from '@/lib/breeds';
 
 const navLinks = [
   { href: '/', label: 'İlanlar' },
@@ -59,12 +69,36 @@ const serviceCategories = [
   { icon: PersonStanding, label: 'Gezdirici', href: '/gezdirici' },
 ];
 
+const allBreedsMap = {
+  'Köpek': allDogBreeds,
+  'Kedi': allCatBreeds,
+  'Kuş': allBirdBreeds,
+  'Akvaryum': allAquariumBreeds,
+  'Diğer': allOtherBreeds
+};
+const allCategories = ['Köpek', 'Kedi', 'Kuş', 'Akvaryum', 'Diğer'];
+
+const slugify = (text: string) => {
+  return text
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-');
+};
+
+
 export function Header() {
   const pathname = usePathname();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
   const { user, isUserLoading } = useUser();
   const { userProfile, isLoading: isProfileLoading } = useUserProfile(user?.uid);
   const [isMounted, setIsMounted] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('Köpek');
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -121,82 +155,81 @@ export function Header() {
       return <Skeleton className="h-10 w-40" />;
     }
 
-    if (user) {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-white/20">
-              <Avatar className={cn(
-                "h-10 w-10 border-2",
-                isPremium
-                  ? "border-yellow-400 ring-2 ring-yellow-400 ring-offset-2 ring-offset-primary"
-                  : "border-secondary"
-              )}>
-                <AvatarImage src={''} alt={user?.displayName ?? 'User'} />
-                <AvatarFallback className="bg-primary-foreground text-primary font-bold text-lg">
-                  {getInitials(user?.email)}
-                </AvatarFallback>
-              </Avatar>
+    return (
+      <>
+        <div className={cn("hidden md:flex items-center space-x-2", { 'invisible': user })}>
+            <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white">
+            <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{userProfile?.username ?? user?.displayName ?? 'Kullanıcı'}</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email}
-                </p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <Link href="/profil">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profilim</span>
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/destek">
-                <LifeBuoy className="mr-2 h-4 w-4" />
-                <span>Yardım & Destek</span>
-              </Link>
-            </DropdownMenuItem>
-            {isAdmin && (
-              <>
-                <DropdownMenuSeparator />
+            <Button variant="outline" asChild className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-white/20 hover:text-white">
+            <Link href="/kayit">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Kayıt Ol
+            </Link>
+            </Button>
+        </div>
+        <div className={cn({ 'invisible': !user })}>
+          {user && <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-white/20">
+                <Avatar className={cn(
+                  "h-10 w-10 border-2",
+                  isPremium
+                    ? "border-yellow-400 ring-2 ring-yellow-400 ring-offset-2 ring-offset-primary"
+                    : "border-secondary"
+                )}>
+                  <AvatarImage src={''} alt={user?.displayName ?? 'User'} />
+                  <AvatarFallback className="bg-primary-foreground text-primary font-bold text-lg">
+                    {getInitials(user?.email)}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{userProfile?.username ?? user?.displayName ?? 'Kullanıcı'}</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user?.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
-                  <Link href="/admin">
-                    <Shield className="mr-2 h-4 w-4" />
-                    <span>Admin Paneli</span>
+                  <Link href="/profil">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profilim</span>
                   </Link>
                 </DropdownMenuItem>
-              </>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Çıkış Yap</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    }
-
-    return (
-      <div className="hidden md:flex items-center space-x-2">
-        <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white">
-          <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
-        </Button>
-        <Button variant="outline" asChild className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-white/20 hover:text-white">
-          <Link href="/kayit">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Kayıt Ol
-          </Link>
-        </Button>
-      </div>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/destek">
+                  <LifeBuoy className="mr-2 h-4 w-4" />
+                  <span>Yardım & Destek</span>
+                </Link>
+              </DropdownMenuItem>
+              {isAdmin && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin">
+                      <Shield className="mr-2 h-4 w-4" />
+                      <span>Admin Paneli</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Çıkış Yap</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>}
+        </div>
+      </>
     );
   };
 
@@ -212,20 +245,68 @@ export function Header() {
             <span className="font-bold text-xl">Patisemti</span>
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  'transition-colors hover:text-white/80',
-                  pathname === link.href ? 'text-white font-semibold' : 'text-primary-foreground/80'
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          <NavigationMenu className="hidden md:flex">
+            <NavigationMenuList>
+              
+               <NavigationMenuItem>
+                <Link href="/" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    İlanlar
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Kategoriler</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                    {allCategories.map((category) => (
+                      <ListItem
+                        key={category}
+                        title={category}
+                        href="#"
+                        onMouseEnter={() => setSelectedCategory(category)}
+                        onClick={() => setSelectedCategory(category)}
+                      >
+                        {allBreedsMap[category as keyof typeof allBreedsMap].slice(0, 3).join(', ')}...
+                      </ListItem>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+
+               <NavigationMenuItem>
+                <NavigationMenuTrigger>Cinsler</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                   <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                    {(allBreedsMap[selectedCategory as keyof typeof allBreedsMap] || []).map((breed) => (
+                      <ListItem
+                        key={breed}
+                        title={breed}
+                        href={`/cins/${slugify(breed)}`}
+                      />
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+
+               <NavigationMenuItem>
+                <Link href="/blog" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Blog
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+               <NavigationMenuItem>
+                <Link href="/guvenlik" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Güvenlik
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+
+            </NavigationMenuList>
+          </NavigationMenu>
 
           <div className="flex flex-1 items-center justify-end space-x-4">
              {renderAuthContent()}
@@ -260,11 +341,7 @@ export function Header() {
                   <Button asChild onClick={() => setSheetOpen(false)}>
                     <Link href={user ? '/listings/new' : '/login'}>İlan Ver</Link>
                   </Button>
-                  {user ? (
-                    <Button variant="outline" onClick={() => { handleLogout(); setSheetOpen(false); }}>
-                      <LogOut className="mr-2" />Çıkış Yap
-                    </Button>
-                  ) : (
+                  {!isLoading && !user && (
                     <>
                       <Button variant="outline" asChild onClick={() => setSheetOpen(false)}>
                         <Link href="/login">Giriş Yap</Link>
@@ -273,6 +350,11 @@ export function Header() {
                         <Link href="/kayit">Kayıt Ol</Link>
                       </Button>
                     </>
+                  )}
+                  {user && (
+                     <Button variant="outline" onClick={() => { handleLogout(); setSheetOpen(false); }}>
+                      <LogOut className="mr-2" />Çıkış Yap
+                    </Button>
                   )}
                 </div>
               </nav>
@@ -313,3 +395,29 @@ export function Header() {
     </>
   );
 }
+
+const ListItem = React.forwardRef<
+  React.ElementRef<"a">,
+  React.ComponentPropsWithoutRef<"a">
+>(({ className, title, children, ...props }, ref) => {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <a
+          ref={ref}
+          className={cn(
+            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+            className
+          )}
+          {...props}
+        >
+          <div className="text-sm font-medium leading-none">{title}</div>
+          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+            {children}
+          </p>
+        </a>
+      </NavigationMenuLink>
+    </li>
+  )
+})
+ListItem.displayName = "ListItem"
