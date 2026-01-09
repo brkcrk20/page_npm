@@ -21,8 +21,8 @@ import { Label } from "./ui/label";
 interface BreedPageSidebarProps {
     categoryName: string;
     categoryCount: number;
-    breedName: string;
-    breedCount: number;
+    breedName?: string;
+    breedCount?: number;
 }
 
 export function BreedPageSidebar({
@@ -35,7 +35,9 @@ export function BreedPageSidebar({
     <div className="w-full space-y-6">
         <div className="bg-secondary/50 p-4 rounded-lg">
             <h2 className="font-bold">{categoryName} ({categoryCount})</h2>
-            <p className="text-primary font-semibold pl-2">{breedName} ({breedCount})</p>
+            {breedName && (
+                <p className="text-primary font-semibold pl-2">{breedName} ({breedCount})</p>
+            )}
         </div>
         
         <div className="space-y-4">

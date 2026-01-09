@@ -14,48 +14,55 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from '@/components/ui/button';
+import { allBreeds, categories } from '@/lib/breeds';
 
 const unslugify = (slug: string) => {
+  if (!slug) return '';
   return slug
     .replace(/-/g, ' ')
     .replace(/\b\w/g, char => char.toUpperCase());
 };
 
-const slugify = (text: string) => {
-  return text
-    .toString()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
-    .replace(/--+/g, '-');
-};
-
-const translateCategory = (category: string) => {
-    switch (category) {
-        case 'Dog': return 'Köpek';
-        case 'Cat': return 'Kedi';
-        case 'Bird': return 'Kuş';
-        case 'Aquarium': return 'Akvaryum';
-        case 'Other': return 'Diğer';
-        default: return category;
-    }
-}
-
-export default function BreedPage() {
+export default function CatchAllPage() {
   const params = useParams();
-  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+  const slugParts = Array.isArray(params.slug) ? params.slug : [params.slug];
 
-  const breedName = unslugify(slug || '');
+  let filteredPets = [];
+  let pageTitle = "Tüm İlanlar";
+  let categoryName = "";
+  let breedName: string | undefined = undefined;
+  let categoryCount = 0;
+  let breedCount = 0;
+  let parentCategorySlug = "";
+  
+  // Single slug part means it's a main category page
+  if (slugParts.length === 1) {
+    const categorySlug = slugParts[0];
+    const category = categories.find(c => c.slug === categorySlug);
+    if (category) {
+        pageTitle = category.title;
+        categoryName = category.title;
+        parentCategorySlug = category.slug;
+        filteredPets = pets.filter(p => p.type === category.type);
+        categoryCount = filteredPets.length;
+    }
+  } 
+  // Two slug parts means it's a specific breed page
+  else if (slugParts.length === 2) {
+    const [categorySlug, breedSlug] = slugParts;
+    const category = categories.find(c => c.slug === categorySlug);
+    const breed = allBreeds.find(b => b.slug === breedSlug);
 
-  const filteredPets = pets.filter(
-    (pet) => slugify(pet.breed) === slug
-  );
-
-  const categoryType = filteredPets.length > 0 ? filteredPets[0].type : '';
-  const categoryName = categoryType ? `${translateCategory(categoryType)} İlanları` : 'Tüm İlanlar';
+    if (category && breed) {
+        pageTitle = breed.name;
+        categoryName = category.title;
+        breedName = breed.name;
+        parentCategorySlug = category.slug;
+        filteredPets = pets.filter(p => p.type === category.type && p.breed === breed.name);
+        breedCount = filteredPets.length;
+        categoryCount = pets.filter(p => p.type === category.type).length;
+    }
+  }
 
   return (
     <div className="container mx-auto py-8">
@@ -64,9 +71,9 @@ export default function BreedPage() {
         <aside className="lg:col-span-1">
           <BreedPageSidebar 
             categoryName={categoryName}
-            categoryCount={pets.filter(p => p.type === categoryType).length}
+            categoryCount={categoryCount}
             breedName={breedName}
-            breedCount={filteredPets.length}
+            breedCount={breedCount}
           />
         </aside>
 
@@ -75,18 +82,22 @@ export default function BreedPage() {
           <div className="text-sm text-muted-foreground mb-4 flex items-center">
             <Link href="/" className="hover:text-primary">Anasayfa</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
-            <span>Kategoriler</span>
-            <ChevronRight className="h-4 w-4 mx-1" />
-            <span className="font-semibold text-foreground">{breedName}</span>
+            <Link href={`/${parentCategorySlug}`} className="hover:text-primary">{categoryName}</Link>
+             {breedName && (
+                <>
+                    <ChevronRight className="h-4 w-4 mx-1" />
+                    <span className="font-semibold text-foreground">{breedName}</span>
+                </>
+             )}
           </div>
 
           <p className="text-sm text-muted-foreground mb-6">
-            <span className='font-bold text-primary'>{breedName}</span> kategorisinde <span className='font-bold text-foreground'>{filteredPets.length}</span> ilan bulundu.
+            <span className='font-bold text-primary'>{pageTitle}</span> kategorisinde <span className='font-bold text-foreground'>{filteredPets.length}</span> ilan bulundu.
           </p>
           
           <div className="flex flex-col sm:flex-row justify-between items-center mb-6 border-t border-b py-4">
               <h1 className="text-2xl font-bold font-headline mb-2 sm:mb-0">
-                {breedName}
+                {pageTitle}
               </h1>
               <div className='flex items-center gap-4'>
                 <div className='flex items-center gap-2 text-sm'>
@@ -124,10 +135,10 @@ export default function BreedPage() {
             <div className="text-center py-20 col-span-full border-2 border-dashed rounded-lg bg-secondary/30">
               <PawPrint className="mx-auto h-16 w-16 text-muted-foreground" />
               <p className="mt-4 text-lg font-semibold">
-                Aradığınız <span className="font-bold text-primary">{breedName}</span> cinsine ait ilan bulunamadı.
+                Aradığınız kriterlere uygun ilan bulunamadı.
               </p>
               <p className="text-muted-foreground">
-                Lütfen daha sonra tekrar kontrol edin veya farklı bir cins arayın.
+                Lütfen daha sonra tekrar kontrol edin veya farklı bir arama yapın.
               </p>
             </div>
           )}
