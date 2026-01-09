@@ -26,13 +26,14 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Pet } from "@/lib/data";
-import { allDogBreeds, allCatBreeds, allBirdBreeds, allAquariumBreeds, allOtherBreeds } from "@/lib/breeds";
+import { allDogBreeds, allCatBreeds, allBirdBreeds, allAquariumBreeds, allOtherBreeds, type Breed } from "@/lib/breeds";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 type BreedInfo = {
   name: string;
   count: number;
+  slug: string;
 };
 
 type CategoryInfo = {
@@ -42,18 +43,6 @@ type CategoryInfo = {
   color: string;
   title: string;
   slug: string;
-};
-
-const slugify = (text: string) => {
-  return text
-    .toString()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
-    .replace(/--+/g, '-');
 };
 
 const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
@@ -66,7 +55,7 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
   return (
     <AccordionItem value={category.type.toLowerCase()}>
       <AccordionTrigger className="font-bold flex justify-between items-center w-full hover:no-underline">
-        <Link href={`/kategori/${category.slug}`} className="flex items-center gap-2 hover:underline">
+        <Link href={`/${category.slug}`} className="flex items-center gap-2 hover:underline">
           <div className={cn("flex items-center gap-2", category.color)}>
             <category.Icon /> {category.title}
           </div>
@@ -86,10 +75,10 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <ul className="space-y-3 pr-2">
-            {filteredBreeds.map((breed) => (
+           <ul className="space-y-3 pr-2">
+            {filteredBreeds.length > 0 ? filteredBreeds.map((breed) => (
               <li key={breed.name}>
-                <Link href={`/cins/${slugify(breed.name)}`} className="flex items-center justify-between text-muted-foreground hover:text-primary group">
+                 <Link href={`/${category.slug}/${breed.slug}`} className="flex items-center justify-between text-muted-foreground hover:text-primary group">
                   <div className="flex items-center gap-3">
                      <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                        <Image 
@@ -106,8 +95,7 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
                   </span>
                 </Link>
               </li>
-            ))}
-             {filteredBreeds.length === 0 && (
+            )) : (
                 <li className="text-center text-sm text-muted-foreground py-4">
                     Sonuç bulunamadı.
                 </li>
@@ -155,12 +143,13 @@ export default function HomePage() {
 
     // 2. Function to merge static breed list with dynamic counts
     const processBreeds = useMemo(() => (
-      allBreeds: string[], 
+      allBreeds: Breed[], 
       breedCounts: Record<string, number> | undefined
     ): BreedInfo[] => {
-      const breedInfo = allBreeds.map(breedName => ({
-        name: breedName,
-        count: breedCounts?.[breedName] || 0,
+      const breedInfo = allBreeds.map(breed => ({
+        name: breed.name,
+        count: breedCounts?.[breed.name] || 0,
+        slug: breed.slug,
       }));
       // Sort by count descending, then alphabetically using a specific locale
       return breedInfo.sort((a, b) => {
@@ -175,40 +164,40 @@ export default function HomePage() {
     const categories: CategoryInfo[] = useMemo(() => [
       {
         type: 'Dog',
-        title: 'Köpekler',
-        slug: 'kopekler',
+        title: 'Köpek İlanları',
+        slug: 'kopek-ilanlari',
         Icon: Dog,
         color: 'text-orange-500',
         breeds: processBreeds(allDogBreeds, countsByType.Dog),
       },
       {
         type: 'Cat',
-        title: 'Kediler',
-        slug: 'kediler',
+        title: 'Kedi İlanları',
+        slug: 'kedi-ilanlari',
         Icon: Cat,
         color: 'text-red-400',
         breeds: processBreeds(allCatBreeds, countsByType.Cat),
       },
       {
         type: 'Bird',
-        title: 'Kuşlar',
-        slug: 'kuslar',
+        title: 'Kuş İlanları',
+        slug: 'kus-ilanlari',
         Icon: Bird,
         color: 'text-sky-400',
         breeds: processBreeds(allBirdBreeds, countsByType.Bird),
       },
       {
         type: 'Aquarium',
-        title: 'Akvaryum Canlıları',
-        slug: 'akvaryum-canlilari',
+        title: 'Akvaryum İlanları',
+        slug: 'akvaryum-ilanlari',
         Icon: Fish,
         color: 'text-blue-400',
         breeds: processBreeds(allAquariumBreeds, countsByType.Aquarium),
       },
        {
         type: 'Other',
-        title: 'Diğer',
-        slug: 'diger',
+        title: 'Diğer İlanlar',
+        slug: 'diger-ilanlar',
         Icon: PawPrint,
         color: 'text-emerald-500',
         breeds: processBreeds(allOtherBreeds, countsByType.Other),
@@ -264,7 +253,7 @@ export default function HomePage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Köpek İlanları</h2>
                 <Button variant="link" asChild className="text-primary">
-                  <Link href="/kategori/kopekler">
+                  <Link href="/kopek-ilanlari">
                     Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
                   </Link>
                 </Button>
@@ -279,7 +268,7 @@ export default function HomePage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Kedi İlanları</h2>
                 <Button variant="link" asChild className="text-primary">
-                  <Link href="/kategori/kediler">
+                  <Link href="/kedi-ilanlari">
                     Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
                   </Link>
                 </Button>
@@ -294,7 +283,7 @@ export default function HomePage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Kuş İlanları</h2>
                 <Button variant="link" asChild className="text-primary">
-                  <Link href="/kategori/kuslar">
+                  <Link href="/kus-ilanlari">
                     Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
                   </Link>
                 </Button>
@@ -309,7 +298,7 @@ export default function HomePage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Akvaryum Canlıları</h2>
                 <Button variant="link" asChild className="text-primary">
-                  <Link href="/kategori/akvaryum-canlilari">
+                  <Link href="/akvaryum-ilanlari">
                     Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
                   </Link>
                 </Button>
