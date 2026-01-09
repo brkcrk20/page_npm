@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -97,6 +98,7 @@ export function RegisterForm() {
       // Now, save the user's profile to Firestore
       const userProfile = {
         id: user.uid,
+        name: values.name,
         username: values.username,
         email: values.email,
         phoneNumber: values.phone,

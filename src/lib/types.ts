@@ -23,6 +23,7 @@ export type PetListing = {
 
 export type UserProfile = {
   id: string;
+  name: string;
   username: SchemaProperties<typeof entities.UserProfile>['username']['type'];
   email: SchemaProperties<typeof entities.UserProfile>['email']['type'];
   phoneNumber?: SchemaProperties<typeof entities.UserProfile>['phoneNumber']['type'];
