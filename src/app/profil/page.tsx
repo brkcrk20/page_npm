@@ -27,16 +27,11 @@ function ProfileListings() {
 
   const userListingsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // This query is intentionally left broad to fetch all petListings.
-    // For a real application, you'd likely query a user's specific listings.
-    // Example: collection(firestore, `users/${user.uid}/petListings`)
-    return collection(firestore, 'petListings');
+    // Corrected query: Fetch listings only for the current user.
+    return query(collection(firestore, `users/${user.uid}/petListings`));
   }, [firestore, user]);
 
-  const { data: listings, isLoading } = useCollection<PetListing>(userListingsQuery);
-  
-  // Filter listings on the client-side
-  const userListings = listings?.filter(listing => listing.userId === user?.uid);
+  const { data: userListings, isLoading } = useCollection<PetListing>(userListingsQuery);
 
   if (isLoading) {
     return (
