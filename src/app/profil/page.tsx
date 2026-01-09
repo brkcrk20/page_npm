@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useUser, useFirestore, useStorage, useAuth, useMemoFirebase } from '@/firebase';
@@ -10,17 +11,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { doc, updateDoc, collection, query, getDoc, getDocs, where, collectionGroup, onSnapshot } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { doc, updateDoc, getDoc, collection, query, where, collectionGroup } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile, signOut } from 'firebase/auth';
 import type { UserProfile, PetListing } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useCollection } from '@/firebase/firestore/use-collection';
+import imageCompression from 'browser-image-compression';
 
 function ProfileListings() {
   const { user } = useUser();
@@ -97,25 +98,33 @@ function ProfileListings() {
 function FavoriteListings() {
     const { user } = useUser();
     const firestore = useFirestore();
-    
-    const userProfileRef = useMemoFirebase(() => {
-        if (!user) return null;
-        return doc(firestore, 'users', user.uid);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+    useEffect(() => {
+      async function fetchProfile() {
+        if (user && firestore) {
+          const docRef = doc(firestore, 'users', user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setProfile(docSnap.data() as UserProfile);
+          }
+          setIsLoadingProfile(false);
+        }
+      }
+      fetchProfile();
     }, [user, firestore]);
 
-    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
-
-    const favoriteIds = userProfile?.favoritePetIds || [];
+    const favoriteIds = profile?.favoritePetIds || [];
     
     const favoritesQuery = useMemoFirebase(() => {
         if (!firestore || favoriteIds.length === 0) return null;
-        // Assuming favoritePetIds stores the full path to the pet listing document
-        return query(collectionGroup(firestore, 'petListings'), where('__name__', 'in', favoriteIds));
+        return query(collectionGroup(firestore, 'petListings'), where('__name__', 'in', favoriteIds.map(id => `petListings/${id}`)));
     }, [firestore, favoriteIds]);
 
     const { data: favoriteListings, isLoading: areListingsLoading } = useCollection<PetListing>(favoritesQuery);
     
-    const isLoading = isProfileLoading || (favoriteIds.length > 0 && areListingsLoading);
+    const isLoading = isLoadingProfile || (favoriteIds.length > 0 && areListingsLoading);
 
     if (isLoading) {
         return (
@@ -171,30 +180,31 @@ export default function ProfilePage() {
 
     const [profileData, setProfileData] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isUploading, setIsUploading] = useState(false);
     
     const [editModes, setEditModes] = useState<Record<string, boolean>>({});
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
     
     useEffect(() => {
         if (!isUserLoading && !user) {
             router.push('/login');
             return;
         }
-        if (user) {
-            const userProfileRef = doc(firestore, "users", user.uid);
-            const unsubscribe = onSnapshot(userProfileRef, (doc) => {
-                if (doc.exists()) {
-                    setProfileData(doc.data() as UserProfile);
+
+        async function fetchProfileData() {
+            if (user) {
+                const userProfileRef = doc(firestore, "users", user.uid);
+                const docSnap = await getDoc(userProfileRef);
+                if (docSnap.exists()) {
+                    setProfileData(docSnap.data() as UserProfile);
                 }
                 setIsLoading(false);
-            }, (err) => {
-                console.error("Failed to fetch profile data:", err);
-                setIsLoading(false);
-            });
-            return () => unsubscribe();
+            }
         }
+        
+        fetchProfileData();
+
     }, [user, isUserLoading, router, firestore]);
 
     const handleLogout = () => {
@@ -203,38 +213,46 @@ export default function ProfilePage() {
             router.push('/');
         });
     };
-
+    
     const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file || !user) return;
-
+    
         setIsUploading(true);
-        const storageRef = ref(storage, `avatars/${user.uid}/${file.name}`);
-        
+    
         try {
-            // Step 1: Upload the file
-            const uploadTask = await uploadBytesResumable(storageRef, file);
-            
-            // Step 2: Get the download URL
-            const downloadURL = await getDownloadURL(uploadTask.ref);
-
-            // Step 3: Update Firestore document
+            const options = {
+                maxSizeMB: 2,
+                maxWidthOrHeight: 1080,
+                useWebWorker: true,
+                quality: 0.7,
+            };
+    
+            const compressedFile = await imageCompression(file, options);
+    
+            const storageRef = ref(storage, `avatars/${user.uid}/profile.jpg`);
+            await uploadBytes(storageRef, compressedFile);
+    
+            const downloadURL = await getDownloadURL(storageRef);
+    
             const userProfileRef = doc(firestore, 'users', user.uid);
             await updateDoc(userProfileRef, { avatarUrl: downloadURL });
-
-            // Step 4: Update Auth user profile
+    
             await updateProfile(user, { photoURL: downloadURL });
-
+    
+            setProfileData(prev => prev ? { ...prev, avatarUrl: downloadURL } : { avatarUrl: downloadURL } as UserProfile);
+    
             toast({
-                title: 'Başarılı',
+                title: 'Başarılı!',
                 description: 'Profil resminiz güncellendi.',
             });
+    
         } catch (error) {
             console.error('Avatar upload failed:', error);
             toast({
                 variant: 'destructive',
                 title: 'Yükleme Başarısız',
-                description: 'Profil resmi yüklenirken bir hata oluştu.',
+                description: 'Profil resmi yüklenirken bir hata oluştu. Lütfen tekrar deneyin.',
             });
         } finally {
             setIsUploading(false);
@@ -250,6 +268,8 @@ export default function ProfilePage() {
             const userProfileRef = doc(firestore, "users", user.uid);
             await updateDoc(userProfileRef, { [field]: fieldValues[field] });
             
+            setProfileData(prev => prev ? { ...prev, [field]: fieldValues[field] } : null);
+
             toast({ title: "Başarılı", description: "Profil bilgileriniz güncellendi." });
             setEditModes(prev => ({ ...prev, [field]: false }));
         } catch (error) {
@@ -280,11 +300,11 @@ export default function ProfilePage() {
         if (!name) return 'U';
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     };
-
+    
     const avatarUrl = profileData?.avatarUrl || user.photoURL || '';
     const username = profileData?.username || user.displayName || 'Kullanıcı';
 
-    const InfoRow = ({ label, value, fieldName }: { label: string, value: string | undefined | null, fieldName?: keyof UserProfile }) => {
+    const InfoRow = ({ label, value, fieldName, isEditable = true }: { label: string, value: string | undefined | null, fieldName?: keyof UserProfile, isEditable?: boolean }) => {
         const isEditing = fieldName && editModes[fieldName];
         const isSaving = isUpdating === fieldName;
 
@@ -303,8 +323,8 @@ export default function ProfilePage() {
                         value || <span className="text-muted-foreground italic">Belirtilmemiş</span>
                     )}
                 </div>
-                 {fieldName && (
-                    <div className="flex items-center gap-2 ml-4">
+                 {fieldName && isEditable && (
+                    <div className="flex items-center gap-2 ml-4 w-32 justify-end">
                         {isEditing ? (
                             <>
                                 <Button size="sm" onClick={() => handleFieldUpdate(fieldName)} disabled={isSaving}>
@@ -330,22 +350,29 @@ export default function ProfilePage() {
                             <AvatarImage src={avatarUrl} alt={username} />
                             <AvatarFallback className="text-3xl bg-secondary">{getInitials(username)}</AvatarFallback>
                         </Avatar>
-                        <Button
-                            onClick={() => fileInputRef.current?.click()}
-                            variant="outline"
-                            size="icon"
-                            className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
-                            disabled={isUploading}
-                        >
-                           {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                            <span className="sr-only">Profil resmini değiştir</span>
-                        </Button>
+                        
+                        {isUploading ? (
+                             <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                                <Loader2 className="h-8 w-8 animate-spin text-white" />
+                            </div>
+                        ) : (
+                            <Button
+                                onClick={() => fileInputRef.current?.click()}
+                                variant="outline"
+                                size="icon"
+                                className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm opacity-50 group-hover:opacity-100 transition-opacity"
+                                disabled={isUploading}
+                            >
+                                <Camera className="h-4 w-4" />
+                                <span className="sr-only">Profil resmini değiştir</span>
+                            </Button>
+                        )}
                         <input
                             type="file"
                             ref={fileInputRef}
                             onChange={handleAvatarChange}
                             className="hidden"
-                            accept="image/png, image/jpeg"
+                            accept="image/png, image/jpeg, image/webp"
                         />
                     </div>
                     <div className="flex-grow">
@@ -381,8 +408,8 @@ export default function ProfilePage() {
                           </CardHeader>
                           <CardContent className="p-0">
                             <ul>
-                              <InfoRow label="Kullanıcı Adı" value={username} />
-                              <InfoRow label="E-posta" value={user.email} />
+                              <InfoRow label="Kullanıcı Adı" value={username} isEditable={false} />
+                              <InfoRow label="E-posta" value={user.email} isEditable={false} />
                               <InfoRow label="Telefon Numarası" value={profileData?.phoneNumber} fieldName="phoneNumber" />
                               <InfoRow label="Konum" value={profileData?.location} fieldName="location" />
                             </ul>
@@ -453,6 +480,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-    
-
-    
