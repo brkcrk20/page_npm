@@ -243,28 +243,6 @@ export function Header() {
             <span className="font-bold text-xl">Patisemti</span>
           </Link>
           
-           <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Kategoriler</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                    {mainCategories.map((category) => (
-                      <ListItem
-                        key={category}
-                        title={category}
-                        href={`/kategori/${slugify(category)}`}
-                      >
-                        {category} kategorisindeki tüm ilanları görün.
-                      </ListItem>
-                    ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-
-
           <div className="flex flex-1 items-center justify-end space-x-4">
              {renderAuthContent()}
             <Button asChild variant="secondary">
