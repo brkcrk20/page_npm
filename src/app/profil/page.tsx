@@ -1,6 +1,6 @@
 'use client';
 
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, useStorage } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, useStorage, useFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { Loader2, User, FileText, Settings, Heart, Edit, Trash2, Camera, LogOut, ShieldCheck, Building } from 'lucide-react';
@@ -483,3 +483,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
