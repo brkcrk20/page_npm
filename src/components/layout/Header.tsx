@@ -16,8 +16,6 @@ import {
   HeartHandshake,
   UserPlus,
   User,
-  Settings,
-  LayoutGrid,
   LifeBuoy,
   Shield,
 } from 'lucide-react';
@@ -26,8 +24,9 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import React from 'react';
-import { useUser, useAuth } from '@/firebase';
-import { signOut } from 'firebase/auth';
+import { useUser } from '@/firebase';
+import { useUserProfile } from '@/firebase/firestore/use-user-profile';
+import { signOut, getAuth } from 'firebase/auth';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +39,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { SearchFilters } from '../SearchFilters';
 import { VetSearchFilters } from '../VetSearchFilters';
+import { Skeleton } from '../ui/skeleton';
 
 const navLinks = [
   { href: '/', label: 'İlanlar' },
@@ -63,9 +63,12 @@ export function Header() {
   const pathname = usePathname();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
   const { user, isUserLoading } = useUser();
-  const auth = useAuth();
+  const { userProfile, isLoading: isProfileLoading } = useUserProfile(user?.uid);
+  
+  const auth = getAuth();
   
   const isAdmin = user && user.email === 'admin@patisemti.com';
+  const isPremium = userProfile?.userStatus === 'premium';
 
   const handleLogout = () => {
     signOut(auth);
@@ -134,21 +137,32 @@ export function Header() {
           </nav>
 
           <div className="flex flex-1 items-center justify-end space-x-4">
-            {!isUserLoading && (
+            {(isUserLoading || isProfileLoading) ? (
+                <Skeleton className="h-9 w-24" />
+            ) : (
               <>
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-white/20">
-                         <div className="h-9 w-9 rounded-full bg-primary-foreground text-primary flex items-center justify-center">
-                            <User className="h-5 w-5" />
-                         </div>
+                      <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-white/20">
+                         <Avatar className={cn(
+                            "h-9 w-9 border-2",
+                            isPremium ? "border-yellow-400" : "border-secondary"
+                         )}>
+                            <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
+                            <AvatarFallback className="bg-primary-foreground text-primary font-bold">
+                                {getInitials(user.email)}
+                            </AvatarFallback>
+                         </Avatar>
+                         {isPremium && (
+                            <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-yellow-400 ring-2 ring-primary" />
+                         )}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56" align="end" forceMount>
                       <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-medium leading-none">{user.displayName ?? 'Kullanıcı'}</p>
+                          <p className="text-sm font-medium leading-none">{userProfile?.username ?? user.displayName ?? 'Kullanıcı'}</p>
                           <p className="text-xs leading-none text-muted-foreground">
                             {user.email}
                           </p>

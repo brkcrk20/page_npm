@@ -36,9 +36,9 @@ export function initializeFirebase(): FirebaseServices {
 }
 
 export * from './provider';
-// REMOVED: export * from './client-provider'; // This was causing a circular dependency
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
+export * from './firestore/use-user-profile';
 export * from './non-blocking-updates';
 export * from './non-blocking-login';
 export * from './errors';
