@@ -19,6 +19,7 @@ interface AvatarUploaderProps {
 export function AvatarUploader({ user }: AvatarUploaderProps) {
   const firestore = useFirestore();
   const storage = useStorage();
+  const auth = useAuth();
   const { toast } = useToast();
 
   const [isUploading, setIsUploading] = useState(false);
@@ -32,36 +33,30 @@ export function AvatarUploader({ user }: AvatarUploaderProps) {
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user) return;
+    if (!file || !user || !auth.currentUser) return;
 
     setIsUploading(true);
 
     try {
-      // 1. Compress the image
       const options = {
         maxSizeMB: 1,
         maxWidthOrHeight: 1080,
         useWebWorker: true,
+        fileType: 'image/jpeg',
       };
       const compressedFile = await imageCompression(file, options);
 
-      // 2. Upload to Storage
       const storageRef = ref(storage, `avatars/${user.uid}/profile.jpg`);
       await uploadBytes(storageRef, compressedFile);
-
-      // 3. Get Download URL
       const downloadURL = await getDownloadURL(storageRef);
 
-      // 4. Update Firestore
-      const userProfileRef = doc(firestore, 'users', user.uid);
-      await updateDoc(userProfileRef, { avatarUrl: downloadURL });
+      // --- CRITICAL CHANGE: Update Auth profile FIRST ---
+      // This will trigger the useUser hook and update the UI immediately and reliably.
+      await updateProfile(auth.currentUser, { photoURL: downloadURL });
       
-      // 5. Update Auth Profile
-      // It's important to use the user object from the hook, not a stale one.
-      const auth = useAuth();
-      if (auth.currentUser) {
-        await updateProfile(auth.currentUser, { photoURL: downloadURL });
-      }
+      // Update Firestore in the background. This doesn't need to block the UI update.
+      const userProfileRef = doc(firestore, 'users', user.uid);
+      updateDoc(userProfileRef, { avatarUrl: downloadURL });
 
       toast({
         title: 'Başarılı!',
