@@ -4,7 +4,7 @@
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Loader2, LogOut, Edit, Save, X, FileText, Heart, ShieldCheck, Building, Settings, User as UserIcon, Coins, Briefcase, Plus, Phone, Eye, MessageCircle } from 'lucide-react';
+import { Loader2, LogOut, Edit, Save, X, FileText, Heart, ShieldCheck, Building, Settings, User as UserIcon, Coins, Briefcase, Plus, Phone, Eye, MessageCircle, CreditCard, Image as ImageIcon, CheckCircle, ListTree } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -169,6 +169,24 @@ function FavoriteListings() {
     );
 }
 
+const PlaceholderContent = ({ title, icon }: { title: string, icon: React.ElementType }) => {
+    const Icon = icon;
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>{title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-12 border-2 border-dashed rounded-lg">
+                    <Icon className="w-16 h-16 mb-4" />
+                    <p className="font-bold text-lg">Bu Alan Yapım Aşamasında</p>
+                    <p className="text-sm">{title} ile ilgili özellikler yakında burada olacak.</p>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
 export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const router = useRouter();
@@ -326,6 +344,7 @@ export default function ProfilePage() {
 
     return (
         <div className="container mx-auto py-12">
+           <Tabs defaultValue="credit" className="w-full">
             <Card className="mb-8">
                 <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row items-center gap-6">
@@ -368,103 +387,31 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 </CardContent>
+                 <TabsList className="grid w-full grid-cols-4 rounded-t-none">
+                    <TabsTrigger value="credit">Üye İlan Kredisi</TabsTrigger>
+                    <TabsTrigger value="photo-limit">Fotoğraf Limiti</TabsTrigger>
+                    <TabsTrigger value="instant-approval">Anında Onay</TabsTrigger>
+                    <TabsTrigger value="category-limit">Kategori Limiti</TabsTrigger>
+                </TabsList>
             </Card>
 
-            <main>
-                <Tabs defaultValue="info" className="w-full">
-                    <TabsList className="grid w-full grid-cols-5">
-                        <TabsTrigger value="info">Profil Bilgileri</TabsTrigger>
-                        <TabsTrigger value="listings"><FileText className="mr-2" />İlanlarım</TabsTrigger>
-                        <TabsTrigger value="favorites"><Heart className="mr-2" />Favorilerim</TabsTrigger>
-                        <TabsTrigger value="status"><ShieldCheck className="mr-2 h-4 w-4" />Hesap Durumu</TabsTrigger>
-                        <TabsTrigger value="settings"><Settings className="mr-2" />Ayarlar</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="info" className="mt-6">
-                       <Card>
-                          <CardHeader>
-                              <CardTitle>Genel Bilgiler</CardTitle>
-                              <CardDescription>Hesap bilgilerinizi görüntüleyin ve düzenleyin.</CardDescription>
-                          </CardHeader>
-                          <CardContent className="p-0">
-                            <ul>
-                              <InfoRow label="Ad Soyad" value={profileData?.name} fieldName="name" />
-                              <InfoRow label="Kullanıcı Adı" value={profileData?.username} isEditable={false} />
-                              <InfoRow label="E-posta" value={user.email} isEditable={false} />
-                              <InfoRow label="Telefon Numarası" value={profileData?.phoneNumber} fieldName="phoneNumber" />
-                              <InfoRow label="Konum" value={profileData?.location} fieldName="location" />
-                            </ul>
-                          </CardContent>
-                      </Card>
-                    </TabsContent>
-                    <TabsContent value="listings" className="mt-6"><ProfileListings /></TabsContent>
-                    <TabsContent value="favorites" className="mt-6"><FavoriteListings /></TabsContent>
-                    <TabsContent value="status" className="mt-6">
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>Hesap Durumu ve Bilgileri</CardTitle>
-                            <CardDescription>Mevcut hesap seviyenizi ve ilgili bilgileri görüntüleyin.</CardDescription>
-                          </CardHeader>
-                          <CardContent className="space-y-6">
-                            <div>
-                              <h3 className="font-medium mb-2">Mevcut Statü</h3>
-                              {profileData?.userStatus ? (
-                                <Badge variant={getStatusVariant(profileData.userStatus)} className="text-base capitalize">
-                                  {profileData.userStatus}
-                                </Badge>
-                              ) : <Badge variant="outline">standart</Badge>}
-                            </div>
-                            {profileData?.companyType ? (
-                              <div className="border-t pt-6">
-                                <h3 className="font-medium mb-4 flex items-center"><Building className="mr-2 h-5 w-5 text-primary" />Kurumsal Bilgiler</h3>
-                                <div className="text-sm space-y-3">
-                                   <p><strong>Şirket Tipi:</strong> {profileData.companyType}</p>
-                                   <p><strong>Firma Ünvanı:</strong> {profileData.companyTitle}</p>
-                                   <p><strong>TC Kimlik No:</strong> {profileData.tcNo}</p>
-                                   <p><strong>Vergi Dairesi:</strong> {profileData.taxOffice}</p>
-                                   <p><strong>Vergi Numarası:</strong> {profileData.taxNo}</p>
-                                   <p><strong>Firma Adresi:</strong> {profileData.companyAddress}</p>
-                                </div>
-                              </div>
-                            ) : (
-                               <div className="border-t pt-6 text-center text-muted-foreground">
-                                  <Building className="mx-auto h-10 w-10 mb-2" />
-                                  <p className="font-semibold">Kurumsal üyeliğiniz bulunmamaktadır.</p>
-                                  <p className="text-xs">Kurumsal üye olarak daha fazla ilanı öne çıkarabilir ve ek avantajlardan yararlanabilirsiniz.</p>
-                                  <Button variant="secondary" className="mt-4">Kurumsal Üyeliğe Geç (Yakında)</Button>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                    </TabsContent>
-                    <TabsContent value="settings" className="mt-6">
-                      <Card>
-                          <CardHeader>
-                              <CardTitle>Hesap Ayarları</CardTitle>
-                              <CardDescription>Şifrenizi değiştirin veya hesabınızı yönetin.</CardDescription>
-                          </CardHeader>
-                          <CardContent className="space-y-6">
-                              <div>
-                                  <h3 className="font-medium mb-2">Şifre Değiştir</h3>
-                                  <Button variant="outline" onClick={() => alert('Şifre sıfırlama özelliği henüz tamamlanmadı.')}>Şifre Değiştirme E-postası Gönder</Button>
-                              </div>
-                               <div className="border-t pt-6">
-                                  <h3 className="font-medium mb-2">Güvenli Çıkış</h3>
-                                  <p className="text-sm text-muted-foreground mb-3">Hesabınızdan güvenli bir şekilde çıkış yapın.</p>
-                                  <Button variant="outline" onClick={handleLogout}>
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    Çıkış Yap
-                                  </Button>
-                              </div>
-                              <div className="border-t pt-6">
-                                  <h3 className="font-medium mb-2 text-destructive">Hesabı Sil</h3>
-                                  <p className="text-sm text-muted-foreground mb-3">Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.</p>
-                                  <Button variant="destructive" onClick={() => alert('Hesap silme özelliği henüz tamamlanmadı. Bu işlem sunucu tarafında yapılmalıdır.')}>Hesabımı Kalıcı Olarak Sil</Button>
-                              </div>
-                          </CardContent>
-                      </Card>
-                    </TabsContent>
-                </Tabs>
+            <main className="mt-6">
+                <TabsContent value="credit">
+                    <PlaceholderContent title="Üye İlan Kredisi" icon={CreditCard} />
+                </TabsContent>
+                <TabsContent value="photo-limit">
+                   <PlaceholderContent title="Fotoğraf Limiti" icon={ImageIcon} />
+                </TabsContent>
+                <TabsContent value="instant-approval">
+                   <PlaceholderContent title="Anında Onay" icon={CheckCircle} />
+                </TabsContent>
+                <TabsContent value="category-limit">
+                   <PlaceholderContent title="Kategori Limiti" icon={ListTree} />
+                </TabsContent>
             </main>
+            </Tabs>
         </div>
     );
 }
+
+    
