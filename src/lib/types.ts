@@ -27,7 +27,6 @@ export type UserProfile = {
   email: SchemaProperties<typeof entities.UserProfile>['email']['type'];
   phoneNumber?: SchemaProperties<typeof entities.UserProfile>['phoneNumber']['type'];
   location?: SchemaProperties<typeof entities.UserProfile>['location']['type'];
-  avatarUrl?: SchemaProperties<typeof entities.UserProfile>['avatarUrl']['type'];
   favoritePetIds?: string[];
   companyType?: SchemaProperties<typeof entities.UserProfile>['companyType']['enum'][number];
   companyTitle?: SchemaProperties<typeof entities.UserProfile>['companyTitle']['type'];

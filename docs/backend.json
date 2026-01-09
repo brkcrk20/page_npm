@@ -95,11 +95,6 @@
           "type": "string",
           "description": "The location of the user."
         },
-        "avatarUrl": {
-          "type": "string",
-          "description": "URL of the user's profile picture.",
-          "format": "uri"
-        },
         "favoritePetIds": {
           "type": "array",
           "description": "References to PetListings that the user has marked as favorites. (Relationship: UserProfile N:N PetListing)",

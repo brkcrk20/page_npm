@@ -4,7 +4,7 @@
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Loader2, LogOut, Edit, Save, X, FileText, Heart, ShieldCheck, Building, Settings } from 'lucide-react';
+import { Loader2, LogOut, Edit, Save, X, FileText, Heart, ShieldCheck, Building, Settings, User as UserIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,6 @@ import { Badge } from '@/components/ui/badge';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AvatarUploader } from '@/components/AvatarUploader';
 import { initializeFirebase } from '@/firebase';
 
 const { auth, firestore } = initializeFirebase();
@@ -313,7 +312,9 @@ export default function ProfilePage() {
         <div className="container mx-auto py-12">
             <Card className="mb-8">
                 <CardContent className="p-6 flex items-center space-x-6">
-                    <AvatarUploader user={user} />
+                    <div className="h-24 w-24 flex items-center justify-center rounded-full bg-secondary text-primary">
+                        <UserIcon className="h-12 w-12" />
+                    </div>
                     <div className="flex-grow">
                         <h1 className="text-2xl font-bold font-headline">{username}</h1>
                         <p className="text-sm text-muted-foreground">{user.email}</p>

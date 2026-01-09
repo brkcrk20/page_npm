@@ -172,23 +172,3 @@ service cloud.firestore {
     }
   }
 }
-
-service firebase.storage {
-  match /b/{bucket}/o {
-    // ----------------------------------------------------------------------
-    // Avatar Storage Rules
-    // ----------------------------------------------------------------------
-    
-    /**
-     * @description Manages user avatar images.
-     * @path /avatars/{userId}/{fileName}
-     * @allow (read) Anyone can read avatar images.
-     * @allow (write) A user can only write to their own avatar directory.
-     * @principle Public read for avatars, but write access is restricted to the owner.
-     */
-    match /avatars/{userId}/{fileName} {
-      allow read;
-      allow write: if isOwner(userId);
-    }
-  }
-}

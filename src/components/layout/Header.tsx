@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -139,10 +140,9 @@ export function Header() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-white/20">
-                        <Avatar className="h-9 w-9">
-                          <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-                          <AvatarFallback className="bg-primary-foreground text-primary">{getInitials(user.email)}</AvatarFallback>
-                        </Avatar>
+                         <div className="h-9 w-9 rounded-full bg-primary-foreground text-primary flex items-center justify-center">
+                            <User className="h-5 w-5" />
+                         </div>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56" align="end" forceMount>
