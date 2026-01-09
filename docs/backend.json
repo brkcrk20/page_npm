@@ -126,6 +126,11 @@
         "tcNo": {
             "type": "string",
             "description": "Turkish Republic Identity Number for individual corporate owners."
+        },
+        "userStatus": {
+          "type": "string",
+          "description": "The status of the user account.",
+          "enum": ["standart", "onayli", "premium", "yasakli"]
         }
       },
       "required": [

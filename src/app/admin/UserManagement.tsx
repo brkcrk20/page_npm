@@ -48,6 +48,19 @@ export function UserManagement() {
     setSelectedUser(null);
   };
 
+  const getStatusVariant = (status: UserProfile['userStatus']) => {
+    switch (status) {
+      case 'premium':
+        return 'default';
+      case 'onayli':
+        return 'secondary';
+      case 'yasakli':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
   return (
     <>
       <Card>
@@ -81,6 +94,7 @@ export function UserManagement() {
                     <TableHead>Email</TableHead>
                     <TableHead>Kullanıcı Adı</TableHead>
                     <TableHead>Konum</TableHead>
+                    <TableHead>Statü</TableHead>
                     <TableHead className="text-right">İşlemler</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -91,6 +105,11 @@ export function UserManagement() {
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.username}</TableCell>
                       <TableCell>{user.location || "Belirtilmemiş"}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusVariant(user.userStatus)}>
+                          {user.userStatus || 'standart'}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">
                          <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -143,12 +162,15 @@ export function UserManagement() {
             <>
               <DialogHeader>
                 <DialogTitle>Kullanıcı Detayları: {selectedUser.username}</DialogTitle>
-                <DialogDescription>Kullanıcı ID: <span className="font-mono">{selectedUser.id}</span></DialogDescription>
+                <DialogDescription>
+                    <span className="font-mono">{selectedUser.id}</span>
+                </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="text-sm">
                   <h4 className="font-semibold mb-3 border-b pb-2">Kişisel Bilgiler</h4>
                   <div className="space-y-2">
+                    <p><strong>Statü:</strong> <Badge variant={getStatusVariant(selectedUser.userStatus)}>{selectedUser.userStatus || 'standart'}</Badge></p>
                     <p><strong>Email:</strong> {selectedUser.email}</p>
                     <p><strong>Kullanıcı Adı:</strong> {selectedUser.username}</p>
                     <p><strong>Telefon:</strong> {selectedUser.phoneNumber || 'Belirtilmemiş'}</p>
