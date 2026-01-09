@@ -8,7 +8,7 @@ export type Pet = {
   image: string; // Corresponds to an ID in placeholder-images.json
   featured: boolean;
   listingType: 'Adoption' | 'Sale';
-  badge?: 'Bireysel' | 'Ruhsatlı';
+  badge?: 'Bireysel' | 'Ruhsatlı' | 'Guvenli Uye' | 'Doping';
 };
 
 export type Service = {
@@ -30,7 +30,7 @@ export const pets: Pet[] = [
     image: 'pet-2', // assuming pet-2 is a scottish fold
     featured: true,
     listingType: 'Adoption',
-    badge: 'Bireysel',
+    badge: 'Guvenli Uye',
   },
   {
     id: '2',
@@ -54,7 +54,7 @@ export const pets: Pet[] = [
     image: 'pet-1',
     featured: true,
     listingType: 'Sale',
-    badge: 'Ruhsatlı',
+    badge: 'Doping',
   },
   {
     id: '3',
@@ -84,13 +84,13 @@ export const pets: Pet[] = [
     id: '4',
     name: 'Baron',
     type: 'Dog',
-    breed: 'Fransız Bulldog',
+    breed: 'French Bulldog',
     age: '3 years',
     location: 'İzmir',
     image: 'pet-3',
     featured: true,
     listingType: 'Sale',
-    badge: 'Ruhsatlı',
+    badge: 'Guvenli Uye',
   },
   {
     id: '5',
@@ -126,6 +126,7 @@ export const pets: Pet[] = [
     image: 'pet-5',
     featured: false,
     listingType: 'Adoption',
+    badge: 'Doping'
   },
   {
     id: '8',
@@ -206,7 +207,7 @@ export const pets: Pet[] = [
     image: 'pet-7', // Placeholder
     featured: true,
     listingType: 'Adoption',
-    badge: 'Bireysel',
+    badge: 'Guvenli Uye',
   }
 ];
 
