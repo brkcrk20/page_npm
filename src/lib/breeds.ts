@@ -1,11 +1,18 @@
 
+import { pets } from './data';
+import type { Pet } from './data';
+import type { ReactNode } from 'react';
+import { Dog, Cat, Bird, Fish, PawPrint } from 'lucide-react';
+
 export type Breed = {
   id: string;
   name: string;
   slug: string;
 };
 
-export const allDogBreeds: Breed[] = [
+// ----------------- RAW BREED DATA -----------------
+
+const allDogBreedsData: Breed[] = [
   { id: 'd0', name: 'Toy Poodle', slug: 'toy-poodle' },
   { id: 'd1', name: 'Maltipoo', slug: 'maltipoo' },
   { id: 'd2', name: 'Pomeranian Boo', slug: 'pomeranian-boo' },
@@ -70,7 +77,7 @@ export const allDogBreeds: Breed[] = [
   { id: 'd61', name: 'Tibet Mastifi', slug: 'tibet-mastifi' }
 ];
 
-export const allCatBreeds: Breed[] = [
+const allCatBreedsData: Breed[] = [
   { id: 'c0', name: 'British Shorthair', slug: 'british-shorthair' },
   { id: 'c1', name: 'Scottish Fold', slug: 'scottish-fold' },
   { id: 'c2', name: 'Tekir', slug: 'tekir' },
@@ -90,7 +97,7 @@ export const allCatBreeds: Breed[] = [
   { id: 'c16', name: 'Van Kedisi', slug: 'van-kedisi' }
 ];
 
-export const allBirdBreeds: Breed[] = [
+const allBirdBreedsData: Breed[] = [
     { id: 'b0', name: "Muhabbet Kuşu", slug: 'muhabbet-kusu' },
     { id: 'b1', name: "Sultan Papağanı", slug: 'sultan-papagani' },
     { id: 'b2', name: "Papağan", slug: 'papagan' },
@@ -100,7 +107,7 @@ export const allBirdBreeds: Breed[] = [
     { id: 'b6', name: "Forpus Papağanı", slug: 'forpus-papagani' }
 ];
 
-export const allAquariumBreeds: Breed[] = [
+const allAquariumBreedsData: Breed[] = [
     { id: 'a0', name: "Japon Balığı", slug: 'japon-baligi' },
     { id: 'a1', name: "Lepistes", slug: 'lepistes' },
     { id: 'a2', name: "Beta", slug: 'beta' },
@@ -114,7 +121,7 @@ export const allAquariumBreeds: Breed[] = [
     { id: 'a10', name: "Karides", slug: 'karides' }
 ];
 
-export const allOtherBreeds: Breed[] = [
+const allOtherBreedsData: Breed[] = [
     { id: 'o0', name: "Hamster", slug: 'hamster' },
     { id: 'o1', name: "Tavşan", slug: 'tavsan' },
     { id: 'o2', name: "Guineapig", slug: 'guineapig' },
@@ -122,10 +129,108 @@ export const allOtherBreeds: Breed[] = [
     { id: 'o4', name: "Iguana", slug: 'iguana' }
 ];
 
+// Re-export for legacy usage if needed, but prefer processed data
+export const allDogBreeds: Breed[] = allDogBreedsData;
+export const allCatBreeds: Breed[] = allCatBreedsData;
+export const allBirdBreeds: Breed[] = allBirdBreedsData;
+export const allAquariumBreeds: Breed[] = allAquariumBreedsData;
+export const allOtherBreeds: Breed[] = allOtherBreedsData;
+
 export const allBreeds = [
-    ...allDogBreeds,
-    ...allCatBreeds,
-    ...allBirdBreeds,
-    ...allAquariumBreeds,
-    ...allOtherBreeds
+    ...allDogBreedsData,
+    ...allCatBreedsData,
+    ...allBirdBreedsData,
+    ...allAquariumBreedsData,
+    ...allOtherBreedsData
+];
+
+// ----------------- PROCESSED CATEGORY DATA -----------------
+
+export type BreedInfo = {
+  id: string;
+  name: string;
+  count: number;
+  slug: string;
+};
+
+export type CategoryInfo = {
+  type: 'Dog' | 'Cat' | 'Bird' | 'Aquarium' | 'Other';
+  breeds: BreedInfo[];
+  Icon: React.ElementType;
+  color: string;
+  title: string;
+  slug: string;
+};
+
+// 1. Get counts of breeds that are in the pet listings
+const countsByType = pets.reduce((acc, pet) => {
+    const { type, breed } = pet;
+    if (!acc[type]) acc[type] = {};
+    if (!acc[type][breed]) acc[type][breed] = 0;
+    acc[type][breed]++;
+    return acc;
+}, {} as Record<Pet['type'], Record<string, number>>);
+
+// 2. Function to merge static breed list with dynamic counts
+const processBreeds = (
+  allBreeds: Breed[], 
+  breedCounts: Record<string, number> | undefined
+): BreedInfo[] => {
+  const breedInfo = allBreeds.map(breed => ({
+    id: breed.id,
+    name: breed.name,
+    count: breedCounts?.[breed.name] || 0,
+    slug: breed.slug,
+  }));
+  // Sort by count descending, then alphabetically using a specific locale
+  return breedInfo.sort((a, b) => {
+    if (b.count !== a.count) {
+      return b.count - a.count;
+    }
+    return a.name.localeCompare(b.name, 'tr');
+  });
+};
+
+// 3. Create the final, pre-processed categories array
+export const categories: CategoryInfo[] = [
+  {
+    type: 'Dog',
+    title: 'Köpek İlanları',
+    slug: 'kopek-ilanlari',
+    Icon: Dog,
+    color: 'text-orange-500',
+    breeds: processBreeds(allDogBreedsData, countsByType.Dog),
+  },
+  {
+    type: 'Cat',
+    title: 'Kedi İlanları',
+    slug: 'kedi-ilanlari',
+    Icon: Cat,
+    color: 'text-red-400',
+    breeds: processBreeds(allCatBreedsData, countsByType.Cat),
+  },
+  {
+    type: 'Bird',
+    title: 'Kuş İlanları',
+    slug: 'kus-ilanlari',
+    Icon: Bird,
+    color: 'text-sky-400',
+    breeds: processBreeds(allBirdBreedsData, countsByType.Bird),
+  },
+  {
+    type: 'Aquarium',
+    title: 'Akvaryum İlanları',
+    slug: 'akvaryum-ilanlari',
+    Icon: Fish,
+    color: 'text-blue-400',
+    breeds: processBreeds(allAquariumBreedsData, countsByType.Aquarium),
+  },
+   {
+    type: 'Other',
+    title: 'Diğer İlanlar',
+    slug: 'diger-ilanlar',
+    Icon: PawPrint,
+    color: 'text-emerald-500',
+    breeds: processBreeds(allOtherBreedsData, countsByType.Other),
+  },
 ];

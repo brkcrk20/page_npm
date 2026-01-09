@@ -10,13 +10,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  Dog,
-  Cat,
-  Bird,
-  Fish,
   ArrowRight,
   Search,
-  PawPrint,
   BookText,
   ChevronDown
 } from "lucide-react";
@@ -26,24 +21,10 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Pet } from "@/lib/data";
-import { allDogBreeds, allCatBreeds, allBirdBreeds, allAquariumBreeds, allOtherBreeds, type Breed } from "@/lib/breeds";
+import { categories, type CategoryInfo } from "@/lib/breeds";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-type BreedInfo = {
-  name: string;
-  count: number;
-  slug: string;
-};
-
-type CategoryInfo = {
-  type: 'Dog' | 'Cat' | 'Bird' | 'Aquarium' | 'Other';
-  breeds: BreedInfo[];
-  Icon: React.ElementType;
-  color: string;
-  title: string;
-  slug: string;
-};
 
 const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -130,79 +111,7 @@ const blogPosts = [
 
 
 export default function HomePage() {
-    const [shuffledFeaturedPets, setShuffledFeaturedPets] = useState<Pet[]>([]);
-
-    // 1. Get counts of breeds that are in the pet listings
-    const countsByType = useMemo(() => pets.reduce((acc, pet) => {
-        const { type, breed } = pet;
-        if (!acc[type]) acc[type] = {};
-        if (!acc[type][breed]) acc[type][breed] = 0;
-        acc[type][breed]++;
-        return acc;
-    }, {} as Record<Pet['type'], Record<string, number>>), []);
-
-    // 2. Function to merge static breed list with dynamic counts
-    const processBreeds = useMemo(() => (
-      allBreeds: Breed[], 
-      breedCounts: Record<string, number> | undefined
-    ): BreedInfo[] => {
-      const breedInfo = allBreeds.map(breed => ({
-        name: breed.name,
-        count: breedCounts?.[breed.name] || 0,
-        slug: breed.slug,
-      }));
-      // Sort by count descending, then alphabetically using a specific locale
-      return breedInfo.sort((a, b) => {
-        if (b.count !== a.count) {
-          return b.count - a.count;
-        }
-        // Using 'en' locale to ensure consistent sorting on server and client
-        return a.name.localeCompare(b.name, 'en');
-      });
-    }, []);
-    
-    const categories: CategoryInfo[] = useMemo(() => [
-      {
-        type: 'Dog',
-        title: 'Köpek İlanları',
-        slug: 'kopek-ilanlari',
-        Icon: Dog,
-        color: 'text-orange-500',
-        breeds: processBreeds(allDogBreeds, countsByType.Dog),
-      },
-      {
-        type: 'Cat',
-        title: 'Kedi İlanları',
-        slug: 'kedi-ilanlari',
-        Icon: Cat,
-        color: 'text-red-400',
-        breeds: processBreeds(allCatBreeds, countsByType.Cat),
-      },
-      {
-        type: 'Bird',
-        title: 'Kuş İlanları',
-        slug: 'kus-ilanlari',
-        Icon: Bird,
-        color: 'text-sky-400',
-        breeds: processBreeds(allBirdBreeds, countsByType.Bird),
-      },
-      {
-        type: 'Aquarium',
-        title: 'Akvaryum İlanları',
-        slug: 'akvaryum-ilanlari',
-        Icon: Fish,
-        color: 'text-blue-400',
-        breeds: processBreeds(allAquariumBreeds, countsByType.Aquarium),
-      },
-       {
-        type: 'Other',
-        title: 'Diğer İlanlar',
-        slug: 'diger-ilanlar',
-        Icon: PawPrint,
-        color: 'text-emerald-500',
-        breeds: processBreeds(allOtherBreeds, countsByType.Other),
-      },
-    ], [countsByType, processBreeds]);
+  const [shuffledFeaturedPets, setShuffledFeaturedPets] = useState<Pet[]>([]);
 
   const dogPets = useMemo(() => pets.filter(p => p.type === 'Dog'), []);
   const catPets = useMemo(() => pets.filter(p => p.type === 'Cat'), []);
