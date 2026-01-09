@@ -35,7 +35,7 @@ const CategoryFilter = ({ category }: { category: CategoryInfo }) => {
 
   return (
     <AccordionItem value={category.type.toLowerCase()}>
-       <AccordionTrigger className="font-bold flex justify-between items-center w-full hover:no-underline p-3 rounded-lg transition-all duration-200 hover:bg-secondary/50 active:scale-[0.98]">
+       <AccordionTrigger className="font-bold flex justify-between items-center w-full hover:no-underline p-3 rounded-lg transition-all duration-200 hover:bg-orange-50 active:scale-[0.98]">
          <Link href={`/${category.slug}`} className="flex items-center gap-2 hover:underline">
            <div className={cn("flex items-center gap-2", category.color)}>
             <category.Icon /> {category.title}
