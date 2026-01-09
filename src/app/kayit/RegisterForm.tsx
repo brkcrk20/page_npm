@@ -14,11 +14,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import React,
-{ useState } from 'react';
-import { useAuth } from '@/firebase';
+import React, { useState } from 'react';
+import { useAuth, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -59,6 +59,7 @@ type FormValues = z.infer<typeof formSchema>;
 export function RegisterForm() {
   const [userType, setUserType] = useState<'bireysel' | 'kurumsal'>('bireysel');
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -87,12 +88,48 @@ export function RegisterForm() {
   async function onSubmit(values: FormValues) {
     setIsLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, values.email, values.password);
-      // Here you would also save the additional user profile data (bireysel/kurumsal) to Firestore
-      console.log(values);
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      // Now, save the user's profile to Firestore
+      const userProfile = {
+        id: user.uid,
+        username: values.name,
+        email: values.email,
+        phoneNumber: values.phone,
+        // Add corporate fields if they exist
+        ...(values.userType === 'kurumsal' && {
+          companyType: values.companyType,
+          companyTitle: values.companyTitle,
+          taxNo: values.taxNo,
+          taxOffice: values.taxOffice,
+          companyAddress: values.companyAddress,
+          tcNo: values.tcNo
+        }),
+      };
+
+      const userDocRef = doc(firestore, "users", user.uid);
+      
+      // Use non-blocking write and handle potential errors with the emitter
+      setDoc(userDocRef, userProfile).catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: userDocRef.path,
+            operation: 'create',
+            requestResourceData: userProfile
+          })
+        );
+      });
+
       router.push('/');
+      toast({
+        title: "Kayıt Başarılı!",
+        description: "Patisemti'ye hoş geldiniz.",
+      });
+
     } catch (error: any) {
-      console.error(error);
+      console.error("Registration error:", error);
       let description = "Kayıt sırasında bir hata oluştu.";
       if (error.code === 'auth/email-already-in-use') {
         description = "Bu e-posta adresi zaten kullanılıyor.";
