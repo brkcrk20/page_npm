@@ -43,7 +43,7 @@ export default function BreedPage() {
     (pet) => slugify(pet.breed) === slug
   );
 
-  const categoryName = filteredPets.length > 0 ? `${filteredPets[0].type} İlanları` : 'Tüm İlanlar';
+  const categoryName = 'Kategoriler';
 
   return (
     <div className="container mx-auto py-8">
@@ -51,7 +51,7 @@ export default function BreedPage() {
         {/* Left Sidebar */}
         <aside className="lg:col-span-1">
           <BreedPageSidebar 
-            categoryName={categoryName}
+            categoryName={filteredPets.length > 0 ? `${filteredPets[0].type} İlanları` : 'Tüm İlanlar'}
             categoryCount={pets.filter(p => p.type === filteredPets[0]?.type).length}
             breedName={breedName}
             breedCount={filteredPets.length}
