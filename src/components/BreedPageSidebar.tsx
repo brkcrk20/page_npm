@@ -40,37 +40,46 @@ export function BreedPageSidebar({
 }: BreedPageSidebarProps) {
   return (
     <div className="w-full space-y-6">
-        <div className="bg-secondary/50 p-4 rounded-lg">
-            <Link href={`/${categorySlug}`} className="block font-bold hover:text-primary transition-colors text-lg mb-2">
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+            <Link 
+              href={`/${categorySlug}`} 
+              className="block font-bold text-lg mb-4 text-center p-3 rounded-lg bg-secondary hover:bg-orange-50 hover:text-orange-600 transition-all duration-200"
+            >
                 {categoryName} ({categoryCount})
             </Link>
 
             {breeds && categorySlug && (
-                <ul className="space-y-1 mt-2 pl-2 max-h-96 overflow-y-auto">
-                    {breeds.map(breed => (
+                <ul className="space-y-2 mt-2">
+                    {breeds.map(breed => {
+                        const isActive = breed.name === breedName;
+                        return (
                          <li key={breed.id}>
                             <Link 
                                 href={`/${categorySlug}/${breed.slug}`} 
                                 className={cn(
-                                    "flex justify-between items-center text-sm p-2 rounded-md text-muted-foreground transition-all duration-300 ease-in-out group",
-                                    "hover:bg-orange-50 hover:text-orange-600 hover:translate-x-1",
-                                    "active:scale-95 active:ring-2 active:ring-orange-200",
-                                    breed.name === breedName && "text-primary font-bold bg-secondary"
+                                    "flex justify-between items-center text-sm p-3 rounded-lg border transition-all duration-300 ease-in-out group",
+                                    "hover:shadow-lg hover:shadow-orange-200 hover:-translate-y-1",
+                                    isActive 
+                                        ? "bg-orange-50 text-orange-600 font-bold border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)]"
+                                        : "text-muted-foreground border-transparent"
                                 )}
                             >
-                               <span>{breed.name}</span>
-                               <div className="flex items-center gap-1">
-                                    <span className="font-semibold">{breed.count}</span>
-                                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1"/>
+                               <span className="truncate">{breed.name}</span>
+                               <div className="flex items-center gap-2">
+                                    <span className={cn("font-semibold px-2 py-0.5 rounded-full text-xs", isActive ? "bg-orange-200 text-orange-700" : "bg-secondary")}>
+                                      {breed.count}
+                                    </span>
+                                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5"/>
                                </div>
                             </Link>
                         </li>
-                    ))}
+                        )
+                    })}
                 </ul>
             )}
         </div>
         
-        <div className="space-y-4">
+        <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm">
              <div>
                 <Label htmlFor="city-select">İl Seçiniz</Label>
                  <Select>
@@ -91,7 +100,7 @@ export function BreedPageSidebar({
             </Button>
         </div>
 
-      <Accordion type="multiple" className="w-full border rounded-lg p-4">
+      <Accordion type="multiple" className="w-full bg-white rounded-lg p-4 shadow-sm">
         <AccordionItem value="age">
           <AccordionTrigger>Yaş</AccordionTrigger>
           <AccordionContent>
