@@ -4,7 +4,7 @@
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Loader2, LogOut, Edit, Save, X, FileText, Heart, ShieldCheck, Building, Settings, User as UserIcon, Coins, Briefcase } from 'lucide-react';
+import { Loader2, LogOut, Edit, Save, X, FileText, Heart, ShieldCheck, Building, Settings, User as UserIcon, Coins, Briefcase, Plus, Phone, Eye, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -256,7 +256,7 @@ export default function ProfilePage() {
         return null; // Should be redirected by the effect
     }
     
-    const username = user.displayName || profileData?.username || 'Kullanıcı';
+    const username = profileData?.name || 'Kullanıcı';
 
     const InfoRow = ({ label, value, fieldName, isEditable = true }: { label: string, value: string | undefined | null, fieldName?: keyof UserProfile, isEditable?: boolean }) => {
         const isEditing = fieldName && editModes[fieldName];
@@ -310,36 +310,45 @@ export default function ProfilePage() {
     
     const userType = profileData?.companyType ? 'Kurumsal Üye' : 'Bireysel Üye';
 
+    const StatItem = ({ icon, value, label }: { icon: React.ElementType, value: string, label: string }) => {
+        const Icon = icon;
+        return (
+            <div className="flex items-center gap-3">
+                <Icon className="h-6 w-6 text-primary" />
+                <div className="text-left">
+                    <p className="font-bold text-lg">{value}</p>
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                </div>
+            </div>
+        );
+    };
+
+
     return (
         <div className="container mx-auto py-12">
             <Card className="mb-8">
-                <CardContent className="p-6 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
-                    <div className="h-24 w-24 flex items-center justify-center rounded-full bg-secondary text-primary">
-                        <UserIcon className="h-12 w-12" />
+                <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6">
+                    <div className="h-28 w-28 flex-shrink-0 flex items-center justify-center rounded-full bg-secondary text-primary">
+                        <UserIcon className="h-16 w-16" />
                     </div>
-                    <div className="flex-grow text-center sm:text-left">
-                        <h1 className="text-2xl font-bold font-headline">{username}</h1>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                        <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-2">
-                            <Badge variant="outline" className="flex items-center gap-1">
-                                <Briefcase className="h-3 w-3" />
-                                {userType}
-                            </Badge>
-                             {profileData?.userStatus && (
-                                <Badge variant={getStatusVariant(profileData.userStatus)} className="capitalize">
-                                    {profileData.userStatus}
-                                </Badge>
-                            )}
-                             <Badge variant="secondary" className="flex items-center gap-1">
-                                <Coins className="h-3 w-3" />
-                                {profileData?.credit ?? 0} Kredi
-                            </Badge>
-                        </div>
+                    <div className="flex-grow grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 text-center md:text-left w-full">
+                        <StatItem icon={FileText} value="5" label="Toplam İlan" />
+                        <StatItem icon={MessageCircle} value="12" label="Whatsapp Talebi" />
+                        <StatItem icon={Phone} value="8" label="Arama Talebi" />
+                        <StatItem icon={Eye} value="1.2k" label="Görüntülenme" />
                     </div>
-                    <Button variant="outline" onClick={handleLogout} className="w-full sm:w-auto">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Çıkış Yap
-                    </Button>
+                    <div className="flex flex-col sm:flex-row md:flex-col gap-3 w-full md:w-auto flex-shrink-0">
+                         <Button variant="outline" className='w-full'>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Profili Düzenle
+                        </Button>
+                        <Button asChild className='w-full'>
+                            <Link href="/listings/new">
+                                <Plus className="mr-2 h-4 w-4" />
+                                İlan Ekle
+                            </Link>
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -360,6 +369,7 @@ export default function ProfilePage() {
                           </CardHeader>
                           <CardContent className="p-0">
                             <ul>
+                              <InfoRow label="Ad Soyad" value={profileData?.name} fieldName="name" />
                               <InfoRow label="Kullanıcı Adı" value={profileData?.username} isEditable={false} />
                               <InfoRow label="E-posta" value={user.email} isEditable={false} />
                               <InfoRow label="Telefon Numarası" value={profileData?.phoneNumber} fieldName="phoneNumber" />
@@ -419,6 +429,14 @@ export default function ProfilePage() {
                                   <h3 className="font-medium mb-2">Şifre Değiştir</h3>
                                   <Button variant="outline" onClick={() => alert('Şifre sıfırlama özelliği henüz tamamlanmadı.')}>Şifre Değiştirme E-postası Gönder</Button>
                               </div>
+                               <div className="border-t pt-6">
+                                  <h3 className="font-medium mb-2">Güvenli Çıkış</h3>
+                                  <p className="text-sm text-muted-foreground mb-3">Hesabınızdan güvenli bir şekilde çıkış yapın.</p>
+                                  <Button variant="outline" onClick={handleLogout}>
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Çıkış Yap
+                                  </Button>
+                              </div>
                               <div className="border-t pt-6">
                                   <h3 className="font-medium mb-2 text-destructive">Hesabı Sil</h3>
                                   <p className="text-sm text-muted-foreground mb-3">Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.</p>
@@ -432,7 +450,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    
-
-    
