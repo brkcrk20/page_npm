@@ -6,7 +6,8 @@ import { ListingManagement } from "./ListingManagement";
 import { ServiceManagement } from "./ServiceManagement";
 import { BreedManagement } from "./BreedManagement";
 import { MenuManagement } from "./MenuManagement";
-import { Users, PawPrint, Layers, Database, LayoutTemplate } from "lucide-react";
+import { AnalyticsManagement } from "./AnalyticsManagement";
+import { Users, PawPrint, Layers, Database, LayoutTemplate, BarChart } from "lucide-react";
 
 export function AdminShell() {
 
@@ -16,14 +17,18 @@ export function AdminShell() {
         <h1 className="text-3xl font-bold font-headline">Admin Paneli</h1>
         <p className="text-muted-foreground">Uygulama verilerini ve içeriğini yönetin.</p>
       </div>
-      <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs defaultValue="analytics" className="w-full">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="analytics"><BarChart className="mr-2" />Analiz</TabsTrigger>
           <TabsTrigger value="users"><Users className="mr-2" />Kullanıcılar</TabsTrigger>
           <TabsTrigger value="listings"><PawPrint className="mr-2" />Hayvan İlanları</TabsTrigger>
           <TabsTrigger value="services"><Layers className="mr-2" />Hizmetler</TabsTrigger>
           <TabsTrigger value="data"><Database className="mr-2" />Veri Yönetimi</TabsTrigger>
           <TabsTrigger value="content"><LayoutTemplate className="mr-2" />İçerik Yönetimi</TabsTrigger>
         </TabsList>
+        <TabsContent value="analytics" className="mt-6">
+          <AnalyticsManagement />
+        </TabsContent>
         <TabsContent value="users" className="mt-6">
           <UserManagement />
         </TabsContent>
