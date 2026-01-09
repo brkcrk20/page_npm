@@ -20,14 +20,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { MoreHorizontal } from 'lucide-react';
 
 function ProfileListings() {
@@ -114,17 +106,17 @@ function FavoriteListings() {
   
   const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
+  // This query is now efficient thanks to the use of 'in' operator
   const favoritesQuery = useMemoFirebase(() => {
     if (!firestore || !userProfile || !userProfile.favoritePetIds || userProfile.favoritePetIds.length === 0) {
       return null;
     }
-    // This query is now efficient.
-    return query(collection(firestore, 'petListings'), where('id', 'in', userProfile.favoritePetIds));
+    // We can query up to 30 items with the 'in' operator. If more are needed, pagination would be required.
+    return query(collection(firestore, 'petListings'), where('id', 'in', userProfile.favoritePetIds.slice(0, 30)));
   }, [firestore, userProfile]);
 
   const { data: favoriteListings, isLoading } = useCollection<PetListing>(favoritesQuery);
 
-  // We only want to show loading state if we know there are favorites to fetch.
   const effectiveIsLoading = (userProfile?.favoritePetIds?.length ?? 0) > 0 && isLoading;
   
   if (effectiveIsLoading) {
@@ -199,9 +191,11 @@ export default function ProfilePage() {
 
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
-  const [username, setUsername] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [location, setLocation] = useState('');
+  const [formData, setFormData] = useState({
+    username: '',
+    phoneNumber: '',
+    location: '',
+  });
   const [isUpdating, setIsUpdating] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
@@ -210,11 +204,18 @@ export default function ProfilePage() {
       router.push('/login');
     }
      if (userProfile) {
-      setUsername(userProfile.username || '');
-      setPhoneNumber(userProfile.phoneNumber || '');
-      setLocation(userProfile.location || '');
+      setFormData({
+        username: userProfile.username || '',
+        phoneNumber: userProfile.phoneNumber || '',
+        location: userProfile.location || '',
+      });
     }
   }, [user, isUserLoading, router, userProfile]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({...prev, [id]: value }));
+  };
   
   const handleLogout = () => {
     signOut(auth);
@@ -262,10 +263,10 @@ export default function ProfilePage() {
       async () => {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          // Use await to ensure updates complete before finishing
           await updateDoc(userProfileRef, { avatarUrl: downloadURL });
-          if (user) {
-            await updateProfile(user, { photoURL: downloadURL });
-          }
+          await updateProfile(user, { photoURL: downloadURL });
+          
           toast({
             title: 'Başarılı',
             description: 'Profil resminiz güncellendi.',
@@ -290,17 +291,19 @@ export default function ProfilePage() {
     
     setIsUpdating(true);
     try {
+      // Use the latest state from formData for the update
       await updateDoc(userProfileRef, {
-        username: username,
-        phoneNumber: phoneNumber,
-        location: location
+        username: formData.username,
+        phoneNumber: formData.phoneNumber,
+        location: formData.location
       });
-       if(user.displayName !== username) {
-        await updateProfile(user, { displayName: username });
-       }
+      // Also update the auth profile if the name changed
+      if (user.displayName !== formData.username) {
+        await updateProfile(user, { displayName: formData.username });
+      }
       toast({ title: "Başarılı", description: "Profil bilgileriniz güncellendi." });
     } catch (error) {
-       toast({ variant: "destructive", title: "Hata", description: "Profil güncellenirken bir sorun oluştu." });
+      toast({ variant: "destructive", title: "Hata", description: "Profil güncellenirken bir sorun oluştu." });
       console.error("Profile update error:", error);
     } finally {
       setIsUpdating(false);
@@ -350,7 +353,7 @@ export default function ProfilePage() {
                     )}
                 </div>
                 <div className="flex-grow">
-                    <h1 className="text-2xl font-bold font-headline">{userProfile?.username}</h1>
+                    <h1 className="text-2xl font-bold font-headline">{formData.username}</h1>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
                      <Badge variant={getStatusVariant(userProfile?.userStatus)} className="mt-2 capitalize">
                         {userProfile?.userStatus || 'standart'}
@@ -364,14 +367,48 @@ export default function ProfilePage() {
         </Card>
 
         <main>
-          <Tabs defaultValue="listings" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs defaultValue="info" className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="info"><User className="mr-2" />Profil Bilgileri</TabsTrigger>
               <TabsTrigger value="listings"><FileText className="mr-2" />İlanlarım</TabsTrigger>
               <TabsTrigger value="favorites"><Heart className="mr-2" />Favorilerim</TabsTrigger>
               <TabsTrigger value="status"><ShieldCheck className="mr-2 h-4 w-4" />Hesap Durumu</TabsTrigger>
               <TabsTrigger value="settings"><Settings className="mr-2" />Ayarlar</TabsTrigger>
             </TabsList>
             
+            <TabsContent value="info" className="mt-6">
+              <Card>
+                  <CardHeader>
+                      <CardTitle>Profil Bilgileri</CardTitle>
+                      <CardDescription>Genel profil bilgilerinizi güncelleyin.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                      <form onSubmit={handleProfileUpdate} className="space-y-4">
+                          <div className="space-y-1">
+                          <Label htmlFor="username">Kullanıcı Adı</Label>
+                          <Input id="username" value={formData.username} onChange={handleInputChange} placeholder="Adınız" />
+                          </div>
+                          <div className="space-y-1">
+                          <Label htmlFor="phoneNumber">Telefon Numarası</Label>
+                          <Input id="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} placeholder="Telefon numaranız" />
+                          </div>
+                          <div className="space-y-1">
+                          <Label htmlFor="location">Konum</Label>
+                          <Input id="location" value={formData.location} onChange={handleInputChange} placeholder="Şehir, Ülke" />
+                          </div>
+                          <div className="space-y-1">
+                          <Label htmlFor="email">E-posta</Label>
+                          <Input id="email" type="email" value={user.email ?? ''} disabled />
+                          </div>
+                          <Button type="submit" disabled={isUpdating} className="w-full">
+                          {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Bilgileri Güncelle
+                          </Button>
+                      </form>
+                  </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="listings" className="mt-6">
                 <ProfileListings />
             </TabsContent>
@@ -419,55 +456,23 @@ export default function ProfilePage() {
             </TabsContent>
 
             <TabsContent value="settings" className="mt-6">
-                <div className="grid md:grid-cols-2 gap-8">
-                     <Card>
-                        <CardHeader>
-                            <CardTitle>Profil Bilgileri</CardTitle>
-                            <CardDescription>Genel profil bilgilerinizi güncelleyin.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleProfileUpdate} className="space-y-4">
-                                <div className="space-y-1">
-                                <Label htmlFor="displayName">Kullanıcı Adı</Label>
-                                <Input id="displayName" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Adınız" />
-                                </div>
-                                <div className="space-y-1">
-                                <Label htmlFor="phoneNumber">Telefon Numarası</Label>
-                                <Input id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Telefon numaranız" />
-                                </div>
-                                <div className="space-y-1">
-                                <Label htmlFor="location">Konum</Label>
-                                <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Şehir, Ülke" />
-                                </div>
-                                <div className="space-y-1">
-                                <Label htmlFor="email">E-posta</Label>
-                                <Input id="email" type="email" value={user.email ?? ''} disabled />
-                                </div>
-                                <Button type="submit" disabled={isUpdating} className="w-full">
-                                {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Bilgileri Güncelle
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Hesap Ayarları</CardTitle>
-                            <CardDescription>Şifrenizi değiştirin veya hesabınızı yönetin.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div>
-                                <h3 className="font-medium mb-2">Şifre Değiştir</h3>
-                                <Button variant="outline" onClick={handlePasswordReset}>Şifre Değiştirme E-postası Gönder</Button>
-                            </div>
-                            <div className="border-t pt-6">
-                                <h3 className="font-medium mb-2 text-destructive">Hesabı Sil</h3>
-                                <p className="text-sm text-muted-foreground mb-3">Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.</p>
-                                <Button variant="destructive" onClick={handleDeleteAccount}>Hesabımı Kalıcı Olarak Sil</Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+              <Card>
+                  <CardHeader>
+                      <CardTitle>Hesap Ayarları</CardTitle>
+                      <CardDescription>Şifrenizi değiştirin veya hesabınızı yönetin.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                      <div>
+                          <h3 className="font-medium mb-2">Şifre Değiştir</h3>
+                          <Button variant="outline" onClick={handlePasswordReset}>Şifre Değiştirme E-postası Gönder</Button>
+                      </div>
+                      <div className="border-t pt-6">
+                          <h3 className="font-medium mb-2 text-destructive">Hesabı Sil</h3>
+                          <p className="text-sm text-muted-foreground mb-3">Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.</p>
+                          <Button variant="destructive" onClick={handleDeleteAccount}>Hesabımı Kalıcı Olarak Sil</Button>
+                      </div>
+                  </CardContent>
+              </Card>
             </TabsContent>
 
           </Tabs>
