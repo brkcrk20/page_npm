@@ -136,9 +136,6 @@ export function BreedPageSidebar({
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-       <Button className="w-full text-base" size="lg">
-            <Filter className="mr-2 h-4 w-4" /> Filtrele
-        </Button>
     </div>
   );
 }
