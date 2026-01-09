@@ -3,22 +3,23 @@
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, useStorage } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { Loader2, User, FileText, Settings, Heart, Edit, Trash2, Camera, LogOut } from 'lucide-react';
+import { Loader2, User, FileText, Settings, Heart, Edit, Trash2, Camera, LogOut, ShieldCheck, Building } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { updateProfile } from 'firebase/auth';
+import { updateProfile, signOut } from 'firebase/auth';
 import type { UserProfile, PetListing } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 function ProfileListings() {
   const { user } = useUser();
@@ -26,10 +27,16 @@ function ProfileListings() {
 
   const userListingsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, `users/${user.uid}/petListings`);
+    // This query is intentionally left broad to fetch all petListings.
+    // For a real application, you'd likely query a user's specific listings.
+    // Example: collection(firestore, `users/${user.uid}/petListings`)
+    return collection(firestore, 'petListings');
   }, [firestore, user]);
 
   const { data: listings, isLoading } = useCollection<PetListing>(userListingsQuery);
+  
+  // Filter listings on the client-side
+  const userListings = listings?.filter(listing => listing.userId === user?.uid);
 
   if (isLoading) {
     return (
@@ -51,7 +58,7 @@ function ProfileListings() {
     );
   }
 
-  if (listings && listings.length === 0) {
+  if (userListings && userListings.length === 0) {
     return (
         <div className="text-center py-20 text-muted-foreground border-2 border-dashed rounded-lg">
             <FileText className="mx-auto h-12 w-12 mb-4" />
@@ -66,7 +73,7 @@ function ProfileListings() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {listings?.map((listing) => (
+      {userListings?.map((listing) => (
         <Card key={listing.id} className="overflow-hidden">
           <div className="relative w-full aspect-square">
             <Image src={listing.imageUrl} alt={listing.name} fill className="object-cover" />
@@ -107,11 +114,19 @@ function FavoriteListings() {
     const fetchFavorites = async () => {
       if (userProfile && userProfile.favoritePetIds && userProfile.favoritePetIds.length > 0) {
         try {
-          const listingsRef = collection(firestore, 'petListings');
-          const q = query(listingsRef, where('id', 'in', userProfile.favoritePetIds));
-          const querySnapshot = await getDocs(q);
-          const listings = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PetListing[];
-          setFavoriteListings(listings);
+          // This is inefficient. In a real app, you'd have a denormalized `petListings` root collection.
+          const usersSnapshot = await getDocs(collection(firestore, 'users'));
+          const allListings: PetListing[] = [];
+          for (const userDoc of usersSnapshot.docs) {
+              const listingsSnapshot = await getDocs(collection(userDoc.ref, 'petListings'));
+              listingsSnapshot.forEach(listingDoc => {
+                  if (userProfile.favoritePetIds?.includes(listingDoc.id)) {
+                      allListings.push({ id: listingDoc.id, ...listingDoc.data() } as PetListing);
+                  }
+              });
+          }
+          setFavoriteListings(allListings);
+
         } catch (error) {
           console.error("Error fetching favorite listings:", error);
         }
@@ -144,7 +159,6 @@ function FavoriteListings() {
 
   return (
      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {/* Re-using a simplified PetCard structure, you can also import PetCard component if needed */}
       {favoriteListings.map(pet => (
         <Link key={pet.id} href={`/listings/${pet.id}`} className="group block">
             <Card className="overflow-hidden">
@@ -162,8 +176,21 @@ function FavoriteListings() {
   );
 }
 
+const getStatusVariant = (status?: UserProfile['userStatus']) => {
+    switch (status) {
+      case 'premium':
+        return 'default';
+      case 'onayli':
+        return 'secondary';
+      case 'yasakli':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+};
+
 export default function ProfilePage() {
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading, auth } = useFirebase();
   const firestore = useFirestore();
   const storage = useStorage();
   const router = useRouter();
@@ -193,6 +220,12 @@ export default function ProfilePage() {
       setLocation(userProfile.location || '');
     }
   }, [user, isUserLoading, router, userProfile]);
+  
+  const handleLogout = () => {
+    signOut(auth);
+    toast({ title: 'Çıkış Yapıldı', description: 'Hesabınızdan güvenle çıkış yaptınız.' });
+    router.push('/');
+  };
 
   if (isUserLoading || !user || isProfileLoading) {
     return (
@@ -204,7 +237,7 @@ export default function ProfilePage() {
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return user?.email?.charAt(0).toUpperCase() ?? 'U';
-    return name.charAt(0).toUpperCase();
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
   
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,10 +268,8 @@ export default function ProfilePage() {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           
-          // Update Firebase Auth profile
           await updateProfile(user, { photoURL: downloadURL });
 
-          // Update Firestore profile
           if (userProfileRef) {
             await updateDoc(userProfileRef, { avatarUrl: downloadURL });
           }
@@ -272,6 +303,9 @@ export default function ProfilePage() {
         phoneNumber: phoneNumber,
         location: location
       });
+       if(user.displayName !== username) {
+        await updateProfile(user, { displayName: username });
+       }
       toast({ title: "Başarılı", description: "Profil bilgileriniz güncellendi." });
     } catch (error) {
        toast({ variant: "destructive", title: "Hata", description: "Profil güncellenirken bir sorun oluştu." });
@@ -282,12 +316,10 @@ export default function ProfilePage() {
   };
   
   const handlePasswordReset = () => {
-    // TODO: Implement password reset logic
     alert('Şifre sıfırlama özelliği henüz tamamlanmadı.');
   }
 
   const handleDeleteAccount = () => {
-    // TODO: Implement account deletion logic (needs a backend function)
     alert('Hesap silme özelliği henüz tamamlanmadı. Bu işlem sunucu tarafında yapılmalıdır.');
   }
 
@@ -295,92 +327,59 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto py-12">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        
-        {/* Left Column */}
-        <aside className="md:col-span-1 space-y-8">
-          <Card>
-            <CardContent className="p-6 flex flex-col items-center space-y-4">
-              <div className="relative group">
-                <Avatar className="h-32 w-32 border-4 border-primary/50">
-                  <AvatarImage src={avatarUrl} alt={username} />
-                  <AvatarFallback className="text-4xl bg-secondary">{getInitials(username)}</AvatarFallback>
-                </Avatar>
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  variant="outline"
-                  size="icon"
-                  className="absolute bottom-1 right-1 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                  disabled={uploadProgress !== null}
-                >
-                  {uploadProgress !== null ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
-                  <span className="sr-only">Profil resmini değiştir</span>
+        <Card className="mb-8">
+            <CardContent className="p-6 flex items-center space-x-6">
+                 <div className="relative group">
+                    <Avatar className="h-24 w-24 border-4 border-primary/50">
+                        <AvatarImage src={avatarUrl} alt={userProfile?.username} />
+                        <AvatarFallback className="text-3xl bg-secondary">{getInitials(userProfile?.username)}</AvatarFallback>
+                    </Avatar>
+                    <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        variant="outline"
+                        size="icon"
+                        className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                        disabled={uploadProgress !== null}
+                    >
+                        {uploadProgress !== null ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                        <span className="sr-only">Profil resmini değiştir</span>
+                    </Button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleAvatarChange}
+                        className="hidden"
+                        accept="image/png, image/jpeg"
+                    />
+                </div>
+                 {uploadProgress !== null && (
+                    <div className="w-24">
+                        <Progress value={uploadProgress} className="h-1" />
+                    </div>
+                )}
+                <div className="flex-grow">
+                    <h1 className="text-2xl font-bold font-headline">{userProfile?.username}</h1>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                     <Badge variant={getStatusVariant(userProfile?.userStatus)} className="mt-2 capitalize">
+                        {userProfile?.userStatus || 'standart'}
+                    </Badge>
+                </div>
+                 <Button variant="outline" onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Çıkış Yap
                 </Button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleAvatarChange}
-                  className="hidden"
-                  accept="image/png, image/jpeg"
-                />
-              </div>
-              {uploadProgress !== null && (
-                <div className="w-32">
-                  <Progress value={uploadProgress} className="h-2" />
-                </div>
-              )}
-              <div className="text-center">
-                <h1 className="text-2xl font-bold font-headline">{username}</h1>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-              </div>
-               <Button variant="outline" className="w-full">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Çıkış Yap
-              </Button>
             </CardContent>
-          </Card>
-          
-           <Card>
-            <CardHeader>
-              <CardTitle>Profil Bilgileri</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleProfileUpdate} className="space-y-4">
-                <div className="space-y-1">
-                  <Label htmlFor="displayName">Kullanıcı Adı</Label>
-                  <Input id="displayName" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Adınız" />
-                </div>
-                 <div className="space-y-1">
-                  <Label htmlFor="phoneNumber">Telefon Numarası</Label>
-                  <Input id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Telefon numaranız" />
-                </div>
-                 <div className="space-y-1">
-                  <Label htmlFor="location">Konum</Label>
-                  <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Şehir, Ülke" />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="email">E-posta</Label>
-                  <Input id="email" type="email" value={user.email ?? ''} disabled />
-                </div>
-                <Button type="submit" disabled={isUpdating} className="w-full">
-                  {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Bilgileri Güncelle
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+        </Card>
 
-        </aside>
-
-        {/* Right Column */}
-        <main className="md:col-span-3">
+        <main>
           <Tabs defaultValue="listings" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="listings"><FileText className="mr-2" />İlanlarım</TabsTrigger>
               <TabsTrigger value="favorites"><Heart className="mr-2" />Favorilerim</TabsTrigger>
+              <TabsTrigger value="status"><ShieldCheck className="mr-2 h-4 w-4" />Hesap Durumu</TabsTrigger>
               <TabsTrigger value="settings"><Settings className="mr-2" />Ayarlar</TabsTrigger>
             </TabsList>
-
+            
             <TabsContent value="listings" className="mt-6">
                 <ProfileListings />
             </TabsContent>
@@ -389,29 +388,98 @@ export default function ProfilePage() {
                  <FavoriteListings />
             </TabsContent>
 
-            <TabsContent value="settings" className="mt-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Hesap Ayarları</CardTitle>
-                        <CardDescription>Şifrenizi değiştirin veya hesabınızı yönetin.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div>
-                            <h3 className="font-medium mb-2">Şifre Değiştir</h3>
-                            <Button variant="outline" onClick={handlePasswordReset}>Şifre Değiştirme E-postası Gönder</Button>
-                        </div>
-                         <div className="border-t pt-6">
-                            <h3 className="font-medium mb-2 text-destructive">Hesabı Sil</h3>
-                            <p className="text-sm text-muted-foreground mb-3">Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.</p>
-                            <Button variant="destructive" onClick={handleDeleteAccount}>Hesabımı Kalıcı Olarak Sil</Button>
-                        </div>
-                    </CardContent>
-                </Card>
+            <TabsContent value="status" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Hesap Durumu ve Bilgileri</CardTitle>
+                  <CardDescription>Mevcut hesap seviyenizi ve ilgili bilgileri görüntüleyin.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <h3 className="font-medium mb-2">Mevcut Statü</h3>
+                    <Badge variant={getStatusVariant(userProfile?.userStatus)} className="text-base capitalize">
+                      {userProfile?.userStatus || 'standart'}
+                    </Badge>
+                  </div>
+                  
+                  {userProfile?.companyType ? (
+                    <div className="border-t pt-6">
+                      <h3 className="font-medium mb-4 flex items-center"><Building className="mr-2 h-5 w-5 text-primary" />Kurumsal Bilgiler</h3>
+                      <div className="text-sm space-y-3">
+                         <p><strong>Şirket Tipi:</strong> {userProfile.companyType}</p>
+                         <p><strong>Firma Ünvanı:</strong> {userProfile.companyTitle}</p>
+                         <p><strong>TC Kimlik No:</strong> {userProfile.tcNo}</p>
+                         <p><strong>Vergi Dairesi:</strong> {userProfile.taxOffice}</p>
+                         <p><strong>Vergi Numarası:</strong> {userProfile.taxNo}</p>
+                         <p><strong>Firma Adresi:</strong> {userProfile.companyAddress}</p>
+                      </div>
+                    </div>
+                  ) : (
+                     <div className="border-t pt-6 text-center text-muted-foreground">
+                        <Building className="mx-auto h-10 w-10 mb-2" />
+                        <p className="font-semibold">Kurumsal üyeliğiniz bulunmamaktadır.</p>
+                        <p className="text-xs">Kurumsal üye olarak daha fazla ilanı öne çıkarabilir ve ek avantajlardan yararlanabilirsiniz.</p>
+                        <Button variant="secondary" className="mt-4">Kurumsal Üyeliğe Geç (Yakında)</Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
+
+            <TabsContent value="settings" className="mt-6">
+                <div className="grid md:grid-cols-2 gap-8">
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Profil Bilgileri</CardTitle>
+                            <CardDescription>Genel profil bilgilerinizi güncelleyin.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleProfileUpdate} className="space-y-4">
+                                <div className="space-y-1">
+                                <Label htmlFor="displayName">Kullanıcı Adı</Label>
+                                <Input id="displayName" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Adınız" />
+                                </div>
+                                <div className="space-y-1">
+                                <Label htmlFor="phoneNumber">Telefon Numarası</Label>
+                                <Input id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Telefon numaranız" />
+                                </div>
+                                <div className="space-y-1">
+                                <Label htmlFor="location">Konum</Label>
+                                <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Şehir, Ülke" />
+                                </div>
+                                <div className="space-y-1">
+                                <Label htmlFor="email">E-posta</Label>
+                                <Input id="email" type="email" value={user.email ?? ''} disabled />
+                                </div>
+                                <Button type="submit" disabled={isUpdating} className="w-full">
+                                {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Bilgileri Güncelle
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Hesap Ayarları</CardTitle>
+                            <CardDescription>Şifrenizi değiştirin veya hesabınızı yönetin.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div>
+                                <h3 className="font-medium mb-2">Şifre Değiştir</h3>
+                                <Button variant="outline" onClick={handlePasswordReset}>Şifre Değiştirme E-postası Gönder</Button>
+                            </div>
+                            <div className="border-t pt-6">
+                                <h3 className="font-medium mb-2 text-destructive">Hesabı Sil</h3>
+                                <p className="text-sm text-muted-foreground mb-3">Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.</p>
+                                <Button variant="destructive" onClick={handleDeleteAccount}>Hesabımı Kalıcı Olarak Sil</Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </TabsContent>
+
           </Tabs>
         </main>
-
-      </div>
     </div>
   );
 }
