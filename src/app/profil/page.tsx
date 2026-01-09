@@ -1,6 +1,6 @@
 'use client';
 
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, useStorage } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { Loader2, User, FileText, Settings, Heart, Edit, Trash2, Camera } from 'lucide-react';
@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
 import type { UserProfile, PetListing } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -165,6 +165,7 @@ function FavoriteListings() {
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const storage = useStorage();
   const router = useRouter();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -210,7 +211,6 @@ export default function ProfilePage() {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
-    const storage = getStorage();
     const storageRef = ref(storage, `avatars/${user.uid}/${file.name}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
