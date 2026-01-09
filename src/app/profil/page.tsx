@@ -1,36 +1,194 @@
 'use client';
 
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Loader2, User, FileText, Settings, Heart } from 'lucide-react';
+import { Loader2, User, FileText, Settings, Heart, Edit, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import type { UserProfile, PetListing } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
+import Image from 'next/image';
+
+function ProfileListings() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userListingsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, `users/${user.uid}/petListings`);
+  }, [firestore, user]);
+
+  const { data: listings, isLoading } = useCollection<PetListing>(userListingsQuery);
+
+  if (isLoading) {
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+                <Card key={i}>
+                    <Skeleton className="w-full h-40" />
+                    <CardHeader>
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                    </CardHeader>
+                    <CardContent className="flex justify-end gap-2">
+                        <Skeleton className="h-10 w-20" />
+                        <Skeleton className="h-10 w-20" />
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
+  }
+
+  if (listings && listings.length === 0) {
+    return (
+        <div className="text-center py-20 text-muted-foreground border-2 border-dashed rounded-lg">
+            <FileText className="mx-auto h-12 w-12 mb-4" />
+            <p className="font-semibold">Henüz hiç ilan vermediniz.</p>
+            <p className="text-sm">Yeni bir ilan oluşturarak başlayabilirsiniz.</p>
+            <Button asChild className="mt-4">
+                <Link href="/listings/new">Yeni İlan Oluştur</Link>
+            </Button>
+        </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {listings?.map((listing) => (
+        <Card key={listing.id} className="overflow-hidden">
+          <div className="relative w-full aspect-square">
+            <Image src={listing.imageUrl} alt={listing.name} fill className="object-cover" />
+          </div>
+          <CardHeader>
+            <CardTitle>{listing.name}</CardTitle>
+            <CardDescription>{listing.breed}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-end gap-2">
+             <Button variant="outline" size="sm" onClick={() => alert('Düzenleme henüz aktif değil.')}>
+              <Edit className="mr-2 h-4 w-4" /> Düzenle
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => alert('Silme henüz aktif değil.')}>
+              <Trash2 className="mr-2 h-4 w-4" /> Sil
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+
+function FavoriteListings() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+  const [favoriteListings, setFavoriteListings] = useState<PetListing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (userProfile && userProfile.favoritePetIds && userProfile.favoritePetIds.length > 0) {
+        try {
+          const listingsRef = collection(firestore, 'petListings');
+          const q = query(listingsRef, where('id', 'in', userProfile.favoritePetIds));
+          const querySnapshot = await getDocs(q);
+          const listings = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PetListing[];
+          setFavoriteListings(listings);
+        } catch (error) {
+          console.error("Error fetching favorite listings:", error);
+        }
+      } else {
+        setFavoriteListings([]);
+      }
+      setIsLoading(false);
+    };
+
+    fetchFavorites();
+  }, [userProfile, firestore]);
+
+  if (isLoading) {
+     return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-64 w-full" />)}
+        </div>
+    );
+  }
+
+  if (favoriteListings.length === 0) {
+    return (
+        <div className="text-center py-20 text-muted-foreground border-2 border-dashed rounded-lg">
+           <Heart className="mx-auto h-12 w-12 mb-4" />
+           <p className="font-semibold">Favori ilanınız bulunmuyor.</p>
+           <p className="text-sm">İlanları gezerken kalp ikonuna tıklayarak favorilerinize ekleyebilirsiniz.</p>
+       </div>
+    );
+  }
+
+  return (
+     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {/* Re-using a simplified PetCard structure, you can also import PetCard component if needed */}
+      {favoriteListings.map(pet => (
+        <Link key={pet.id} href={`/listings/${pet.id}`} className="group block">
+            <Card className="overflow-hidden">
+                <div className="relative aspect-square">
+                    <Image src={pet.imageUrl} alt={pet.name} fill className="object-cover transition-transform group-hover:scale-105" />
+                </div>
+                <CardContent className="p-4">
+                    <h3 className="font-bold text-lg truncate">{pet.name}</h3>
+                    <p className="text-sm text-muted-foreground">{pet.breed}</p>
+                </CardContent>
+            </Card>
+        </Link>
+      ))}
+    </div>
+  );
+}
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
-  const [displayName, setDisplayName] = useState(user?.displayName ?? '');
+  const { toast } = useToast();
+  
+  const userProfileRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
+
+  const [username, setUsername] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [location, setLocation] = useState('');
-
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/login');
     }
-     if (user) {
-      setDisplayName(user.displayName || user.email?.split('@')[0] || '');
-      // In a real app, you'd fetch the full user profile from Firestore
-      // For now, we'll just use what's in the auth object
+     if (userProfile) {
+      setUsername(userProfile.username || '');
+      setPhoneNumber(userProfile.phoneNumber || '');
+      setLocation(userProfile.location || '');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, userProfile]);
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || isProfileLoading) {
     return (
       <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -39,26 +197,49 @@ export default function ProfilePage() {
   }
 
   const getInitials = (name: string | null | undefined) => {
-    if (!name) return 'U';
+    if (!name) return user?.email?.charAt(0).toUpperCase() ?? 'U';
     return name.charAt(0).toUpperCase();
   };
 
-  const handleProfileUpdate = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO: Implement profile update logic (e.g., updateProfile in Firebase Auth, and update user doc in Firestore)
-    console.log('Updating profile with:', { displayName, phoneNumber, location });
-    alert('Profil güncelleme özelliği henüz tamamlanmadı.');
+    if (!userProfileRef) return;
+    
+    setIsUpdating(true);
+    try {
+      await updateDoc(userProfileRef, {
+        username: username,
+        phoneNumber: phoneNumber,
+        location: location
+      });
+      toast({ title: "Başarılı", description: "Profil bilgileriniz güncellendi." });
+    } catch (error) {
+       toast({ variant: "destructive", title: "Hata", description: "Profil güncellenirken bir sorun oluştu." });
+      console.error("Profile update error:", error);
+    } finally {
+      setIsUpdating(false);
+    }
   };
+  
+  const handlePasswordReset = () => {
+    // TODO: Implement password reset logic
+    alert('Şifre sıfırlama özelliği henüz tamamlanmadı.');
+  }
+
+  const handleDeleteAccount = () => {
+    // TODO: Implement account deletion logic (needs a backend function)
+    alert('Hesap silme özelliği henüz tamamlanmadı. Bu işlem sunucu tarafında yapılmalıdır.');
+  }
 
   return (
     <div className="container mx-auto py-12">
       <div className="flex flex-col items-center space-y-4 mb-10">
         <Avatar className="h-32 w-32 border-4 border-primary/50">
-          <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-          <AvatarFallback className="text-4xl bg-secondary">{getInitials(user.displayName)}</AvatarFallback>
+          <AvatarImage src={user.photoURL ?? ''} alt={username} />
+          <AvatarFallback className="text-4xl bg-secondary">{getInitials(username)}</AvatarFallback>
         </Avatar>
         <div className="text-center">
-          <h1 className="text-3xl font-bold font-headline">{user.displayName || 'Kullanıcı'}</h1>
+          <h1 className="text-3xl font-bold font-headline">{username}</h1>
           <p className="text-muted-foreground">{user.email}</p>
         </div>
       </div>
@@ -70,6 +251,7 @@ export default function ProfilePage() {
           <TabsTrigger value="favorites"><Heart className="mr-2" />Favorilerim</TabsTrigger>
           <TabsTrigger value="settings"><Settings className="mr-2" />Ayarlar</TabsTrigger>
         </TabsList>
+
         <TabsContent value="profile" className="mt-6">
           <Card>
             <CardHeader>
@@ -79,8 +261,8 @@ export default function ProfilePage() {
             <CardContent>
               <form onSubmit={handleProfileUpdate} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="displayName">Görünür İsim</Label>
-                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Adınız" />
+                  <Label htmlFor="displayName">Kullanıcı Adı</Label>
+                  <Input id="displayName" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Adınız" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">E-posta</Label>
@@ -96,44 +278,39 @@ export default function ProfilePage() {
                   <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Şehir, Ülke" />
                 </div>
                 <div className="flex justify-end">
-                    <Button type="submit">Bilgileri Güncelle</Button>
+                    <Button type="submit" disabled={isUpdating}>
+                      {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Bilgileri Güncelle
+                    </Button>
                 </div>
               </form>
             </CardContent>
           </Card>
         </TabsContent>
+
         <TabsContent value="listings" className="mt-6">
-            <div className="text-center py-20 text-muted-foreground">
-                <FileText className="mx-auto h-12 w-12 mb-4" />
-                <p className="font-semibold">Henüz hiç ilan vermediniz.</p>
-                <p className="text-sm">Yeni bir ilan oluşturarak başlayabilirsiniz.</p>
-                <Button asChild className="mt-4">
-                    <a href="/listings/new">Yeni İlan Oluştur</a>
-                </Button>
-            </div>
+            <ProfileListings />
         </TabsContent>
+
         <TabsContent value="favorites" className="mt-6">
-             <div className="text-center py-20 text-muted-foreground">
-                <Heart className="mx-auto h-12 w-12 mb-4" />
-                <p className="font-semibold">Favori ilanınız bulunmuyor.</p>
-                <p className="text-sm">İlanları gezerken kalp ikonuna tıklayarak favorilerinize ekleyebilirsiniz.</p>
-            </div>
+             <FavoriteListings />
         </TabsContent>
+
         <TabsContent value="settings" className="mt-6">
             <Card>
                 <CardHeader>
                     <CardTitle>Hesap Ayarları</CardTitle>
                     <CardDescription>Şifrenizi değiştirin veya hesabınızı yönetin.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                     <div>
                         <h3 className="font-medium mb-2">Şifre Değiştir</h3>
-                        <Button variant="outline">Şifre Değiştirme E-postası Gönder</Button>
+                        <Button variant="outline" onClick={handlePasswordReset}>Şifre Değiştirme E-postası Gönder</Button>
                     </div>
-                     <div className="border-t pt-4">
+                     <div className="border-t pt-6">
                         <h3 className="font-medium mb-2 text-destructive">Hesabı Sil</h3>
                         <p className="text-sm text-muted-foreground mb-3">Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.</p>
-                        <Button variant="destructive">Hesabımı Kalıcı Olarak Sil</Button>
+                        <Button variant="destructive" onClick={handleDeleteAccount}>Hesabımı Kalıcı Olarak Sil</Button>
                     </div>
                 </CardContent>
             </Card>
