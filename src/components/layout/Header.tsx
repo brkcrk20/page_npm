@@ -36,7 +36,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { SearchFilters } from '../SearchFilters';
 import { VetSearchFilters } from '../VetSearchFilters';
 import { Skeleton } from '../ui/skeleton';
@@ -138,7 +138,7 @@ export function Header() {
 
           <div className="flex flex-1 items-center justify-end space-x-4">
             {(isUserLoading || isProfileLoading) ? (
-                <Skeleton className="h-9 w-24" />
+                <Skeleton className="h-10 w-10 rounded-full" />
             ) : (
               <>
                 {user ? (
@@ -146,17 +146,16 @@ export function Header() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-white/20">
                          <Avatar className={cn(
-                            "h-9 w-9 border-2",
-                            isPremium ? "border-yellow-400" : "border-secondary"
+                            "h-10 w-10 border-2",
+                            isPremium 
+                              ? "border-yellow-400 ring-2 ring-yellow-400 ring-offset-2 ring-offset-primary" 
+                              : "border-secondary"
                          )}>
                             <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-                            <AvatarFallback className="bg-primary-foreground text-primary font-bold">
+                            <AvatarFallback className="bg-primary-foreground text-primary font-bold text-lg">
                                 {getInitials(user.email)}
                             </AvatarFallback>
                          </Avatar>
-                         {isPremium && (
-                            <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-yellow-400 ring-2 ring-primary" />
-                         )}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56" align="end" forceMount>
