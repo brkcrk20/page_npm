@@ -1,21 +1,17 @@
 
 'use client';
 
-import { useUser, useAuth, useFirestore, useStorage } from '@/firebase';
+import { useUser, useAuth, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
-import { Loader2, User as UserIcon, Camera, LogOut, Save, X, Edit, FileText, Heart, ShieldCheck, Building, Settings } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useEffect, useState } from 'react';
+import { Loader2, LogOut, Edit, Save, X, FileText, Heart, ShieldCheck, Building, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { doc, updateDoc, getDoc, collection, onSnapshot, query, where, collectionGroup } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { updateProfile, signOut } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
 import type { UserProfile, PetListing } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import imageCompression from 'browser-image-compression';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -23,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AvatarUploader } from '@/components/AvatarUploader';
 
 
 function ProfileListings() {
@@ -88,7 +85,7 @@ function ProfileListings() {
               <Edit className="mr-2 h-4 w-4" /> Düzenle
             </Button>
             <Button variant="destructive" size="sm" onClick={() => alert('Silme henüz aktif değil.')}>
-              <Trash2 className="mr-2 h-4 w-4" /> Sil
+              <X className="mr-2 h-4 w-4" /> Sil
             </Button>
           </CardContent>
         </Card>
@@ -163,7 +160,7 @@ function FavoriteListings() {
                     </Link>
                     <CardContent className="p-4 pt-0">
                         <Button variant="outline" size="sm" className="w-full" onClick={() => alert('Favorilerden kaldırma henüz aktif değil.')}>
-                            <Trash2 className="mr-2 h-4 w-4" />
+                            <X className="mr-2 h-4 w-4" />
                             Favorilerden Kaldır
                         </Button>
                     </CardContent>
@@ -177,14 +174,11 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
     const firestore = useFirestore();
-    const storage = useStorage();
     const router = useRouter();
     const { toast } = useToast();
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
+    
     const [profileData, setProfileData] = useState<UserProfile | null>(null);
     const [isProfileLoading, setIsProfileLoading] = useState(true);
-    const [isUploading, setIsUploading] = useState(false);
     
     const [editModes, setEditModes] = useState<Record<string, boolean>>({});
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
@@ -220,49 +214,6 @@ export default function ProfilePage() {
         });
     };
     
-    const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file || !user) return;
-    
-        setIsUploading(true);
-    
-        try {
-            const options = {
-                maxSizeMB: 1,
-                maxWidthOrHeight: 1080,
-                useWebWorker: true,
-            };
-    
-            const compressedFile = await imageCompression(file, options);
-    
-            const storageRef = ref(storage, `avatars/${user.uid}/profile.jpg`);
-            await uploadBytes(storageRef, compressedFile);
-    
-            const downloadURL = await getDownloadURL(storageRef);
-    
-            const userProfileRef = doc(firestore, 'users', user.uid);
-            await updateDoc(userProfileRef, { avatarUrl: downloadURL });
-    
-            await updateProfile(user, { photoURL: downloadURL });
-    
-            toast({
-                title: 'Başarılı!',
-                description: 'Profil resminiz güncellendi.',
-            });
-    
-        } catch (error) {
-            console.error('Avatar upload failed:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Yükleme Başarısız',
-                description: 'Profil resmi yüklenirken bir hata oluştu. Lütfen tekrar deneyin.',
-            });
-        } finally {
-            setIsUploading(false);
-        }
-    };
-
-
     const handleFieldUpdate = async (field: keyof UserProfile) => {
         if (!user || !fieldValues[field]) return;
 
@@ -297,17 +248,10 @@ export default function ProfilePage() {
     }
 
      if (!user) {
-        return null; // or a redirect component
+        return null; // Should be redirected by the effect
     }
     
-    const getInitials = (name?: string | null) => {
-        if (!name && user?.email) return user.email.charAt(0).toUpperCase();
-        if (!name) return 'U';
-        return name.split(' ').map(n => n[0]).join('').toUpperCase();
-    };
-    
-    const avatarUrl = profileData?.avatarUrl || user.photoURL || '';
-    const username = profileData?.username || user.displayName || 'Kullanıcı';
+    const username = user.displayName || profileData?.username || 'Kullanıcı';
 
     const InfoRow = ({ label, value, fieldName, isEditable = true }: { label: string, value: string | undefined | null, fieldName?: keyof UserProfile, isEditable?: boolean }) => {
         const isEditing = fieldName && editModes[fieldName];
@@ -350,36 +294,7 @@ export default function ProfilePage() {
         <div className="container mx-auto py-12">
             <Card className="mb-8">
                 <CardContent className="p-6 flex items-center space-x-6">
-                    <div className="relative group">
-                        <Avatar className="h-24 w-24 border-4 border-primary/50">
-                            <AvatarImage src={avatarUrl} alt={username} />
-                            <AvatarFallback className="text-3xl bg-secondary">{getInitials(username)}</AvatarFallback>
-                        </Avatar>
-                        
-                        {isUploading ? (
-                             <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
-                                <Loader2 className="h-8 w-8 animate-spin text-white" />
-                            </div>
-                        ) : (
-                            <Button
-                                onClick={() => fileInputRef.current?.click()}
-                                variant="outline"
-                                size="icon"
-                                className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm opacity-50 group-hover:opacity-100 transition-opacity"
-                                disabled={isUploading}
-                            >
-                                <Camera className="h-4 w-4" />
-                                <span className="sr-only">Profil resmini değiştir</span>
-                            </Button>
-                        )}
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleAvatarChange}
-                            className="hidden"
-                            accept="image/png, image/jpeg, image/webp"
-                        />
-                    </div>
+                    <AvatarUploader user={user} />
                     <div className="flex-grow">
                         <h1 className="text-2xl font-bold font-headline">{username}</h1>
                         <p className="text-sm text-muted-foreground">{user.email}</p>
@@ -399,7 +314,7 @@ export default function ProfilePage() {
             <main>
                 <Tabs defaultValue="info" className="w-full">
                     <TabsList className="grid w-full grid-cols-5">
-                        <TabsTrigger value="info"><UserIcon className="mr-2" />Profil Bilgileri</TabsTrigger>
+                        <TabsTrigger value="info">Profil Bilgileri</TabsTrigger>
                         <TabsTrigger value="listings"><FileText className="mr-2" />İlanlarım</TabsTrigger>
                         <TabsTrigger value="favorites"><Heart className="mr-2" />Favorilerim</TabsTrigger>
                         <TabsTrigger value="status"><ShieldCheck className="mr-2 h-4 w-4" />Hesap Durumu</TabsTrigger>
@@ -485,4 +400,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
