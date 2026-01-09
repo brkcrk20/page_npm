@@ -102,23 +102,15 @@ function FavoriteListings() {
   
   const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
-  // This query is now much more efficient.
   const favoritesQuery = useMemoFirebase(() => {
     if (!firestore || !userProfile || !userProfile.favoritePetIds || userProfile.favoritePetIds.length === 0) {
       return null;
     }
-    // We query a root `petListings` collection for performance. This requires security rule and data structure changes.
-    // As a fallback, we can't efficiently query subcollections across all users.
-    // For this implementation, we assume a root collection or accept the limitation.
-    // Let's assume there is a root 'petListings' collection for this query.
-    // If not, this will return 0 results but won't be slow.
-    // To make this work, pet listings should be created in a root `petListings` collection.
     return query(collection(firestore, 'petListings'), where('id', 'in', userProfile.favoritePetIds));
   }, [firestore, userProfile]);
 
   const { data: favoriteListings, isLoading } = useCollection<PetListing>(favoritesQuery);
 
-  // If the query is not ready to run (e.g., no favorites), we can handle the loading state.
   const effectiveIsLoading = (userProfile?.favoritePetIds?.length ?? 0) > 0 && isLoading;
   
   if (effectiveIsLoading) {
@@ -250,11 +242,10 @@ export default function ProfilePage() {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           
-          await updateProfile(user, { photoURL: downloadURL });
-
           if (userProfileRef) {
             await updateDoc(userProfileRef, { avatarUrl: downloadURL });
           }
+          await updateProfile(user, { photoURL: downloadURL });
 
           toast({
             title: 'Başarılı',
@@ -311,7 +302,7 @@ export default function ProfilePage() {
     <div className="container mx-auto py-12">
         <Card className="mb-8">
             <CardContent className="p-6 flex items-center space-x-6">
-                 <div className="relative">
+                 <div className="relative group">
                     <Avatar className="h-24 w-24 border-4 border-primary/50">
                         <AvatarImage src={avatarUrl} alt={userProfile?.username} />
                         <AvatarFallback className="text-3xl bg-secondary">{getInitials(userProfile?.username)}</AvatarFallback>
@@ -333,12 +324,12 @@ export default function ProfilePage() {
                         className="hidden"
                         accept="image/png, image/jpeg"
                     />
+                     {uploadProgress !== null && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                            <Progress value={uploadProgress} className="h-1 w-16" />
+                        </div>
+                    )}
                 </div>
-                 {uploadProgress !== null && (
-                    <div className="w-24">
-                        <Progress value={uploadProgress} className="h-1" />
-                    </div>
-                )}
                 <div className="flex-grow">
                     <h1 className="text-2xl font-bold font-headline">{userProfile?.username}</h1>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
