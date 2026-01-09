@@ -15,7 +15,7 @@ export function PetCard({ pet }: PetCardProps) {
   const isDoping = pet.badge === 'Doping';
 
   return (
-    <Link href={`/${pet.type.toLowerCase()}-ilanlari/${pet.id}`} className="group block">
+    <Link href={`/ilan/${pet.id}`} className="group block">
       <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-transparent hover:border-primary">
         <div className="relative overflow-hidden aspect-square">
           
@@ -40,6 +40,7 @@ export function PetCard({ pet }: PetCardProps) {
               fill
               className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-110"
               data-ai-hint={image.imageHint}
+              loading="lazy"
             />
           ) : (
             <div className="w-full h-full bg-secondary flex items-center justify-center text-muted-foreground">

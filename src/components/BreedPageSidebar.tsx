@@ -49,7 +49,7 @@ export function BreedPageSidebar({
                 <ul className="space-y-1 mt-2 pl-2 max-h-96 overflow-y-auto">
                     {breeds.map(breed => (
                         <li key={breed.id}>
-                            <Link href={`/${categorySlug}/${breed.slug}`} className={cn(
+                            <Link href={`/${categorySlug}/${breed.name.toLowerCase().replace(/ /g, '-')}`} className={cn(
                                 "flex justify-between items-center text-sm text-muted-foreground hover:text-primary group",
                                 breed.name === breedName && "text-primary font-bold"
                             )}>

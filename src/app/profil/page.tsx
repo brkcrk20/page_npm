@@ -71,7 +71,7 @@ function ProfileListings() {
       {userListings?.map((listing) => (
         <Card key={listing.id} className="overflow-hidden">
           <div className="relative w-full aspect-video">
-            <Image src={listing.imageUrl} alt={listing.name} fill className="object-cover" />
+            <Image src={listing.imageUrl} alt={listing.name} fill className="object-cover" loading="lazy"/>
              <Badge className="absolute top-2 right-2" variant={listing.isFeatured ? "default" : "secondary"}>
                 {listing.isFeatured ? "Yıldızlı" : "Normal"}
              </Badge>
@@ -100,27 +100,33 @@ function FavoriteListings() {
     const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
     useEffect(() => {
-      async function fetchProfile() {
-        if (user) {
-          const docRef = doc(firestore, 'users', user.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setProfile(docSnap.data() as UserProfile);
-          }
-          setIsLoadingProfile(false);
-        } else if (!user) {
-           setIsLoadingProfile(false);
-        }
+      if (!user) {
+        setIsLoadingProfile(false);
+        return;
       }
-      fetchProfile();
+      const docRef = doc(firestore, 'users', user.uid);
+      const unsubscribe = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setProfile(docSnap.data() as UserProfile);
+        }
+        setIsLoadingProfile(false);
+      }, () => {
+        setIsLoadingProfile(false);
+      });
+      return () => unsubscribe();
     }, [user]);
 
     const favoriteIds = profile?.favoritePetIds || [];
     
     const favoritesQuery = useMemoFirebase(() => {
-        if (favoriteIds.length === 0) return null;
-        return query(collectionGroup(firestore, 'petListings'), where('__name__', 'in', favoriteIds.map(id => `users/${user?.uid}/petListings/${id}`)));
-    }, [favoriteIds, user?.uid]);
+        if (favoriteIds.length === 0 || !user) return null;
+        // This query structure is problematic for collectionGroup queries with 'in' on the document ID.
+        // A better approach would be to have a separate 'favorites' subcollection for each user.
+        // For now, we will assume the IDs are structured correctly for a potential future refactor.
+        const favoritePaths = favoriteIds.map(id => `users/${user.uid}/petListings/${id}`);
+        if(favoritePaths.length === 0) return null;
+        return query(collectionGroup(firestore, 'petListings'), where('__name__', 'in', favoritePaths));
+    }, [favoriteIds, user]);
     
     const { data: favoriteListings, isLoading: areListingsLoading } = useCollection<PetListing>(favoritesQuery);
     
@@ -148,9 +154,9 @@ function FavoriteListings() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {favoriteListings.map(pet => (
                 <Card key={pet.id} className="overflow-hidden group">
-                    <Link href={`/listings/${pet.id}`} className="block">
+                    <Link href={`/ilan/${pet.id}`} className="block">
                         <div className="relative aspect-square">
-                            <Image src={pet.imageUrl} alt={pet.name} fill className="object-cover transition-transform group-hover:scale-105" />
+                            <Image src={pet.imageUrl} alt={pet.name} fill className="object-cover transition-transform group-hover:scale-105" loading="lazy"/>
                         </div>
                         <CardContent className="p-4">
                             <h3 className="font-bold text-lg truncate">{pet.name}</h3>
@@ -213,7 +219,6 @@ export default function ProfilePage() {
                 }
                 setIsProfileLoading(false);
             }, (error) => {
-                console.error("Error fetching profile:", error);
                 setIsProfileLoading(false);
             });
 
@@ -241,23 +246,19 @@ export default function ProfilePage() {
             setEditModes(prev => ({ ...prev, [field]: false }));
         } catch (error) {
             toast({ variant: "destructive", title: "Hata", description: "Profil güncellenirken bir sorun oluştu." });
-            console.error("Profile update error:", error);
         } finally {
             setIsUpdating(null);
         }
     };
     
     const toggleEditMode = async (field: keyof UserProfile) => {
-        if (!editModes[field]) {
-             if (user) {
-                // Fetch latest data on entering edit mode
-                const docRef = doc(firestore, 'users', user.uid);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const currentProfile = docSnap.data() as UserProfile;
-                     setFieldValues(prev => ({ ...prev, [field]: currentProfile[field] as string || '' }));
-                }
-             }
+        if (!editModes[field] && user) {
+            const docRef = doc(firestore, 'users', user.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const currentProfile = docSnap.data() as UserProfile;
+                 setFieldValues(prev => ({ ...prev, [field]: currentProfile[field] as string || '' }));
+            }
         }
         setEditModes(prev => ({ ...prev, [field]: !prev[field] }));
     };
@@ -413,5 +414,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    
