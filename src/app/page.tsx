@@ -204,7 +204,8 @@ export default function HomePage() {
 
   const dogPets = pets.filter(p => p.type === 'Dog');
   const catPets = pets.filter(p => p.type === 'Cat');
-  const birdAndFishPets = pets.filter(p => p.type === 'Bird' || p.type === 'Aquarium');
+  const birdPets = pets.filter(p => p.type === 'Bird');
+  const aquariumPets = pets.filter(p => p.type === 'Aquarium');
 
   return (
     <div className="bg-secondary/50">
@@ -267,7 +268,7 @@ export default function HomePage() {
             </div>
              <div>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">Kuş ve Balık İlanları</h2>
+                <h2 className="text-2xl font-bold">Kuş İlanları</h2>
                 <Button variant="link" asChild className="text-primary">
                   <Link href="/">
                     Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
@@ -275,7 +276,22 @@ export default function HomePage() {
                 </Button>
               </div>
               <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                {birdAndFishPets.slice(0, 4).map((pet) => (
+                {birdPets.slice(0, 4).map((pet) => (
+                  <PetCard key={pet.id} pet={pet} />
+                ))}
+              </div>
+            </div>
+             <div>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Akvaryum Canlıları</h2>
+                <Button variant="link" asChild className="text-primary">
+                  <Link href="/">
+                    Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+                {aquariumPets.slice(0, 4).map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
                 ))}
               </div>
@@ -312,5 +328,7 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
 
     
