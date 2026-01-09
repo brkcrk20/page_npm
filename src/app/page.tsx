@@ -23,7 +23,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Pet } from "@/lib/data";
 import { allDogBreeds, allCatBreeds, allBirdBreeds, allAquariumBreeds, allOtherBreeds } from "@/lib/breeds";
 import { Badge } from "@/components/ui/badge";
@@ -135,18 +135,19 @@ const blogPosts = [
 
 
 export default function HomePage() {
+    const [shuffledFeaturedPets, setShuffledFeaturedPets] = useState<Pet[]>([]);
 
     // 1. Get counts of breeds that are in the pet listings
-    const countsByType = pets.reduce((acc, pet) => {
+    const countsByType = useMemo(() => pets.reduce((acc, pet) => {
         const { type, breed } = pet;
         if (!acc[type]) acc[type] = {};
         if (!acc[type][breed]) acc[type][breed] = 0;
         acc[type][breed]++;
         return acc;
-    }, {} as Record<Pet['type'], Record<string, number>>);
+    }, {} as Record<Pet['type'], Record<string, number>>), []);
 
     // 2. Function to merge static breed list with dynamic counts
-    const processBreeds = (
+    const processBreeds = useMemo(() => (
       allBreeds: string[], 
       breedCounts: Record<string, number> | undefined
     ): BreedInfo[] => {
@@ -162,9 +163,9 @@ export default function HomePage() {
         // Using 'en' locale to ensure consistent sorting on server and client
         return a.name.localeCompare(b.name, 'en');
       });
-    };
+    }, []);
     
-    const categories: CategoryInfo[] = [
+    const categories: CategoryInfo[] = useMemo(() => [
       {
         type: 'Dog',
         title: 'Köpekler',
@@ -200,12 +201,23 @@ export default function HomePage() {
         color: 'text-emerald-500',
         breeds: processBreeds(allOtherBreeds, countsByType.Other),
       },
-    ];
+    ], [countsByType, processBreeds]);
 
-  const dogPets = pets.filter(p => p.type === 'Dog');
-  const catPets = pets.filter(p => p.type === 'Cat');
-  const birdPets = pets.filter(p => p.type === 'Bird');
-  const aquariumPets = pets.filter(p => p.type === 'Aquarium');
+  const dogPets = useMemo(() => pets.filter(p => p.type === 'Dog'), []);
+  const catPets = useMemo(() => pets.filter(p => p.type === 'Cat'), []);
+  const birdPets = useMemo(() => pets.filter(p => p.type === 'Bird'), []);
+  const aquariumPets = useMemo(() => pets.filter(p => p.type === 'Aquarium'), []);
+  
+  const initialFeatured = useMemo(() => pets.filter(p => p.featured).slice(0, 8), []);
+
+  useEffect(() => {
+    // Client-side shuffle to avoid hydration mismatch
+    const featured = pets.filter(p => p.featured);
+    const shuffled = [...featured].sort(() => 0.5 - Math.random());
+    setShuffledFeaturedPets(shuffled.slice(0, 8));
+  }, []);
+
+  const displayedFeaturedPets = shuffledFeaturedPets.length > 0 ? shuffledFeaturedPets : initialFeatured;
 
   return (
     <div className="bg-secondary/50">
@@ -231,7 +243,7 @@ export default function HomePage() {
                 </Button>
               </div>
               <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                {pets.filter(p => p.featured).slice(0, 8).map((pet) => (
+                {displayedFeaturedPets.map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
                 ))}
               </div>
@@ -332,3 +344,5 @@ export default function HomePage() {
     
 
     
+
+  
