@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useUser } from '@/firebase';
 import { useUserProfile } from '@/firebase/firestore/use-user-profile';
 import { signOut, getAuth } from 'firebase/auth';
@@ -70,6 +70,13 @@ export function Header() {
   const isAdmin = user && user.email === 'admin@patisemti.com';
   const isPremium = userProfile?.userStatus === 'premium';
 
+  // State to prevent hydration errors
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+
   const handleLogout = () => {
     signOut(auth);
   };
@@ -110,6 +117,8 @@ export function Header() {
 
   const showCategoriesAndFilters = pathname !== '/login' && pathname !== '/kayit';
 
+  const isLoading = isUserLoading || isProfileLoading;
+
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-primary text-primary-foreground">
@@ -137,7 +146,7 @@ export function Header() {
           </nav>
 
           <div className="flex flex-1 items-center justify-end space-x-4">
-            {(isUserLoading || isProfileLoading) ? (
+            {(!isMounted || isLoading) ? (
                 <Skeleton className="h-10 w-10 rounded-full" />
             ) : (
               <>
