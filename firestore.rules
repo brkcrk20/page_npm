@@ -147,17 +147,18 @@ service cloud.firestore {
     }
 
     // ----------------------------------------------------------------------
-    // Collection Group Rules for Admin Access
+    // Collection Group Rules
     // ----------------------------------------------------------------------
 
     /**
-     * @description Allows admin to query across all pet listings in the application.
+     * @description Allows admin to query across all pet listings in the application. Also allows authenticated users to query for their favorite listings.
      * @path /petListings/{petListingId}
-     * @allow (get) Admin can read any single pet listing from any user.
-     * @principle Enables global read access for admin role via collection group query.
+     * @allow (get, list) Admin can read any pet listing. Authenticated users can read listings if their ID is in the user's favoritePetIds list.
+     * @principle Enables global read access for admin and targeted access for users' favorites via collection group query.
      */
     match /{path=**}/petListings/{petListingId} {
       allow get, list: if isAdmin();
+      allow get, list: if isSignedIn() && resource.id in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.favoritePetIds;
     }
 
     /**

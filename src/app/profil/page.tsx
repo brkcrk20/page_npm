@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { doc, updateDoc, collection, query, where } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, collectionGroup } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { updateProfile, signOut } from 'firebase/auth';
 import type { UserProfile, PetListing } from '@/lib/types';
@@ -20,7 +20,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal } from 'lucide-react';
 
 function ProfileListings() {
   const { user } = useUser();
@@ -28,6 +27,7 @@ function ProfileListings() {
 
   const userListingsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
+    // Correctly query the subcollection for the current user
     return query(collection(firestore, `users/${user.uid}/petListings`));
   }, [firestore, user]);
 
@@ -94,7 +94,6 @@ function ProfileListings() {
   );
 }
 
-
 function FavoriteListings() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -110,7 +109,12 @@ function FavoriteListings() {
     if (!firestore || !userProfile || !userProfile.favoritePetIds || userProfile.favoritePetIds.length === 0) {
       return null;
     }
-    return query(collection(firestore, 'petListings'), where('id', 'in', userProfile.favoritePetIds.slice(0, 30)));
+    // Correctly use a collectionGroup query to find listings across all users.
+    // This requires a composite index in Firestore and updated security rules.
+    return query(
+      collectionGroup(firestore, 'petListings'), 
+      where('id', 'in', userProfile.favoritePetIds.slice(0, 30))
+    );
   }, [firestore, userProfile]);
 
   const { data: favoriteListings, isLoading } = useCollection<PetListing>(favoritesQuery);
@@ -159,6 +163,7 @@ function FavoriteListings() {
     </div>
   );
 }
+
 
 const getStatusVariant = (status?: UserProfile['userStatus']) => {
     switch (status) {
@@ -259,8 +264,11 @@ export default function ProfilePage() {
       async () => {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          // Update both Firestore and Auth profile
           await updateDoc(userProfileRef, { avatarUrl: downloadURL });
-          await updateProfile(user, { photoURL: downloadURL });
+          if(user) {
+            await updateProfile(user, { photoURL: downloadURL });
+          }
           setUserProfile(prev => prev ? { ...prev, avatarUrl: downloadURL } : null);
           
           toast({
@@ -299,8 +307,8 @@ export default function ProfilePage() {
 
   const toggleEditMode = (field: EditableField) => {
     setEditModes(prev => ({ ...prev, [field]: !prev[field] }));
-    // If we're canceling an edit, revert changes
-    if (editModes[field]) {
+    // If we're canceling an edit, revert changes to the initial state
+    if (editModes[field] && initialProfile) {
       setUserProfile(initialProfile);
     }
   };
@@ -314,7 +322,7 @@ export default function ProfilePage() {
         <CardContent className="p-4 flex items-center justify-between">
           <div className="flex-grow">
             <Label className="text-xs text-muted-foreground">{label}</Label>
-            {isEditing && fieldName ? (
+            {isEditing && fieldName && userProfile ? (
               <Input 
                 value={userProfile[fieldName] || ''} 
                 onChange={(e) => handleInputChange(e, fieldName)} 
@@ -325,7 +333,7 @@ export default function ProfilePage() {
             )}
           </div>
           {fieldName && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ml-4">
               {isEditing ? (
                  <>
                   <Button size="icon" onClick={() => handleFieldUpdate(fieldName)} disabled={isUpdating}>
