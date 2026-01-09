@@ -3,7 +3,7 @@
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, useStorage } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { Loader2, User, FileText, Settings, Heart, Edit, Trash2, Camera } from 'lucide-react';
+import { Loader2, User, FileText, Settings, Heart, Edit, Trash2, Camera, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -295,114 +295,123 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto py-12">
-      <div className="flex flex-col items-center space-y-4 mb-10">
-        <div className="relative group">
-          <Avatar className="h-32 w-32 border-4 border-primary/50">
-            <AvatarImage src={avatarUrl} alt={username} />
-            <AvatarFallback className="text-4xl bg-secondary">{getInitials(username)}</AvatarFallback>
-          </Avatar>
-           <Button
-            onClick={() => fileInputRef.current?.click()}
-            variant="outline"
-            size="icon"
-            className="absolute bottom-1 right-1 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
-            disabled={uploadProgress !== null}
-          >
-            {uploadProgress !== null ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
-            <span className="sr-only">Profil resmini değiştir</span>
-          </Button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleAvatarChange}
-            className="hidden"
-            accept="image/png, image/jpeg"
-          />
-        </div>
-         {uploadProgress !== null && (
-          <div className="w-32 mt-2">
-            <Progress value={uploadProgress} className="h-2" />
-          </div>
-        )}
-
-        <div className="text-center">
-          <h1 className="text-3xl font-bold font-headline">{username}</h1>
-          <p className="text-muted-foreground">{user.email}</p>
-        </div>
-      </div>
-      
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="profile"><User className="mr-2" />Profil Bilgileri</TabsTrigger>
-          <TabsTrigger value="listings"><FileText className="mr-2" />İlanlarım</TabsTrigger>
-          <TabsTrigger value="favorites"><Heart className="mr-2" />Favorilerim</TabsTrigger>
-          <TabsTrigger value="settings"><Settings className="mr-2" />Ayarlar</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="profile" className="mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        
+        {/* Left Column */}
+        <aside className="md:col-span-1 space-y-8">
           <Card>
+            <CardContent className="p-6 flex flex-col items-center space-y-4">
+              <div className="relative group">
+                <Avatar className="h-32 w-32 border-4 border-primary/50">
+                  <AvatarImage src={avatarUrl} alt={username} />
+                  <AvatarFallback className="text-4xl bg-secondary">{getInitials(username)}</AvatarFallback>
+                </Avatar>
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                  size="icon"
+                  className="absolute bottom-1 right-1 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                  disabled={uploadProgress !== null}
+                >
+                  {uploadProgress !== null ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
+                  <span className="sr-only">Profil resmini değiştir</span>
+                </Button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                  accept="image/png, image/jpeg"
+                />
+              </div>
+              {uploadProgress !== null && (
+                <div className="w-32">
+                  <Progress value={uploadProgress} className="h-2" />
+                </div>
+              )}
+              <div className="text-center">
+                <h1 className="text-2xl font-bold font-headline">{username}</h1>
+                <p className="text-sm text-muted-foreground">{user.email}</p>
+              </div>
+               <Button variant="outline" className="w-full">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Çıkış Yap
+              </Button>
+            </CardContent>
+          </Card>
+          
+           <Card>
             <CardHeader>
-              <CardTitle>Profil Bilgilerini Güncelle</CardTitle>
-              <CardDescription>Kişisel bilgilerinizi buradan düzenleyebilirsiniz.</CardDescription>
+              <CardTitle>Profil Bilgileri</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleProfileUpdate} className="space-y-6">
-                <div className="space-y-2">
+              <form onSubmit={handleProfileUpdate} className="space-y-4">
+                <div className="space-y-1">
                   <Label htmlFor="displayName">Kullanıcı Adı</Label>
                   <Input id="displayName" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Adınız" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-posta</Label>
-                  <Input id="email" type="email" value={user.email ?? ''} disabled />
-                  <p className="text-xs text-muted-foreground">E-posta adresiniz değiştirilemez.</p>
-                </div>
-                <div className="space-y-2">
+                 <div className="space-y-1">
                   <Label htmlFor="phoneNumber">Telefon Numarası</Label>
                   <Input id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Telefon numaranız" />
                 </div>
-                 <div className="space-y-2">
+                 <div className="space-y-1">
                   <Label htmlFor="location">Konum</Label>
                   <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Şehir, Ülke" />
                 </div>
-                <div className="flex justify-end">
-                    <Button type="submit" disabled={isUpdating}>
-                      {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Bilgileri Güncelle
-                    </Button>
+                <div className="space-y-1">
+                  <Label htmlFor="email">E-posta</Label>
+                  <Input id="email" type="email" value={user.email ?? ''} disabled />
                 </div>
+                <Button type="submit" disabled={isUpdating} className="w-full">
+                  {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Bilgileri Güncelle
+                </Button>
               </form>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="listings" className="mt-6">
-            <ProfileListings />
-        </TabsContent>
+        </aside>
 
-        <TabsContent value="favorites" className="mt-6">
-             <FavoriteListings />
-        </TabsContent>
+        {/* Right Column */}
+        <main className="md:col-span-3">
+          <Tabs defaultValue="listings" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="listings"><FileText className="mr-2" />İlanlarım</TabsTrigger>
+              <TabsTrigger value="favorites"><Heart className="mr-2" />Favorilerim</TabsTrigger>
+              <TabsTrigger value="settings"><Settings className="mr-2" />Ayarlar</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="settings" className="mt-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Hesap Ayarları</CardTitle>
-                    <CardDescription>Şifrenizi değiştirin veya hesabınızı yönetin.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div>
-                        <h3 className="font-medium mb-2">Şifre Değiştir</h3>
-                        <Button variant="outline" onClick={handlePasswordReset}>Şifre Değiştirme E-postası Gönder</Button>
-                    </div>
-                     <div className="border-t pt-6">
-                        <h3 className="font-medium mb-2 text-destructive">Hesabı Sil</h3>
-                        <p className="text-sm text-muted-foreground mb-3">Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.</p>
-                        <Button variant="destructive" onClick={handleDeleteAccount}>Hesabımı Kalıcı Olarak Sil</Button>
-                    </div>
-                </CardContent>
-            </Card>
-        </TabsContent>
-      </Tabs>
+            <TabsContent value="listings" className="mt-6">
+                <ProfileListings />
+            </TabsContent>
+
+            <TabsContent value="favorites" className="mt-6">
+                 <FavoriteListings />
+            </TabsContent>
+
+            <TabsContent value="settings" className="mt-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Hesap Ayarları</CardTitle>
+                        <CardDescription>Şifrenizi değiştirin veya hesabınızı yönetin.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div>
+                            <h3 className="font-medium mb-2">Şifre Değiştir</h3>
+                            <Button variant="outline" onClick={handlePasswordReset}>Şifre Değiştirme E-postası Gönder</Button>
+                        </div>
+                         <div className="border-t pt-6">
+                            <h3 className="font-medium mb-2 text-destructive">Hesabı Sil</h3>
+                            <p className="text-sm text-muted-foreground mb-3">Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.</p>
+                            <Button variant="destructive" onClick={handleDeleteAccount}>Hesabımı Kalıcı Olarak Sil</Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+          </Tabs>
+        </main>
+
+      </div>
     </div>
   );
 }
