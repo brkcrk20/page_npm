@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useFirestore, useStorage } from '@/firebase';
 import { User, updateProfile } from 'firebase/auth';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -11,16 +10,17 @@ import imageCompression from 'browser-image-compression';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Loader2, Camera } from 'lucide-react';
+import { initializeFirebase } from '@/firebase';
+
+// Initialize services once, outside the component, to ensure stability.
+const { auth, firestore, storage } = initializeFirebase();
 
 interface AvatarUploaderProps {
   user: User;
 }
 
 export function AvatarUploader({ user }: AvatarUploaderProps) {
-  const firestore = useFirestore();
-  const storage = useStorage();
   const { toast } = useToast();
-
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -32,8 +32,16 @@ export function AvatarUploader({ user }: AvatarUploaderProps) {
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    const currentUser = user; // Use the user prop which is always current
-    if (!file || !currentUser) return;
+    const currentUser = auth.currentUser; // Always use the current user from the stable auth instance.
+
+    if (!file || !currentUser) {
+      toast({
+        variant: 'destructive',
+        title: 'Hata',
+        description: 'Kullanıcı bulunamadı veya dosya seçilmedi.',
+      });
+      return;
+    }
 
     setIsUploading(true);
 
@@ -45,18 +53,20 @@ export function AvatarUploader({ user }: AvatarUploaderProps) {
         fileType: 'image/jpeg',
       };
       const compressedFile = await imageCompression(file, options);
-
       const storageRef = ref(storage, `avatars/${currentUser.uid}/profile.jpg`);
-      await uploadBytes(storageRef, compressedFile);
-      const downloadURL = await getDownloadURL(storageRef);
 
-      // --- CRITICAL CHANGE: Update Auth profile FIRST ---
-      // This will trigger the useUser hook and update the UI immediately and reliably.
+      // 1. Upload the file
+      await uploadBytes(storageRef, compressedFile);
+
+      // 2. Get the download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // 3. Update Auth Profile (triggers UI update via useUser hook)
       await updateProfile(currentUser, { photoURL: downloadURL });
       
-      // Update Firestore in the background. This doesn't need to block the UI update.
+      // 4. Update Firestore document in the background
       const userProfileRef = doc(firestore, 'users', currentUser.uid);
-      updateDoc(userProfileRef, { avatarUrl: downloadURL });
+      await updateDoc(userProfileRef, { avatarUrl: downloadURL });
 
       toast({
         title: 'Başarılı!',
@@ -76,6 +86,7 @@ export function AvatarUploader({ user }: AvatarUploaderProps) {
   };
 
   const username = user.displayName || user.email || 'Kullanıcı';
+  // Directly use user.photoURL from the hook, which is always up-to-date.
   const avatarUrl = user.photoURL || '';
 
   return (

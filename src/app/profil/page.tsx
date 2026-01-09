@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useUser, useAuth, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Loader2, LogOut, Edit, Save, X, FileText, Heart, ShieldCheck, Building, Settings } from 'lucide-react';
@@ -20,12 +20,13 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AvatarUploader } from '@/components/AvatarUploader';
+import { initializeFirebase } from '@/firebase';
 
+const { auth, firestore } = initializeFirebase();
 
 function ProfileListings() {
   const { user } = useUser();
-  const firestore = useFirestore();
-
+ 
   const userListingsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, `users/${user.uid}/petListings`));
@@ -96,13 +97,12 @@ function ProfileListings() {
 
 function FavoriteListings() {
     const { user } = useUser();
-    const firestore = useFirestore();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
     useEffect(() => {
       async function fetchProfile() {
-        if (user && firestore) {
+        if (user) {
           const docRef = doc(firestore, 'users', user.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
@@ -114,14 +114,14 @@ function FavoriteListings() {
         }
       }
       fetchProfile();
-    }, [user, firestore]);
+    }, [user]);
 
     const favoriteIds = profile?.favoritePetIds || [];
     
     const favoritesQuery = useMemoFirebase(() => {
-        if (!firestore || favoriteIds.length === 0) return null;
+        if (favoriteIds.length === 0) return null;
         return query(collectionGroup(firestore, 'petListings'), where('id', 'in', favoriteIds));
-    }, [firestore, favoriteIds]);
+    }, [favoriteIds]);
 
     const { data: favoriteListings, isLoading: areListingsLoading } = useCollection<PetListing>(favoritesQuery);
     
@@ -172,8 +172,6 @@ function FavoriteListings() {
 
 export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
-    const auth = useAuth();
-    const firestore = useFirestore();
     const router = useRouter();
     const { toast } = useToast();
     
@@ -190,7 +188,7 @@ export default function ProfilePage() {
             return;
         }
 
-        if (user && firestore) {
+        if (user) {
             const userProfileRef = doc(firestore, "users", user.uid);
             const unsubscribe = onSnapshot(userProfileRef, (doc) => {
                 if (doc.exists()) {
@@ -205,7 +203,7 @@ export default function ProfilePage() {
             return () => unsubscribe();
         }
 
-    }, [user, isUserLoading, router, firestore]);
+    }, [user, isUserLoading, router]);
 
     const handleLogout = () => {
         signOut(auth).then(() => {
@@ -232,9 +230,17 @@ export default function ProfilePage() {
         }
     };
     
-    const toggleEditMode = (field: keyof UserProfile) => {
+    const toggleEditMode = async (field: keyof UserProfile) => {
         if (!editModes[field]) {
-            setFieldValues(prev => ({ ...prev, [field]: profileData?.[field] as string || '' }));
+             if (user) {
+                // Fetch latest data on entering edit mode
+                const docRef = doc(firestore, 'users', user.uid);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const currentProfile = docSnap.data() as UserProfile;
+                     setFieldValues(prev => ({ ...prev, [field]: currentProfile[field] as string || '' }));
+                }
+             }
         }
         setEditModes(prev => ({ ...prev, [field]: !prev[field] }));
     };
@@ -298,7 +304,7 @@ export default function ProfilePage() {
                     <div className="flex-grow">
                         <h1 className="text-2xl font-bold font-headline">{username}</h1>
                         <p className="text-sm text-muted-foreground">{user.email}</p>
-                        {profileData?.userStatus && (
+                         {profileData?.userStatus && (
                             <Badge variant={profileData.userStatus === 'premium' ? 'default' : 'secondary'} className="mt-2 capitalize">
                                 {profileData.userStatus}
                             </Badge>
@@ -328,7 +334,7 @@ export default function ProfilePage() {
                           </CardHeader>
                           <CardContent className="p-0">
                             <ul>
-                              <InfoRow label="Kullanıcı Adı" value={username} isEditable={false} />
+                              <InfoRow label="Kullanıcı Adı" value={profileData?.username} isEditable={false} />
                               <InfoRow label="E-posta" value={user.email} isEditable={false} />
                               <InfoRow label="Telefon Numarası" value={profileData?.phoneNumber} fieldName="phoneNumber" />
                               <InfoRow label="Konum" value={profileData?.location} fieldName="location" />
