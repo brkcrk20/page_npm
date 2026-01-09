@@ -162,24 +162,6 @@ export function Header() {
                             <span>Profilim</span>
                            </Link>
                         </DropdownMenuItem>
-                         <DropdownMenuItem asChild>
-                           <Link href="/ilanlarim">
-                            <LayoutGrid className="mr-2 h-4 w-4" />
-                            <span>İlanlarım</span>
-                           </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                           <Link href="/favorilerim">
-                            <Heart className="mr-2 h-4 w-4" />
-                            <span>Favorilerim</span>
-                           </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                           <Link href="/ayarlar">
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Ayarlar</span>
-                           </Link>
-                        </DropdownMenuItem>
                       </DropdownMenuGroup>
                       <DropdownMenuSeparator />
                        <DropdownMenuItem asChild>
