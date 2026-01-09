@@ -27,6 +27,7 @@ import {
   Star,
   CreditCard,
   FileText,
+  MessageCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -148,7 +149,7 @@ export function Header() {
     return <SearchFilters />;
   };
 
-  const showCategoriesAndFilters = pathname !== '/login' && pathname !== '/kayit';
+  const showCategoriesAndFilters = pathname !== '/login' && pathname !== '/kayit' && pathname !== '/profil';
 
   const renderAuthContent = () => {
     if (isLoading) {
@@ -198,10 +199,16 @@ export function Header() {
                   <span>Profilim</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                 <Link href="/profil#update">
+               <DropdownMenuItem asChild>
+                <Link href="/profil#update">
                   <User className="mr-2 h-4 w-4" />
                   <span>Profil Güncelle</span>
+                </Link>
+              </DropdownMenuItem>
+               <DropdownMenuItem asChild>
+                <Link href="/paketler">
+                  <Package className="mr-2 h-4 w-4" />
+                  <span>Paket Satın Al</span>
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -246,15 +253,15 @@ export function Header() {
                         <span>Siparişlerim</span>
                     </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href="/yorumlar">
+                       <MessageCircle className="mr-2 h-4 w-4" />
+                       <span>Yorumlar</span>
+                    </Link>
+                </DropdownMenuItem>
              </DropdownMenuGroup>
              <DropdownMenuSeparator />
              <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                    <Link href="/paketler">
-                        <Package className="mr-2 h-4 w-4" />
-                        <span>Paket Satın Al</span>
-                    </Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem>
                     <CreditCard className="mr-2 h-4 w-4" />
                     <span>Krediniz: {userProfile?.credit ?? 0}</span>
