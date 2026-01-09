@@ -64,6 +64,10 @@ export function Header() {
   const [isSheetOpen, setSheetOpen] = React.useState(false);
   const { user, isUserLoading } = useUser();
   const { userProfile, isLoading: isProfileLoading } = useUserProfile(user?.uid);
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   const auth = getAuth();
   
@@ -78,6 +82,8 @@ export function Header() {
     if (!email) return 'U';
     return email.charAt(0).toUpperCase();
   };
+
+  const isLoading = !isMounted || isUserLoading || isProfileLoading;
   
   const renderFilters = () => {
     if (pathname === '/veteriner') {
@@ -110,16 +116,15 @@ export function Header() {
 
   const showCategoriesAndFilters = pathname !== '/login' && pathname !== '/kayit';
 
-  const isLoading = isUserLoading || isProfileLoading;
-
   const renderAuthContent = () => {
+    if (isLoading) {
+        return <Skeleton className="h-10 w-40" />;
+    }
+    
     return (
       <div className="flex items-center space-x-2">
-        {/* Skeleton shown during load */}
-        <Skeleton className={cn("h-10 w-40", isLoading ? "flex" : "hidden")} />
-        
         {/* User Dropdown - Rendered but hidden during load */}
-        <div className={cn(isLoading || !user ? "hidden" : "flex")}>
+        <div className={cn(!user ? "hidden" : "flex")}>
            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-white/20">
@@ -129,7 +134,7 @@ export function Header() {
                         ? "border-yellow-400 ring-2 ring-yellow-400 ring-offset-2 ring-offset-primary" 
                         : "border-secondary"
                     )}>
-                      <AvatarImage src={user?.photoURL ?? ''} alt={user?.displayName ?? 'User'} />
+                      <AvatarImage src={''} alt={user?.displayName ?? 'User'} />
                       <AvatarFallback className="bg-primary-foreground text-primary font-bold text-lg">
                           {getInitials(user?.email)}
                       </AvatarFallback>
@@ -259,7 +264,7 @@ export function Header() {
                   </Button>
                   {user ? (
                     <Button variant="outline" onClick={() => { handleLogout(); setSheetOpen(false); }}>
-                      Çıkış Yap
+                      <LogOut className="mr-2" />Çıkış Yap
                     </Button>
                   ) : (
                     <>
