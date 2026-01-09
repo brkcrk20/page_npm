@@ -121,15 +121,8 @@ export function Header() {
 
   const renderAuthContent = () => {
     if (!isMounted || isLoading) {
-      return (
-        <div className="flex items-center space-x-2">
-          <Skeleton className="h-10 w-10 rounded-full" />
-          <div className="hidden md:flex items-center space-x-2">
-            <Skeleton className="h-9 w-20" />
-            <Skeleton className="h-9 w-24" />
-          </div>
-        </div>
-      );
+       // On server-side and during initial client-side loading, render a consistent skeleton.
+      return <Skeleton className="h-10 w-40" />;
     }
 
     if (user) {
@@ -172,7 +165,7 @@ export function Header() {
                 <DropdownMenuItem asChild>
                     <Link href="/destek">
                     <LifeBuoy className="mr-2 h-4 w-4" />
-                    <span>Yardım &amp; Destek</span>
+                    <span>Yardım & Destek</span>
                     </Link>
                 </DropdownMenuItem>
                 {isAdmin && (
