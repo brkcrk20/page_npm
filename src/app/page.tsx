@@ -238,7 +238,7 @@ export default function HomePage() {
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <BookText className="w-6 h-6" />
-                        <h2 className="text-2xl font-bold">Ciraks Blog</h2>
+                        <h2 className="text-2xl font-bold">Patisemti Blog</h2>
                     </div>
                     <Button variant="link" asChild className="text-primary">
                         <Link href="/blog">

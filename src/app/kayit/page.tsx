@@ -13,7 +13,7 @@ export default function RegisterPage() {
         <Card className="w-full max-w-md mx-4 border-0 shadow-none sm:border sm:shadow-sm">
           <CardHeader className="text-center space-y-2">
             <CardTitle className="text-3xl font-headline">Hesap Oluştur</CardTitle>
-            <CardDescription>Ciraks ailesine katılın</CardDescription>
+            <CardDescription>Patisemti ailesine katılın</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <RegisterForm />

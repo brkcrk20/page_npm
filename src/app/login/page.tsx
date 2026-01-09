@@ -13,7 +13,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-md mx-4 border-0 shadow-none sm:border sm:shadow-sm">
           <CardHeader className="text-center space-y-2">
             <CardTitle className="text-3xl font-headline">Giriş Yap</CardTitle>
-            <CardDescription>Ciraks'e tekrar hoş geldiniz</CardDescription>
+            <CardDescription>Patisemti'ne tekrar hoş geldiniz</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <LoginForm />

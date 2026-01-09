@@ -7,7 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'Ciraks - Find Your Best Friend',
+  title: 'Patisemti - Find Your Best Friend',
   description: 'List pets for adoption, sale, or find pet-related services near you.',
   icons: {
     icon: '/favicon.ico',
