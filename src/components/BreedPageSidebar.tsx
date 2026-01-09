@@ -27,7 +27,7 @@ interface BreedPageSidebarProps {
     breedName?: string;
     breedCount?: number;
     breeds?: BreedInfo[];
-    categorySlug?: string;
+    categorySlug: string;
 }
 
 export function BreedPageSidebar({
@@ -41,18 +41,21 @@ export function BreedPageSidebar({
   return (
     <div className="w-full space-y-6">
         <div className="bg-secondary/50 p-4 rounded-lg">
-            <Link href={`/${categorySlug || ''}`} className="block font-bold hover:text-primary transition-colors text-lg mb-2">
+            <Link href={`/${categorySlug}`} className="block font-bold hover:text-primary transition-colors text-lg mb-2">
                 {categoryName} ({categoryCount})
             </Link>
 
             {breeds && categorySlug && (
                 <ul className="space-y-1 mt-2 pl-2 max-h-96 overflow-y-auto">
                     {breeds.map(breed => (
-                        <li key={breed.id}>
-                            <Link href={`/${categorySlug}/${breed.name.toLowerCase().replace(/ /g, '-')}`} className={cn(
-                                "flex justify-between items-center text-sm text-muted-foreground hover:text-primary group",
-                                breed.name === breedName && "text-primary font-bold"
-                            )}>
+                         <li key={breed.id}>
+                            <Link 
+                                href={`/${categorySlug}/${breed.slug}`} 
+                                className={cn(
+                                    "flex justify-between items-center text-sm p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-secondary group",
+                                    breed.name === breedName && "text-primary font-bold bg-secondary"
+                                )}
+                            >
                                <span>{breed.name}</span>
                                <div className="flex items-center gap-1">
                                     <span className="font-semibold">{breed.count}</span>

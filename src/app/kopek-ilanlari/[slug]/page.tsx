@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -5,7 +6,7 @@ import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
 import { PawPrint, ChevronRight, LayoutGrid, List } from 'lucide-react';
 import Link from 'next/link';
-import { allDogBreeds, categories } from '@/lib/breeds';
+import { categories } from '@/lib/breeds';
 import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,10 +15,13 @@ export default function DogBreedPage() {
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
 
-  const breed = allDogBreeds.find(b => b.slug === slug);
+  const category = categories.find(c => c.type === 'Dog');
+  const breed = category?.breeds.find(b => b.slug === slug);
   const breedName = breed ? breed.name : 'Bilinmeyen Cins';
   
-  const category = categories.find(c => c.type === 'Dog');
+  if (!category) {
+    return <div>Kategori bulunamadı.</div>;
+  }
 
   const filteredPets = pets.filter(
     (pet) => pet.type === 'Dog' && pet.breed === breedName
@@ -30,8 +34,10 @@ export default function DogBreedPage() {
        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <aside className="lg:col-span-1">
            <BreedPageSidebar 
-            categoryName={category?.title || 'Köpek İlanları'}
+            categoryName={category.title}
             categoryCount={categoryCount}
+            categorySlug={category.slug}
+            breeds={category.breeds}
             breedName={breedName}
             breedCount={filteredPets.length}
           />

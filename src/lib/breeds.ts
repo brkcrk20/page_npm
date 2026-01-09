@@ -4,6 +4,18 @@ import type { Pet } from './data';
 import type { ReactNode } from 'react';
 import { Dog, Cat, Bird, Fish, PawPrint } from 'lucide-react';
 
+const slugify = (text: string) => {
+  return text
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-');
+};
+
 export type Breed = {
   id: string;
   name: string;
@@ -148,6 +160,7 @@ export const allBreeds = [
 export type BreedInfo = {
   id: string;
   name: string;
+  slug: string;
   count: number;
 };
 
@@ -177,6 +190,7 @@ const processBreeds = (
   const breedInfo = allBreeds.map(breed => ({
     id: breed.id,
     name: breed.name,
+    slug: slugify(breed.name),
     count: breedCounts?.[breed.name] || 0,
   }));
   // Sort by count descending, then alphabetically using a specific locale

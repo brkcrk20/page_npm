@@ -1,3 +1,4 @@
+
 'use client';
 
 import { pets } from '@/lib/data';
@@ -21,13 +22,19 @@ export default function CatPage() {
   const filteredPets = pets.filter((pet) => pet.type === 'Cat');
   const category = categories.find(c => c.type === 'Cat');
 
+  if (!category) {
+    return <div>Kategori bulunamadı.</div>;
+  }
+
   return (
     <div className="container mx-auto py-8">
        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <aside className="lg:col-span-1">
            <BreedPageSidebar 
-            categoryName={category?.title || 'Kedi İlanları'}
+            categoryName={category.title}
             categoryCount={filteredPets.length}
+            categorySlug={category.slug}
+            breeds={category.breeds}
           />
         </aside>
         <main className="lg:col-span-3">

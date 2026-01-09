@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -5,7 +6,7 @@ import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
 import { PawPrint, ChevronRight, LayoutGrid, List } from 'lucide-react';
 import Link from 'next/link';
-import { allOtherBreeds, categories } from '@/lib/breeds';
+import { categories } from '@/lib/breeds';
 import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,10 +15,13 @@ export default function OtherBreedPage() {
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
 
-  const breed = allOtherBreeds.find(b => b.slug === slug);
+  const category = categories.find(c => c.type === 'Other');
+  const breed = category?.breeds.find(b => b.slug === slug);
   const breedName = breed ? breed.name : 'Bilinmeyen Cins';
   
-  const category = categories.find(c => c.type === 'Other');
+  if (!category) {
+    return <div>Kategori bulunamadı.</div>;
+  }
 
   const filteredPets = pets.filter(
     (pet) => pet.type === 'Other' && pet.breed === breedName
@@ -30,8 +34,10 @@ export default function OtherBreedPage() {
        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <aside className="lg:col-span-1">
            <BreedPageSidebar 
-            categoryName={category?.title || 'Diğer İlanlar'}
+            categoryName={category.title}
             categoryCount={categoryCount}
+            categorySlug={category.slug}
+            breeds={category.breeds}
             breedName={breedName}
             breedCount={filteredPets.length}
           />
