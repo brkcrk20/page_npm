@@ -70,13 +70,6 @@ export function Header() {
   const isAdmin = user && user.email === 'admin@patisemti.com';
   const isPremium = userProfile?.userStatus === 'premium';
 
-  // State to prevent hydration errors
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-
   const handleLogout = () => {
     signOut(auth);
   };
@@ -120,87 +113,87 @@ export function Header() {
   const isLoading = isUserLoading || isProfileLoading;
 
   const renderAuthContent = () => {
-    if (!isMounted || isLoading) {
-       // On server-side and during initial client-side loading, render a consistent skeleton.
-      return <Skeleton className="h-10 w-40" />;
-    }
-
-    if (user) {
-      return (
-         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-white/20">
-                  <Avatar className={cn(
-                    "h-10 w-10 border-2",
-                    isPremium 
-                      ? "border-yellow-400 ring-2 ring-yellow-400 ring-offset-2 ring-offset-primary" 
-                      : "border-secondary"
-                  )}>
-                    <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-                    <AvatarFallback className="bg-primary-foreground text-primary font-bold text-lg">
-                        {getInitials(user.email)}
-                    </AvatarFallback>
-                  </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{userProfile?.username ?? user.displayName ?? 'Kullanıcı'}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user.email}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                    <Link href="/profil">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profilim</span>
-                    </Link>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                    <Link href="/destek">
-                    <LifeBuoy className="mr-2 h-4 w-4" />
-                    <span>Yardım & Destek</span>
-                    </Link>
-                </DropdownMenuItem>
-                {isAdmin && (
-                <>
-                  <DropdownMenuSeparator />
+    return (
+      <div className="flex items-center space-x-2">
+        {/* Skeleton shown during load */}
+        <Skeleton className={cn("h-10 w-40", isLoading ? "flex" : "hidden")} />
+        
+        {/* User Dropdown - Rendered but hidden during load */}
+        <div className={cn(isLoading || !user ? "hidden" : "flex")}>
+           <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-white/20">
+                    <Avatar className={cn(
+                      "h-10 w-10 border-2",
+                      isPremium 
+                        ? "border-yellow-400 ring-2 ring-yellow-400 ring-offset-2 ring-offset-primary" 
+                        : "border-secondary"
+                    )}>
+                      <AvatarImage src={user?.photoURL ?? ''} alt={user?.displayName ?? 'User'} />
+                      <AvatarFallback className="bg-primary-foreground text-primary font-bold text-lg">
+                          {getInitials(user?.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{userProfile?.username ?? user?.displayName ?? 'Kullanıcı'}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
                   <DropdownMenuItem asChild>
-                      <Link href="/admin">
-                      <Shield className="mr-2 h-4 w-4" />
-                      <span>Admin Paneli</span>
+                      <Link href="/profil">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profilim</span>
                       </Link>
                   </DropdownMenuItem>
-                </>
-                )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Çıkış Yap</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-      );
-    }
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                      <Link href="/destek">
+                      <LifeBuoy className="mr-2 h-4 w-4" />
+                      <span>Yardım & Destek</span>
+                      </Link>
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                        <Link href="/admin">
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Admin Paneli</span>
+                        </Link>
+                    </DropdownMenuItem>
+                  </>
+                  )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Çıkış Yap</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
 
-    return (
-       <div className="hidden md:flex items-center space-x-2">
-          <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white">
-            <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
-          </Button>
-          <Button variant="outline" asChild className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-white/20 hover:text-white">
-            <Link href="/kayit">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Kayıt Ol
-            </Link>
-          </Button>
-       </div>
+        {/* Login/Register Buttons - Rendered but hidden during load or if user exists */}
+         <div className={cn("hidden md:flex items-center space-x-2", isLoading || user ? "hidden" : "flex")}>
+            <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white">
+              <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
+            </Button>
+            <Button variant="outline" asChild className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-white/20 hover:text-white">
+              <Link href="/kayit">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Kayıt Ol
+              </Link>
+            </Button>
+         </div>
+      </div>
     );
   };
 
