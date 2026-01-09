@@ -27,7 +27,6 @@ function ProfileListings() {
 
   const userListingsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // Correctly query the subcollection for the current user
     return query(collection(firestore, `users/${user.uid}/petListings`));
   }, [firestore, user]);
 
@@ -109,8 +108,6 @@ function FavoriteListings() {
     if (!firestore || !userProfile || !userProfile.favoritePetIds || userProfile.favoritePetIds.length === 0) {
       return null;
     }
-    // Correctly use a collectionGroup query to find listings across all users.
-    // This requires a composite index in Firestore and updated security rules.
     return query(
       collectionGroup(firestore, 'petListings'), 
       where('id', 'in', userProfile.favoritePetIds.slice(0, 30))
@@ -197,44 +194,27 @@ export default function ProfilePage() {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
-  const { data: initialProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [editModes, setEditModes] = useState<EditModes>({});
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [fieldValues, setFieldValues] = useState<Partial<Pick<UserProfile, EditableField>>>({});
+  const [isUpdating, setIsUpdating] = useState<EditableField | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/login');
     }
-     if (initialProfile) {
-      setUserProfile(initialProfile);
-    }
-  }, [user, isUserLoading, router, initialProfile]);
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof UserProfile) => {
-    if (!userProfile) return;
-    setUserProfile({ ...userProfile, [field]: e.target.value });
+  }, [user, isUserLoading, router]);
+
+  const handleInputChange = (value: string, field: EditableField) => {
+    setFieldValues(prev => ({ ...prev, [field]: value }));
   };
   
   const handleLogout = () => {
     signOut(auth);
     toast({ title: 'Çıkış Yapıldı', description: 'Hesabınızdan güvenle çıkış yaptınız.' });
     router.push('/');
-  };
-
-  if (isUserLoading || !user || isProfileLoading || !userProfile) {
-    return (
-      <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return user?.email?.charAt(0).toUpperCase() ?? 'U';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
   
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -264,12 +244,10 @@ export default function ProfilePage() {
       async () => {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          // Update both Firestore and Auth profile
           await updateDoc(userProfileRef, { avatarUrl: downloadURL });
           if(user) {
             await updateProfile(user, { photoURL: downloadURL });
           }
-          setUserProfile(prev => prev ? { ...prev, avatarUrl: downloadURL } : null);
           
           toast({
             title: 'Başarılı',
@@ -292,54 +270,78 @@ export default function ProfilePage() {
   const handleFieldUpdate = async (field: EditableField) => {
     if (!userProfileRef || !userProfile) return;
     
-    setIsUpdating(true);
+    setIsUpdating(field);
     try {
-      await updateDoc(userProfileRef, { [field]: userProfile[field] });
+      await updateDoc(userProfileRef, { [field]: fieldValues[field] });
       toast({ title: "Başarılı", description: "Profil bilgileriniz güncellendi." });
       setEditModes(prev => ({...prev, [field]: false}));
     } catch (error) {
       toast({ variant: "destructive", title: "Hata", description: "Profil güncellenirken bir sorun oluştu." });
       console.error("Profile update error:", error);
     } finally {
-      setIsUpdating(false);
+      setIsUpdating(null);
     }
   };
 
   const toggleEditMode = (field: EditableField) => {
-    setEditModes(prev => ({ ...prev, [field]: !prev[field] }));
-    // If we're canceling an edit, revert changes to the initial state
-    if (editModes[field] && initialProfile) {
-      setUserProfile(initialProfile);
+    if (!editModes[field]) {
+        // Entering edit mode, initialize with current profile value
+        setFieldValues(prev => ({ ...prev, [field]: userProfile?.[field] || '' }));
     }
+    setEditModes(prev => ({ ...prev, [field]: !prev[field] }));
   };
 
+  const handlePasswordReset = () => {
+    alert('Şifre sıfırlama özelliği henüz tamamlanmadı.');
+  };
+
+  const handleDeleteAccount = () => {
+    alert('Hesap silme özelliği henüz tamamlanmadı. Bu işlem sunucu tarafında yapılmalıdır.');
+  };
+
+  if (isUserLoading || !user || isProfileLoading || !userProfile) {
+    return (
+      <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return user?.email?.charAt(0).toUpperCase() ?? 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const avatarUrl = userProfile?.avatarUrl ?? user.photoURL ?? '';
 
   const InfoRow = ({ label, value, fieldName }: { label: string, value: string | undefined | null, fieldName?: EditableField }) => {
     const isEditing = fieldName && editModes[fieldName];
+    const isSaving = isUpdating === fieldName;
 
     return (
       <Card>
         <CardContent className="p-4 flex items-center justify-between">
           <div className="flex-grow">
             <Label className="text-xs text-muted-foreground">{label}</Label>
-            {isEditing && fieldName && userProfile ? (
+            {isEditing && fieldName ? (
               <Input 
-                value={userProfile[fieldName] || ''} 
-                onChange={(e) => handleInputChange(e, fieldName)} 
+                value={fieldValues[fieldName] || ''} 
+                onChange={(e) => handleInputChange(e.target.value, fieldName)} 
                 className="mt-1"
+                disabled={isSaving}
               />
             ) : (
-              <p className="font-semibold">{value || 'Belirtilmemiş'}</p>
+              <p className="font-semibold text-lg">{value || 'Belirtilmemiş'}</p>
             )}
           </div>
           {fieldName && (
             <div className="flex items-center gap-2 ml-4">
               {isEditing ? (
                  <>
-                  <Button size="icon" onClick={() => handleFieldUpdate(fieldName)} disabled={isUpdating}>
-                    {isUpdating ? <Loader2 className="animate-spin" /> : <Save />}
+                  <Button size="icon" onClick={() => handleFieldUpdate(fieldName)} disabled={isSaving}>
+                    {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
                   </Button>
-                  <Button size="icon" variant="ghost" onClick={() => toggleEditMode(fieldName)}><X /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => toggleEditMode(fieldName)} disabled={isSaving}><X /></Button>
                  </>
               ) : (
                  <Button size="icon" variant="ghost" onClick={() => toggleEditMode(fieldName)}><Edit /></Button>
@@ -351,16 +353,6 @@ export default function ProfilePage() {
     );
   };
   
-  const handlePasswordReset = () => {
-    alert('Şifre sıfırlama özelliği henüz tamamlanmadı.');
-  }
-
-  const handleDeleteAccount = () => {
-    alert('Hesap silme özelliği henüz tamamlanmadı. Bu işlem sunucu tarafında yapılmalıdır.');
-  }
-
-  const avatarUrl = userProfile?.avatarUrl ?? user.photoURL ?? '';
-
   return (
     <div className="container mx-auto py-12">
         <Card className="mb-8">
