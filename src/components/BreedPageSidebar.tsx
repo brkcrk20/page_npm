@@ -52,7 +52,9 @@ export function BreedPageSidebar({
                             <Link 
                                 href={`/${categorySlug}/${breed.slug}`} 
                                 className={cn(
-                                    "flex justify-between items-center text-sm p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-secondary group",
+                                    "flex justify-between items-center text-sm p-2 rounded-md text-muted-foreground transition-all duration-300 ease-in-out group",
+                                    "hover:bg-orange-50 hover:text-orange-600 hover:translate-x-1",
+                                    "active:scale-95 active:ring-2 active:ring-orange-200",
                                     breed.name === breedName && "text-primary font-bold bg-secondary"
                                 )}
                             >
