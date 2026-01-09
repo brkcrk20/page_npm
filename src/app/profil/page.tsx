@@ -1,27 +1,29 @@
 
 'use client';
 
-import { useUser, useFirestore, useStorage, useAuth, useMemoFirebase } from '@/firebase';
+import { useUser, useAuth, useFirestore, useStorage } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { Loader2, User as UserIcon, FileText, Settings, Heart, Edit, Trash2, Camera, LogOut, ShieldCheck, Building, Save, X } from 'lucide-react';
+import { Loader2, User as UserIcon, Camera, LogOut, Save, X, Edit, FileText, Heart, ShieldCheck, Building, Settings } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { doc, updateDoc, getDoc, collection, query, where, collectionGroup } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, collection, onSnapshot, query, where, collectionGroup } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile, signOut } from 'firebase/auth';
 import type { UserProfile, PetListing } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import imageCompression from 'browser-image-compression';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import imageCompression from 'browser-image-compression';
+import { useMemoFirebase } from '@/firebase/provider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 function ProfileListings() {
   const { user } = useUser();
@@ -110,6 +112,8 @@ function FavoriteListings() {
             setProfile(docSnap.data() as UserProfile);
           }
           setIsLoadingProfile(false);
+        } else if (!user) {
+           setIsLoadingProfile(false);
         }
       }
       fetchProfile();
@@ -119,7 +123,7 @@ function FavoriteListings() {
     
     const favoritesQuery = useMemoFirebase(() => {
         if (!firestore || favoriteIds.length === 0) return null;
-        return query(collectionGroup(firestore, 'petListings'), where('__name__', 'in', favoriteIds.map(id => `petListings/${id}`)));
+        return query(collectionGroup(firestore, 'petListings'), where('id', 'in', favoriteIds));
     }, [firestore, favoriteIds]);
 
     const { data: favoriteListings, isLoading: areListingsLoading } = useCollection<PetListing>(favoritesQuery);
@@ -179,7 +183,7 @@ export default function ProfilePage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [profileData, setProfileData] = useState<UserProfile | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isProfileLoading, setIsProfileLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
     
     const [editModes, setEditModes] = useState<Record<string, boolean>>({});
@@ -192,18 +196,20 @@ export default function ProfilePage() {
             return;
         }
 
-        async function fetchProfileData() {
-            if (user) {
-                const userProfileRef = doc(firestore, "users", user.uid);
-                const docSnap = await getDoc(userProfileRef);
-                if (docSnap.exists()) {
-                    setProfileData(docSnap.data() as UserProfile);
+        if (user && firestore) {
+            const userProfileRef = doc(firestore, "users", user.uid);
+            const unsubscribe = onSnapshot(userProfileRef, (doc) => {
+                if (doc.exists()) {
+                    setProfileData(doc.data() as UserProfile);
                 }
-                setIsLoading(false);
-            }
+                setIsProfileLoading(false);
+            }, (error) => {
+                console.error("Error fetching profile:", error);
+                setIsProfileLoading(false);
+            });
+
+            return () => unsubscribe();
         }
-        
-        fetchProfileData();
 
     }, [user, isUserLoading, router, firestore]);
 
@@ -222,10 +228,9 @@ export default function ProfilePage() {
     
         try {
             const options = {
-                maxSizeMB: 2,
+                maxSizeMB: 1,
                 maxWidthOrHeight: 1080,
                 useWebWorker: true,
-                quality: 0.7,
             };
     
             const compressedFile = await imageCompression(file, options);
@@ -239,8 +244,6 @@ export default function ProfilePage() {
             await updateDoc(userProfileRef, { avatarUrl: downloadURL });
     
             await updateProfile(user, { photoURL: downloadURL });
-    
-            setProfileData(prev => prev ? { ...prev, avatarUrl: downloadURL } : { avatarUrl: downloadURL } as UserProfile);
     
             toast({
                 title: 'Başarılı!',
@@ -268,8 +271,6 @@ export default function ProfilePage() {
             const userProfileRef = doc(firestore, "users", user.uid);
             await updateDoc(userProfileRef, { [field]: fieldValues[field] });
             
-            setProfileData(prev => prev ? { ...prev, [field]: fieldValues[field] } : null);
-
             toast({ title: "Başarılı", description: "Profil bilgileriniz güncellendi." });
             setEditModes(prev => ({ ...prev, [field]: false }));
         } catch (error) {
@@ -287,15 +288,19 @@ export default function ProfilePage() {
         setEditModes(prev => ({ ...prev, [field]: !prev[field] }));
     };
 
-    if (isUserLoading || isLoading || !user) {
+    if (isUserLoading || isProfileLoading) {
         return (
             <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
             </div>
         );
     }
+
+     if (!user) {
+        return null; // or a redirect component
+    }
     
-    const getInitials = (name: string | null | undefined) => {
+    const getInitials = (name?: string | null) => {
         if (!name && user?.email) return user.email.charAt(0).toUpperCase();
         if (!name) return 'U';
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -480,3 +485,4 @@ export default function ProfilePage() {
         </div>
     );
 }
+
