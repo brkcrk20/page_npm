@@ -3,7 +3,7 @@
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, useStorage, useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { Loader2, User, FileText, Settings, Heart, Edit, Trash2, Camera, LogOut, ShieldCheck, Building } from 'lucide-react';
+import { Loader2, User, FileText, Settings, Heart, Edit, Trash2, Camera, LogOut, ShieldCheck, Building, Save, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -106,12 +106,10 @@ function FavoriteListings() {
   
   const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
-  // This query is now efficient thanks to the use of 'in' operator
   const favoritesQuery = useMemoFirebase(() => {
     if (!firestore || !userProfile || !userProfile.favoritePetIds || userProfile.favoritePetIds.length === 0) {
       return null;
     }
-    // We can query up to 30 items with the 'in' operator. If more are needed, pagination would be required.
     return query(collection(firestore, 'petListings'), where('id', 'in', userProfile.favoritePetIds.slice(0, 30)));
   }, [firestore, userProfile]);
 
@@ -175,6 +173,11 @@ const getStatusVariant = (status?: UserProfile['userStatus']) => {
     }
 };
 
+type EditableField = 'phoneNumber' | 'location';
+type EditModes = {
+  [key in EditableField]?: boolean;
+};
+
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
@@ -189,13 +192,10 @@ export default function ProfilePage() {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
+  const { data: initialProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
-  const [formData, setFormData] = useState({
-    username: '',
-    phoneNumber: '',
-    location: '',
-  });
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [editModes, setEditModes] = useState<EditModes>({});
   const [isUpdating, setIsUpdating] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
@@ -203,18 +203,14 @@ export default function ProfilePage() {
     if (!isUserLoading && !user) {
       router.push('/login');
     }
-     if (userProfile) {
-      setFormData({
-        username: userProfile.username || '',
-        phoneNumber: userProfile.phoneNumber || '',
-        location: userProfile.location || '',
-      });
+     if (initialProfile) {
+      setUserProfile(initialProfile);
     }
-  }, [user, isUserLoading, router, userProfile]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({...prev, [id]: value }));
+  }, [user, isUserLoading, router, initialProfile]);
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof UserProfile) => {
+    if (!userProfile) return;
+    setUserProfile({ ...userProfile, [field]: e.target.value });
   };
   
   const handleLogout = () => {
@@ -223,7 +219,7 @@ export default function ProfilePage() {
     router.push('/');
   };
 
-  if (isUserLoading || !user || isProfileLoading) {
+  if (isUserLoading || !user || isProfileLoading || !userProfile) {
     return (
       <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -263,9 +259,9 @@ export default function ProfilePage() {
       async () => {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          // Use await to ensure updates complete before finishing
           await updateDoc(userProfileRef, { avatarUrl: downloadURL });
           await updateProfile(user, { photoURL: downloadURL });
+          setUserProfile(prev => prev ? { ...prev, avatarUrl: downloadURL } : null);
           
           toast({
             title: 'Başarılı',
@@ -284,30 +280,67 @@ export default function ProfilePage() {
       }
     );
   };
-
-  const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!userProfileRef) return;
+  
+  const handleFieldUpdate = async (field: EditableField) => {
+    if (!userProfileRef || !userProfile) return;
     
     setIsUpdating(true);
     try {
-      // Use the latest state from formData for the update
-      await updateDoc(userProfileRef, {
-        username: formData.username,
-        phoneNumber: formData.phoneNumber,
-        location: formData.location
-      });
-      // Also update the auth profile if the name changed
-      if (user.displayName !== formData.username) {
-        await updateProfile(user, { displayName: formData.username });
-      }
+      await updateDoc(userProfileRef, { [field]: userProfile[field] });
       toast({ title: "Başarılı", description: "Profil bilgileriniz güncellendi." });
+      setEditModes(prev => ({...prev, [field]: false}));
     } catch (error) {
       toast({ variant: "destructive", title: "Hata", description: "Profil güncellenirken bir sorun oluştu." });
       console.error("Profile update error:", error);
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const toggleEditMode = (field: EditableField) => {
+    setEditModes(prev => ({ ...prev, [field]: !prev[field] }));
+    // If we're canceling an edit, revert changes
+    if (editModes[field]) {
+      setUserProfile(initialProfile);
+    }
+  };
+
+
+  const InfoRow = ({ label, value, fieldName }: { label: string, value: string | undefined | null, fieldName?: EditableField }) => {
+    const isEditing = fieldName && editModes[fieldName];
+
+    return (
+      <Card>
+        <CardContent className="p-4 flex items-center justify-between">
+          <div className="flex-grow">
+            <Label className="text-xs text-muted-foreground">{label}</Label>
+            {isEditing && fieldName ? (
+              <Input 
+                value={userProfile[fieldName] || ''} 
+                onChange={(e) => handleInputChange(e, fieldName)} 
+                className="mt-1"
+              />
+            ) : (
+              <p className="font-semibold">{value || 'Belirtilmemiş'}</p>
+            )}
+          </div>
+          {fieldName && (
+            <div className="flex items-center gap-2">
+              {isEditing ? (
+                 <>
+                  <Button size="icon" onClick={() => handleFieldUpdate(fieldName)} disabled={isUpdating}>
+                    {isUpdating ? <Loader2 className="animate-spin" /> : <Save />}
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => toggleEditMode(fieldName)}><X /></Button>
+                 </>
+              ) : (
+                 <Button size="icon" variant="ghost" onClick={() => toggleEditMode(fieldName)}><Edit /></Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
   };
   
   const handlePasswordReset = () => {
@@ -353,7 +386,7 @@ export default function ProfilePage() {
                     )}
                 </div>
                 <div className="flex-grow">
-                    <h1 className="text-2xl font-bold font-headline">{formData.username}</h1>
+                    <h1 className="text-2xl font-bold font-headline">{userProfile.username}</h1>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
                      <Badge variant={getStatusVariant(userProfile?.userStatus)} className="mt-2 capitalize">
                         {userProfile?.userStatus || 'standart'}
@@ -377,36 +410,18 @@ export default function ProfilePage() {
             </TabsList>
             
             <TabsContent value="info" className="mt-6">
-              <Card>
-                  <CardHeader>
-                      <CardTitle>Profil Bilgileri</CardTitle>
-                      <CardDescription>Genel profil bilgilerinizi güncelleyin.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                      <form onSubmit={handleProfileUpdate} className="space-y-4">
-                          <div className="space-y-1">
-                          <Label htmlFor="username">Kullanıcı Adı</Label>
-                          <Input id="username" value={formData.username} onChange={handleInputChange} placeholder="Adınız" />
-                          </div>
-                          <div className="space-y-1">
-                          <Label htmlFor="phoneNumber">Telefon Numarası</Label>
-                          <Input id="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} placeholder="Telefon numaranız" />
-                          </div>
-                          <div className="space-y-1">
-                          <Label htmlFor="location">Konum</Label>
-                          <Input id="location" value={formData.location} onChange={handleInputChange} placeholder="Şehir, Ülke" />
-                          </div>
-                          <div className="space-y-1">
-                          <Label htmlFor="email">E-posta</Label>
-                          <Input id="email" type="email" value={user.email ?? ''} disabled />
-                          </div>
-                          <Button type="submit" disabled={isUpdating} className="w-full">
-                          {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          Bilgileri Güncelle
-                          </Button>
-                      </form>
-                  </CardContent>
-              </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Genel Bilgiler</CardTitle>
+                        <CardDescription>Hesap bilgilerinizi görüntüleyin ve düzenleyin.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <InfoRow label="Kullanıcı Adı" value={userProfile.username} />
+                        <InfoRow label="E-posta" value={userProfile.email} />
+                        <InfoRow label="Telefon Numarası" value={userProfile.phoneNumber} fieldName="phoneNumber" />
+                        <InfoRow label="Konum" value={userProfile.location} fieldName="location" />
+                    </CardContent>
+                </Card>
             </TabsContent>
 
             <TabsContent value="listings" className="mt-6">
