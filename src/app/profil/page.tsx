@@ -106,11 +106,15 @@ function FavoriteListings() {
     if (!firestore || !userProfile || !userProfile.favoritePetIds || userProfile.favoritePetIds.length === 0) {
       return null;
     }
+    // This query is inefficient and should be improved if many pet listings exist.
+    // A better approach would involve denormalizing favorite data or using a dedicated favorites collection.
+    // For this prototype, we'll proceed with a potentially slow 'in' query.
     return query(collection(firestore, 'petListings'), where('id', 'in', userProfile.favoritePetIds));
   }, [firestore, userProfile]);
 
   const { data: favoriteListings, isLoading } = useCollection<PetListing>(favoritesQuery);
 
+  // We only want to show loading state if we know there are favorites to fetch.
   const effectiveIsLoading = (userProfile?.favoritePetIds?.length ?? 0) > 0 && isLoading;
   
   if (effectiveIsLoading) {
@@ -216,7 +220,7 @@ export default function ProfilePage() {
   
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user) return;
+    if (!file || !user || !userProfileRef) return;
 
     const storageRef = ref(storage, `avatars/${user.uid}/${file.name}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
@@ -234,7 +238,7 @@ export default function ProfilePage() {
         toast({
           variant: 'destructive',
           title: 'Yükleme Başarısız',
-          description: 'Profil resmi yüklenirken bir hata oluştu.',
+          description: 'Profil resmi yüklenirken bir hata oluştu. İzinlerinizi kontrol edin.',
         });
         setUploadProgress(null);
       },
@@ -242,9 +246,7 @@ export default function ProfilePage() {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           
-          if (userProfileRef) {
-            await updateDoc(userProfileRef, { avatarUrl: downloadURL });
-          }
+          await updateDoc(userProfileRef, { avatarUrl: downloadURL });
           await updateProfile(user, { photoURL: downloadURL });
 
           toast({
