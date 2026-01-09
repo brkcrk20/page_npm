@@ -120,9 +120,9 @@ function FavoriteListings() {
     
     const favoritesQuery = useMemoFirebase(() => {
         if (favoriteIds.length === 0) return null;
-        return query(collectionGroup(firestore, 'petListings'), where('id', 'in', favoriteIds));
-    }, [favoriteIds]);
-
+        return query(collectionGroup(firestore, 'petListings'), where('__name__', 'in', favoriteIds.map(id => `users/${user?.uid}/petListings/${id}`)));
+    }, [favoriteIds, user?.uid]);
+    
     const { data: favoriteListings, isLoading: areListingsLoading } = useCollection<PetListing>(favoritesQuery);
     
     const isLoading = isLoadingProfile || (favoriteIds.length > 0 && areListingsLoading);
@@ -295,6 +295,19 @@ export default function ProfilePage() {
              </li>
         );
     };
+    
+    const getStatusVariant = (status?: UserProfile['userStatus']) => {
+        switch (status) {
+        case 'premium':
+            return 'default';
+        case 'onayli':
+            return 'secondary';
+        case 'yasakli':
+            return 'destructive';
+        default:
+            return 'outline';
+        }
+    };
 
     return (
         <div className="container mx-auto py-12">
@@ -305,7 +318,7 @@ export default function ProfilePage() {
                         <h1 className="text-2xl font-bold font-headline">{username}</h1>
                         <p className="text-sm text-muted-foreground">{user.email}</p>
                          {profileData?.userStatus && (
-                            <Badge variant={profileData.userStatus === 'premium' ? 'default' : 'secondary'} className="mt-2 capitalize">
+                            <Badge variant={getStatusVariant(profileData.userStatus)} className="mt-2 capitalize">
                                 {profileData.userStatus}
                             </Badge>
                         )}
@@ -354,7 +367,7 @@ export default function ProfilePage() {
                             <div>
                               <h3 className="font-medium mb-2">Mevcut Statü</h3>
                               {profileData?.userStatus ? (
-                                <Badge variant={profileData.userStatus === 'premium' ? 'default' : profileData.userStatus === 'onayli' ? 'secondary' : 'outline'} className="text-base capitalize">
+                                <Badge variant={getStatusVariant(profileData.userStatus)} className="text-base capitalize">
                                   {profileData.userStatus}
                                 </Badge>
                               ) : <Badge variant="outline">standart</Badge>}
