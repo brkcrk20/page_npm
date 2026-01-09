@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useAllUsers } from "@/firebase/firestore/admin-hooks";
-import { Loader2, ShieldAlert, MoreHorizontal, UserPlus, Trash2, Ban, UserCog, Star, FileText, X } from "lucide-react";
+import { Loader2, ShieldAlert, MoreHorizontal, UserPlus, Trash2, Ban, UserCog, Star, FileText, X, Building, Fingerprint, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -146,31 +146,42 @@ export function UserManagement() {
                 <DialogDescription>Kullanıcı ID: <span className="font-mono">{selectedUser.id}</span></DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <span className="text-right font-bold">Email</span>
-                  <span className="col-span-3">{selectedUser.email}</span>
-                </div>
-                 <div className="grid grid-cols-4 items-center gap-4">
-                  <span className="text-right font-bold">Kullanıcı Adı</span>
-                  <span className="col-span-3">{selectedUser.username}</span>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <span className="text-right font-bold">Telefon</span>
-                  <span className="col-span-3">{selectedUser.phoneNumber || 'Belirtilmemiş'}</span>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <span className="text-right font-bold">Konum</span>
-                  <span className="col-span-3">{selectedUser.location || 'Belirtilmemiş'}</span>
-                </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <span className="text-right font-bold pt-1">Favori İlanlar</span>
-                  <div className="col-span-3">
-                    {selectedUser.favoritePetIds && selectedUser.favoritePetIds.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {selectedUser.favoritePetIds.map(id => <Badge key={id} variant="secondary" className="font-mono">{id}</Badge>)}
-                      </div>
-                    ) : 'Favori ilanı yok'}
+                <div className="text-sm">
+                  <h4 className="font-semibold mb-3 border-b pb-2">Kişisel Bilgiler</h4>
+                  <div className="space-y-2">
+                    <p><strong>Email:</strong> {selectedUser.email}</p>
+                    <p><strong>Kullanıcı Adı:</strong> {selectedUser.username}</p>
+                    <p><strong>Telefon:</strong> {selectedUser.phoneNumber || 'Belirtilmemiş'}</p>
+                    <p><strong>Konum:</strong> {selectedUser.location || 'Belirtilmemiş'}</p>
                   </div>
+                </div>
+
+                {selectedUser.companyType && (
+                    <div className="text-sm">
+                        <h4 className="font-semibold mb-3 border-b pb-2 pt-4">Kurumsal Bilgiler</h4>
+                        <div className="space-y-2">
+                             <p><strong>Şirket Tipi:</strong> {selectedUser.companyType}</p>
+                             <p><strong>Firma Ünvanı:</strong> {selectedUser.companyTitle}</p>
+                             <p><strong>TC Kimlik No:</strong> {selectedUser.tcNo}</p>
+                             <p><strong>Vergi Dairesi:</strong> {selectedUser.taxOffice}</p>
+                             <p><strong>Vergi Numarası:</strong> {selectedUser.taxNo}</p>
+                             <p><strong>Firma Adresi:</strong> {selectedUser.companyAddress}</p>
+                        </div>
+                    </div>
+                )}
+                
+                <div className="text-sm">
+                   <h4 className="font-semibold mb-3 border-b pb-2 pt-4">İlişkili Veriler</h4>
+                    <div className="space-y-2">
+                       <p className="flex items-center">
+                         <strong className="w-32">Favori İlanlar:</strong>
+                         {selectedUser.favoritePetIds && selectedUser.favoritePetIds.length > 0 ? (
+                          <span className="flex flex-wrap gap-1">
+                            {selectedUser.favoritePetIds.map(id => <Badge key={id} variant="secondary" className="font-mono">{id}</Badge>)}
+                          </span>
+                        ) : 'Favori ilanı yok'}
+                       </p>
+                    </div>
                 </div>
               </div>
               <DialogFooter>

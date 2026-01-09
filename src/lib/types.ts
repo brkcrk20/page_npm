@@ -28,6 +28,12 @@ export type UserProfile = {
   phoneNumber?: SchemaProperties<typeof entities.UserProfile>['phoneNumber']['type'];
   location?: SchemaProperties<typeof entities.UserProfile>['location']['type'];
   favoritePetIds?: string[];
+  companyType?: SchemaProperties<typeof entities.UserProfile>['companyType']['enum'][number];
+  companyTitle?: SchemaProperties<typeof entities.UserProfile>['companyTitle']['type'];
+  taxNo?: SchemaProperties<typeof entities.UserProfile>['taxNo']['type'];
+  taxOffice?: SchemaProperties<typeof entities.UserProfile>['taxOffice']['type'];
+  companyAddress?: SchemaProperties<typeof entities.UserProfile>['companyAddress']['type'];
+  tcNo?: SchemaProperties<typeof entities.UserProfile>['tcNo']['type'];
 };
 
 export type Service = {

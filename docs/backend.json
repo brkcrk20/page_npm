@@ -101,6 +101,31 @@
           "items": {
             "type": "string"
           }
+        },
+        "companyType": {
+            "type": "string",
+            "description": "Type of the company for corporate users.",
+            "enum": ["Sahis", "Limited", "Anonim"]
+        },
+        "companyTitle": {
+            "type": "string",
+            "description": "Official title of the company."
+        },
+        "taxNo": {
+            "type": "string",
+            "description": "Tax identification number of the company."
+        },
+        "taxOffice": {
+            "type": "string",
+            "description": "The tax office where the company is registered."
+        },
+        "companyAddress": {
+            "type": "string",
+            "description": "The registered address of the company."
+        },
+        "tcNo": {
+            "type": "string",
+            "description": "Turkish Republic Identity Number for individual corporate owners."
         }
       },
       "required": [
