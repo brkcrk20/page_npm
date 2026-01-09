@@ -2,7 +2,7 @@
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Loader2, User, FileText, Settings, Heart, Edit, Trash2, Camera } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -11,11 +11,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { updateProfile } from 'firebase/auth';
 import type { UserProfile, PetListing } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Progress } from '@/components/ui/progress';
 
 function ProfileListings() {
   const { user } = useUser();
@@ -164,6 +167,7 @@ export default function ProfilePage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const userProfileRef = useMemoFirebase(() => {
     if (!user) return null;
@@ -176,6 +180,7 @@ export default function ProfilePage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [location, setLocation] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -201,13 +206,59 @@ export default function ProfilePage() {
     return name.charAt(0).toUpperCase();
   };
   
-  const handleAvatarChange = () => {
-    // This is a placeholder for the real implementation which would involve:
-    // 1. Opening a file picker.
-    // 2. Uploading the file to Firebase Storage.
-    // 3. Getting the URL.
-    // 4. Updating the user's profile in Auth and Firestore.
-    alert("Profil resmi değiştirme özelliği yakında gelecek!");
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    const storage = getStorage();
+    const storageRef = ref(storage, `avatars/${user.uid}/${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    setUploadProgress(0);
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error('Upload failed:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Yükleme Başarısız',
+          description: 'Profil resmi yüklenirken bir hata oluştu.',
+        });
+        setUploadProgress(null);
+      },
+      async () => {
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          
+          // Update Firebase Auth profile
+          await updateProfile(user, { photoURL: downloadURL });
+
+          // Update Firestore profile
+          if (userProfileRef) {
+            await updateDoc(userProfileRef, { avatarUrl: downloadURL });
+          }
+
+          toast({
+            title: 'Başarılı',
+            description: 'Profil resminiz güncellendi.',
+          });
+        } catch (error) {
+           console.error('Profile update failed:', error);
+           toast({
+            variant: 'destructive',
+            title: 'Güncelleme Başarısız',
+            description: 'Profil bilgileri güncellenirken bir hata oluştu.',
+          });
+        } finally {
+          setUploadProgress(null);
+        }
+      }
+    );
   };
 
   const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -251,15 +302,28 @@ export default function ProfilePage() {
             <AvatarFallback className="text-4xl bg-secondary">{getInitials(username)}</AvatarFallback>
           </Avatar>
            <Button
-            onClick={handleAvatarChange}
+            onClick={() => fileInputRef.current?.click()}
             variant="outline"
             size="icon"
             className="absolute bottom-1 right-1 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+            disabled={uploadProgress !== null}
           >
-            <Camera className="h-5 w-5" />
+            {uploadProgress !== null ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
             <span className="sr-only">Profil resmini değiştir</span>
           </Button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleAvatarChange}
+            className="hidden"
+            accept="image/png, image/jpeg"
+          />
         </div>
+         {uploadProgress !== null && (
+          <div className="w-32 mt-2">
+            <Progress value={uploadProgress} className="h-2" />
+          </div>
+        )}
 
         <div className="text-center">
           <h1 className="text-3xl font-bold font-headline">{username}</h1>
