@@ -29,6 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 const individualSchema = z.object({
   userType: z.literal('bireysel'),
   name: z.string().min(2, { message: 'Ad soyad en az 2 karakter olmalıdır.' }),
+  username: z.string().min(3, { message: 'Kullanıcı adı en az 3 karakter olmalıdır.' }).regex(/^[a-zA-Z0-9_]+$/, { message: 'Kullanıcı adı sadece harf, rakam ve alt çizgi içerebilir.' }),
   email: z.string().email({ message: 'Geçerli bir e-posta adresi girin.' }),
   phone: z.string().min(10, { message: 'Geçerli bir telefon numarası girin.' }),
   password: z.string().min(6, { message: 'Şifre en az 6 karakter olmalıdır.' }),
@@ -39,6 +40,7 @@ const individualSchema = z.object({
 const corporateSchema = z.object({
   userType: z.literal('kurumsal'),
   name: z.string().min(2, { message: 'Ad soyad en az 2 karakter olmalıdır.' }),
+  username: z.string().min(3, { message: 'Kullanıcı adı en az 3 karakter olmalıdır.' }).regex(/^[a-zA-Z0-9_]+$/, { message: 'Kullanıcı adı sadece harf, rakam ve alt çizgi içerebilir.' }),
   email: z.string().email({ message: 'Geçerli bir e-posta adresi girin.' }),
   phone: z.string().min(10, { message: 'Geçerli bir telefon numarası girin.' }),
   password: z.string().min(6, { message: 'Şifre en az 6 karakter olmalıdır.' }),
@@ -69,6 +71,7 @@ export function RegisterForm() {
     defaultValues: {
       userType: 'bireysel',
       name: '',
+      username: '',
       email: '',
       phone: '',
       password: '',
@@ -94,7 +97,7 @@ export function RegisterForm() {
       // Now, save the user's profile to Firestore
       const userProfile = {
         id: user.uid,
-        username: values.name,
+        username: values.username,
         email: values.email,
         phoneNumber: values.phone,
         userStatus: 'standart' as const, // Assign default status
@@ -222,6 +225,19 @@ export function RegisterForm() {
                 </FormItem>
               )}
             />
+             <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kullanıcı Adı <span className="text-red-500">*</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="johndoe" {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="email"
@@ -273,6 +289,19 @@ export function RegisterForm() {
                 <FormItem>
                   <FormLabel>Adı Soyadı (Yetkili) <span className="text-red-500">*</span></FormLabel>
                   <FormControl><Input placeholder="John Doe" {...field} disabled={isLoading} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kullanıcı Adı <span className="text-red-500">*</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="johndoe" {...field} disabled={isLoading} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

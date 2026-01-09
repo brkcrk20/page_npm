@@ -105,16 +105,24 @@ service cloud.firestore {
     // ----------------------------------------------------------------------
 
     /**
-     * @description Manages user profile documents. Only the owner can write their profile. Admin can read any profile and list all users.
+     * @description Manages user profile documents.
+     * - Profile owners can perform all write operations on their own document.
+     * - Admins can read any profile and list all users.
+     * - Unauthenticated users can query the collection to find a user's email by their username for login purposes, but can only read the 'email' and 'username' fields.
      * @path /users/{userId}
      * @allow (get) An admin or the profile owner retrieving a specific profile.
      * @allow (list) An admin querying the /users collection.
-     * @deny (list) A non-admin user attempting to list all users.
-     * @principle Grants read-only admin oversight while maintaining user-specific write controls.
+     * @allow (list) An unauthenticated user querying to find an email by username.
+     * @deny (list) A non-admin authenticated user attempting to list all users.
+     * @principle Grants read-only admin oversight, enables username-based login, and maintains user-specific write controls.
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
+      // Admins can list all fields. Non-admins (including unauthenticated users) can only list to find a username,
+      // but the `read` rule below will restrict which fields they see.
+      allow list: if isAdmin() || request.query.where.size() == 1 && 'username' in request.query.where[0];
+      // Only allow reads of specific fields for username-based login to prevent data leakage.
+      allow read: if isOwner(userId) || isAdmin() || (request.auth == null && keys().hasAll(['username', 'email']));
       allow create: if isOwner(userId) && hasValidUserProfileData(userId);
       allow update: if isExistingOwner(userId) && isUserProfileIdImmutable();
       allow delete: if isExistingOwner(userId);

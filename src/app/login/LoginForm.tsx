@@ -16,20 +16,23 @@ import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { Checkbox } from '@/components/ui/checkbox';
 import React, { useState } from 'react';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import type { UserProfile } from '@/lib/types';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Geçerli bir e-posta adresi girin.' }),
+  loginId: z.string().min(1, { message: 'Kullanıcı adı veya e-posta gereklidir.' }),
   password: z.string().min(6, { message: 'Şifre en az 6 karakter olmalıdır.' }),
   remember: z.boolean().default(false).optional(),
 });
 
 export function LoginForm() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -37,22 +40,60 @@ export function LoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      loginId: '',
       password: '',
       remember: false,
     },
   });
 
+  async function getEmailFromUsername(username: string): Promise<string | null> {
+    try {
+      const usersRef = collection(firestore, 'users');
+      const q = query(usersRef, where('username', '==', username), limit(1));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0].data() as UserProfile;
+        return userDoc.email;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching user by username:", error);
+      // This might fail due to security rules if not properly configured.
+      // We'll let the main login function handle the generic error message.
+      return null;
+    }
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
+    let emailToLogin = values.loginId;
+
+    // Check if loginId is not an email, then assume it's a username
+    if (!values.loginId.includes('@')) {
+      const foundEmail = await getEmailFromUsername(values.loginId);
+      if (foundEmail) {
+        emailToLogin = foundEmail;
+      } else {
+        // If username is not found, we can fail early
+        toast({
+          variant: "destructive",
+          title: "Giriş Başarısız",
+          description: "Kullanıcı adı veya şifre hatalı. Lütfen bilgilerinizi kontrol edin.",
+        });
+        setIsLoading(false);
+        return;
+      }
+    }
+
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
+      await signInWithEmailAndPassword(auth, emailToLogin, values.password);
       router.push('/');
     } catch (error: any) {
       console.error(error);
       let description = "Giriş yapılırken bir hata oluştu.";
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        description = "E-posta veya şifre hatalı. Lütfen bilgilerinizi kontrol edin.";
+        description = "Kullanıcı adı veya şifre hatalı. Lütfen bilgilerinizi kontrol edin.";
       }
       toast({
         variant: "destructive",
@@ -69,12 +110,12 @@ export function LoginForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" id="login-form" noValidate>
         <FormField
           control={form.control}
-          name="email"
+          name="loginId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>E-posta</FormLabel>
+              <FormLabel>Kullanıcı Adı veya E-posta</FormLabel>
               <FormControl>
-                <Input placeholder="email@example.com" {...field} disabled={isLoading} />
+                <Input placeholder="kullanici_adim veya email@example.com" {...field} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>
