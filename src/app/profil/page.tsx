@@ -1,6 +1,6 @@
 'use client';
 
-import { useUser, useFirestore, useMemoFirebase, useStorage, useAuth } from '@/firebase';
+import { useUser, useFirestore, useStorage, useAuth, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { Loader2, User as UserIcon, FileText, Settings, Heart, Edit, Trash2, Camera, LogOut, ShieldCheck, Building, Save, X } from 'lucide-react';
@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { doc, updateDoc, collection, query, where, collectionGroup, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, getDoc, getDocs, where, collectionGroup } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { updateProfile, signOut } from 'firebase/auth';
 import type { UserProfile, PetListing } from '@/lib/types';
@@ -107,14 +107,13 @@ function FavoriteListings() {
         };
 
         const docRef = doc(firestore, 'users', user.uid);
-        const unsubscribe = onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
+        getDoc(docRef).then(docSnap => {
+             if (docSnap.exists()) {
                 setUserProfile(docSnap.data() as UserProfile);
             }
             setProfileLoading(false);
         });
         
-        return () => unsubscribe();
     }, [user, firestore]);
 
     const favoriteIds = userProfile?.favoritePetIds || [];
@@ -184,7 +183,8 @@ export default function ProfilePage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [profileData, setProfileData] = useState<UserProfile | null>(null);
-    const [isProfileLoading, setIsProfileLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
+    
     const [editModes, setEditModes] = useState<Record<string, boolean>>({});
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
@@ -193,28 +193,27 @@ export default function ProfilePage() {
     useEffect(() => {
         if (!isUserLoading && !user) {
             router.push('/login');
+            return;
         }
-    }, [user, isUserLoading, router]);
-
-    useEffect(() => {
-        if (user) {
+        if(user){
             const userProfileRef = doc(firestore, "users", user.uid);
-            const unsubscribe = onSnapshot(userProfileRef, (doc) => {
-                if (doc.exists()) {
-                    setProfileData(doc.data() as UserProfile);
+            getDoc(userProfileRef).then(docSnap => {
+                if (docSnap.exists()) {
+                    setProfileData(docSnap.data() as UserProfile);
                 }
-                setIsProfileLoading(false);
+                setIsLoading(false);
+            }).catch(err => {
+                console.error("Failed to fetch profile data:", err);
+                setIsLoading(false);
             });
-            return () => unsubscribe();
-        } else if (!isUserLoading) {
-            setIsProfileLoading(false);
         }
-    }, [user, firestore, isUserLoading]);
+    }, [user, isUserLoading, router, firestore]);
 
     const handleLogout = () => {
-        signOut(auth);
-        toast({ title: 'Çıkış Yapıldı', description: 'Hesabınızdan güvenle çıkış yaptınız.' });
-        router.push('/');
+        signOut(auth).then(() => {
+            toast({ title: 'Çıkış Yapıldı', description: 'Hesabınızdan güvenle çıkış yaptınız.' });
+            router.push('/');
+        });
     };
 
     const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -265,13 +264,20 @@ export default function ProfilePage() {
         );
     };
 
-    const handleFieldUpdate = async (field: string) => {
+    const handleFieldUpdate = async (field: keyof UserProfile) => {
         if (!user || !fieldValues[field]) return;
 
         setIsUpdating(field);
         try {
             const userProfileRef = doc(firestore, "users", user.uid);
             await updateDoc(userProfileRef, { [field]: fieldValues[field] });
+            
+            // Re-fetch data to show updated value
+            const updatedDoc = await getDoc(userProfileRef);
+            if (updatedDoc.exists()) {
+                setProfileData(updatedDoc.data() as UserProfile);
+            }
+
             toast({ title: "Başarılı", description: "Profil bilgileriniz güncellendi." });
             setEditModes(prev => ({ ...prev, [field]: false }));
         } catch (error) {
@@ -282,14 +288,15 @@ export default function ProfilePage() {
         }
     };
     
-    const toggleEditMode = (field: string) => {
+    const toggleEditMode = (field: keyof UserProfile) => {
         if (!editModes[field]) {
-            setFieldValues(prev => ({ ...prev, [field]: profileData?.[field as keyof UserProfile] as string || '' }));
+            // Entering edit mode, set initial value
+            setFieldValues(prev => ({ ...prev, [field]: profileData?.[field] as string || '' }));
         }
         setEditModes(prev => ({ ...prev, [field]: !prev[field] }));
     };
 
-    if (isUserLoading || isProfileLoading || !user || !profileData) {
+    if (isUserLoading || isLoading || !user) {
         return (
             <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -303,44 +310,43 @@ export default function ProfilePage() {
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     };
 
-    const avatarUrl = user.photoURL || profileData.avatarUrl || '';
+    const avatarUrl = user.photoURL || profileData?.avatarUrl || '';
+    const username = user.displayName || profileData?.username || 'Kullanıcı';
 
     const InfoRow = ({ label, value, fieldName }: { label: string, value: string | undefined | null, fieldName?: keyof UserProfile }) => {
         const isEditing = fieldName && editModes[fieldName];
         const isSaving = isUpdating === fieldName;
 
         return (
-            <Card>
-                <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex-grow">
-                        <Label className="text-xs text-muted-foreground">{label}</Label>
-                        {isEditing && fieldName ? (
-                            <Input
-                                value={fieldValues[fieldName] || ''}
-                                onChange={(e) => setFieldValues(prev => ({...prev, [fieldName]: e.target.value}))}
-                                className="mt-1"
-                                disabled={isSaving}
-                            />
+             <div className="flex items-center justify-between p-4 border-b">
+                <div className='w-1/3 text-sm text-muted-foreground'>{label}</div>
+                <div className="flex-grow text-sm font-medium">
+                     {isEditing && fieldName ? (
+                        <Input
+                            value={fieldValues[fieldName] || ''}
+                            onChange={(e) => setFieldValues(prev => ({...prev, [fieldName]: e.target.value}))}
+                            className="h-8"
+                            disabled={isSaving}
+                        />
+                    ) : (
+                        value || 'Belirtilmemiş'
+                    )}
+                </div>
+                 {fieldName && (
+                    <div className="flex items-center gap-2 ml-4">
+                        {isEditing ? (
+                            <>
+                                <Button size="sm" onClick={() => handleFieldUpdate(fieldName)} disabled={isSaving}>
+                                    {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => toggleEditMode(fieldName)} disabled={isSaving}><X className="h-4 w-4" /></Button>
+                            </>
                         ) : (
-                            <p className="font-semibold text-lg">{value || 'Belirtilmemiş'}</p>
+                            <Button size="sm" variant="ghost" onClick={() => toggleEditMode(fieldName)}><Edit className="h-4 w-4" /> Değiştir</Button>
                         )}
                     </div>
-                    {fieldName && (
-                        <div className="flex items-center gap-2 ml-4">
-                            {isEditing ? (
-                                <>
-                                    <Button size="icon" onClick={() => handleFieldUpdate(fieldName)} disabled={isSaving}>
-                                        {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
-                                    </Button>
-                                    <Button size="icon" variant="ghost" onClick={() => toggleEditMode(fieldName)} disabled={isSaving}><X /></Button>
-                                </>
-                            ) : (
-                                <Button size="icon" variant="ghost" onClick={() => toggleEditMode(fieldName)}><Edit /></Button>
-                            )}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                )}
+             </div>
         );
     };
 
@@ -348,16 +354,16 @@ export default function ProfilePage() {
         <div className="container mx-auto py-12">
             <Card className="mb-8">
                 <CardContent className="p-6 flex items-center space-x-6">
-                    <div className="relative">
+                    <div className="relative group">
                         <Avatar className="h-24 w-24 border-4 border-primary/50">
-                            <AvatarImage src={avatarUrl} alt={profileData.username} />
-                            <AvatarFallback className="text-3xl bg-secondary">{getInitials(profileData.username)}</AvatarFallback>
+                            <AvatarImage src={avatarUrl} alt={username} />
+                            <AvatarFallback className="text-3xl bg-secondary">{getInitials(username)}</AvatarFallback>
                         </Avatar>
                         <Button
                             onClick={() => fileInputRef.current?.click()}
                             variant="outline"
                             size="icon"
-                            className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
+                            className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
                             disabled={uploadProgress !== null}
                         >
                             {uploadProgress !== null ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
@@ -370,18 +376,20 @@ export default function ProfilePage() {
                             className="hidden"
                             accept="image/png, image/jpeg"
                         />
-                        {uploadProgress !== null && (
+                         {uploadProgress !== null && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
                                 <Progress value={uploadProgress} className="h-1 w-16" />
                             </div>
                         )}
                     </div>
                     <div className="flex-grow">
-                        <h1 className="text-2xl font-bold font-headline">{profileData.username}</h1>
+                        <h1 className="text-2xl font-bold font-headline">{username}</h1>
                         <p className="text-sm text-muted-foreground">{user.email}</p>
-                        <Badge variant={profileData.userStatus === 'premium' ? 'default' : 'secondary'} className="mt-2 capitalize">
-                            {profileData.userStatus || 'standart'}
-                        </Badge>
+                        {profileData?.userStatus && (
+                            <Badge variant={profileData.userStatus === 'premium' ? 'default' : 'secondary'} className="mt-2 capitalize">
+                                {profileData.userStatus}
+                            </Badge>
+                        )}
                     </div>
                     <Button variant="outline" onClick={handleLogout}>
                         <LogOut className="mr-2 h-4 w-4" />
@@ -405,11 +413,11 @@ export default function ProfilePage() {
                               <CardTitle>Genel Bilgiler</CardTitle>
                               <CardDescription>Hesap bilgilerinizi görüntüleyin ve düzenleyin.</CardDescription>
                           </CardHeader>
-                          <CardContent className="space-y-4">
-                              <InfoRow label="Kullanıcı Adı" value={profileData.username} />
-                              <InfoRow label="E-posta" value={profileData.email} />
-                              <InfoRow label="Telefon Numarası" value={profileData.phoneNumber} fieldName="phoneNumber" />
-                              <InfoRow label="Konum" value={profileData.location} fieldName="location" />
+                          <CardContent className="p-0">
+                            <InfoRow label="Kullanıcı Adı" value={username} />
+                            <InfoRow label="E-posta" value={user.email} />
+                            <InfoRow label="Telefon Numarası" value={profileData?.phoneNumber} fieldName="phoneNumber" />
+                            <InfoRow label="Konum" value={profileData?.location} fieldName="location" />
                           </CardContent>
                       </Card>
                     </TabsContent>
@@ -424,11 +432,13 @@ export default function ProfilePage() {
                           <CardContent className="space-y-6">
                             <div>
                               <h3 className="font-medium mb-2">Mevcut Statü</h3>
-                              <Badge variant={profileData.userStatus === 'premium' ? 'default' : profileData.userStatus === 'onayli' ? 'secondary' : 'outline'} className="text-base capitalize">
-                                {profileData.userStatus || 'standart'}
-                              </Badge>
+                              {profileData?.userStatus ? (
+                                <Badge variant={profileData.userStatus === 'premium' ? 'default' : profileData.userStatus === 'onayli' ? 'secondary' : 'outline'} className="text-base capitalize">
+                                  {profileData.userStatus}
+                                </Badge>
+                              ) : <Badge variant="outline">standart</Badge>}
                             </div>
-                            {profileData.companyType ? (
+                            {profileData?.companyType ? (
                               <div className="border-t pt-6">
                                 <h3 className="font-medium mb-4 flex items-center"><Building className="mr-2 h-5 w-5 text-primary" />Kurumsal Bilgiler</h3>
                                 <div className="text-sm space-y-3">
@@ -475,5 +485,4 @@ export default function ProfilePage() {
         </div>
     );
 }
-
     
