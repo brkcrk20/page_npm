@@ -131,6 +131,10 @@
           "type": "string",
           "description": "The status of the user account.",
           "enum": ["standart", "onayli", "premium", "yasakli"]
+        },
+        "credit": {
+          "type": "number",
+          "description": "The amount of credits the user has."
         }
       },
       "required": [

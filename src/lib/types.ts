@@ -35,6 +35,7 @@ export type UserProfile = {
   companyAddress?: SchemaProperties<typeof entities.UserProfile>['companyAddress']['type'];
   tcNo?: SchemaProperties<typeof entities.UserProfile>['tcNo']['type'];
   userStatus?: SchemaProperties<typeof entities.UserProfile>['userStatus']['enum'][number];
+  credit?: SchemaProperties<typeof entities.UserProfile>['credit']['type'];
 };
 
 export type Service = {

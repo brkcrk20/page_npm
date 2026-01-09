@@ -101,6 +101,7 @@ export function RegisterForm() {
         email: values.email,
         phoneNumber: values.phone,
         userStatus: 'standart' as const, // Assign default status
+        credit: 0, // Assign default credit
         // Add corporate fields if they exist
         ...(values.userType === 'kurumsal' && {
           companyType: values.companyType,

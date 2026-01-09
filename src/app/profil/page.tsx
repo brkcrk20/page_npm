@@ -4,7 +4,7 @@
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Loader2, LogOut, Edit, Save, X, FileText, Heart, ShieldCheck, Building, Settings, User as UserIcon } from 'lucide-react';
+import { Loader2, LogOut, Edit, Save, X, FileText, Heart, ShieldCheck, Building, Settings, User as UserIcon, Coin, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -307,24 +307,36 @@ export default function ProfilePage() {
             return 'outline';
         }
     };
+    
+    const userType = profileData?.companyType ? 'Kurumsal Üye' : 'Bireysel Üye';
 
     return (
         <div className="container mx-auto py-12">
             <Card className="mb-8">
-                <CardContent className="p-6 flex items-center space-x-6">
+                <CardContent className="p-6 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
                     <div className="h-24 w-24 flex items-center justify-center rounded-full bg-secondary text-primary">
                         <UserIcon className="h-12 w-12" />
                     </div>
-                    <div className="flex-grow">
+                    <div className="flex-grow text-center sm:text-left">
                         <h1 className="text-2xl font-bold font-headline">{username}</h1>
                         <p className="text-sm text-muted-foreground">{user.email}</p>
-                         {profileData?.userStatus && (
-                            <Badge variant={getStatusVariant(profileData.userStatus)} className="mt-2 capitalize">
-                                {profileData.userStatus}
+                        <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-2">
+                            <Badge variant="outline" className="flex items-center gap-1">
+                                <Briefcase className="h-3 w-3" />
+                                {userType}
                             </Badge>
-                        )}
+                             {profileData?.userStatus && (
+                                <Badge variant={getStatusVariant(profileData.userStatus)} className="capitalize">
+                                    {profileData.userStatus}
+                                </Badge>
+                            )}
+                             <Badge variant="secondary" className="flex items-center gap-1">
+                                <Coin className="h-3 w-3" />
+                                {profileData?.credit ?? 0} Kredi
+                            </Badge>
+                        </div>
                     </div>
-                    <Button variant="outline" onClick={handleLogout}>
+                    <Button variant="outline" onClick={handleLogout} className="w-full sm:w-auto">
                         <LogOut className="mr-2 h-4 w-4" />
                         Çıkış Yap
                     </Button>
