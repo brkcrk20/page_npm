@@ -12,7 +12,8 @@ import { ListingRow } from '@/components/ListingRow';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function DogPage() {
   const filteredPets = pets.filter((pet) => pet.type === 'Dog');
@@ -161,6 +162,30 @@ export default function DogPage() {
                     <MessageCircle className="w-6 h-6 text-primary" />
                     <h2 className="text-2xl font-bold">Kategori Hakkındaki Yorumlar</h2>
                 </div>
+
+                <Card className="mb-8">
+                    <CardHeader>
+                        <CardTitle>Yorumunuzu Paylaşın</CardTitle>
+                        <CardDescription>Bu kategori hakkındaki düşüncelerinizi diğer kullanıcılarla paylaşın.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4">
+                            <div className="flex items-center gap-2">
+                                <span className="font-medium">Puanınız:</span>
+                                <div className="flex items-center text-yellow-400">
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star key={i} className="w-6 h-6 cursor-pointer fill-current" />
+                                    ))}
+                                </div>
+                            </div>
+                            <Textarea placeholder="Yorumunuzu buraya yazın..." rows={4} />
+                            <div className="flex justify-end">
+                                <Button>Yorumu Gönder</Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 <div className="space-y-6">
                   {mockReviews.map((review) => (
                     <Card key={review.id} className="p-0">
