@@ -4,11 +4,14 @@
 import { useParams } from 'next/navigation';
 import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
-import { PawPrint, ChevronRight } from 'lucide-react';
+import { PawPrint, ChevronRight, BookOpen, MessageCircle, Star } from 'lucide-react';
 import Link from 'next/link';
 import { categories } from '@/lib/breeds';
 import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { ListingRow } from '@/components/ListingRow';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function DogBreedPage() {
   const params = useParams();
@@ -29,6 +32,23 @@ export default function DogBreedPage() {
   const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
   const standardPets = filteredPets.filter(p => !p.featured);
   const categoryCount = pets.filter(p => p.type === 'Dog').length;
+
+   const mockReviews = [
+    {
+      id: 1,
+      author: "GoldenAşığı",
+      avatar: "https://i.pravatar.cc/150?img=7",
+      comment: "Golden Retriever'lar gerçekten harika aile köpekleri. Bu siteden aldığım ilandaki yavru çok sağlıklı ve oyuncu çıktı.",
+      date: "5 gün önce"
+    },
+    {
+      id: 2,
+      author: "Apartman Sakini",
+      avatar: "https://i.pravatar.cc/150?img=8",
+      comment: "Enerjileri yüksek, apartmanda bakacaklar günde en az iki kez uzun yürüyüşlere hazırlıklı olmalı. Ama sevgileri her şeye değer.",
+      date: "2 hafta önce"
+    }
+  ];
 
   return (
     <div className="container mx-auto py-8">
@@ -97,6 +117,77 @@ export default function DogBreedPage() {
                     </p>
                 </div>
                 )}
+            </div>
+
+             {/* Pagination */}
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious href="#" />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#" isActive>1</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#">2</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext href="#" />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+
+            {/* Most Visited Listings */}
+             <div className="mt-16">
+                <h2 className="text-2xl font-bold mb-4">En Çok Ziyaret Edilen {breedName} İlanları</h2>
+                <div className="relative">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {pets.slice(0, 4).map((pet) => (
+                            <PetCard key={pet.id} pet={pet} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Reviews */}
+            <div className="mt-16">
+                <div className="flex items-center gap-2 mb-6">
+                    <MessageCircle className="w-6 h-6 text-primary" />
+                    <h2 className="text-2xl font-bold">{breedName} Cinsi Hakkındaki Yorumlar</h2>
+                </div>
+                <div className="space-y-6">
+                  {mockReviews.map((review) => (
+                    <Card key={review.id} className="p-0">
+                      <CardContent className="p-6 flex gap-4">
+                          <Avatar>
+                              <AvatarImage src={review.avatar} alt={review.author} />
+                              <AvatarFallback>{review.author.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                              <div className="flex justify-between items-center mb-1">
+                                  <h4 className="font-semibold">{review.author}</h4>
+                                  <span className="text-xs text-muted-foreground">{review.date}</span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{review.comment}</p>
+                          </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+            </div>
+
+            {/* Article Section */}
+            <div className="mt-16 border-t pt-12">
+                <h2 className="text-3xl font-bold font-headline mb-4 text-gray-800 flex items-center gap-3"><BookOpen />{breedName} Bakımı ve Özellikleri</h2>
+                <div className="prose max-w-none text-muted-foreground space-y-4">
+                    <p>
+                        {breedName} cinsi, zekası, enerjisi ve sadakati ile bilinen popüler bir köpek ırkıdır. Bu rehberde, {breedName} bakımı hakkında bilmeniz gereken her şeyi bulacaksınız.
+                    </p>
+                    <h3 className="text-2xl font-bold font-headline text-gray-700 !mt-6 !mb-2">Karakter Özellikleri</h3>
+                    <p>
+                       Genellikle {breedName} cinsi köpekler, ailelerine karşı oldukça sevgi dolu ve koruyucudur. Çocuklarla ve diğer evcil hayvanlarla iyi anlaşırlar. Erken yaşta sosyalleştirilmeleri, dengeli bir yetişkin olmaları için önemlidir.
+                    </p>
+                </div>
             </div>
         </main>
       </div>

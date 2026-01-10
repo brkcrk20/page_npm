@@ -4,11 +4,12 @@
 import { useParams } from 'next/navigation';
 import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
-import { PawPrint, ChevronRight } from 'lucide-react';
+import { PawPrint, ChevronRight, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { categories } from '@/lib/breeds';
 import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { ListingRow } from '@/components/ListingRow';
+import { Pagination, PaginationItem, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 
 export default function BirdBreedPage() {
   const params = useParams();
@@ -97,6 +98,27 @@ export default function BirdBreedPage() {
                     </p>
                 </div>
                 )}
+            </div>
+             {/* Pagination */}
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationLink href="#" isActive>1</PaginationLink>
+                </PaginationItem>
+                 <PaginationItem>
+                  <PaginationNext href="#" />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+
+             {/* Article Section */}
+            <div className="mt-16 border-t pt-12">
+                <h2 className="text-3xl font-bold font-headline mb-4 text-gray-800 flex items-center gap-3"><BookOpen />{breedName} Bakımı</h2>
+                <div className="prose max-w-none text-muted-foreground space-y-4">
+                    <p>
+                        {breedName}, enerjik ve sosyal yapılarıyla bilinen popüler ev kuşlarındandır. Doğru bakım ile uzun yıllar size arkadaşlık edebilirler.
+                    </p>
+                </div>
             </div>
         </main>
       </div>

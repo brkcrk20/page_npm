@@ -3,12 +3,14 @@
 
 import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
-import { PawPrint } from 'lucide-react';
+import { PawPrint, ChevronRight, BookOpen, MessageCircle, Star } from 'lucide-react';
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
 import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { categories } from '@/lib/breeds';
 import { ListingRow } from '@/components/ListingRow';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
 
 
 export default function CatPage() {
@@ -20,6 +22,23 @@ export default function CatPage() {
   if (!category) {
     return <div>Kategori bulunamadı.</div>;
   }
+
+  const mockReviews = [
+    {
+      id: 1,
+      author: "PatiSever",
+      avatar: "https://i.pravatar.cc/150?img=9",
+      comment: "Kedi sahiplenmek isteyenler için harika bir platform. Çok çeşitli cinsler var ve ilan sahipleri genellikle ilgili oluyor.",
+      date: "1 gün önce"
+    },
+    {
+      id: 2,
+      author: "Ev Kedisi",
+      avatar: "https://i.pravatar.cc/150?img=10",
+      comment: "Aradığım British Shorthair'i buradan buldum. Sitedeki bilgiler çok yardımcı oldu.",
+      date: "4 gün önce"
+    }
+  ];
 
   return (
     <div className="container mx-auto py-8">
@@ -85,6 +104,78 @@ export default function CatPage() {
                 </div>
               )}
             </div>
+
+            {/* Pagination */}
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious href="#" />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#" isActive>1</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#">2</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext href="#" />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+
+            {/* Popular Listings */}
+            <div className="mt-12">
+                <h2 className="text-2xl font-bold mb-4">Popüler Kedi İlanları</h2>
+                <div className="relative">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {filteredPets.slice(0, 4).map((pet) => (
+                            <PetCard key={pet.id} pet={pet} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Reviews */}
+            <div className="mt-16">
+                <div className="flex items-center gap-2 mb-6">
+                    <MessageCircle className="w-6 h-6 text-primary" />
+                    <h2 className="text-2xl font-bold">Kedi Sahiplenme Hakkında Yorumlar</h2>
+                </div>
+                <div className="space-y-6">
+                  {mockReviews.map((review) => (
+                    <Card key={review.id} className="p-0">
+                      <CardContent className="p-6 flex gap-4">
+                          <Avatar>
+                              <AvatarImage src={review.avatar} alt={review.author} />
+                              <AvatarFallback>{review.author.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                              <div className="flex justify-between items-center mb-1">
+                                  <h4 className="font-semibold">{review.author}</h4>
+                                  <span className="text-xs text-muted-foreground">{review.date}</span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{review.comment}</p>
+                          </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+            </div>
+
+            {/* Article Section */}
+            <div className="mt-16 border-t pt-12">
+                <h2 className="text-3xl font-bold font-headline mb-4 text-gray-800 flex items-center gap-3"><BookOpen />Kedilerin Gizemli Dünyası</h2>
+                <div className="prose max-w-none text-muted-foreground space-y-4">
+                    <p>
+                        Kediler, bağımsız doğaları, zarif hareketleri ve gizemli tavırlarıyla binlerce yıldır insanların ilgisini çeker. Bir kediyle yaşamı paylaşmak, eşsiz bir deneyimdir.
+                    </p>
+                    <h3 className="text-2xl font-bold font-headline text-gray-700 !mt-6 !mb-2">Ev Ortamına Uyum</h3>
+                    <p>
+                        Kediler temiz ve titiz hayvanlardır. Tuvalet eğitimi genellikle içgüdüseldir. Onlara temiz bir kum kabı, tırmalama tahtası ve güvenli bir dinlenme alanı sağlamak, evdeki mutlulukları için esastır.
+                    </p>
+                </div>
+            </div>
+
         </main>
       </div>
     </div>

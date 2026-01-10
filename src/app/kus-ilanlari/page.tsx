@@ -3,12 +3,14 @@
 
 import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
-import { PawPrint } from 'lucide-react';
+import { PawPrint, ChevronRight, BookOpen, MessageCircle, Star } from 'lucide-react';
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
 import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { categories } from '@/lib/breeds';
 import { ListingRow } from '@/components/ListingRow';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext } from '@/components/ui/pagination';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export default function BirdPage() {
   const filteredPets = pets.filter((pet) => pet.type === 'Bird');
@@ -83,6 +85,27 @@ export default function BirdPage() {
                     </p>
                 </div>
               )}
+            </div>
+             {/* Pagination */}
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationLink href="#" isActive>1</PaginationLink>
+                </PaginationItem>
+                 <PaginationItem>
+                  <PaginationNext href="#" />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+
+             {/* Article Section */}
+            <div className="mt-16 border-t pt-12">
+                <h2 className="text-3xl font-bold font-headline mb-4 text-gray-800 flex items-center gap-3"><BookOpen />Ev Kuşları Bakım Rehberi</h2>
+                <div className="prose max-w-none text-muted-foreground space-y-4">
+                    <p>
+                        Kuşlar, cıvıltıları ve renkli tüyleriyle eve neşe katan harika canlılardır. Onların sağlıklı ve mutlu olması için doğru bakım şarttır.
+                    </p>
+                </div>
             </div>
         </main>
       </div>

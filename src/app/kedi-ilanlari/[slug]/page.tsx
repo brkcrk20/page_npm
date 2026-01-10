@@ -4,11 +4,14 @@
 import { useParams } from 'next/navigation';
 import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
-import { PawPrint, ChevronRight } from 'lucide-react';
+import { PawPrint, ChevronRight, BookOpen, MessageCircle, Star } from 'lucide-react';
 import Link from 'next/link';
 import { categories } from '@/lib/breeds';
 import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { ListingRow } from '@/components/ListingRow';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function CatBreedPage() {
   const params = useParams();
@@ -29,6 +32,16 @@ export default function CatBreedPage() {
   const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
   const standardPets = filteredPets.filter(p => !p.featured);
   const categoryCount = pets.filter(p => p.type === 'Cat').length;
+
+  const mockReviews = [
+    {
+      id: 1,
+      author: "ScottishFoldHayranı",
+      avatar: "https://i.pravatar.cc/150?img=11",
+      comment: "Bu cinsin kulak yapısı ve sakin karakteri harika. Sahiplenmeden önce genetik hastalıkları hakkında bilgi edinmek önemli.",
+      date: "2 gün önce"
+    }
+  ];
 
   return (
     <div className="container mx-auto py-8">
@@ -97,6 +110,74 @@ export default function CatBreedPage() {
                     </p>
                 </div>
                 )}
+            </div>
+
+            {/* Pagination */}
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious href="#" />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#" isActive>1</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext href="#" />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+
+            {/* Popular Listings */}
+            <div className="mt-12">
+                <h2 className="text-2xl font-bold mb-4">Popüler {breedName} İlanları</h2>
+                <div className="relative">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {filteredPets.slice(0, 4).map((pet) => (
+                            <PetCard key={pet.id} pet={pet} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+             {/* Reviews */}
+            <div className="mt-16">
+                <div className="flex items-center gap-2 mb-6">
+                    <MessageCircle className="w-6 h-6 text-primary" />
+                    <h2 className="text-2xl font-bold">{breedName} Cinsi Hakkında Yorumlar</h2>
+                </div>
+                <div className="space-y-6">
+                  {mockReviews.map((review) => (
+                    <Card key={review.id} className="p-0">
+                      <CardContent className="p-6 flex gap-4">
+                          <Avatar>
+                              <AvatarImage src={review.avatar} alt={review.author} />
+                              <AvatarFallback>{review.author.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                              <div className="flex justify-between items-center mb-1">
+                                  <h4 className="font-semibold">{review.author}</h4>
+                                  <span className="text-xs text-muted-foreground">{review.date}</span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{review.comment}</p>
+                          </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+            </div>
+
+            {/* Article Section */}
+            <div className="mt-16 border-t pt-12">
+                <h2 className="text-3xl font-bold font-headline mb-4 text-gray-800 flex items-center gap-3"><BookOpen />{breedName} Bakımı ve Karakteri</h2>
+                <div className="prose max-w-none text-muted-foreground space-y-4">
+                    <p>
+                        {breedName}, kendine özgü görünüşü ve sevecen karakteriyle en popüler kedi ırklarından biridir. Sakin ve uysal yapıları, onları harika birer ev arkadaşı yapar.
+                    </p>
+                    <h3 className="text-2xl font-bold font-headline text-gray-700 !mt-6 !mb-2">Tüy Bakımı</h3>
+                    <p>
+                        Bu cinsin tüy yapısına göre bakım ihtiyacı değişir. Shorthair olanlar haftada bir fırçalanmaya ihtiyaç duyarken, Longhair olanların tüy yumaklarını önlemek için daha sık taranması gerekebilir.
+                    </p>
+                </div>
             </div>
         </main>
       </div>

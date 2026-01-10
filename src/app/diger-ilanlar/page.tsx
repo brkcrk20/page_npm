@@ -3,12 +3,12 @@
 
 import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
-import { PawPrint } from 'lucide-react';
+import { PawPrint, ChevronRight, BookOpen } from 'lucide-react';
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
 import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { categories } from '@/lib/breeds';
 import { ListingRow } from '@/components/ListingRow';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 
 export default function OtherPage() {
   const filteredPets = pets.filter((pet) => pet.type === 'Other');
@@ -83,6 +83,25 @@ export default function OtherPage() {
                     </p>
                 </div>
               )}
+            </div>
+
+            {/* Pagination */}
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationLink href="#" isActive>1</PaginationLink>
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+
+             {/* Article Section */}
+            <div className="mt-16 border-t pt-12">
+                <h2 className="text-3xl font-bold font-headline mb-4 text-gray-800 flex items-center gap-3"><BookOpen />Egzotik Evcil Hayvanlar</h2>
+                <div className="prose max-w-none text-muted-foreground space-y-4">
+                    <p>
+                        Kedi ve köpeklerin dışında, tavşan, hamster, kaplumbağa gibi farklı türde evcil hayvanlar da hayatımıza renk katar. Bu hayvanların bakımları özel bilgi gerektirebilir.
+                    </p>
+                </div>
             </div>
         </main>
       </div>
