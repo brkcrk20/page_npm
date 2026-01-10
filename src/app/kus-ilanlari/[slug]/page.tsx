@@ -31,8 +31,8 @@ export default function BirdBreedPage() {
 
   return (
     <div className="container mx-auto py-8">
-       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <aside className="lg:col-span-1">
+       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
+        <aside className="col-span-1">
            <BreedPageSidebar 
             categoryName={category.title}
             categoryCount={categoryCount}
@@ -42,7 +42,7 @@ export default function BirdBreedPage() {
             breedCount={filteredPets.length}
           />
         </aside>
-        <main className="lg:col-span-3">
+        <main className="col-span-1">
            <div className="text-sm text-muted-foreground mb-4 flex items-center">
             <Link href="/" className="hover:text-primary">Anasayfa</Link>
             <ChevronRight className="h-4 w-4 mx-1" />

@@ -37,12 +37,12 @@ export function BreedPageSidebar({
     breeds,
     categorySlug
 }: BreedPageSidebarProps) {
-    // If breedName exists, we are on a breed detail page or category page, so we don't use the accordion.
+    // If breedName or breeds are passed, we are on a breed detail page or category page, so we don't use the accordion.
     if (breedName || (breeds && categorySlug)) {
         return (
             <div className="w-full space-y-6">
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                   <div className="w-full p-4 flex items-center justify-between font-bold text-orange-600 bg-orange-50 border border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)] rounded-t-xl border-b-0 cursor-default">
+                   <div className="w-full p-4 flex items-center justify-between font-bold text-orange-600 bg-orange-50 border border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)] rounded-xl cursor-default">
                        <span>{categoryName}</span>
                        <span className="font-semibold px-2 py-0.5 rounded-full text-xs bg-orange-200 text-orange-700">
                            {categoryCount}
@@ -50,7 +50,7 @@ export function BreedPageSidebar({
                    </div>
 
                     {breeds && categorySlug && (
-                        <ul className="space-y-1 p-4 bg-white rounded-b-xl border border-t-0 border-gray-200">
+                        <ul className="space-y-1 p-2 bg-white rounded-b-xl border border-t-0 border-gray-200 h-auto">
                             {breeds.map(breed => {
                                 const isActive = breed.name === breedName;
                                 return (
@@ -82,7 +82,49 @@ export function BreedPageSidebar({
   // Fallback to the Accordion for the main page
   return (
     <div className="w-full space-y-6">
-       {/* This part is for the main page, which is now handled by page.tsx's CategoryFilter */}
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <h3 className="text-xl font-bold mb-4 flex items-center">
+          <Filter className="mr-2 h-5 w-5" /> Filtrele
+        </h3>
+        <Accordion type="multiple" defaultValue={['category']} className="w-full">
+          <AccordionItem value="category">
+            <AccordionTrigger className="text-base font-semibold">Kategori</AccordionTrigger>
+            <AccordionContent>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <Button variant="link" className="justify-start">Köpek ({categoryCount})</Button>
+                <Button variant="link" className="justify-start">Kedi (12)</Button>
+                <Button variant="link" className="justify-start">Kuş (8)</Button>
+                <Button variant="link" className="justify-start">Akvaryum (5)</Button>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="location">
+            <AccordionTrigger className="text-base font-semibold">Konum</AccordionTrigger>
+            <AccordionContent>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Şehir seçin..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="istanbul">İstanbul</SelectItem>
+                  <SelectItem value="ankara">Ankara</SelectItem>
+                  <SelectItem value="izmir">İzmir</SelectItem>
+                </SelectContent>
+              </Select>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="age">
+            <AccordionTrigger className="text-base font-semibold">Yaş</AccordionTrigger>
+            <AccordionContent>
+              <div>
+                <Label htmlFor="age-range">Yaş Aralığı</Label>
+                {/* Placeholder for a slider */}
+                <p className="text-sm text-muted-foreground">0 - 5 yaş</p>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
     </div>
   );
 }
