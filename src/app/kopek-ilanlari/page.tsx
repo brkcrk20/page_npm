@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
 import { PawPrint, AlertCircle, MessageCircle, Star, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -15,17 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 
-export default function DogPage() {
-  const filteredPets = pets.filter((pet) => pet.type === 'Dog');
-  const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
-  const standardPets = filteredPets.filter(p => !p.featured);
-  const category = categories.find(c => c.type === 'Dog');
-
-  if (!category) {
-    return <div>Kategori bulunamadı.</div>;
-  }
-
-  const mockReviews = [
+const initialMockReviews = [
     {
       id: 1,
       author: "Köpeksever123",
@@ -41,6 +32,37 @@ export default function DogPage() {
       date: "1 hafta önce"
     }
   ];
+
+export default function DogPage() {
+  const filteredPets = pets.filter((pet) => pet.type === 'Dog');
+  const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
+  const standardPets = filteredPets.filter(p => !p.featured);
+  const category = categories.find(c => c.type === 'Dog');
+
+  const [reviews, setReviews] = useState(initialMockReviews);
+  const [newComment, setNewComment] = useState("");
+  const [newRating, setNewRating] = useState(5);
+
+  const handleCommentSubmit = () => {
+    if (newComment.trim() === "") return;
+
+    const newReview = {
+      id: reviews.length + 1,
+      author: "Yeni Kullanıcı", // In a real app, this would be the logged-in user
+      avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
+      comment: newComment,
+      date: "şimdi"
+    };
+
+    setReviews([newReview, ...reviews]);
+    setNewComment("");
+    setNewRating(5);
+  };
+
+
+  if (!category) {
+    return <div>Kategori bulunamadı.</div>;
+  }
 
   return (
      <div className="container mx-auto py-8">
@@ -69,7 +91,7 @@ export default function DogPage() {
             <div>
               <h2 className="text-xl font-bold mb-4">Yıldızlı İlanlar</h2>
               {featuredPets.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {featuredPets.map((pet) => (
                     <PetCard key={pet.id} pet={pet} />
                   ))}
@@ -174,20 +196,20 @@ export default function DogPage() {
                                 <span className="font-medium">Puanınız:</span>
                                 <div className="flex items-center text-yellow-400">
                                     {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className="w-6 h-6 cursor-pointer fill-current" />
+                                        <Star key={i} className={`w-6 h-6 cursor-pointer ${i < newRating ? 'fill-current' : 'fill-muted stroke-muted-foreground'}`} onClick={() => setNewRating(i + 1)} />
                                     ))}
                                 </div>
                             </div>
-                            <Textarea placeholder="Yorumunuzu buraya yazın..." rows={4} />
+                            <Textarea placeholder="Yorumunuzu buraya yazın..." rows={4} value={newComment} onChange={(e) => setNewComment(e.target.value)} />
                             <div className="flex justify-end">
-                                <Button>Yorumu Gönder</Button>
+                                <Button onClick={handleCommentSubmit}>Yorumu Gönder</Button>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 <div className="space-y-6">
-                  {mockReviews.map((review) => (
+                  {reviews.map((review) => (
                     <Card key={review.id} className="p-0">
                       <CardContent className="p-6 flex gap-4">
                           <Avatar>
@@ -230,3 +252,5 @@ export default function DogPage() {
     </div>
   );
 }
+
+    

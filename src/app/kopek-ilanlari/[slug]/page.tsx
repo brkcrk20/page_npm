@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
@@ -11,29 +12,11 @@ import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { ListingRow } from '@/components/ListingRow';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardDescription, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
-export default function DogBreedPage() {
-  const params = useParams();
-  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
-
-  const category = categories.find(c => c.type === 'Dog');
-  const breed = category?.breeds.find(b => b.slug === slug);
-  const breedName = breed ? breed.name : 'Bilinmeyen Cins';
-  
-  if (!category) {
-    return <div>Kategori bulunamadı.</div>;
-  }
-
-  const filteredPets = pets.filter(
-    (pet) => pet.type === 'Dog' && pet.breed === breedName
-  );
-  
-  const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
-  const standardPets = filteredPets.filter(p => !p.featured);
-  const categoryCount = pets.filter(p => p.type === 'Dog').length;
-
-   const mockReviews = [
+const initialMockReviews = [
     {
       id: 1,
       author: "GoldenAşığı",
@@ -49,6 +32,46 @@ export default function DogBreedPage() {
       date: "2 hafta önce"
     }
   ];
+
+export default function DogBreedPage() {
+  const params = useParams();
+  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+
+  const category = categories.find(c => c.type === 'Dog');
+  const breed = category?.breeds.find(b => b.slug === slug);
+  const breedName = breed ? breed.name : 'Bilinmeyen Cins';
+  
+  const [reviews, setReviews] = useState(initialMockReviews);
+  const [newComment, setNewComment] = useState("");
+  const [newRating, setNewRating] = useState(5);
+
+  const handleCommentSubmit = () => {
+    if (newComment.trim() === "") return;
+
+    const newReview = {
+      id: reviews.length + 1,
+      author: "Yeni Kullanıcı",
+      avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
+      comment: newComment,
+      date: "şimdi"
+    };
+
+    setReviews([newReview, ...reviews]);
+    setNewComment("");
+    setNewRating(5);
+  };
+  
+  if (!category) {
+    return <div>Kategori bulunamadı.</div>;
+  }
+
+  const filteredPets = pets.filter(
+    (pet) => pet.type === 'Dog' && pet.breed === breedName
+  );
+  
+  const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
+  const standardPets = filteredPets.filter(p => !p.featured);
+  const categoryCount = pets.filter(p => p.type === 'Dog').length;
 
   return (
     <div className="container mx-auto py-8">
@@ -155,8 +178,30 @@ export default function DogBreedPage() {
                     <MessageCircle className="w-6 h-6 text-primary" />
                     <h2 className="text-2xl font-bold">{breedName} Cinsi Hakkındaki Yorumlar</h2>
                 </div>
+                <Card className="mb-8">
+                    <CardHeader>
+                        <CardTitle>Yorumunuzu Paylaşın</CardTitle>
+                        <CardDescription>Bu cins hakkındaki düşüncelerinizi diğer kullanıcılarla paylaşın.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4">
+                            <div className="flex items-center gap-2">
+                                <span className="font-medium">Puanınız:</span>
+                                <div className="flex items-center text-yellow-400">
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star key={i} className={`w-6 h-6 cursor-pointer ${i < newRating ? 'fill-current' : 'fill-muted stroke-muted-foreground'}`} onClick={() => setNewRating(i + 1)} />
+                                    ))}
+                                </div>
+                            </div>
+                            <Textarea placeholder="Yorumunuzu buraya yazın..." rows={4} value={newComment} onChange={(e) => setNewComment(e.target.value)} />
+                            <div className="flex justify-end">
+                                <Button onClick={handleCommentSubmit}>Yorumu Gönder</Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
                 <div className="space-y-6">
-                  {mockReviews.map((review) => (
+                  {reviews.map((review) => (
                     <Card key={review.id} className="p-0">
                       <CardContent className="p-6 flex gap-4">
                           <Avatar>
@@ -194,3 +239,5 @@ export default function DogBreedPage() {
     </div>
   );
 }
+
+    

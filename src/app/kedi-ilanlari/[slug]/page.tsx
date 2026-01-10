@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
@@ -15,6 +16,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
+const initialMockReviews = [
+    {
+      id: 1,
+      author: "ScottishFoldHayranı",
+      avatar: "https://i.pravatar.cc/150?img=11",
+      comment: "Bu cinsin kulak yapısı ve sakin karakteri harika. Sahiplenmeden önce genetik hastalıkları hakkında bilgi edinmek önemli.",
+      date: "2 gün önce"
+    }
+  ];
+
+
 export default function CatBreedPage() {
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
@@ -23,6 +35,26 @@ export default function CatBreedPage() {
   const breed = category?.breeds.find(b => b.slug === slug);
   const breedName = breed ? breed.name : 'Bilinmeyen Cins';
   
+  const [reviews, setReviews] = useState(initialMockReviews);
+  const [newComment, setNewComment] = useState("");
+  const [newRating, setNewRating] = useState(5);
+
+  const handleCommentSubmit = () => {
+    if (newComment.trim() === "") return;
+
+    const newReview = {
+      id: reviews.length + 1,
+      author: "Yeni Kullanıcı",
+      avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
+      comment: newComment,
+      date: "şimdi"
+    };
+
+    setReviews([newReview, ...reviews]);
+    setNewComment("");
+    setNewRating(5);
+  };
+
   if (!category) {
     return <div>Kategori bulunamadı.</div>;
   }
@@ -34,16 +66,6 @@ export default function CatBreedPage() {
   const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
   const standardPets = filteredPets.filter(p => !p.featured);
   const categoryCount = pets.filter(p => p.type === 'Cat').length;
-
-  const mockReviews = [
-    {
-      id: 1,
-      author: "ScottishFoldHayranı",
-      avatar: "https://i.pravatar.cc/150?img=11",
-      comment: "Bu cinsin kulak yapısı ve sakin karakteri harika. Sahiplenmeden önce genetik hastalıkları hakkında bilgi edinmek önemli.",
-      date: "2 gün önce"
-    }
-  ];
 
   return (
     <div className="container mx-auto py-8">
@@ -158,19 +180,19 @@ export default function CatBreedPage() {
                                 <span className="font-medium">Puanınız:</span>
                                 <div className="flex items-center text-yellow-400">
                                     {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className="w-6 h-6 cursor-pointer fill-current" />
+                                        <Star key={i} className={`w-6 h-6 cursor-pointer ${i < newRating ? 'fill-current' : 'fill-muted stroke-muted-foreground'}`} onClick={() => setNewRating(i + 1)} />
                                     ))}
                                 </div>
                             </div>
-                            <Textarea placeholder="Yorumunuzu buraya yazın..." rows={4} />
+                            <Textarea placeholder="Yorumunuzu buraya yazın..." rows={4} value={newComment} onChange={(e) => setNewComment(e.target.value)} />
                             <div className="flex justify-end">
-                                <Button>Yorumu Gönder</Button>
+                                <Button onClick={handleCommentSubmit}>Yorumu Gönder</Button>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
                 <div className="space-y-6">
-                  {mockReviews.map((review) => (
+                  {reviews.map((review) => (
                     <Card key={review.id} className="p-0">
                       <CardContent className="p-6 flex gap-4">
                           <Avatar>
@@ -208,3 +230,5 @@ export default function CatBreedPage() {
     </div>
   );
 }
+
+    
