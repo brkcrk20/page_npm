@@ -42,16 +42,26 @@ export default function IlanPage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const pet = pets.find((p) => p.id === id);
 
-  const galleryImages = [
-    'https://picsum.photos/seed/pomeranian-1/800/600',
+  const imageDetails = pet ? PlaceHolderImages.find((img) => img.id === pet.image) : null;
+  const galleryImages = imageDetails ? [
+    imageDetails.imageUrl,
     'https://picsum.photos/seed/pomeranian-2/800/600',
     'https://picsum.photos/seed/pomeranian-3/800/600',
     'https://picsum.photos/seed/pomeranian-4/800/600',
     'https://picsum.photos/seed/pomeranian-5/800/600'
+  ] : [
+    'https://picsum.photos/seed/placeholder/800/600'
   ];
 
   const [mainImage, setMainImage] = useState(galleryImages[0]);
-  
+   
+  useEffect(() => {
+    if (imageDetails) {
+        setMainImage(imageDetails.imageUrl);
+    }
+  }, [imageDetails]);
+
+
   const mockReviews = [
     {
       id: 1,
@@ -76,6 +86,8 @@ export default function IlanPage() {
   }
 
   const similarPets = pets.filter(p => p.type === pet.type && p.id !== pet.id).slice(0, 4);
+  const priceDisplay = pet.listingType === 'Sale' ? `${(Math.random() * 5000 + 1000).toFixed(0)} TL` : 'Görüşülür';
+
 
   return (
     <div className="container mx-auto py-8">
@@ -83,8 +95,8 @@ export default function IlanPage() {
         <div className="flex justify-between items-center mb-4">
             <div className="text-sm text-muted-foreground">
                 <Link href="/" className="hover:text-primary">Anasayfa</Link> &gt; 
-                <Link href="/kopek-ilanlari" className="hover:text-primary"> Köpek İlanları</Link> &gt; 
-                <span className="font-semibold text-foreground"> Pomeranian Boo</span>
+                <Link href={`/${pet.type.toLowerCase()}-ilanlari`} className="hover:text-primary"> {pet.type} İlanları</Link> &gt; 
+                <span className="font-semibold text-foreground"> {pet.breed}</span>
             </div>
             <div className="flex items-center gap-4 text-sm">
                 <Link href="#" className="flex items-center gap-1 hover:text-primary"><Star className="w-4 h-4" /> Favorilere Ekle</Link>
@@ -97,7 +109,7 @@ export default function IlanPage() {
             </div>
         </div>
 
-        <h1 className="text-2xl font-bold mb-6">Teddybear Pomerianboo</h1>
+        <h1 className="text-2xl font-bold mb-6">{pet.name} - {pet.breed}</h1>
       
         <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-8">
         
@@ -106,7 +118,7 @@ export default function IlanPage() {
             {/* Gallery */}
             <div>
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border mb-2">
-                    <Image src={mainImage} alt="Main pet image" fill className="object-cover" />
+                    <Image src={mainImage} alt={pet.name} fill className="object-cover" />
                      <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white hover:bg-black/70">
                         <ChevronLeft />
                     </Button>
@@ -149,19 +161,19 @@ export default function IlanPage() {
         {/* --- 2. ORTA SÜTUN (TEKNİK TABLO) --- */}
         <div className="lg:col-span-4">
             <div className="border rounded-lg bg-white p-4">
-                <h2 className="text-2xl font-bold text-blue-600 mb-1">Görüşülür</h2>
+                <h2 className="text-2xl font-bold text-blue-600 mb-1">{priceDisplay}</h2>
                 <div className="text-sm text-muted-foreground mb-4">
-                    İstanbul / Tuzla / Postane Mah.
+                    {pet.location}
                 </div>
 
                 <ul className="info-table text-sm">
-                    <li><span className="label">Türü</span><span className="value">Köpek Cinsleri</span></li>
-                    <li><span className="label">Cinsi</span><span className="value"><Link href="#" className="text-red-600 hover:underline">Pomeranian Boo</Link></span></li>
-                    <li><span className="label">İlan No</span><span className="value text-red-600 font-semibold">105693</span></li>
+                    <li><span className="label">Türü</span><span className="value">{pet.type} Cinsleri</span></li>
+                    <li><span className="label">Cinsi</span><span className="value"><Link href="#" className="text-red-600 hover:underline">{pet.breed}</Link></span></li>
+                    <li><span className="label">İlan No</span><span className="value text-red-600 font-semibold">{pet.id}</span></li>
                     <li><span className="label">İlan Tarihi</span><span className="value">6 Ocak 2026</span></li>
-                    <li><span className="label">Yaş</span><span className="value">2 Aylık</span></li>
+                    <li><span className="label">Yaş</span><span className="value">{pet.age}</span></li>
                     <li><span className="label">Cinsiyet</span><span className="value">Erkek</span></li>
-                    <li><span className="label">Durum</span><span className="value">Görüşülür</span></li>
+                    <li><span className="label">Durum</span><span className="value">{pet.listingType === 'Sale' ? 'Satılık' : 'Sahiplenme'}</span></li>
                     <li><span className="label">Aşı</span><span className="value">Var</span></li>
                     <li><span className="label">İç Parazit</span><span className="value">Var</span></li>
                     <li><span className="label">Dış Parazit</span><span className="value">Yok</span></li>
