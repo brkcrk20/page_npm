@@ -67,7 +67,7 @@ const CategoryFilter = ({ category, onTriggerClick, isSelected }: { category: Ca
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-           <ul className="space-y-1 max-h-60 overflow-y-auto pr-2">
+           <ul className="space-y-1 pr-2">
             {filteredBreeds.length > 0 ? filteredBreeds.map((breed) => (
               <li key={breed.name}>
                  <Link href={`/${category.slug}/${breed.slug}`} className="flex items-center justify-between text-muted-foreground hover:text-primary group p-2 rounded-md hover:bg-secondary/50">
@@ -153,7 +153,7 @@ export default function HomePage() {
   return (
     <div className="bg-secondary/50">
       <div className="container mx-auto py-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
           <aside className="col-span-1">
             <div className="bg-white p-4 rounded-lg shadow-sm">
               <Accordion type="multiple" value={openAccordion} onValueChange={setOpenAccordion} className="w-full space-y-1">
@@ -168,7 +168,7 @@ export default function HomePage() {
               </Accordion>
             </div>
           </aside>
-          <main className="col-span-3 space-y-12">
+          <main className="col-span-1 space-y-12">
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Yıldızlı İlanlar</h2>
@@ -178,7 +178,7 @@ export default function HomePage() {
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {displayedFeaturedPets.map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
                 ))}
@@ -193,7 +193,7 @@ export default function HomePage() {
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {dogPets.slice(0, 4).map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
                 ))}
@@ -208,7 +208,7 @@ export default function HomePage() {
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {catPets.slice(0, 4).map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
                 ))}
@@ -223,7 +223,7 @@ export default function HomePage() {
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {birdPets.slice(0, 4).map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
                 ))}
@@ -238,7 +238,7 @@ export default function HomePage() {
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {aquariumPets.slice(0, 4).map((pet) => (
                   <PetCard key={pet.id} pet={pet} />
                 ))}
