@@ -29,6 +29,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import NotFound from '@/app/not-found';
 
 const WhatsappIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -71,16 +72,7 @@ export default function IlanPage() {
   ];
 
   if (!pet) {
-    return (
-      <div className="container mx-auto py-20 text-center">
-        <AlertCircle className="mx-auto h-16 w-16 text-destructive" />
-        <h1 className="mt-4 text-2xl font-bold">İlan Bulunamadı</h1>
-        <p className="text-muted-foreground">Aradığınız ilan mevcut değil veya kaldırılmış olabilir.</p>
-        <Button asChild className="mt-6">
-          <Link href="/"><Home className="mr-2" /> Anasayfaya Dön</Link>
-        </Button>
-      </div>
-    );
+    return <NotFound />;
   }
 
   const similarPets = pets.filter(p => p.type === pet.type && p.id !== pet.id).slice(0, 4);
