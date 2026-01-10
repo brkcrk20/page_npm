@@ -25,6 +25,9 @@ import { Badge } from '@/components/ui/badge';
 import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 
 const WhatsappIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -46,6 +49,25 @@ export default function IlanPage() {
   ];
 
   const [mainImage, setMainImage] = useState(galleryImages[0]);
+  
+  const mockReviews = [
+    {
+      id: 1,
+      author: "Ayşe Yılmaz",
+      avatar: "https://i.pravatar.cc/150?img=1",
+      rating: 5,
+      comment: "İlan sahibi çok ilgiliydi, yavruyu sağlıklı bir şekilde teslim aldık. Herkese tavsiye ederim!",
+      date: "2 gün önce"
+    },
+    {
+      id: 2,
+      author: "Mehmet Kaya",
+      avatar: "https://i.pravatar.cc/150?img=2",
+      rating: 4,
+      comment: "İletişim kurmak kolay oldu. Köpeğin aşıları tamdı. Sadece buluşma yerinde biraz bekledik ama genel olarak memnun kaldık.",
+      date: "1 hafta önce"
+    }
+  ];
 
   if (!pet) {
     return (
@@ -231,6 +253,61 @@ export default function IlanPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {similarPets.map((pet) => (
             <PetCard key={pet.id} pet={pet} />
+          ))}
+        </div>
+      </div>
+      
+       {/* İlan Değerlendirmeleri Bölümü */}
+       <div className="mt-16">
+        <h2 className="text-2xl font-bold mb-6">İlan Değerlendirmeleri</h2>
+        
+        {/* Yorum Yazma Formu */}
+        <Card className="mb-8">
+            <CardHeader>
+                <CardTitle>Yorumunuzu Paylaşın</CardTitle>
+                <CardDescription>Bu ilan hakkındaki düşüncelerinizi diğer kullanıcılarla paylaşın.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="font-medium">Puanınız:</span>
+                        <div className="flex items-center text-yellow-400">
+                            {[...Array(5)].map((_, i) => (
+                                <Star key={i} className="w-6 h-6 cursor-pointer fill-current" />
+                            ))}
+                        </div>
+                    </div>
+                    <Textarea placeholder="Yorumunuzu buraya yazın..." rows={4} />
+                    <div className="flex justify-end">
+                        <Button>Yorumu Gönder</Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
+        {/* Mevcut Yorumlar */}
+        <div className="space-y-6">
+          {mockReviews.map((review) => (
+            <Card key={review.id} className="p-0">
+              <CardContent className="p-6 flex gap-4">
+                  <Avatar>
+                      <AvatarImage src={review.avatar} alt={review.author} />
+                      <AvatarFallback>{review.author.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                      <div className="flex justify-between items-center mb-1">
+                          <h4 className="font-semibold">{review.author}</h4>
+                          <span className="text-xs text-muted-foreground">{review.date}</span>
+                      </div>
+                      <div className="flex items-center mb-2">
+                          {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                          ))}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{review.comment}</p>
+                  </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
