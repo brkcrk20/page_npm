@@ -1,84 +1,162 @@
-
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PawPrint, Twitter, Instagram, Facebook } from 'lucide-react';
+import {
+  PawPrint,
+  Twitter,
+  Instagram,
+  Facebook,
+  Youtube,
+  Linkedin,
+  Phone,
+  Mail,
+  MessageCircle,
+  ArrowUp,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useToast } from '@/hooks/use-toast';
+
+// A simple SVG placeholder for logos like iyzico, visa, etc.
+const PaymentBadge = ({ text, width = 80, height = 30 }: { text: string, width?: number, height?: number }) => (
+  <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} fill="none" xmlns="http://www.w3.org/2000/svg" className="text-muted-foreground">
+    <rect width={width} height={height} rx="4" fill="currentColor" fillOpacity="0.1" />
+    <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="currentColor" fontSize="10" fontWeight="bold">
+      {text}
+    </text>
+  </svg>
+);
+
 
 export function Footer() {
-  const year = new Date().getFullYear();
-  const auth = useAuth();
-  const { toast } = useToast();
+  const [isVisible, setIsVisible] = useState(false);
 
-  const handleLogin = async (userType: 'admin' | 'premium' | 'user') => {
-    const credentials = {
-      admin: { email: 'admin@patisemti.com', password: 'password' },
-      premium: { email: 'premium@patisemti.com', password: 'password' },
-      user: { email: 'user@patisemti.com', password: 'password' },
-    };
-
-    const { email, password } = credentials[userType];
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({
-        title: 'Giriş Başarılı',
-        description: `${email} olarak giriş yapıldı.`,
-      });
-    } catch (error: any) {
-      console.error(`${userType} login failed`, error);
-      let description = 'Giriş sırasında bilinmeyen bir hata oluştu.';
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
-        description = `Test kullanıcısı (${email}) bulunamadı. Lütfen Firebase Authentication panelinden oluşturun. Şifre: "password"`;
-      }
-      toast({
-        variant: 'destructive',
-        title: 'Giriş Başarısız',
-        description: description,
-      });
-    }
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
   };
 
+  useEffect(() => {
+    const toggleVisibility = () => {
+      if (window.pageYOffset > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener('scroll', toggleVisibility);
+
+    return () => window.removeEventListener('scroll', toggleVisibility);
+  }, []);
+
+  const footerLinkStyle = "text-sm text-gray-600 hover:text-primary transition-colors";
+  const footerTitleStyle = "text-base font-bold text-gray-800 mb-4";
+
   return (
-    <footer className="bg-secondary">
-      <div className="container mx-auto py-8 px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center space-x-2 mb-4 md:mb-0">
-            <PawPrint className="h-6 w-6 text-primary" />
-            <span className="font-bold font-headline">Patisemti</span>
+    <footer className="bg-secondary/50 border-t">
+      <div className="container mx-auto py-12 px-4">
+        {/* Top Section: Links */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+          {/* Column 1: Brand */}
+          <div className="col-span-1 lg:col-span-1">
+            <Link href="/" className="flex items-center space-x-2 mb-4">
+              <PawPrint className="h-8 w-8 text-primary" />
+              <span className="text-2xl font-bold font-headline">Patisemti</span>
+            </Link>
+            <p className="text-sm text-gray-600">
+              Evcil Hayvan Sahiplendirme platformu Patisemti, yavru evcil hayvan cinsleri ve diğer tüm sahiplendirme ilanları ile yayında!
+            </p>
           </div>
-          <div className="text-center md:text-left text-sm text-muted-foreground mb-4 md:mb-0 space-x-4">
-            <span>&copy; {year} Patisemti. Tüm hakları saklıdır.</span>
-            <Link href="/admin" className="hover:text-primary underline">Admin</Link>
+
+          {/* Column 2: Dog Breeds */}
+          <div>
+            <h3 className={footerTitleStyle}>Köpek İlanları</h3>
+            <ul className="space-y-2">
+              <li><Link href="#" className={footerLinkStyle}>Pomeranian Boo</Link></li>
+              <li><Link href="#" className={footerLinkStyle}>Maltipoo</Link></li>
+              <li><Link href="#" className={footerLinkStyle}>Maltese Terrier</Link></li>
+              <li><Link href="#" className={footerLinkStyle}>Golden Retriever</Link></li>
+              <li><Link href="#" className={footerLinkStyle}>Toy Poodle</Link></li>
+            </ul>
           </div>
-          <div className="flex space-x-4">
-            <Link href="#" className="text-muted-foreground hover:text-primary">
-              <Twitter />
-            </Link>
-            <Link href="#" className="text-muted-foreground hover:text-primary">
-              <Instagram />
-            </Link>
-            <Link href="#" className="text-muted-foreground hover:text-primary">
-              <Facebook />
-            </Link>
+
+          {/* Column 3: Cat Breeds */}
+          <div>
+            <h3 className={footerTitleStyle}>Kedi İlanları</h3>
+            <ul className="space-y-2">
+              <li><Link href="#" className={footerLinkStyle}>British Shorthair</Link></li>
+              <li><Link href="#" className={footerLinkStyle}>Scottish Fold</Link></li>
+              <li><Link href="#" className={footerLinkStyle}>İran Kedisi</Link></li>
+              <li><Link href="#" className={footerLinkStyle}>Siyam Kedisi</Link></li>
+              <li><Link href="#" className={footerLinkStyle}>Bengal Kedisi</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 4: Corporate */}
+          <div>
+            <h3 className={footerTitleStyle}>Kurumsal</h3>
+            <ul className="space-y-2">
+              <li><Link href="#" className={footerLinkStyle}>Gizlilik Sözleşmesi</Link></li>
+              <li><Link href="#" className={footerLinkStyle}>Kullanım Şartları</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 5: General */}
+          <div>
+            <h3 className={footerTitleStyle}>Genel Bilgiler</h3>
+            <ul className="space-y-2">
+              <li><Link href="#" className={footerLinkStyle}>Hakkımızda</Link></li>
+              <li><Link href="#" className={footerLinkStyle}>İletişim</Link></li>
+            </ul>
           </div>
         </div>
-        <div className="mt-8 pt-8 border-t border-border/50 flex flex-col items-center justify-center space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-            <p className="text-sm text-muted-foreground">Geliştirme Amaçlı Girişler:</p>
-            <Button variant="outline" size="sm" onClick={() => handleLogin('admin')}>
-                Admin Girişi
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleLogin('premium')}>
-                Premium Üye Girişi
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleLogin('user')}>
-                Normal Üye Girişi
-            </Button>
+
+        {/* Middle Section: Contact Info & Social */}
+        <div className="border-t mt-10 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex flex-col md:flex-row items-center gap-6 text-sm text-gray-700">
+                <h3 className="font-bold text-base hidden md:block">BİZE ULAŞIN</h3>
+                <Link href="tel:05550873777" className="flex items-center gap-2 hover:text-primary"><Phone className="w-4 h-4"/> 0555 087 37 77</Link>
+                <Link href="mailto:info@patisemti.com" className="flex items-center gap-2 hover:text-primary"><Mail className="w-4 h-4"/> info@patisemti.com</Link>
+                <Link href="https://wa.me/905550873777" target="_blank" className="flex items-center gap-2 hover:text-primary"><MessageCircle className="w-4 h-4"/> Whatsapp: 0555 087 37 77</Link>
+            </div>
+            <div className="flex space-x-2">
+                <Link href="#" className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center hover:opacity-80"><Facebook className="w-5 h-5"/></Link>
+                <Link href="#" className="w-8 h-8 rounded-full bg-sky-500 text-white flex items-center justify-center hover:opacity-80"><Twitter className="w-5 h-5"/></Link>
+                <Link href="#" className="w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center hover:opacity-80"><Instagram className="w-5 h-5"/></Link>
+                <Link href="#" className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center hover:opacity-80"><Youtube className="w-5 h-5"/></Link>
+                <Link href="#" className="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center hover:opacity-80"><Linkedin className="w-5 h-5"/></Link>
+            </div>
+        </div>
+
+        {/* Bottom Section: Copyright & Badges */}
+        <div className="border-t mt-8 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-gray-500 order-2 md:order-1">
+            &copy; {new Date().getFullYear()} Patisemti. Tüm hakları saklıdır.
+          </p>
+          <div className="flex items-center gap-3 order-1 md:order-2">
+            <PaymentBadge text="ISO" width={40} />
+            <PaymentBadge text="TÜRKPATENT" />
+            <PaymentBadge text="iyzico" />
+            <PaymentBadge text="Mastercard" />
+            <PaymentBadge text="VISA" />
+            <PaymentBadge text="AMEX" />
+            <PaymentBadge text="troy" />
+          </div>
         </div>
       </div>
+      
+       {/* Scroll to Top Button */}
+      {isVisible && (
+        <Button
+          onClick={scrollToTop}
+          className="fixed bottom-5 right-5 h-12 w-12 rounded-full bg-gray-800 text-white shadow-lg hover:bg-gray-900"
+          aria-label="Go to top"
+        >
+          <ArrowUp className="h-6 w-6" />
+        </Button>
+      )}
     </footer>
   );
 }
