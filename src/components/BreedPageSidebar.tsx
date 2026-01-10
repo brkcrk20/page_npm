@@ -37,119 +37,73 @@ export function BreedPageSidebar({
     breeds,
     categorySlug
 }: BreedPageSidebarProps) {
+    // If breedName exists, we are on a breed detail page or category page, so we don't use the accordion.
+    if (breedName || (breeds && categorySlug)) {
+        return (
+            <div className="w-full space-y-6">
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div className="w-full p-4 flex items-center justify-between font-bold text-orange-600 bg-orange-50 border border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)] rounded-t-xl border-b-0 cursor-default">
+                       <span>{categoryName}</span>
+                       <span className="font-semibold px-2 py-0.5 rounded-full text-xs bg-orange-200 text-orange-700">
+                           {categoryCount}
+                       </span>
+                   </div>
+
+                    {breeds && categorySlug && (
+                        <ul className="space-y-1 p-4 bg-white rounded-b-xl border border-t-0 border-gray-200">
+                            {breeds.map(breed => {
+                                const isActive = breed.name === breedName;
+                                return (
+                                 <li key={breed.id}>
+                                    <Link 
+                                        href={`/${categorySlug}/${breed.slug}`} 
+                                        className={cn(
+                                            "flex justify-between items-center text-sm p-3 rounded-lg border transition-all duration-300 ease-in-out group",
+                                            isActive 
+                                                ? "bg-orange-50 border-orange-500 text-orange-600 font-bold shadow-[0_0_15px_rgba(249,115,22,0.5)] scale-[1.01]"
+                                                : "text-muted-foreground border-transparent hover:border-orange-200 hover:shadow-orange-100 hover:shadow-md hover:-translate-y-px"
+                                        )}
+                                    >
+                                       <span className="truncate">{breed.name}</span>
+                                       <span className={cn("font-semibold px-2 py-0.5 rounded-full text-xs", isActive ? "bg-orange-200 text-orange-700" : "bg-secondary")}>
+                                           {breed.count}
+                                       </span>
+                                    </Link>
+                                </li>
+                                )
+                            })}
+                        </ul>
+                    )}
+                </div>
+                
+                <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm">
+                     <div>
+                        <Label htmlFor="city-select">İl Seçiniz</Label>
+                         <Select>
+                            <SelectTrigger id="city-select">
+                                <SelectValue placeholder="Şehir seçin..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="istanbul">İstanbul</SelectItem>
+                                <SelectItem value="ankara">Ankara</SelectItem>
+                                <SelectItem value="izmir">İzmir</SelectItem>
+                                <SelectItem value="bursa">Bursa</SelectItem>
+                                <SelectItem value="adana">Adana</SelectItem>
+                            </SelectContent>
+                        </Select>
+                     </div>
+                    <Button className="w-full text-base" size="lg">
+                        <Filter className="mr-2 h-4 w-4" /> Filtrele
+                    </Button>
+                </div>
+            </div>
+        )
+    }
+
+  // Fallback to the Accordion for the main page
   return (
     <div className="w-full space-y-6">
-        <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div 
-              className={cn(
-                "w-full p-4 mb-4 rounded-xl border font-bold flex justify-between items-center",
-                "border-orange-500 bg-orange-50 text-orange-600 shadow-[0_0_15px_rgba(249,115,22,0.5)]"
-              )}
-            >
-                {categoryName}
-                <span className={cn("font-semibold px-2 py-0.5 rounded-full text-xs", "bg-orange-200 text-orange-700")}>
-                    {categoryCount}
-                </span>
-            </div>
-
-            {breeds && categorySlug && (
-                <ul className="space-y-1">
-                    {breeds.map(breed => {
-                        const isActive = breed.name === breedName;
-                        return (
-                         <li key={breed.id}>
-                            <Link 
-                                href={`/${categorySlug}/${breed.slug}`} 
-                                className={cn(
-                                    "flex justify-between items-center text-sm p-3 rounded-lg border transition-all duration-300 ease-in-out group",
-                                    isActive 
-                                        ? "bg-orange-50 border-orange-500 text-orange-600 font-bold shadow-[0_0_15px_rgba(249,115,22,0.5)] scale-[1.01]"
-                                        : "text-muted-foreground border-transparent hover:border-orange-200 hover:shadow-orange-100 hover:shadow-md hover:-translate-y-px"
-                                )}
-                            >
-                               <span className="truncate">{breed.name}</span>
-                               <span className={cn("font-semibold px-2 py-0.5 rounded-full text-xs", isActive ? "bg-orange-200 text-orange-700" : "bg-secondary")}>
-                                   {breed.count}
-                               </span>
-                            </Link>
-                        </li>
-                        )
-                    })}
-                </ul>
-            )}
-        </div>
-        
-        <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm">
-             <div>
-                <Label htmlFor="city-select">İl Seçiniz</Label>
-                 <Select>
-                    <SelectTrigger id="city-select">
-                        <SelectValue placeholder="Şehir seçin..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="istanbul">İstanbul</SelectItem>
-                        <SelectItem value="ankara">Ankara</SelectItem>
-                        <SelectItem value="izmir">İzmir</SelectItem>
-                        <SelectItem value="bursa">Bursa</SelectItem>
-                        <SelectItem value="adana">Adana</SelectItem>
-                    </SelectContent>
-                </Select>
-             </div>
-            <Button className="w-full text-base" size="lg">
-                <Filter className="mr-2 h-4 w-4" /> Filtrele
-            </Button>
-        </div>
-
-      <Accordion type="multiple" className="w-full bg-white rounded-lg p-4 shadow-sm">
-        <AccordionItem value="age">
-          <AccordionTrigger>Yaş</AccordionTrigger>
-          <AccordionContent>
-            İçerik yakında eklenecek.
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="gender">
-          <AccordionTrigger>Cinsiyet</AccordionTrigger>
-          <AccordionContent>
-            İçerik yakında eklenecek.
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="status">
-          <AccordionTrigger>Durum</AccordionTrigger>
-          <AccordionContent>
-            İçerik yakında eklenecek.
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="vaccine">
-          <AccordionTrigger>Aşı</AccordionTrigger>
-          <AccordionContent>
-            İçerik yakında eklenecek.
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="internal_parasite">
-          <AccordionTrigger>İç Parazit</AccordionTrigger>
-          <AccordionContent>
-            İçerik yakında eklenecek.
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="external_parasite">
-          <AccordionTrigger>Dış Parazit</AccordionTrigger>
-          <AccordionContent>
-            İçerik yakında eklenecek.
-          </AccordionContent>
-        </AccordionItem>
-         <AccordionItem value="credit_card">
-          <AccordionTrigger>Kredi Kartına Ödeme</AccordionTrigger>
-          <AccordionContent>
-            İçerik yakında eklenecek.
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="shipping" className="border-b-0">
-          <AccordionTrigger>Şehir Dışına Gönderim</AccordionTrigger>
-          <AccordionContent>
-            İçerik yakında eklenecek.
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+       {/* This part is for the main page, which is now handled by page.tsx's CategoryFilter */}
     </div>
   );
 }
