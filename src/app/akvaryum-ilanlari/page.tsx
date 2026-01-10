@@ -16,14 +16,14 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 export default function AquariumPage() {
   const filteredPets = pets.filter((pet) => pet.type === 'Aquarium');
   const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
-  const standardPets = filteredPets.filter(p => !p.featured);
+  const allPetsInCateogry = filteredPets;
   const category = categories.find(c => c.type === 'Aquarium');
   
   const [currentPage, setCurrentPage] = useState(1);
   const listingsPerPage = 20;
 
-  const totalPages = Math.ceil(standardPets.length / listingsPerPage);
-  const paginatedListings = standardPets.slice(
+  const totalPages = Math.ceil(allPetsInCateogry.length / listingsPerPage);
+  const paginatedListings = allPetsInCateogry.slice(
     (currentPage - 1) * listingsPerPage,
     currentPage * listingsPerPage
   );

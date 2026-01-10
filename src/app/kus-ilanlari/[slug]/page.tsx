@@ -33,11 +33,11 @@ export default function BirdBreedPage() {
   );
   
   const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
-  const standardPets = filteredPets.filter(p => !p.featured);
+  const allPetsInCateogry = filteredPets;
   const categoryCount = pets.filter(p => p.type === 'Bird').length;
 
-  const totalPages = Math.ceil(standardPets.length / listingsPerPage);
-  const paginatedListings = standardPets.slice(
+  const totalPages = Math.ceil(allPetsInCateogry.length / listingsPerPage);
+  const paginatedListings = allPetsInCateogry.slice(
     (currentPage - 1) * listingsPerPage,
     currentPage * listingsPerPage
   );
