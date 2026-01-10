@@ -23,6 +23,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { pets } from '@/lib/data';
+import { PetCard } from '@/components/PetCard';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const WhatsappIcon = () => (
@@ -59,6 +60,7 @@ export default function IlanPage() {
     );
   }
 
+  const similarPets = pets.filter(p => p.type === pet.type && p.id !== pet.id).slice(0, 4);
 
   return (
     <div className="container mx-auto py-8">
@@ -220,6 +222,16 @@ export default function IlanPage() {
                     Sonraki İlan <ChevronRight className="ml-1"/>
                 </Button>
             </div>
+        </div>
+      </div>
+      
+      {/* Benzer İlanlar Bölümü */}
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold mb-6">Benzer İlanlar</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {similarPets.map((pet) => (
+            <PetCard key={pet.id} pet={pet} />
+          ))}
         </div>
       </div>
     </div>
