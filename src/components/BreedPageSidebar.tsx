@@ -42,7 +42,7 @@ export function BreedPageSidebar({
         return (
             <div className="w-full space-y-6">
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div className="w-full p-4 flex items-center justify-between font-bold text-orange-600 bg-orange-50 border border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)] rounded-t-xl border-b-0 cursor-default">
+                   <div className="w-full p-4 flex items-center justify-between font-bold text-orange-600 bg-orange-50 border border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)] rounded-t-xl border-b-0 cursor-default">
                        <span>{categoryName}</span>
                        <span className="font-semibold px-2 py-0.5 rounded-full text-xs bg-orange-200 text-orange-700">
                            {categoryCount}
@@ -74,27 +74,6 @@ export function BreedPageSidebar({
                             })}
                         </ul>
                     )}
-                </div>
-                
-                <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm">
-                     <div>
-                        <Label htmlFor="city-select">İl Seçiniz</Label>
-                         <Select>
-                            <SelectTrigger id="city-select">
-                                <SelectValue placeholder="Şehir seçin..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="istanbul">İstanbul</SelectItem>
-                                <SelectItem value="ankara">Ankara</SelectItem>
-                                <SelectItem value="izmir">İzmir</SelectItem>
-                                <SelectItem value="bursa">Bursa</SelectItem>
-                                <SelectItem value="adana">Adana</SelectItem>
-                            </SelectContent>
-                        </Select>
-                     </div>
-                    <Button className="w-full text-base" size="lg">
-                        <Filter className="mr-2 h-4 w-4" /> Filtrele
-                    </Button>
                 </div>
             </div>
         )
