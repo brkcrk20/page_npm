@@ -52,7 +52,7 @@ export function PetCard({ pet }: PetCardProps) {
           <div className='flex-grow'>
             <h3 className="text-sm font-semibold truncate mb-1 group-hover:text-primary transition-colors leading-tight">{pet.name}</h3>
             <div className="text-xs text-center space-y-0.5">
-                <p className="text-primary font-semibold">{pet.age}</p>
+                <p className="text-primary font-semibold">{pet.age.replace(/years?/, 'yaşında')}</p>
                 <p className="font-bold text-gray-800">{pet.breed}</p>
             </div>
           </div>
