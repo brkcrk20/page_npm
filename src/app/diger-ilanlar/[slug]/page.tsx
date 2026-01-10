@@ -2,6 +2,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
 import { PawPrint, ChevronRight, BookOpen } from 'lucide-react';
@@ -9,7 +10,7 @@ import Link from 'next/link';
 import { categories } from '@/lib/breeds';
 import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { ListingRow } from '@/components/ListingRow';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 export default function OtherBreedPage() {
   const params = useParams();
@@ -18,6 +19,10 @@ export default function OtherBreedPage() {
   const category = categories.find(c => c.type === 'Other');
   const breed = category?.breeds.find(b => b.slug === slug);
   const breedName = breed ? breed.name : 'Bilinmeyen Cins';
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const listingsPerPage = 20;
+
   
   if (!category) {
     return <div>Kategori bulunamadı.</div>;
@@ -30,6 +35,13 @@ export default function OtherBreedPage() {
   const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
   const standardPets = filteredPets.filter(p => !p.featured);
   const categoryCount = pets.filter(p => p.type === 'Other').length;
+
+  const totalPages = Math.ceil(standardPets.length / listingsPerPage);
+  const paginatedListings = standardPets.slice(
+    (currentPage - 1) * listingsPerPage,
+    currentPage * listingsPerPage
+  );
+
 
   return (
     <div className="container mx-auto py-8">
@@ -81,9 +93,9 @@ export default function OtherBreedPage() {
 
             {/* Standard List Section */}
             <div>
-              {standardPets.length > 0 ? (
+              {paginatedListings.length > 0 ? (
                 <div className="space-y-px bg-gray-200 border border-gray-200 rounded-lg">
-                    {standardPets.map((pet) => (
+                    {paginatedListings.map((pet) => (
                     <ListingRow key={pet.id} pet={pet} />
                     ))}
                 </div>
@@ -101,13 +113,46 @@ export default function OtherBreedPage() {
             </div>
 
              {/* Pagination */}
-            <Pagination className="mt-8">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationLink href="#" isActive>1</PaginationLink>
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            {totalPages > 1 && (
+                <Pagination className="mt-8">
+                <PaginationContent>
+                    <PaginationItem>
+                    <PaginationPrevious 
+                        href="#" 
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(p => Math.max(1, p - 1));
+                        }}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                         <PaginationItem key={i}>
+                            <PaginationLink 
+                                href="#"
+                                isActive={currentPage === i + 1}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage(i + 1)
+                                }}
+                            >
+                                {i + 1}
+                            </PaginationLink>
+                         </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                    <PaginationNext 
+                        href="#"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(p => Math.min(totalPages, p + 1));
+                        }}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                     />
+                    </PaginationItem>
+                </PaginationContent>
+                </Pagination>
+            )}
 
              {/* Article Section */}
             <div className="mt-16 border-t pt-12">

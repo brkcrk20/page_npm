@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
 import { PawPrint, BookOpen } from 'lucide-react';
@@ -9,7 +10,7 @@ import { ChevronRight } from 'lucide-react';
 import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { categories } from '@/lib/breeds';
 import { ListingRow } from '@/components/ListingRow';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 
 
 export default function AquariumPage() {
@@ -17,6 +18,16 @@ export default function AquariumPage() {
   const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
   const standardPets = filteredPets.filter(p => !p.featured);
   const category = categories.find(c => c.type === 'Aquarium');
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const listingsPerPage = 20;
+
+  const totalPages = Math.ceil(standardPets.length / listingsPerPage);
+  const paginatedListings = standardPets.slice(
+    (currentPage - 1) * listingsPerPage,
+    currentPage * listingsPerPage
+  );
+
 
   if (!category) {
     return <div>Kategori bulunamadı.</div>;
@@ -68,9 +79,9 @@ export default function AquariumPage() {
             
             {/* Standard List Section */}
             <div>
-              {standardPets.length > 0 ? (
+              {paginatedListings.length > 0 ? (
                 <div className="space-y-px bg-gray-200 border border-gray-200 rounded-lg">
-                  {standardPets.map((pet) => (
+                  {paginatedListings.map((pet) => (
                     <ListingRow key={pet.id} pet={pet} />
                   ))}
                 </div>
@@ -88,13 +99,46 @@ export default function AquariumPage() {
             </div>
 
              {/* Pagination */}
-            <Pagination className="mt-8">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationLink href="#" isActive>1</PaginationLink>
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            {totalPages > 1 && (
+                <Pagination className="mt-8">
+                <PaginationContent>
+                    <PaginationItem>
+                    <PaginationPrevious 
+                        href="#" 
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(p => Math.max(1, p - 1));
+                        }}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                         <PaginationItem key={i}>
+                            <PaginationLink 
+                                href="#"
+                                isActive={currentPage === i + 1}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage(i + 1)
+                                }}
+                            >
+                                {i + 1}
+                            </PaginationLink>
+                         </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                    <PaginationNext 
+                        href="#"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(p => Math.min(totalPages, p + 1));
+                        }}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                     />
+                    </PaginationItem>
+                </PaginationContent>
+                </Pagination>
+            )}
 
             {/* Article Section */}
             <div className="mt-16 border-t pt-12">

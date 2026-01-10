@@ -38,6 +38,9 @@ export default function CatBreedPage() {
   const [reviews, setReviews] = useState(initialMockReviews);
   const [newComment, setNewComment] = useState("");
   const [newRating, setNewRating] = useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
+  const listingsPerPage = 20;
+
 
   const handleCommentSubmit = () => {
     if (newComment.trim() === "") return;
@@ -66,6 +69,13 @@ export default function CatBreedPage() {
   const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
   const standardPets = filteredPets.filter(p => !p.featured);
   const categoryCount = pets.filter(p => p.type === 'Cat').length;
+  
+  const totalPages = Math.ceil(standardPets.length / listingsPerPage);
+  const paginatedListings = standardPets.slice(
+    (currentPage - 1) * listingsPerPage,
+    currentPage * listingsPerPage
+  );
+
 
   return (
     <div className="container mx-auto py-8">
@@ -117,9 +127,9 @@ export default function CatBreedPage() {
             
             {/* Standard List Section */}
             <div>
-                {standardPets.length > 0 ? (
+                {paginatedListings.length > 0 ? (
                 <div className="space-y-px bg-gray-200 border border-gray-200 rounded-lg">
-                    {standardPets.map((pet) => (
+                    {paginatedListings.map((pet) => (
                     <ListingRow key={pet.id} pet={pet} />
                     ))}
                 </div>
@@ -137,19 +147,46 @@ export default function CatBreedPage() {
             </div>
 
             {/* Pagination */}
-            <Pagination className="mt-8">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious href="#" />
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#" isActive>1</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationNext href="#" />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            {totalPages > 1 && (
+                <Pagination className="mt-8">
+                <PaginationContent>
+                    <PaginationItem>
+                    <PaginationPrevious 
+                        href="#" 
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(p => Math.max(1, p - 1));
+                        }}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                         <PaginationItem key={i}>
+                            <PaginationLink 
+                                href="#"
+                                isActive={currentPage === i + 1}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage(i + 1)
+                                }}
+                            >
+                                {i + 1}
+                            </PaginationLink>
+                         </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                    <PaginationNext 
+                        href="#"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(p => Math.min(totalPages, p + 1));
+                        }}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                     />
+                    </PaginationItem>
+                </PaginationContent>
+                </Pagination>
+            )}
 
             {/* Popular Listings */}
             <div className="mt-12">
@@ -230,5 +267,3 @@ export default function CatBreedPage() {
     </div>
   );
 }
-
-    

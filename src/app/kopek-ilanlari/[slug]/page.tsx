@@ -44,6 +44,8 @@ export default function DogBreedPage() {
   const [reviews, setReviews] = useState(initialMockReviews);
   const [newComment, setNewComment] = useState("");
   const [newRating, setNewRating] = useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
+  const listingsPerPage = 20;
 
   const handleCommentSubmit = () => {
     if (newComment.trim() === "") return;
@@ -72,6 +74,13 @@ export default function DogBreedPage() {
   const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
   const standardPets = filteredPets.filter(p => !p.featured);
   const categoryCount = pets.filter(p => p.type === 'Dog').length;
+
+  const totalPages = Math.ceil(standardPets.length / listingsPerPage);
+  const paginatedListings = standardPets.slice(
+    (currentPage - 1) * listingsPerPage,
+    currentPage * listingsPerPage
+  );
+
 
   return (
     <div className="container mx-auto py-8">
@@ -123,9 +132,9 @@ export default function DogBreedPage() {
 
             {/* Standard List Section */}
             <div>
-                {standardPets.length > 0 ? (
+                {paginatedListings.length > 0 ? (
                 <div className="space-y-px bg-gray-200 border border-gray-200 rounded-lg">
-                    {standardPets.map((pet) => (
+                    {paginatedListings.map((pet) => (
                     <ListingRow key={pet.id} pet={pet} />
                     ))}
                 </div>
@@ -143,22 +152,46 @@ export default function DogBreedPage() {
             </div>
 
              {/* Pagination */}
-            <Pagination className="mt-8">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious href="#" />
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#" isActive>1</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#">2</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationNext href="#" />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            {totalPages > 1 && (
+                <Pagination className="mt-8">
+                <PaginationContent>
+                    <PaginationItem>
+                    <PaginationPrevious 
+                        href="#" 
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(p => Math.max(1, p - 1));
+                        }}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                         <PaginationItem key={i}>
+                            <PaginationLink 
+                                href="#"
+                                isActive={currentPage === i + 1}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage(i + 1)
+                                }}
+                            >
+                                {i + 1}
+                            </PaginationLink>
+                         </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                    <PaginationNext 
+                        href="#"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(p => Math.min(totalPages, p + 1));
+                        }}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                     />
+                    </PaginationItem>
+                </PaginationContent>
+                </Pagination>
+            )}
 
             {/* Most Visited Listings */}
              <div className="mt-16">
@@ -239,5 +272,3 @@ export default function DogBreedPage() {
     </div>
   );
 }
-
-    

@@ -42,6 +42,15 @@ export default function DogPage() {
   const [reviews, setReviews] = useState(initialMockReviews);
   const [newComment, setNewComment] = useState("");
   const [newRating, setNewRating] = useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
+  const listingsPerPage = 20;
+
+  const totalPages = Math.ceil(standardPets.length / listingsPerPage);
+  const paginatedListings = standardPets.slice(
+    (currentPage - 1) * listingsPerPage,
+    currentPage * listingsPerPage
+  );
+
 
   const handleCommentSubmit = () => {
     if (newComment.trim() === "") return;
@@ -111,9 +120,9 @@ export default function DogPage() {
 
             {/* Standard List Section */}
             <div>
-               {standardPets.length > 0 ? (
+               {paginatedListings.length > 0 ? (
                 <div className="space-y-px bg-gray-200 border border-gray-200 rounded-lg">
-                  {standardPets.map((pet) => (
+                  {paginatedListings.map((pet) => (
                     <ListingRow key={pet.id} pet={pet} />
                   ))}
                 </div>
@@ -131,28 +140,46 @@ export default function DogPage() {
             </div>
 
             {/* Pagination */}
-            <Pagination className="mt-8">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious href="#" />
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#" isActive>1</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#">2</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#">3</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationNext href="#" />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            {totalPages > 1 && (
+                <Pagination className="mt-8">
+                <PaginationContent>
+                    <PaginationItem>
+                    <PaginationPrevious 
+                        href="#" 
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(p => Math.max(1, p - 1));
+                        }}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                         <PaginationItem key={i}>
+                            <PaginationLink 
+                                href="#"
+                                isActive={currentPage === i + 1}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage(i + 1)
+                                }}
+                            >
+                                {i + 1}
+                            </PaginationLink>
+                         </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                    <PaginationNext 
+                        href="#"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(p => Math.min(totalPages, p + 1));
+                        }}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                     />
+                    </PaginationItem>
+                </PaginationContent>
+                </Pagination>
+            )}
 
             {/* Most Visited Listings */}
              <div className="mt-16">
@@ -252,5 +279,3 @@ export default function DogPage() {
     </div>
   );
 }
-
-    
