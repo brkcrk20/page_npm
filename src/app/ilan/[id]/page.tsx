@@ -18,7 +18,8 @@ import {
   Eye,
   Phone,
   Home,
-  AlertCircle
+  AlertCircle,
+  BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -309,6 +310,24 @@ export default function IlanPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      </div>
+
+       {/* Makale Bölümü */}
+      <div className="mt-16 border-t pt-12">
+        <h2 className="text-3xl font-bold font-headline mb-4 text-gray-800 flex items-center gap-3"><BookOpen />Pomeranian Bakımı: Bilmeniz Gerekenler</h2>
+        <div className="prose-lg max-w-none text-muted-foreground space-y-4">
+            <p>
+                Pomeranian, genellikle "Pom" olarak kısaltılan, Spitz tipi küçük bir köpek ırkıdır. Adını, Orta Avrupa'daki Pomeranya bölgesinden (bugünkü Polonya ve Almanya'nın bir kısmı) alır. Bu sevimli ve enerjik köpekler, canlı karakterleri, zekaları ve gür kürkleriyle tanınırlar.
+            </p>
+            <h3 className="text-2xl font-bold font-headline text-gray-700 !mt-6 !mb-2">Tüy Bakımı</h3>
+            <p>
+                Pomeranian'ların çift katmanlı, yoğun bir kürkü vardır. Bu nedenle düzenli tüy bakımı çok önemlidir. Tüy dökülmesini kontrol altında tutmak ve tüy yumaklarının oluşmasını önlemek için haftada en az 2-3 kez fırçalanmalıdırlar. Özellikle tüy dökme mevsimlerinde bu sıklığı artırmak gerekebilir.
+            </p>
+            <h3 className="text-2xl font-bold font-headline text-gray-700 !mt-6 !mb-2">Eğitim ve Sosyalleşme</h3>
+            <p>
+                Zeki ve öğrenmeye hevesli olmalarına rağmen, Pomeranian'lar bazen inatçı olabilirler. Erken yaşta sosyalleşme ve pozitif pekiştirme yöntemleriyle temel itaat eğitimi, onların iyi huylu birer yetişkin olmalarını sağlar. Diğer köpekler ve insanlarla erken yaşta tanıştırılmaları, özgüvenli ve sosyal köpekler olmalarına yardımcı olur.
+            </p>
         </div>
       </div>
     </div>
