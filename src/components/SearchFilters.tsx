@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,22 +10,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search } from 'lucide-react';
+import { Search, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 
 export function SearchFilters() {
+  // Başlangıçta kapalı olsun (false)
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="py-2 w-full max-w-full">
-      {/* gap-3 yerine mobilde gap-2 yaptık, sıkışmayı önlemek için */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 md:gap-3 items-end w-full">
+      
+      {/* MOBİL İÇİN AÇMA/KAPAMA BUTONU */}
+      {/* md:hidden dedik, yani bilgisayarda bu buton görünmeyecek */}
+      <Button 
+        variant="outline" 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="w-full flex items-center justify-between mb-2 md:hidden h-10 bg-white"
+      >
+        <span className="flex items-center gap-2 text-gray-600">
+          <Search className="w-4 h-4" />
+          İlan Ara & Filtrele
+        </span>
+        {/* Açık/Kapalı durumuna göre ok yönü değişir */}
+        {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      </Button>
+
+      {/* ARAMA FORMU */}
+      {/* Mobilde: isOpen true ise 'grid', false ise 'hidden' (gizli) */}
+      {/* Masaüstünde (md): Her zaman 'grid' (görünür) */}
+      <div className={`${isOpen ? 'grid' : 'hidden'} md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 md:gap-3 items-end w-full animate-in slide-in-from-top-2 duration-200`}>
         
         <div className="relative lg:col-span-2 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Ne arıyorsun? (Irk, isim...)" className="pl-9 h-9 w-full" />
+          <Input placeholder="Ne arıyorsun? (Irk, isim...)" className="pl-9 h-9 w-full bg-white" />
         </div>
 
         <Select>
-          {/* w-full ekledik: Kutu genişliği %100 olsun */}
-          <SelectTrigger className="h-9 w-full">
+          <SelectTrigger className="h-9 w-full bg-white">
             <SelectValue placeholder="Tüm Türler" />
           </SelectTrigger>
           <SelectContent>
@@ -36,8 +57,7 @@ export function SearchFilters() {
         </Select>
 
         <Select>
-           {/* w-full ekledik */}
-          <SelectTrigger className="h-9 w-full">
+          <SelectTrigger className="h-9 w-full bg-white">
             <SelectValue placeholder="Tüm Cinsler" />
           </SelectTrigger>
           <SelectContent>
@@ -49,8 +69,7 @@ export function SearchFilters() {
         </Select>
         
         <Select>
-           {/* w-full ekledik */}
-          <SelectTrigger className="h-9 w-full">
+          <SelectTrigger className="h-9 w-full bg-white">
             <SelectValue placeholder="Tüm Şehirler" />
           </SelectTrigger>
           <SelectContent>
