@@ -13,15 +13,18 @@ import { Search } from 'lucide-react';
 
 export function SearchFilters() {
   return (
-    <div className="py-2">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
-        <div className="relative lg:col-span-2">
+    <div className="py-2 w-full max-w-full">
+      {/* gap-3 yerine mobilde gap-2 yaptık, sıkışmayı önlemek için */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 md:gap-3 items-end w-full">
+        
+        <div className="relative lg:col-span-2 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Ne arıyorsun? (Irk, isim...)" className="pl-9 h-9" />
+          <Input placeholder="Ne arıyorsun? (Irk, isim...)" className="pl-9 h-9 w-full" />
         </div>
 
         <Select>
-          <SelectTrigger className="h-9">
+          {/* w-full ekledik: Kutu genişliği %100 olsun */}
+          <SelectTrigger className="h-9 w-full">
             <SelectValue placeholder="Tüm Türler" />
           </SelectTrigger>
           <SelectContent>
@@ -33,7 +36,8 @@ export function SearchFilters() {
         </Select>
 
         <Select>
-          <SelectTrigger className="h-9">
+           {/* w-full ekledik */}
+          <SelectTrigger className="h-9 w-full">
             <SelectValue placeholder="Tüm Cinsler" />
           </SelectTrigger>
           <SelectContent>
@@ -45,7 +49,8 @@ export function SearchFilters() {
         </Select>
         
         <Select>
-          <SelectTrigger className="h-9">
+           {/* w-full ekledik */}
+          <SelectTrigger className="h-9 w-full">
             <SelectValue placeholder="Tüm Şehirler" />
           </SelectTrigger>
           <SelectContent>
