@@ -106,7 +106,7 @@ export function Header() {
   
   const auth = getAuth();
   
-  const isAdmin = user && user.email === 'admin@petsemti.com';
+  const isAdmin = user && user.email === 'admin@patisemti.com';
   const isPremium = userProfile?.userStatus === 'premium';
 
   const handleLogout = () => {
@@ -308,12 +308,12 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-primary text-primary-foreground">
-       <div className="w-full px-4 md:container md:mx-auto flex h-16 items-center">
+        <div className="container flex h-16 items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <div className="bg-white p-1 rounded-md">
               <Heart className="h-6 w-6 text-primary fill-primary" />
             </div>
-            <span className="font-bold text-xl">petsemti</span>
+            <span className="font-bold text-xl">Patisemti</span>
           </Link>
           
           <div className="flex flex-1 items-center justify-end space-x-4">
@@ -374,7 +374,7 @@ export function Header() {
       </header>
       {showCategoriesAndFilters && (
         <div className="bg-white shadow-sm border-b py-2">
-          <div className="w-full px-2 md:container md:mx-auto overflow-hidden">
+          <div className="container mx-auto">
             <div className="w-full">
               <div className="grid w-full grid-cols-5 md:grid-cols-9 h-auto p-1 bg-muted rounded-md text-muted-foreground">
                 {serviceCategories.map((service) => {
