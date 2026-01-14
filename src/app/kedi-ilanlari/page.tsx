@@ -35,7 +35,7 @@ const initialMockReviews = [
 export default function CatPage() {
   const filteredPets = pets.filter((pet) => pet.type === 'Cat');
   const featuredPets = filteredPets.filter(p => p.featured).slice(0, 4);
-  const allPetsInCateogry = filteredPets;
+  const allPetsInCategory = filteredPets;
   const category = categories.find(c => c.type === 'Cat');
 
   const [reviews, setReviews] = useState(initialMockReviews);
@@ -44,8 +44,8 @@ export default function CatPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const listingsPerPage = 20;
 
-  const totalPages = Math.ceil(allPetsInCateogry.length / listingsPerPage);
-  const paginatedListings = allPetsInCateogry.slice(
+  const totalPages = Math.ceil(allPetsInCategory.length / listingsPerPage);
+  const paginatedListings = allPetsInCategory.slice(
     (currentPage - 1) * listingsPerPage,
     currentPage * listingsPerPage
   );
@@ -260,3 +260,5 @@ export default function CatPage() {
     </div>
   );
 }
+
+    
