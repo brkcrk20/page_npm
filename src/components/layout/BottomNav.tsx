@@ -20,10 +20,10 @@ export function BottomNav() {
       icon: Heart,
     },
     {
-      href: '/listings/new', // İlan Ver butonu (Ortadaki)
+      href: '/listings/new',
       label: 'İlan Ver',
       icon: Plus,
-      isMain: true, // Bunu özel tasarlayacağız
+      isMain: true,
     },
     {
       href: '/mesajlarim',
@@ -31,7 +31,7 @@ export function BottomNav() {
       icon: MessageSquare,
     },
     {
-      href: '/profil', // Giriş yapılmamışsa login'e yönlendirir (middleware varsa)
+      href: '/profil',
       label: 'Profil',
       icon: User,
     },
@@ -43,16 +43,17 @@ export function BottomNav() {
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           
-          // Eğer ortadaki "İlan Ver" butonuysa farklı tasarım
+          // ORTA BUTON (İLAN VER) - ÖZEL TASARIM
           if (item.isMain) {
             return (
-              <div key={item.href} className="relative flex items-center justify-center group">
+              <div key={item.href} className="relative flex items-center justify-center group h-full">
                 <Link
                   href={item.href}
                   className="absolute -top-5 flex items-center justify-center w-14 h-14 bg-primary rounded-full shadow-lg shadow-primary/30 transition-transform active:scale-95"
                 >
                   <item.icon className="w-7 h-7 text-white" />
                 </Link>
+                {/* Yazıyı biraz aşağı ittik ki butona yapışmasın */}
                 <span className="absolute bottom-1 text-[10px] font-medium text-gray-500">
                   {item.label}
                 </span>
@@ -60,23 +61,25 @@ export function BottomNav() {
             );
           }
 
-          // Diğer standart butonlar
+          // DİĞER BUTONLAR - STANDART TASARIM
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 transition-colors group"
+              // DÜZELTME BURADA: px-5'i kaldırdık, w-full ve h-full verdik.
+              className="inline-flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 transition-colors group"
             >
               <item.icon
                 className={cn(
                   "w-6 h-6 mb-1 transition-colors",
                   isActive ? "text-primary fill-current" : "text-gray-500 group-hover:text-primary"
                 )}
-                // Sadece Home ve Heart için 'fill' özelliği mantıklı olabilir, diğerleri stroke kalabilir
+                // Sadece belirli ikonların içini doldur, diğerleri çizgi kalsın
                 fill={isActive && (item.label === 'Favoriler' || item.label === 'Ana Sayfa') ? "currentColor" : "none"}
               />
               <span className={cn(
-                "text-[10px] font-medium transition-colors",
+                // DÜZELTME: whitespace-nowrap ekledik (asla alt satıra geçmez)
+                "text-[10px] font-medium transition-colors whitespace-nowrap",
                 isActive ? "text-primary" : "text-gray-500 group-hover:text-primary"
               )}>
                 {item.label}
