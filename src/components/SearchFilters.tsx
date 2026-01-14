@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react'; // İkonu değiştirdik
+import { Search, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 
 export function SearchFilters() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,38 +18,54 @@ export function SearchFilters() {
   return (
     <div className="py-2 w-full max-w-full">
       
-      {/* MOBİL BUTON - TASARIM GÜNCELLENDİ */}
+      {/* MOBİL FİLTRE BUTONU 
+         - rounded-full veya rounded-2xl: Daha modern, yumuşak köşeler.
+         - shadow-md: Butona derinlik katar.
+         - border-transparent: Çizgi kirliliğini kaldırır.
+      */}
       <Button 
-        variant="outline" 
         onClick={() => setIsOpen(!isOpen)} 
         className={`
-          w-full flex items-center justify-between mb-3 md:hidden h-12 
-          rounded-xl border-2 shadow-sm transition-all duration-200
+          w-full flex items-center justify-between mb-4 md:hidden h-12 
+          rounded-2xl transition-all duration-300 shadow-sm border
           ${isOpen 
-            ? 'bg-primary text-white border-primary' // Açıkken: Turuncu zemin, beyaz yazı
-            : 'bg-white text-primary border-primary/20 hover:border-primary hover:bg-orange-50' // Kapalıyken: Beyaz zemin, turuncu yazı
+            ? 'bg-primary text-primary-foreground border-primary' // Açık: Turuncu zemin, Beyaz yazı
+            : 'bg-white text-gray-700 border-gray-100 hover:border-primary/30 hover:bg-orange-50' // Kapalı: Beyaz zemin, Gri yazı
           }
         `}
       >
-        <span className="flex items-center gap-2 font-semibold text-base">
-          {/* Hem büyüteç hem filtre ikonu kullanabiliriz, buraya filtre ikonu koydum */}
-          <SlidersHorizontal className="w-5 h-5" />
+        <span className="flex items-center gap-2.5 font-semibold text-base">
+          {/* İkon rengini duruma göre ayarladık */}
+          <div className={`p-1.5 rounded-full ${isOpen ? 'bg-white/20' : 'bg-orange-100 text-primary'}`}>
+             <SlidersHorizontal className="w-4 h-4" />
+          </div>
           İlan Ara & Filtrele
         </span>
         
-        {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        {/* Ok işareti */}
+        {isOpen 
+          ? <ChevronUp className="w-5 h-5 opacity-80" /> 
+          : <ChevronDown className="w-5 h-5 text-gray-400" />
+        }
       </Button>
 
-      {/* ARAMA FORMU */}
-      <div className={`${isOpen ? 'grid' : 'hidden'} md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 md:gap-3 items-end w-full animate-in slide-in-from-top-2 duration-200`}>
+      {/* ARAMA FORMU KUTUSU */}
+      <div className={`
+        ${isOpen ? 'grid' : 'hidden'} 
+        md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 items-end w-full 
+        animate-in slide-in-from-top-4 fade-in duration-300 ease-out
+      `}>
         
         <div className="relative lg:col-span-2 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Ne arıyorsun? (Irk, isim...)" className="pl-9 h-9 w-full bg-white border-gray-200" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input 
+            placeholder="Ne arıyorsun? (Irk, isim...)" 
+            className="pl-9 h-11 w-full bg-white border-gray-200 rounded-xl focus:border-primary focus:ring-primary/20" 
+          />
         </div>
 
         <Select>
-          <SelectTrigger className="h-9 w-full bg-white border-gray-200">
+          <SelectTrigger className="h-11 w-full bg-white border-gray-200 rounded-xl focus:ring-primary/20">
             <SelectValue placeholder="Tüm Türler" />
           </SelectTrigger>
           <SelectContent>
@@ -61,7 +77,7 @@ export function SearchFilters() {
         </Select>
 
         <Select>
-          <SelectTrigger className="h-9 w-full bg-white border-gray-200">
+          <SelectTrigger className="h-11 w-full bg-white border-gray-200 rounded-xl focus:ring-primary/20">
             <SelectValue placeholder="Tüm Cinsler" />
           </SelectTrigger>
           <SelectContent>
@@ -73,7 +89,7 @@ export function SearchFilters() {
         </Select>
         
         <Select>
-          <SelectTrigger className="h-9 w-full bg-white border-gray-200">
+          <SelectTrigger className="h-11 w-full bg-white border-gray-200 rounded-xl focus:ring-primary/20">
             <SelectValue placeholder="Tüm Şehirler" />
           </SelectTrigger>
           <SelectContent>
@@ -84,7 +100,8 @@ export function SearchFilters() {
           </SelectContent>
         </Select>
 
-        <Button className="w-full h-9 text-base bg-primary hover:bg-primary/90 text-white shadow-sm">
+        {/* BUL BUTONU - Filtre butonuyla uyumlu olsun */}
+        <Button className="w-full h-11 text-base font-bold bg-primary hover:bg-primary/90 text-white rounded-xl shadow-md transition-transform active:scale-95">
           Bul
         </Button>
       </div>
