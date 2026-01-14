@@ -222,7 +222,7 @@ export function RegisterForm() {
                 <FormItem>
                   <FormLabel>Ad Soyad <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} disabled={isLoading} />
+                    <Input placeholder="Ad Soyad" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -235,7 +235,7 @@ export function RegisterForm() {
                 <FormItem>
                   <FormLabel>Kullanıcı Adı <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="johndoe" {...field} disabled={isLoading} />
+                    <Input placeholder="Kullanıcı Adı" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -248,7 +248,7 @@ export function RegisterForm() {
                 <FormItem>
                   <FormLabel>E-posta <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="email@example.com" {...field} disabled={isLoading} />
+                    <Input placeholder="Mail Adresi" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -291,7 +291,7 @@ export function RegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Adı Soyadı (Yetkili) <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input placeholder="John Doe" {...field} disabled={isLoading} /></FormControl>
+                  <FormControl><Input placeholder="Adı Soyadı" {...field} disabled={isLoading} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -303,7 +303,7 @@ export function RegisterForm() {
                 <FormItem>
                   <FormLabel>Kullanıcı Adı <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="johndoe" {...field} disabled={isLoading} />
+                    <Input placeholder="Kullanıcı Adı" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -315,7 +315,7 @@ export function RegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>E-posta Adresi <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input placeholder="email@example.com" {...field} disabled={isLoading} /></FormControl>
+                  <FormControl><Input placeholder="Mail Adresi" {...field} disabled={isLoading} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
