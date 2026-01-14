@@ -152,8 +152,8 @@ export default function HomePage() {
 
   return (
     <div className="bg-secondary/50 overflow-x-hidden">
-      <div className="container mx-auto py-4">
-        <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
+      <div className="container mx-auto py-4 px-4 max-w-full overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8">
           <aside className="col-span-1 hidden md:block">
             <div className="bg-white p-4 rounded-lg shadow-sm">
               <Accordion type="multiple" value={openAccordion} onValueChange={setOpenAccordion} className="w-full space-y-1">

@@ -73,7 +73,7 @@ export default function CatPage() {
 
   return (
     <div className="container mx-auto py-8">
-       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
+       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8">
         <aside className="col-span-1">
            <BreedPageSidebar 
             categoryName={category.title}
