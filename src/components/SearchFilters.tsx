@@ -26,7 +26,7 @@ export function SearchFilters() {
       <Button 
         onClick={() => setIsOpen(!isOpen)} 
         className={`
-          w-full flex items-center justify-between mb-4 md:hidden h-12 
+          w-full flex items-center justify-between mb-2 md:hidden h-12 
           rounded-2xl transition-all duration-300 shadow-sm border
           ${isOpen 
             ? 'bg-primary text-primary-foreground border-primary' // Açık: Turuncu zemin, Beyaz yazı

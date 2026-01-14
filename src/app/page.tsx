@@ -152,7 +152,8 @@ export default function HomePage() {
 
   return (
     <div className="bg-secondary/50 overflow-x-hidden">
-      <div className="w-full px-5 md:container md:mx-auto py-6">
+      {/* py-6 yerine pt-2 pb-8 yaptık. Üst boşluk çok azaldı */}
+<div className="w-full px-5 md:container md:mx-auto pt-2 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
           <aside className="col-span-1 hidden md:block">
             <div className="bg-white p-4 rounded-lg shadow-sm">

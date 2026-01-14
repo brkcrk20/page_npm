@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -24,7 +23,6 @@ import {
   Package,
   Store,
   ShoppingBag,
-  Star,
   CreditCard,
   FileText,
   MessageCircle,
@@ -47,15 +45,8 @@ import {
   DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
   NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { SearchFilters } from '../SearchFilters';
 import { VetSearchFilters } from '../VetSearchFilters';
 import { Skeleton } from '../ui/skeleton';
@@ -78,21 +69,6 @@ const serviceCategories = [
   { icon: PersonStanding, label: 'Gezdirici', href: '/gezdirici' },
 ];
 
-const mainCategories = ['Köpek', 'Kedi', 'Kuş', 'Akvaryum', 'Diğer'];
-
-const slugify = (text: string) => {
-  return text
-    .toString()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
-    .replace(/--+/g, '-');
-};
-
-
 export function Header() {
   const pathname = usePathname();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
@@ -107,45 +83,22 @@ export function Header() {
   const auth = getAuth();
   
   const isAdmin = user && user.email === 'admin@patisemti.com';
-  const isPremium = userProfile?.userStatus === 'premium';
 
   const handleLogout = () => {
     signOut(auth);
   };
 
-  const getInitials = (email?: string | null) => {
-    if (!email) return 'U';
-    return email.charAt(0).toUpperCase();
-  };
-
   const isLoading = !isMounted || isUserLoading || isProfileLoading;
   
   const renderFilters = () => {
-    if (pathname === '/veteriner') {
-      return <VetSearchFilters pageType="vet" />;
-    }
-    if (pathname === '/pet-oteli') {
-      return <VetSearchFilters pageType="hotel" />;
-    }
-    if (pathname === '/egitmen') {
-      return <VetSearchFilters pageType="trainer" />;
-    }
-    if (pathname === '/pet_kuafor') {
-      return <VetSearchFilters pageType="groomer" />;
-    }
-    if (pathname === '/petshop') {
-      return <VetSearchFilters pageType="petshop" />;
-    }
-    if (pathname === '/pet_taksi') {
-      return <VetSearchFilters pageType="pet_taksi" />;
-    }
-    if (pathname === '/gezdirici') {
-      return <VetSearchFilters pageType="walker" />;
-    }
-    if (pathname === '/es-arayanlar') {
-      return <SearchFilters />;
-    }
-    // Default filters for home page and others
+    if (pathname === '/veteriner') return <VetSearchFilters pageType="vet" />;
+    if (pathname === '/pet-oteli') return <VetSearchFilters pageType="hotel" />;
+    if (pathname === '/egitmen') return <VetSearchFilters pageType="trainer" />;
+    if (pathname === '/pet_kuafor') return <VetSearchFilters pageType="groomer" />;
+    if (pathname === '/petshop') return <VetSearchFilters pageType="petshop" />;
+    if (pathname === '/pet_taksi') return <VetSearchFilters pageType="pet_taksi" />;
+    if (pathname === '/gezdirici') return <VetSearchFilters pageType="walker" />;
+    if (pathname === '/es-arayanlar') return <SearchFilters />;
     return <SearchFilters />;
   };
 
@@ -153,7 +106,6 @@ export function Header() {
 
   const renderAuthContent = () => {
     if (isLoading) {
-      // Show a single skeleton that roughly matches the final size of the auth section
       return <Skeleton className="h-10 w-64" />;
     }
     
@@ -186,102 +138,37 @@ export function Header() {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{userProfile?.name ?? 'Kullanıcı'}</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email}
-                </p>
+                <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <Link href="/profil">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profilim</span>
-                </Link>
-              </DropdownMenuItem>
-               <DropdownMenuItem asChild>
-                <Link href="/profil#update">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profil Güncelle</span>
-                </Link>
-              </DropdownMenuItem>
-               <DropdownMenuItem asChild>
-                <Link href="/paketler">
-                  <Package className="mr-2 h-4 w-4" />
-                  <span>Paket Satın Al</span>
-                </Link>
-              </DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/profil"><User className="mr-2 h-4 w-4" /><span>Profilim</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/profil#update"><User className="mr-2 h-4 w-4" /><span>Profil Güncelle</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/paketler"><Package className="mr-2 h-4 w-4" /><span>Paket Satın Al</span></Link></DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
              <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                    <Link href="/mesajlarim">
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        <span>Mesajlarım</span>
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link href="/profil/favoriler">
-                        <Heart className="mr-2 h-4 w-4" />
-                        <span>Favori İlanlarım</span>
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link href="/profil/ilanlarim">
-                       <FileText className="mr-2 h-4 w-4" />
-                       <span>İlanlarım</span>
-                    </Link>
-                </DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/mesajlarim"><MessageSquare className="mr-2 h-4 w-4" /><span>Mesajlarım</span></Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/profil/favoriler"><Heart className="mr-2 h-4 w-4" /><span>Favori İlanlarım</span></Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/profil/ilanlarim"><FileText className="mr-2 h-4 w-4" /><span>İlanlarım</span></Link></DropdownMenuItem>
              </DropdownMenuGroup>
              <DropdownMenuSeparator />
              <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                    <Link href="/magazalarim">
-                        <Store className="mr-2 h-4 w-4" />
-                        <span>Mağazalarım</span>
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link href="/magaza-olustur">
-                        <Store className="mr-2 h-4 w-4" />
-                        <span>Mağaza Oluştur</span>
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link href="/siparislerim">
-                        <ShoppingBag className="mr-2 h-4 w-4" />
-                        <span>Siparişlerim</span>
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link href="/yorumlar">
-                       <MessageCircle className="mr-2 h-4 w-4" />
-                       <span>Yorumlar</span>
-                    </Link>
-                </DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/magazalarim"><Store className="mr-2 h-4 w-4" /><span>Mağazalarım</span></Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/magaza-olustur"><Store className="mr-2 h-4 w-4" /><span>Mağaza Oluştur</span></Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/siparislerim"><ShoppingBag className="mr-2 h-4 w-4" /><span>Siparişlerim</span></Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/yorumlar"><MessageCircle className="mr-2 h-4 w-4" /><span>Yorumlar</span></Link></DropdownMenuItem>
              </DropdownMenuGroup>
              <DropdownMenuSeparator />
              <DropdownMenuGroup>
-                <DropdownMenuItem>
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    <span>Krediniz: {userProfile?.credit ?? 0}</span>
-                </DropdownMenuItem>
-                 <DropdownMenuItem asChild>
-                    <Link href="/kredi-hareketleri">
-                        <CreditCard className="mr-2 h-4 w-4" />
-                        <span>Borç Hareketleri</span>
-                    </Link>
-                </DropdownMenuItem>
+                <DropdownMenuItem><CreditCard className="mr-2 h-4 w-4" /><span>Krediniz: {userProfile?.credit ?? 0}</span></DropdownMenuItem>
+                 <DropdownMenuItem asChild><Link href="/kredi-hareketleri"><CreditCard className="mr-2 h-4 w-4" /><span>Borç Hareketleri</span></Link></DropdownMenuItem>
              </DropdownMenuGroup>
             {isAdmin && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/admin">
-                    <Shield className="mr-2 h-4 w-4" />
-                    <span>Admin Paneli</span>
-                  </Link>
-                </DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/admin"><Shield className="mr-2 h-4 w-4" /><span>Admin Paneli</span></Link></DropdownMenuItem>
               </>
             )}
             <DropdownMenuSeparator />
@@ -304,11 +191,10 @@ export function Header() {
     );
   };
 
-
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-primary text-primary-foreground">
-        <div className="container flex h-16 items-center">
+        <div className="container flex h-16 items-center px-5">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <div className="bg-white p-1 rounded-md">
               <Heart className="h-6 w-6 text-primary fill-primary" />
@@ -317,9 +203,9 @@ export function Header() {
           </Link>
           
           <div className="flex flex-1 items-center justify-end space-x-4">
-             <div className="hidden md:flex items-center space-x-4">
+              <div className="hidden md:flex items-center space-x-4">
                 {renderAuthContent()}
-             </div>
+              </div>
             <Button asChild variant="secondary">
               <Link href={user ? '/listings/new' : '/login'}>İlan Ver</Link>
             </Button>
@@ -362,7 +248,7 @@ export function Header() {
                     </>
                   )}
                   {user && (
-                     <Button variant="outline" onClick={() => { handleLogout(); setSheetOpen(false); }}>
+                      <Button variant="outline" onClick={() => { handleLogout(); setSheetOpen(false); }}>
                       <LogOut className="mr-2" />Çıkış Yap
                     </Button>
                   )}
@@ -372,11 +258,15 @@ export function Header() {
           </Sheet>
         </div>
       </header>
+
+      {/* YENİLENMİŞ KATEGORİ VE FİLTRE ALANI */}
       {showCategoriesAndFilters && (
         <div className="bg-white shadow-sm border-b py-2">
-          <div className="container mx-auto">
+          <div className="w-full md:container md:mx-auto">
+            
             <div className="w-full">
-              <div className="grid w-full grid-cols-5 md:grid-cols-9 h-auto p-1 bg-muted rounded-md text-muted-foreground">
+              {/* Yatay Kaydırmalı Kategori Menüsü */}
+              <div className="flex w-full overflow-x-auto py-2 px-4 gap-3 md:grid md:grid-cols-9 md:gap-1 md:overflow-visible no-scrollbar">
                 {serviceCategories.map((service) => {
                   const isActive = pathname === service.href;
 
@@ -385,20 +275,36 @@ export function Header() {
                       href={service.href}
                       key={service.label}
                       className={cn(
-                        'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-col gap-1 h-auto text-center hover:text-primary',
+                        'flex flex-col items-center justify-center transition-all duration-200 rounded-xl',
+                        'min-w-[72px] py-2 gap-1.5',
+                        'md:min-w-0 md:w-full md:py-1.5 md:gap-1',
                         isActive
-                          ? 'bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))]'
-                          : ''
+                          ? 'bg-orange-50 text-primary ring-1 ring-primary/20 shadow-sm'
+                          : 'text-gray-500 hover:bg-gray-50 hover:text-primary'
                       )}
                     >
-                      <service.icon className="w-5 h-5 transition-colors" />
-                      <span className="text-xs font-medium hidden sm:block">{service.label}</span>
+                      <div className={cn(
+                        "p-2 rounded-full transition-colors",
+                        isActive ? "bg-white text-primary shadow-sm" : "bg-gray-100/50 text-gray-500 group-hover:bg-white"
+                      )}>
+                        <service.icon className="w-5 h-5 md:w-5 md:h-5" />
+                      </div>
+                      
+                      <span className={cn(
+                        "text-[10px] md:text-[11px] font-medium text-center leading-tight px-1",
+                        "whitespace-nowrap md:whitespace-normal" 
+                      )}>
+                        {service.label}
+                      </span>
                     </Link>
                   );
                 })}
               </div>
             </div>
-            {renderFilters()}
+            
+            <div className="px-4 md:px-0 mt-2">
+               {renderFilters()}
+            </div>
           </div>
         </div>
       )}
@@ -431,6 +337,3 @@ const ListItem = React.forwardRef<
   )
 })
 ListItem.displayName = "ListItem"
-
-
-    

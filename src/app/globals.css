@@ -99,3 +99,11 @@
       @apply text-gray-800 w-2/3;
   }
 }
+/* Kaydırma çubuğunu gizle */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
