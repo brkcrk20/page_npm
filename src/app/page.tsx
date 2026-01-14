@@ -154,7 +154,7 @@ export default function HomePage() {
     <div className="bg-secondary/50">
       <div className="container mx-auto py-4">
         <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
-          <aside className="col-span-1">
+          <aside className="col-span-1 hidden md:block">
             <div className="bg-white p-4 rounded-lg shadow-sm">
               <Accordion type="multiple" value={openAccordion} onValueChange={setOpenAccordion} className="w-full space-y-1">
                  {categories.map((cat) => (
