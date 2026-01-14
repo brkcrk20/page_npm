@@ -63,8 +63,13 @@
   * {
     @apply border-border;
   }
+  
+  /* İŞTE O SİHİRLİ KOD BURADA */
+  html,
   body {
     @apply bg-background text-foreground;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 }
 
