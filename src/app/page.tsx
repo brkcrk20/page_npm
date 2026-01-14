@@ -151,7 +151,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="bg-secondary/50">
+    <div className="bg-secondary/50 overflow-x-hidden">
       <div className="container mx-auto py-4">
         <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
           <aside className="col-span-1 hidden md:block">
