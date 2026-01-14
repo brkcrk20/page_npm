@@ -91,7 +91,7 @@ export default function FaturaBilgileriPage() {
                 <input
                   required
                   type="text"
-                  placeholder="Örn: Ahmet Yılmaz veya Patisemti Ltd. Şti."
+                  placeholder="Örn: Ahmet Yılmaz veya petsemti Ltd. Şti."
                   className="w-full p-3.5 border border-gray-300 rounded-lg text-gray-700 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition-all"
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 />

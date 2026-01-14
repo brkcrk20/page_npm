@@ -63,10 +63,10 @@ export function Footer() {
           <div className="col-span-1 lg:col-span-1">
             <Link href="/" className="flex items-center space-x-2 mb-4">
               <PawPrint className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold font-headline">Patisemti</span>
+              <span className="text-2xl font-bold font-headline">petsemti</span>
             </Link>
             <p className="text-sm text-gray-600">
-              Evcil Hayvan Sahiplendirme platformu Patisemti, yavru evcil hayvan cinsleri ve diğer tüm sahiplendirme ilanları ile yayında!
+              Evcil Hayvan Sahiplendirme platformu petsemti, yavru evcil hayvan cinsleri ve diğer tüm sahiplendirme ilanları ile yayında!
             </p>
           </div>
 
@@ -118,7 +118,7 @@ export function Footer() {
             <div className="flex flex-col md:flex-row items-center gap-6 text-sm text-gray-700">
                 <h3 className="font-bold text-base hidden md:block">BİZE ULAŞIN</h3>
                 <Link href="tel:05550873777" className="flex items-center gap-2 hover:text-primary"><Phone className="w-4 h-4"/> 0555 087 37 77</Link>
-                <Link href="mailto:info@patisemti.com" className="flex items-center gap-2 hover:text-primary"><Mail className="w-4 h-4"/> info@patisemti.com</Link>
+                <Link href="mailto:info@petsemti.com" className="flex items-center gap-2 hover:text-primary"><Mail className="w-4 h-4"/> info@petsemti.com</Link>
                 <Link href="https://wa.me/905550873777" target="_blank" className="flex items-center gap-2 hover:text-primary"><MessageCircle className="w-4 h-4"/> Whatsapp: 0555 087 37 77</Link>
             </div>
             <div className="flex space-x-2">
@@ -133,7 +133,7 @@ export function Footer() {
         {/* Bottom Section: Copyright & Badges */}
         <div className="border-t mt-8 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-gray-500 order-2 md:order-1">
-            &copy; {new Date().getFullYear()} Patisemti. Tüm hakları saklıdır.
+            &copy; {new Date().getFullYear()} petsemti. Tüm hakları saklıdır.
           </p>
           <div className="flex items-center gap-3 order-1 md:order-2">
             <PaymentBadge text="ISO" width={40} />

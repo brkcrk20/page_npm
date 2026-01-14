@@ -18,7 +18,7 @@ export default function AdminPage() {
 
   // IMPORTANT: In a real production app, this check should be done using custom claims
   // and enforced with Firestore security rules, not just client-side logic.
-  const isAdmin = user && user.email === 'admin@patisemti.com';
+  const isAdmin = user && user.email === 'admin@petsemti.com';
 
   if (!isAdmin) {
     return (

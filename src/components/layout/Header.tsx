@@ -106,7 +106,7 @@ export function Header() {
   
   const auth = getAuth();
   
-  const isAdmin = user && user.email === 'admin@patisemti.com';
+  const isAdmin = user && user.email === 'admin@petsemti.com';
   const isPremium = userProfile?.userStatus === 'premium';
 
   const handleLogout = () => {
@@ -313,7 +313,7 @@ export function Header() {
             <div className="bg-white p-1 rounded-md">
               <Heart className="h-6 w-6 text-primary fill-primary" />
             </div>
-            <span className="font-bold text-xl">Patisemti</span>
+            <span className="font-bold text-xl">petsemti</span>
           </Link>
           
           <div className="flex flex-1 items-center justify-end space-x-4">

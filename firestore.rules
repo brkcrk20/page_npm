@@ -33,7 +33,7 @@ service cloud.firestore {
      * IMPORTANT: For production, it's highly recommended to use custom claims instead of hardcoding an email.
      */
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email == 'admin@patisemti.com';
+      return isSignedIn() && request.auth.token.email == 'admin@petsemti.com';
     }
 
     /**

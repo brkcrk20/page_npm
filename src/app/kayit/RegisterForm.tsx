@@ -132,7 +132,7 @@ export function RegisterForm() {
       router.push('/');
       toast({
         title: "Kayıt Başarılı!",
-        description: "Patisemti'ye hoş geldiniz.",
+        description: "petsemti'ye hoş geldiniz.",
       });
 
     } catch (error: any) {
@@ -381,7 +381,7 @@ export function RegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Firma Ünvanı <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input placeholder="Patisemti A.Ş." {...field} disabled={isLoading} /></FormControl>
+                  <FormControl><Input placeholder="petsemti A.Ş." {...field} disabled={isLoading} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
