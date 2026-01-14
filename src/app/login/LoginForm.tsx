@@ -115,7 +115,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Kullanıcı Adı veya E-posta</FormLabel>
               <FormControl>
-                <Input placeholder="kullanici_adim veya email@example.com" {...field} disabled={isLoading} />
+                <Input placeholder="Kullanıcı Adı veya Mail Adresi" {...field} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>
