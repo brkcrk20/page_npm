@@ -136,20 +136,23 @@ export default function HomePage() {
   // VERİ DÖNÜŞTÜRÜCÜ: PetCard'ın anlayacağı şekle sokar (Hata önleyici)
   const mapListingToPet = (listing: any) => ({
     ...listing,
-    // PetCard dizi bekliyorsa 'imageUrl' değerini diziye çeviriyoruz
-    image: listing.imageUrl ? [listing.imageUrl] : (listing.image || []),
+    // ÖNEMLİ: Resim imageUrl ise diziye çeviriyoruz ki PetCard okuyabilsin
+    image: listing.imageUrl ? [listing.imageUrl] : (Array.isArray(listing.image) ? listing.image : []),
     type: listing.species || listing.type,
-    // KRİTİK: Yaş bilgisi sayı gelirse metne çevirip çökme hatasını engelliyoruz
+    // ÖNEMLİ: Yaş bilgisi sayıysa metne çevirip replace hatasını engelliyoruz
     age: listing.age ? String(listing.age) : "0", 
     price: listing.price || 0,
     location: listing.location || "Belirtilmemiş",
+    // ÖNEMLİ: Sadece isFeatured işaretliyse öne çıkanlara girer
+    featured: listing.isFeatured === true,
     isDb: true
   });
 
-  // HİBRİT VERİ: Veritabanı + Sabit Örnekler
+  // HİBRİT VERİ: Veritabanından gelenleri ve sabit örnekleri birleştiriyoruz
   const allPets = useMemo(() => {
     const fromDb = dbListings.map(mapListingToPet);
     const fromStatic = staticPets.map(p => ({ ...p, isStatic: true }));
+    // Veritabanı ilanları her zaman en üstte görünsün
     return [...fromDb, ...fromStatic];
   }, [dbListings]);
 
@@ -157,7 +160,11 @@ export default function HomePage() {
   const dogPets = useMemo(() => allPets.filter(p => p.type === 'Dog'), [allPets]);
   const catPets = useMemo(() => allPets.filter(p => p.type === 'Cat'), [allPets]);
   const birdPets = useMemo(() => allPets.filter(p => p.type === 'Bird'), [allPets]);
-  const featuredPets = useMemo(() => allPets.slice(0, 8), [allPets]);
+  
+  // ÖNEMLİ: Sadece 'featured' alanı true olanlar Yıldızlı İlanlara girer
+  const featuredPets = useMemo(() => {
+    return allPets.filter(p => p.featured === true).slice(0, 8);
+  }, [allPets]);
 
   const handleAccordionToggle = (value: string) => {
     setOpenAccordion(prev => 
@@ -165,6 +172,7 @@ export default function HomePage() {
     );
   };
 
+  // Yükleme ekranı
   if (loading && dbListings.length === 0) {
     return <div className="min-h-screen flex items-center justify-center bg-secondary/50"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
   }
