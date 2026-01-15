@@ -1,7 +1,7 @@
 'use client';
 
 import { PetCard } from "@/components/PetCard";
-import { pets as staticPets } from "@/lib/data"; // Sabit verileri geri ekledik
+import { pets as staticPets } from "@/lib/data"; // Sabit veriler
 import {
   Accordion,
   AccordionContent,
@@ -24,7 +24,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { categories, type CategoryInfo } from "@/lib/breeds";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-// DOĞRU İTHALAT YOLU
+
+// FIREBASE BAĞLANTISI
 import { db } from '@/lib/firebase';
 import { collectionGroup, getDocs, query } from 'firebase/firestore';
 import type { PetListing } from "@/lib/types";
@@ -41,7 +42,7 @@ const CategoryFilter = ({ category, onTriggerClick, isSelected }: { category: Ca
        <div className={cn(
         "flex items-center justify-between whitespace-nowrap text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 w-full rounded-t-xl",
         isSelected 
-            ? "bg-background text-primary shadow-sm [box-shadow:0_0_8_hsl(var(--primary))] rounded-b-none"
+            ? "bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))] rounded-b-none"
             : "bg-muted text-muted-foreground hover:text-primary rounded-xl"
         )}>
           <Link href={`/${category.slug}`} className="flex items-center gap-2 font-bold p-3 flex-grow">
@@ -132,26 +133,27 @@ export default function HomePage() {
     fetchAllListings();
   }, []);
 
-  // VERİ DÖNÜŞTÜRÜCÜ: Veritabanı verisini PetCard'ın anlayacağı şekle sokar (Hata önleyici)
+  // VERİ DÖNÜŞTÜRÜCÜ: PetCard'ın anlayacağı şekle sokar (Hata önleyici)
   const mapListingToPet = (listing: any) => ({
     ...listing,
-    // PetCard 'image' (dizi) bekliyorsa 'imageUrl' (string) değerini diziye çeviriyoruz
+    // PetCard dizi bekliyorsa 'imageUrl' değerini diziye çeviriyoruz
     image: listing.imageUrl ? [listing.imageUrl] : (listing.image || []),
     type: listing.species || listing.type,
+    // KRİTİK: Yaş bilgisi sayı gelirse metne çevirip çökme hatasını engelliyoruz
+    age: listing.age ? String(listing.age) : "0", 
     price: listing.price || 0,
     location: listing.location || "Belirtilmemiş",
     isDb: true
   });
 
-  // HİBRİT VERİ: Veritabanından gelenleri ve sabit örnekleri birleştiriyoruz
+  // HİBRİT VERİ: Veritabanı + Sabit Örnekler
   const allPets = useMemo(() => {
     const fromDb = dbListings.map(mapListingToPet);
     const fromStatic = staticPets.map(p => ({ ...p, isStatic: true }));
-    // Veritabanı ilanları her zaman en üstte görünsün
     return [...fromDb, ...fromStatic];
   }, [dbListings]);
 
-  // FİLTRELEME MANTIKLARI (Güncellenmiş liste üzerinden)
+  // FİLTRELEME MANTIKLARI
   const dogPets = useMemo(() => allPets.filter(p => p.type === 'Dog'), [allPets]);
   const catPets = useMemo(() => allPets.filter(p => p.type === 'Cat'), [allPets]);
   const birdPets = useMemo(() => allPets.filter(p => p.type === 'Bird'), [allPets]);
@@ -163,7 +165,6 @@ export default function HomePage() {
     );
   };
 
-  // Yükleme ekranı (Sadece ilk veriler gelene kadar)
   if (loading && dbListings.length === 0) {
     return <div className="min-h-screen flex items-center justify-center bg-secondary/50"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
   }
