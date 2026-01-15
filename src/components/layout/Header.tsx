@@ -15,7 +15,6 @@ import {
   HeartHandshake,
   UserPlus,
   User,
-  LifeBuoy,
   Shield,
   Bell,
   MessageSquare,
@@ -26,6 +25,8 @@ import {
   CreditCard,
   FileText,
   MessageCircle,
+  Bird,      
+  Banknote,  
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -59,6 +60,8 @@ const navLinks = [
 
 const serviceCategories = [
   { icon: Heart, label: 'Sahiplendirme', href: '/' },
+  { icon: Bird, label: 'Güvercinler', href: '/guvercinler' },
+  { icon: Banknote, label: 'Al & Sat', href: '/al-sat' },
   { icon: HeartHandshake, label: 'Eş Arayanlar', href: '/es-arayanlar' },
   { icon: Stethoscope, label: 'Veteriner', href: '/veteriner' },
   { icon: Building, label: 'Pet Oteli', href: '/pet-oteli' },
@@ -98,6 +101,8 @@ export function Header() {
     if (pathname === '/petshop') return <VetSearchFilters pageType="petshop" />;
     if (pathname === '/pet_taksi') return <VetSearchFilters pageType="pet_taksi" />;
     if (pathname === '/gezdirici') return <VetSearchFilters pageType="walker" />;
+    if (pathname === '/guvercinler') return <SearchFilters />;
+    if (pathname === '/al-sat') return <SearchFilters />;
     if (pathname === '/es-arayanlar') return <SearchFilters />;
     return <SearchFilters />;
   };
@@ -259,14 +264,18 @@ export function Header() {
         </div>
       </header>
 
-      {/* YENİLENMİŞ KATEGORİ VE FİLTRE ALANI */}
+      {/* KATEGORİ VE FİLTRE ALANI - MASAÜSTÜ İÇİN TEK SATIR AYARI */}
       {showCategoriesAndFilters && (
         <div className="bg-white shadow-sm border-b py-2">
           <div className="w-full md:container md:mx-auto">
             
             <div className="w-full">
-              {/* Yatay Kaydırmalı Kategori Menüsü */}
-              <div className="flex w-full overflow-x-auto py-2 px-4 gap-3 md:grid md:grid-cols-9 md:gap-1 md:overflow-visible no-scrollbar">
+              {/* ÖNEMLİ DEĞİŞİKLİK BURADA:
+                  md:flex-nowrap -> Asla alt satıra geçme
+                  md:justify-between -> Ekrana eşit yay
+                  md:gap-1 -> Araları sıkı tut
+              */}
+              <div className="flex w-full overflow-x-auto py-2 px-4 gap-3 md:flex md:justify-between md:flex-nowrap md:gap-1 md:overflow-visible no-scrollbar">
                 {serviceCategories.map((service) => {
                   const isActive = pathname === service.href;
 
@@ -277,7 +286,8 @@ export function Header() {
                       className={cn(
                         'flex flex-col items-center justify-center transition-all duration-200 rounded-xl',
                         'min-w-[72px] py-2 gap-1.5',
-                        'md:min-w-0 md:w-full md:py-1.5 md:gap-1',
+                        // Masaüstünde paddingleri biraz azalttık (px-2) ki 11 tane sığsın
+                        'md:min-w-0 md:w-auto md:px-2 md:py-2 md:gap-2',
                         isActive
                           ? 'bg-orange-50 text-primary ring-1 ring-primary/20 shadow-sm'
                           : 'text-gray-500 hover:bg-gray-50 hover:text-primary'
@@ -292,7 +302,7 @@ export function Header() {
                       
                       <span className={cn(
                         "text-[10px] md:text-[11px] font-medium text-center leading-tight px-1",
-                        "whitespace-nowrap md:whitespace-normal" 
+                        "whitespace-nowrap md:whitespace-nowrap" 
                       )}>
                         {service.label}
                       </span>
