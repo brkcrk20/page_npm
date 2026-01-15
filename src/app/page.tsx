@@ -1,6 +1,7 @@
 'use client';
 
 import { PetCard } from "@/components/PetCard";
+import { pets as staticPets } from "@/lib/data"; // Sabit verileri geri ekledik
 import {
   Accordion,
   AccordionContent,
@@ -12,7 +13,8 @@ import {
   Search,
   BookText,
   ChevronDown,
-  Loader2
+  Loader2,
+  Info
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,7 +24,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { categories, type CategoryInfo } from "@/lib/breeds";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-// FIREBASE İTHALATLARI
+// DOĞRU İTHALAT YOLU
 import { db } from '@/lib/firebase';
 import { collectionGroup, getDocs, query } from 'firebase/firestore';
 import type { PetListing } from "@/lib/types";
@@ -39,7 +41,7 @@ const CategoryFilter = ({ category, onTriggerClick, isSelected }: { category: Ca
        <div className={cn(
         "flex items-center justify-between whitespace-nowrap text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 w-full rounded-t-xl",
         isSelected 
-            ? "bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))] rounded-b-none"
+            ? "bg-background text-primary shadow-sm [box-shadow:0_0_8_hsl(var(--primary))] rounded-b-none"
             : "bg-muted text-muted-foreground hover:text-primary rounded-xl"
         )}>
           <Link href={`/${category.slug}`} className="flex items-center gap-2 font-bold p-3 flex-grow">
@@ -90,9 +92,7 @@ const CategoryFilter = ({ category, onTriggerClick, isSelected }: { category: Ca
                 </Link>
               </li>
             )) : (
-                <li className="text-center text-sm text-muted-foreground py-4">
-                    Sonuç bulunamadı.
-                </li>
+                <li className="text-center text-sm text-muted-foreground py-4">Sonuç bulunamadı.</li>
             )}
           </ul>
         </div>
@@ -132,12 +132,30 @@ export default function HomePage() {
     fetchAllListings();
   }, []);
 
-  // FİLTRELEME MANTIKLARI
-  const dogListings = useMemo(() => dbListings.filter(p => p.species === 'Dog'), [dbListings]);
-  const catListings = useMemo(() => dbListings.filter(p => p.species === 'Cat'), [dbListings]);
-  const birdListings = useMemo(() => dbListings.filter(p => p.species === 'Bird'), [dbListings]);
-  const otherListings = useMemo(() => dbListings.filter(p => p.species === 'Other'), [dbListings]);
-  const featuredListings = useMemo(() => dbListings.slice(0, 8), [dbListings]);
+  // VERİ DÖNÜŞTÜRÜCÜ: Veritabanı verisini PetCard'ın anlayacağı şekle sokar (Hata önleyici)
+  const mapListingToPet = (listing: any) => ({
+    ...listing,
+    // PetCard 'image' (dizi) bekliyorsa 'imageUrl' (string) değerini diziye çeviriyoruz
+    image: listing.imageUrl ? [listing.imageUrl] : (listing.image || []),
+    type: listing.species || listing.type,
+    price: listing.price || 0,
+    location: listing.location || "Belirtilmemiş",
+    isDb: true
+  });
+
+  // HİBRİT VERİ: Veritabanından gelenleri ve sabit örnekleri birleştiriyoruz
+  const allPets = useMemo(() => {
+    const fromDb = dbListings.map(mapListingToPet);
+    const fromStatic = staticPets.map(p => ({ ...p, isStatic: true }));
+    // Veritabanı ilanları her zaman en üstte görünsün
+    return [...fromDb, ...fromStatic];
+  }, [dbListings]);
+
+  // FİLTRELEME MANTIKLARI (Güncellenmiş liste üzerinden)
+  const dogPets = useMemo(() => allPets.filter(p => p.type === 'Dog'), [allPets]);
+  const catPets = useMemo(() => allPets.filter(p => p.type === 'Cat'), [allPets]);
+  const birdPets = useMemo(() => allPets.filter(p => p.type === 'Bird'), [allPets]);
+  const featuredPets = useMemo(() => allPets.slice(0, 8), [allPets]);
 
   const handleAccordionToggle = (value: string) => {
     setOpenAccordion(prev => 
@@ -145,7 +163,10 @@ export default function HomePage() {
     );
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-secondary/50"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
+  // Yükleme ekranı (Sadece ilk veriler gelene kadar)
+  if (loading && dbListings.length === 0) {
+    return <div className="min-h-screen flex items-center justify-center bg-secondary/50"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
+  }
 
   return (
     <div className="bg-secondary/50 overflow-x-hidden">
@@ -167,6 +188,14 @@ export default function HomePage() {
           </aside>
           
           <main className="col-span-1 space-y-12">
+            {/* BİLGİ KUTUSU: Veritabanı boşsa gösterilir */}
+            {dbListings.length === 0 && !loading && (
+              <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center gap-3 text-blue-800 text-sm">
+                <Info className="h-5 w-5" />
+                <span>Henüz veritabanında ilan yok, örnek veriler gösteriliyor. İlan vererek burayı canlandırabilirsiniz!</span>
+              </div>
+            )}
+
             {/* YILDIZLI İLANLAR */}
             <section>
               <div className="flex justify-between items-center mb-4">
@@ -176,39 +205,35 @@ export default function HomePage() {
                 </Button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-                {featuredListings.map((pet) => (
+                {featuredPets.map((pet) => (
                   <PetCard key={pet.id} pet={pet as any} />
                 ))}
               </div>
             </section>
 
             {/* KÖPEK İLANLARI */}
-            {dogListings.length > 0 && (
-              <section>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-bold">Köpek İlanları</h2>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-                  {dogListings.slice(0, 4).map((pet) => (
-                    <PetCard key={pet.id} pet={pet as any} />
-                  ))}
-                </div>
-              </section>
-            )}
+            <section>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Köpek İlanları</h2>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+                {dogPets.slice(0, 4).map((pet) => (
+                  <PetCard key={pet.id} pet={pet as any} />
+                ))}
+              </div>
+            </section>
 
             {/* KEDİ İLANLARI */}
-            {catListings.length > 0 && (
-              <section>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-bold">Kedi İlanları</h2>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-                  {catListings.slice(0, 4).map((pet) => (
-                    <PetCard key={pet.id} pet={pet as any} />
-                  ))}
-                </div>
-              </section>
-            )}
+            <section>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Kedi İlanları</h2>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+                {catPets.slice(0, 4).map((pet) => (
+                  <PetCard key={pet.id} pet={pet as any} />
+                ))}
+              </div>
+            </section>
 
             {/* BLOG KISMI */}
             <div className="space-y-8 pt-8 border-t">
