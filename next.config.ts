@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com', // Firebase resimleri için eklendi
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'placehold.co',
         port: '',
         pathname: '/**',
@@ -30,8 +36,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // This allows the Next.js dev server to accept requests from the
-  // Firebase Studio environment, fixing cross-origin issues.
+  // Firebase Studio ortamı için gerekli olan bu kısmı asla silmiyoruz:
   allowedDevOrigins: [
     'https://*.cluster-6aufaxcfanfh2quaz7stglulic.cloudworkstations.dev',
   ],
