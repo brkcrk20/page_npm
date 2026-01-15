@@ -74,7 +74,10 @@ export function UserManagement() {
     if (action === 'View Details') {
       setSelectedUser(user);
     } else {
-      alert(`${action} action for user ${user.id} is not implemented yet. This requires server-side logic (e.g., Firebase Functions).`);
+      toast({
+        title: "Bilgi",
+        description: `${action} işlemi henüz aktif değil. Firebase Functions gerektirir.`,
+      });
     }
   };
   
@@ -84,41 +87,41 @@ export function UserManagement() {
 
   const getStatusVariant = (status?: UserProfile['userStatus']) => {
     switch (status) {
-      case 'premium':
-        return 'default';
-      case 'onayli':
-        return 'secondary';
-      case 'yasakli':
-        return 'destructive';
-      default:
-        return 'outline';
+      case 'premium': return 'default';
+      case 'onayli': return 'secondary';
+      case 'yasakli': return 'destructive';
+      default: return 'outline';
     }
   };
 
   const handleAddUserSubmit = async (values: AddUserFormValues) => {
     form.clearErrors();
     try {
-      // Create user in Auth
+      // 1. Firebase Auth üzerinde kullanıcıyı oluştur
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
-      // Save profile to Firestore
-      const userProfile: Omit<UserProfile, 'favoritePetIds'> = {
+      // 2. Firestore için profil objesini hazırla
+      // DÜZELTME: 'name' ve 'favoritePetIds' alanlarını ekleyerek tip hatasını giderdik
+      const newUserProfile: UserProfile = {
         id: user.uid,
+        name: values.username, // Formdaki username'i 'name' olarak da atıyoruz
         username: values.username,
         email: values.email,
         userStatus: 'standart',
+        favoritePetIds: [], // Boş bir dizi olarak başlatıyoruz
       };
       
       const userDocRef = doc(firestore, "users", user.uid);
       
-      setDoc(userDocRef, userProfile).catch(error => {
+      // 3. Firestore'a kaydet
+      await setDoc(userDocRef, newUserProfile).catch(error => {
         errorEmitter.emit(
           'permission-error',
           new FirestorePermissionError({
             path: userDocRef.path,
             operation: 'create',
-            requestResourceData: userProfile
+            requestResourceData: newUserProfile
           })
         );
       });
@@ -143,7 +146,6 @@ export function UserManagement() {
       });
     }
   };
-
 
   return (
     <>
@@ -227,8 +229,7 @@ export function UserManagement() {
                   <ShieldAlert className="w-16 h-16" />
                   <p className="font-bold">Veri Çekilemedi</p>
                   <p className="text-xs text-muted-foreground">
-                      Admin yetkileri için Firestore kuralları ayarlanmamış olabilir. <br />
-                      <code>`rules_version = '2'; service cloud.firestore {'{'} match /databases/{'{'}database{'}'}/documents {'{'}`</code>
+                      Admin yetkileri için Firestore kuralları ayarlanmamış olabilir.
                   </p>
               </div>
           )}
@@ -238,8 +239,7 @@ export function UserManagement() {
                   <TableRow>
                     <TableHead>Kullanıcı ID</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Kullanıcı Adı</TableHead>
-                    <TableHead>Konum</TableHead>
+                    <TableHead>İsim / Kullanıcı Adı</TableHead>
                     <TableHead>Statü</TableHead>
                     <TableHead className="text-right">İşlemler</TableHead>
                   </TableRow>
@@ -249,8 +249,7 @@ export function UserManagement() {
                     <TableRow key={user.id}>
                       <TableCell className="font-mono text-xs">{user.id}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.username}</TableCell>
-                      <TableCell>{user.location || "Belirtilmemiş"}</TableCell>
+                      <TableCell>{user.name || user.username || "İsimsiz"}</TableCell>
                       <TableCell>
                         <Badge variant={getStatusVariant(user.userStatus)}>
                           {user.userStatus || 'standart'}
@@ -260,7 +259,6 @@ export function UserManagement() {
                          <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Menüyü aç</span>
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -268,25 +266,16 @@ export function UserManagement() {
                             <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleAction('View Details', user)}>
                               <FileText className="mr-2 h-4 w-4" />
-                              Kullanıcı Bilgileri
+                              Detaylar
                             </DropdownMenuItem>
-                             <DropdownMenuItem onClick={() => handleAction('Make Premium', user)}>
+                            <DropdownMenuItem onClick={() => handleAction('Make Premium', user)}>
                               <Star className="mr-2 h-4 w-4" />
                               Premium Yap
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                             <DropdownMenuItem onClick={() => handleAction('Change Role', user)}>
-                              <UserCog className="mr-2 h-4 w-4" />
-                              Rolünü Değiştir
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive" onClick={() => handleAction('Ban', user)}>
                               <Ban className="mr-2 h-4 w-4" />
-                              Kullanıcıyı Yasakla
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleAction('Delete', user)}>
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Kullanıcıyı Sil
+                              Yasakla
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -296,60 +285,26 @@ export function UserManagement() {
                 </TableBody>
               </Table>
           )}
-          {!isLoading && users?.length === 0 && (
-            <p className="text-center text-muted-foreground">Henüz kayıtlı kullanıcı bulunmuyor.</p>
-          )}
         </CardContent>
       </Card>
       
+      {/* Detaylar Dialogu */}
       <Dialog open={!!selectedUser} onOpenChange={(isOpen) => !isOpen && handleCloseDialog()}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[500px]">
           {selectedUser && (
             <>
               <DialogHeader>
-                <DialogTitle>Kullanıcı Detayları: {selectedUser.username}</DialogTitle>
-                <DialogDescription>
-                    <span className="font-mono">{selectedUser.id}</span>
-                </DialogDescription>
+                <DialogTitle>Kullanıcı Detayları</DialogTitle>
+                <DialogDescription className="font-mono text-xs">{selectedUser.id}</DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="text-sm">
-                  <h4 className="font-semibold mb-3 border-b pb-2">Kişisel Bilgiler</h4>
-                  <div className="space-y-2">
-                    <div><strong>Statü:</strong> <Badge variant={getStatusVariant(selectedUser.userStatus)}>{selectedUser.userStatus || 'standart'}</Badge></div>
-                    <p><strong>Email:</strong> {selectedUser.email}</p>
-                    <p><strong>Kullanıcı Adı:</strong> {selectedUser.username}</p>
-                    <p><strong>Telefon:</strong> {selectedUser.phoneNumber || 'Belirtilmemiş'}</p>
-                    <p><strong>Konum:</strong> {selectedUser.location || 'Belirtilmemiş'}</p>
-                  </div>
-                </div>
-
-                {selectedUser.companyType && (
-                    <div className="text-sm">
-                        <h4 className="font-semibold mb-3 border-b pb-2 pt-4">Kurumsal Bilgiler</h4>
-                        <div className="space-y-2">
-                             <p><strong>Şirket Tipi:</strong> {selectedUser.companyType}</p>
-                             <p><strong>Firma Ünvanı:</strong> {selectedUser.companyTitle}</p>
-                             <p><strong>TC Kimlik No:</strong> {selectedUser.tcNo}</p>
-                             <p><strong>Vergi Dairesi:</strong> {selectedUser.taxOffice}</p>
-                             <p><strong>Vergi Numarası:</strong> {selectedUser.taxNo}</p>
-                             <p><strong>Firma Adresi:</strong> {selectedUser.companyAddress}</p>
-                        </div>
-                    </div>
-                )}
-                
-                <div className="text-sm">
-                   <h4 className="font-semibold mb-3 border-b pb-2 pt-4">İlişkili Veriler</h4>
-                    <div className="space-y-2">
-                       <div className="flex items-center">
-                         <strong className="w-32">Favori İlanlar:</strong>
-                         {selectedUser.favoritePetIds && selectedUser.favoritePetIds.length > 0 ? (
-                          <span className="flex flex-wrap gap-1">
-                            {selectedUser.favoritePetIds.map(id => <Badge key={id} variant="secondary" className="font-mono">{id}</Badge>)}
-                          </span>
-                        ) : 'Favori ilanı yok'}
-                       </div>
-                    </div>
+              <div className="space-y-4 py-4 text-sm">
+                <div className="grid grid-cols-2 gap-2">
+                  <p><strong>İsim:</strong> {selectedUser.name || 'Belirtilmemiş'}</p>
+                  <p><strong>Kullanıcı Adı:</strong> {selectedUser.username}</p>
+                  <p><strong>E-posta:</strong> {selectedUser.email}</p>
+                  <p><strong>Durum:</strong> <Badge variant={getStatusVariant(selectedUser.userStatus)}>{selectedUser.userStatus || 'standart'}</Badge></p>
+                  <p><strong>Konum:</strong> {selectedUser.location || 'Belirtilmemiş'}</p>
+                  <p><strong>Telefon:</strong> {selectedUser.phoneNumber || 'Belirtilmemiş'}</p>
                 </div>
               </div>
               <DialogFooter>
@@ -359,7 +314,6 @@ export function UserManagement() {
           )}
         </DialogContent>
       </Dialog>
-
     </>
   )
 }
