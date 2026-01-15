@@ -15,6 +15,7 @@ import {
   HeartHandshake,
   UserPlus,
   User,
+  LifeBuoy,
   Shield,
   Bell,
   MessageSquare,
@@ -25,9 +26,6 @@ import {
   CreditCard,
   FileText,
   MessageCircle,
-  // YENİ EKLENEN İKONLAR:
-  Bird,      // Güvercinler için
-  Banknote,  // Al & Sat için
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -59,14 +57,8 @@ const navLinks = [
   { href: '/guvenlik', label: 'Güvenlik' },
 ];
 
-// MENÜ SIRALAMASINI BURADAN AYARLADIK
 const serviceCategories = [
   { icon: Heart, label: 'Sahiplendirme', href: '/' },
-  
-  // YENİ EKLENENLER (Öne çıkması için başa aldık)
-  { icon: Bird, label: 'Güvercinler', href: '/guvercinler' },
-  { icon: Banknote, label: 'Al & Sat', href: '/al-sat' },
-  
   { icon: HeartHandshake, label: 'Eş Arayanlar', href: '/es-arayanlar' },
   { icon: Stethoscope, label: 'Veteriner', href: '/veteriner' },
   { icon: Building, label: 'Pet Oteli', href: '/pet-oteli' },
@@ -81,7 +73,7 @@ export function Header() {
   const pathname = usePathname();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
   const { user, isUserLoading } = useUser();
-  const { userProfile, isLoading: isProfileLoading } = useUserProfile(user?.uid);
+  const { data: userProfile, isLoading: isProfileLoading } = useUserProfile(user?.uid);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -98,7 +90,6 @@ export function Header() {
 
   const isLoading = !isMounted || isUserLoading || isProfileLoading;
   
-  // FİLTRELERİN AYARLANDIĞI KISIM (Güvercin ve Al-Sat için de filtre göstermeliyiz)
   const renderFilters = () => {
     if (pathname === '/veteriner') return <VetSearchFilters pageType="vet" />;
     if (pathname === '/pet-oteli') return <VetSearchFilters pageType="hotel" />;
@@ -107,11 +98,6 @@ export function Header() {
     if (pathname === '/petshop') return <VetSearchFilters pageType="petshop" />;
     if (pathname === '/pet_taksi') return <VetSearchFilters pageType="pet_taksi" />;
     if (pathname === '/gezdirici') return <VetSearchFilters pageType="walker" />;
-    
-    // Şimdilik Güvercin ve Al-Sat sayfalarında da standart filtreleri gösterelim
-    if (pathname === '/guvercinler') return <SearchFilters />;
-    if (pathname === '/al-sat') return <SearchFilters />;
-    
     if (pathname === '/es-arayanlar') return <SearchFilters />;
     return <SearchFilters />;
   };
@@ -273,7 +259,7 @@ export function Header() {
         </div>
       </header>
 
-      {/* KATEGORİ VE FİLTRE ALANI */}
+      {/* YENİLENMİŞ KATEGORİ VE FİLTRE ALANI */}
       {showCategoriesAndFilters && (
         <div className="bg-white shadow-sm border-b py-2">
           <div className="w-full md:container md:mx-auto">
