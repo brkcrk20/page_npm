@@ -85,7 +85,7 @@ export function Header() {
   
   const auth = getAuth();
   
-  const isAdmin = user && user.email === 'admin@patisemti.com';
+  const isAdmin = user && user.email === 'admin@petsemti.com';
 
   const handleLogout = () => {
     signOut(auth);
