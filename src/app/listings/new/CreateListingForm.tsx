@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -32,11 +31,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { handleImproveDescription, handleSuggestBreeds } from './actions';
 import { useUser, useFirestore, useStorage } from '@/firebase';
 import { useUserProfile } from '@/firebase/firestore/use-user-profile';
-import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import type { PetListing } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+// TYPESCRIPT HATASINI ÇÖZEN ARAYÜZ
+interface CreateListingFormProps {
+  isAdmin?: boolean;
+}
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'İsim en az 2 karakter olmalıdır.' }),
@@ -60,11 +64,12 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function CreateListingForm() {
+// BİLEŞENİ GÜNCELLEDİK: isAdmin bilgisini alıyor
+export function CreateListingForm({ isAdmin = false }: CreateListingFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
-  const { userProfile, isLoading: isProfileLoading } = useUserProfile(user?.uid);
+  const { data: userProfile, isLoading: isProfileLoading } = useUserProfile(user?.uid);
   const firestore = useFirestore();
   const storage = useStorage();
   
@@ -102,8 +107,9 @@ export function CreateListingForm() {
     }
   }, [userProfile, form]);
 
-  const canPostListing = userProfile?.userStatus === 'premium' || (listingCount !== null && listingCount < 1);
-  const isLoading = isUserLoading || isProfileLoading || listingCount === null;
+  // LİMİT KONTROLÜ: Admin ise her zaman true (izinli) döner
+  const canPostListing = isAdmin || userProfile?.userStatus === 'premium' || (listingCount !== null && listingCount < 1);
+  const isLoading = isUserLoading || isProfileLoading || (listingCount === null && !isAdmin);
 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,7 +119,7 @@ export function CreateListingForm() {
       reader.onload = (event) => {
         const dataUri = event.target?.result as string;
         setPhotoPreview(dataUri);
-        setBreedSuggestions([]); // Clear previous suggestions
+        setBreedSuggestions([]); 
       };
       reader.readAsDataURL(file);
     }
@@ -171,27 +177,24 @@ export function CreateListingForm() {
 
     setIsSubmitting(true);
     try {
-        // 1. Upload image to Storage
         const imageRef = ref(storage, `pet-listings/${user.uid}/${Date.now()}`);
         const uploadResult = await uploadString(imageRef, photoPreview, 'data_url');
         const imageUrl = await getDownloadURL(uploadResult.ref);
 
-        // 2. Prepare data for Firestore
         const newListing: Omit<PetListing, 'id'> = {
             name: values.name,
             species: values.animalType,
             breed: values.breed,
-            age: parseInt(values.age), // Assuming age is entered as a number of years
+            age: parseInt(values.age), 
             description: values.description,
             listingType: values.listingType,
             price: values.listingType === 'Sale' ? parseInt(values.price!) : 0,
             location: values.location,
             imageUrl: imageUrl,
             userId: user.uid,
-            isFeatured: userProfile?.userStatus === 'premium', // Feature premium user listings
+            isFeatured: isAdmin || userProfile?.userStatus === 'premium', 
         };
 
-        // 3. Add document to Firestore
         const listingsRef = collection(firestore, `users/${user.uid}/petListings`);
         const docRef = await addDoc(listingsRef, newListing);
         
@@ -200,7 +203,7 @@ export function CreateListingForm() {
             description: `${values.name} başarıyla listelendi.`,
         });
 
-        router.push(`/listings/${docRef.id}`); // Redirect to new listing page
+        router.push(`/listings/${docRef.id}`); 
 
     } catch (error) {
         console.error("Error creating listing:", error);
@@ -225,7 +228,8 @@ export function CreateListingForm() {
         <CardDescription>Evcil dostunuz hakkında bilgileri doldurun.</CardDescription>
       </CardHeader>
       <CardContent>
-         {!canPostListing && (
+          {/* UYARI KUTUSU: Sadece admin DEĞİLSE ve limiti dolduysa gösterilir */}
+          {!isAdmin && !canPostListing && (
              <Alert variant="destructive" className="mb-6">
                 <ShieldAlert className="h-4 w-4" />
                 <AlertTitle>İlan Verme Limitine Ulaştınız</AlertTitle>
@@ -233,7 +237,7 @@ export function CreateListingForm() {
                     Standart üyeler yalnızca bir ilan yayınlayabilir. Daha fazla ilan yayınlamak için hesabınızı Premium'a yükseltin.
                 </AlertDescription>
             </Alert>
-         )}
+          )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -248,7 +252,7 @@ export function CreateListingForm() {
                         <div className="w-full aspect-square border-2 border-dashed rounded-lg flex items-center justify-center relative">
                           {photoPreview ? (
                             <>
-                              <Image src={photoPreview} alt="Pet preview" layout="fill" objectFit="cover" className="rounded-lg" />
+                              <Image src={photoPreview} alt="Pet preview" fill className="rounded-lg object-cover" />
                               <Button
                                 type="button"
                                 variant="destructive"
@@ -279,18 +283,9 @@ export function CreateListingForm() {
                 {photoPreview && (
                   <div className="space-y-2">
                     <Button type="button" onClick={onSuggestBreeds} disabled={isSuggestingBreeds} className="w-full">
-                      {isSuggestingBreeds ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Wand2 className="mr-2 h-4 w-4" />
-                      )}
+                      {isSuggestingBreeds ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                       AI ile Cins Önerisi Al
                     </Button>
-                    {breedSuggestions.length > 0 && (
-                      <div className="text-sm text-muted-foreground">
-                        Öneriler: {breedSuggestions.join(', ')}
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -324,6 +319,7 @@ export function CreateListingForm() {
                     )}
                   />
                 </div>
+                
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -384,7 +380,7 @@ export function CreateListingForm() {
                     <FormItem>
                       <FormLabel>Açıklama</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Dostunuzun özelliklerini, alışkanlıklarını anlatın..." className="min-h-[150px]" {...field} />
+                        <Textarea placeholder="Dostunuzun özelliklerini..." className="min-h-[150px]" {...field} />
                       </FormControl>
                       <FormMessage />
                       <FormDescription className="flex justify-between items-center pt-1">
@@ -397,8 +393,9 @@ export function CreateListingForm() {
                     </FormItem>
                   )}
                 />
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <FormField
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
                         control={form.control}
                         name="listingType"
                         render={({ field }) => (
@@ -441,7 +438,7 @@ export function CreateListingForm() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Button type="submit" size="lg" disabled={isSubmitting || !canPostListing || isLoading}>
+              <Button type="submit" size="lg" disabled={isSubmitting || (!isAdmin && !canPostListing)}>
                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 İlanı Oluştur
               </Button>
