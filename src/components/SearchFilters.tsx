@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/select';
 import { Search, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { citiesData, cityNames } from '@/lib/turkiye-data';
+import { petBreeds } from '@/lib/pet-data'; // YENİ VERİYİ ÇEKİYORUZ
 
-// 1. ASIL MANTIĞI BU FONKSİYON İÇİNE ALDIK
 function SearchFiltersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -70,48 +70,69 @@ function SearchFiltersContent() {
         <div className="relative lg:col-span-2 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input 
-            placeholder="Ne arıyorsun? (Irk, isim...)" 
+            placeholder="Ne arıyorsun? (İlan no, başlık...)" 
             className="pl-9 h-11 w-full bg-white border-gray-200 rounded-xl focus:border-primary focus:ring-primary/20" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        {/* Tür Seçimi */}
-        <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="h-11 w-full bg-white border-gray-200 rounded-xl focus:ring-primary/20"><SelectValue placeholder="Tüm Türler" /></SelectTrigger>
+        {/* --- TÜR SEÇİMİ (Kedi, Köpek vb.) --- */}
+        <Select 
+          value={selectedType} 
+          onValueChange={(val) => {
+            setSelectedType(val);
+            setSelectedBreed(""); // Tür değişince cins sıfırlanır
+          }}
+        >
+          <SelectTrigger className="h-11 w-full bg-white border-gray-200 rounded-xl focus:ring-primary/20">
+            <SelectValue placeholder="Tüm Türler" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tüm Türler</SelectItem>
-            <SelectItem value="Dog">Köpek</SelectItem>
-            <SelectItem value="Cat">Kedi</SelectItem>
-            <SelectItem value="Bird">Kuş</SelectItem>
-            <SelectItem value="Other">Diğer</SelectItem>
+            <SelectItem value="dog">Köpek</SelectItem>
+            <SelectItem value="cat">Kedi</SelectItem>
+            <SelectItem value="bird">Kuş</SelectItem>
+            <SelectItem value="fish">Akvaryum</SelectItem>
+            <SelectItem value="other">Diğer</SelectItem>
           </SelectContent>
         </Select>
 
-        {/* Cins Seçimi */}
-        <Select value={selectedBreed} onValueChange={setSelectedBreed}>
-          <SelectTrigger className="h-11 w-full bg-white border-gray-200 rounded-xl focus:ring-primary/20"><SelectValue placeholder="Tüm Cinsler" /></SelectTrigger>
-          <SelectContent>
+        {/* --- CİNS SEÇİMİ (Dinamik) --- */}
+        <Select 
+          value={selectedBreed} 
+          onValueChange={setSelectedBreed}
+          // Eğer tür seçili değilse veya "all/other" ise kapalı kalsın
+          disabled={!selectedType || selectedType === "all" || selectedType === "other"}
+        >
+          <SelectTrigger className="h-11 w-full bg-white border-gray-200 rounded-xl focus:ring-primary/20">
+            <SelectValue placeholder="Tüm Cinsler" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px]">
             <SelectItem value="all">Tüm Cinsler</SelectItem>
-            <SelectItem value="golden-retriever">Golden Retriever</SelectItem>
-            <SelectItem value="scottish-fold">Scottish Fold</SelectItem>
-            <SelectItem value="tekir">Tekir</SelectItem>
+            {/* Seçilen türe göre listeyi getir */}
+            {selectedType && petBreeds[selectedType]?.map((breed) => (
+              <SelectItem key={breed} value={breed}>{breed}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
         
-        {/* İl Seçimi */}
+        {/* --- İL SEÇİMİ --- */}
         <Select value={selectedCity} onValueChange={(val) => { setSelectedCity(val); setSelectedDistrict(""); }}>
-          <SelectTrigger className="h-11 w-full bg-white border-gray-200 rounded-xl focus:ring-primary/20"><SelectValue placeholder="İl" /></SelectTrigger>
+          <SelectTrigger className="h-11 w-full bg-white border-gray-200 rounded-xl focus:ring-primary/20">
+            <SelectValue placeholder="İl" />
+          </SelectTrigger>
           <SelectContent className="max-h-[300px]">
             <SelectItem value="tum_sehirler">Tüm Şehirler</SelectItem>
             {cityNames.map((city) => (<SelectItem key={city} value={city}>{city}</SelectItem>))}
           </SelectContent>
         </Select>
 
-        {/* İlçe Seçimi */}
+        {/* --- İLÇE SEÇİMİ --- */}
         <Select value={selectedDistrict} onValueChange={setSelectedDistrict} disabled={!selectedCity || selectedCity === "tum_sehirler"}>
-          <SelectTrigger className="h-11 w-full bg-white border-gray-200 rounded-xl focus:ring-primary/20"><SelectValue placeholder="İlçe" /></SelectTrigger>
+          <SelectTrigger className="h-11 w-full bg-white border-gray-200 rounded-xl focus:ring-primary/20">
+            <SelectValue placeholder="İlçe" />
+          </SelectTrigger>
           <SelectContent className="max-h-[300px]">
             <SelectItem value="tum_ilceler">Tüm İlçeler</SelectItem>
             {selectedCity && citiesData[selectedCity]?.map((district) => (<SelectItem key={district} value={district}>{district}</SelectItem>))}
@@ -125,7 +146,6 @@ function SearchFiltersContent() {
   );
 }
 
-// 2. DIŞARIYA SUSPENSE İLE SARMALANMIŞ HALİNİ VERİYORUZ
 export function SearchFilters() {
   return (
     <Suspense fallback={<div className="h-12 w-full bg-gray-100 rounded-xl animate-pulse" />}>
