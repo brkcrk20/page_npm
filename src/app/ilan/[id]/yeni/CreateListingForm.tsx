@@ -122,7 +122,7 @@ export function CreateListingForm() {
         const docRef = await addDoc(collection(firestore, `users/${user.uid}/petListings`), newListing);
         
         toast({ title: "Başarılı", description: "İlanınız başarıyla yayınlandı!" });
-        router.push(`/ilan/${docRef.id}`); 
+        router.push(`/listings/${docRef.id}`); 
 
     } catch (error) {
         console.error(error);
