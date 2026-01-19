@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, SlidersHorizontal, ChevronDown, ChevronUp, Check, X } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { citiesData, cityNames } from '@/lib/turkiye-data';
 import { petBreeds } from '@/lib/pet-data';
 import { cn } from '@/lib/utils';
@@ -49,7 +49,7 @@ function SearchFiltersContent() {
     setSelectedDistrict(searchParams.get('district') || "");
   }, [searchParams]);
 
-  // Firebase'den İlan Sayılarını Çek (Sadece bir kere çalışır)
+  // Firebase'den İlan Sayılarını Çek
   useEffect(() => {
     const fetchCounts = async () => {
       try {
@@ -106,7 +106,7 @@ function SearchFiltersContent() {
       if (countB !== countA) {
         return countB - countA;
       }
-      // İlan sayısı eşitse (veya 0 ise) alfabetik sırala
+      // İlan sayısı eşitse alfabetik sırala
       return a.localeCompare(b, 'tr');
     });
   }, [selectedType, breedSearch, breedCounts]);
@@ -202,7 +202,8 @@ function SearchFiltersContent() {
                     <div className="flex items-center border-b px-3 pb-2 pt-3 sticky top-0 bg-white">
                         <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                         <input
-                           ref={(input) => input && input.focus()} 
+                           // HATA BURADAYDI, DÜZELTİLDİ:
+                           ref={(input) => { if (input) input.focus(); }} 
                            className="flex h-7 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
                            placeholder="Cins ara..."
                            value={breedSearch}
