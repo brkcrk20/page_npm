@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,19 +14,18 @@ import {
 import { Search, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { citiesData, cityNames } from '@/lib/turkiye-data';
 
-export function SearchFilters() {
+// 1. ASIL MANTIĞI BU FONKSİYON İÇİNE ALDIK
+function SearchFiltersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   
-  // State'leri URL'den gelen verilere göre başlatıyoruz (Sayfa yenilenince kaybolmasın diye)
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || "");
   const [selectedType, setSelectedType] = useState(searchParams.get('type') || "");
   const [selectedBreed, setSelectedBreed] = useState(searchParams.get('breed') || "");
   const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || "");
   const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || "");
 
-  // URL değişirse state'leri güncelle (Senkronizasyon)
   useEffect(() => {
     setSearchTerm(searchParams.get('q') || "");
     setSelectedType(searchParams.get('type') || "");
@@ -36,25 +35,14 @@ export function SearchFilters() {
   }, [searchParams]);
 
   const handleSearch = () => {
-    // Mevcut parametreleri al
     const params = new URLSearchParams(searchParams.toString());
 
-    // Yeni değerleri ayarla veya sil
     if (searchTerm) params.set('q', searchTerm); else params.delete('q');
-    
-    if (selectedType && selectedType !== "all") params.set('type', selectedType); 
-    else params.delete('type');
+    if (selectedType && selectedType !== "all") params.set('type', selectedType); else params.delete('type');
+    if (selectedBreed && selectedBreed !== "all") params.set('breed', selectedBreed); else params.delete('breed');
+    if (selectedCity && selectedCity !== "tum_sehirler") params.set('city', selectedCity); else params.delete('city');
+    if (selectedDistrict && selectedDistrict !== "tum_ilceler") params.set('district', selectedDistrict); else params.delete('district');
 
-    if (selectedBreed && selectedBreed !== "all") params.set('breed', selectedBreed); 
-    else params.delete('breed');
-
-    if (selectedCity && selectedCity !== "tum_sehirler") params.set('city', selectedCity); 
-    else params.delete('city');
-
-    if (selectedDistrict && selectedDistrict !== "tum_ilceler") params.set('district', selectedDistrict); 
-    else params.delete('district');
-
-    // URL'i güncelle (Sayfa yenilenmeden)
     router.push(`/?${params.toString()}`);
   };
 
@@ -134,5 +122,14 @@ export function SearchFilters() {
         <Button onClick={handleSearch} className="w-full h-11 text-base font-bold bg-primary hover:bg-primary/90 text-white rounded-xl shadow-md transition-transform active:scale-95">Bul</Button>
       </div>
     </div>
+  );
+}
+
+// 2. DIŞARIYA SUSPENSE İLE SARMALANMIŞ HALİNİ VERİYORUZ
+export function SearchFilters() {
+  return (
+    <Suspense fallback={<div className="h-12 w-full bg-gray-100 rounded-xl animate-pulse" />}>
+      <SearchFiltersContent />
+    </Suspense>
   );
 }
