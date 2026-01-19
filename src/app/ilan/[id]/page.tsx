@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, notFound } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -12,24 +13,24 @@ import {
   Star,
   MessageSquare,
   AlertTriangle,
+  Heart,
   Printer,
+  Share2,
+  Eye,
   Phone,
-  ArrowLeft,
+  Home,
+  AlertCircle,
   BookOpen,
-  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { pets as staticPets } from '@/lib/data'; // Statik veriler
+import { Badge } from '@/components/ui/badge';
+import { pets } from '@/lib/data';
 import { PetCard } from '@/components/PetCard';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-
-// Firebase importları
-import { db } from '@/lib/firebase';
-import { collectionGroup, getDocs, query } from 'firebase/firestore';
-import type { PetListing } from '@/lib/types';
+import NotFound from '@/app/not-found';
 
 const WhatsappIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -37,151 +38,122 @@ const WhatsappIcon = () => (
     </svg>
 );
 
-export default function IlanDetayPage() {
+export default function IlanPage() {
   const params = useParams();
-  // ID bazen dizi gelebilir, string'e çeviriyoruz
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const pet = pets.find((p) => p.id === id);
 
-  const [pet, setPet] = useState<any>(null); // Hem statik hem DB verisi için esnek tip
-  const [loading, setLoading] = useState(true);
-  const [mainImage, setMainImage] = useState<string>('');
-  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const imageDetails = pet ? PlaceHolderImages.find((img) => img.id === pet.image) : null;
+  const galleryImages = imageDetails ? [
+    imageDetails.imageUrl,
+    'https://picsum.photos/seed/pomeranian-2/800/600',
+    'https://picsum.photos/seed/pomeranian-3/800/600',
+    'https://picsum.photos/seed/pomeranian-4/800/600',
+    'https://picsum.photos/seed/pomeranian-5/800/600'
+  ] : [
+    'https://picsum.photos/seed/placeholder/800/600'
+  ];
 
-  // Veriyi Çekme (Statik mi DB mi kontrolü)
+  const [mainImage, setMainImage] = useState(galleryImages[0]);
+   
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    if (imageDetails) {
+        setMainImage(imageDetails.imageUrl);
+    }
+  }, [imageDetails]);
 
-      // 1. Önce Statik Verilerde Ara (Eski ilanlar bozulmasın)
-      const staticPet = staticPets.find((p) => p.id === id);
 
-      if (staticPet) {
-        setPet(staticPet);
-        // Statik resim mantığı
-        const imageDetails = PlaceHolderImages.find((img) => img.id === staticPet.image);
-        const mainImg = imageDetails ? imageDetails.imageUrl : 'https://picsum.photos/seed/placeholder/800/600';
-        setMainImage(mainImg);
-        setGalleryImages([
-            mainImg,
-            'https://picsum.photos/seed/pomeranian-2/800/600',
-            'https://picsum.photos/seed/pomeranian-3/800/600'
-        ]);
-        setLoading(false);
-        return;
-      }
+  const mockReviews = [
+    {
+      id: 1,
+      author: "Ayşe Yılmaz",
+      avatar: "https://i.pravatar.cc/150?img=1",
+      rating: 5,
+      comment: "İlan sahibi çok ilgiliydi, yavruyu sağlıklı bir şekilde teslim aldık. Herkese tavsiye ederim!",
+      date: "2 gün önce"
+    },
+    {
+      id: 2,
+      author: "Mehmet Kaya",
+      avatar: "https://i.pravatar.cc/150?img=2",
+      rating: 4,
+      comment: "İletişim kurmak kolay oldu. Köpeğin aşıları tamdı. Sadece buluşma yerinde biraz bekledik ama genel olarak memnun kaldık.",
+      date: "1 hafta önce"
+    }
+  ];
 
-      // 2. Statik değilse Firebase'e bak
-      try {
-        const q = query(collectionGroup(db, 'petListings'));
-        const querySnapshot = await getDocs(q);
-        const foundDoc = querySnapshot.docs.find(doc => doc.id === id);
-
-        if (foundDoc) {
-          const dbData = foundDoc.data() as PetListing;
-          // DB verisini UI formatına uyarla
-          const normalizedPet = {
-            id: foundDoc.id,
-            name: dbData.name,
-            breed: dbData.breed,
-            type: dbData.species || 'Other', // species'i type'a çevir
-            age: dbData.age,
-            description: dbData.description,
-            location: dbData.location,
-            listingType: dbData.listingType,
-            price: dbData.price,
-            imageUrl: dbData.imageUrl,
-            isDb: true // DB'den geldiğini işaretle
-          };
-          
-          setPet(normalizedPet);
-          setMainImage(dbData.imageUrl);
-          setGalleryImages([dbData.imageUrl]); // DB'de şimdilik tek resim var
-        }
-      } catch (error) {
-        console.error("İlan çekilemedi:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) fetchData();
-  }, [id]);
-
-  // Loading Ekranı
-  if (loading) {
-    return (
-        <div className="min-h-screen flex items-center justify-center">
-            <Loader2 className="h-10 w-10 animate-spin text-[#f05a28]" />
-        </div>
-    );
-  }
-
-  // İlan Bulunamadıysa
   if (!pet) {
-    return (
-        <div className="container mx-auto py-20 text-center">
-            <h2 className="text-2xl font-bold">İlan bulunamadı.</h2>
-            <Button asChild className="mt-6 bg-[#f05a28] hover:bg-[#d44d21]">
-                <Link href="/">Ana Sayfaya Dön</Link>
-            </Button>
-        </div>
-    );
+    return <NotFound />;
   }
 
-  // Fiyat Gösterimi
-  const priceDisplay = pet.listingType === 'Sale' 
-    ? (pet.price ? `${Number(pet.price).toLocaleString()} TL` : 'Fiyat Belirtilmemiş') 
-    : 'Ücretsiz Sahiplendirme';
+  const similarPets = pets.filter(p => p.type === pet.type && p.id !== pet.id).slice(0, 4);
+  const priceDisplay = pet.listingType === 'Sale' ? `${(Math.random() * 5000 + 1000).toFixed(0)} TL` : 'Görüşülür';
 
-  // Benzer İlanlar (Statik veriden çekiyoruz şimdilik)
-  const similarPets = staticPets.filter(p => p.type === pet.type && p.id !== pet.id).slice(0, 4);
 
   return (
-    <div className="container mx-auto py-8 px-4">
-        {/* Breadcrumb */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+    <div className="container mx-auto py-8">
+        {/* Breadcrumb and Top Actions */}
+        <div className="flex justify-between items-center mb-4">
             <div className="text-sm text-muted-foreground">
                 <Link href="/" className="hover:text-primary">Anasayfa</Link> &gt; 
-                <span className="mx-1">{pet.type} İlanları</span> &gt; 
-                <span className="font-semibold text-foreground ml-1">{pet.breed}</span>
+                <Link href={`/${pet.type.toLowerCase()}-ilanlari`} className="hover:text-primary"> {pet.type} İlanları</Link> &gt; 
+                <span className="font-semibold text-foreground"> {pet.breed}</span>
             </div>
             <div className="flex items-center gap-4 text-sm">
-                 <Link href="#" className="flex items-center gap-1 hover:text-primary"><Star className="w-4 h-4" /> Favorilere Ekle</Link>
-                 <Link href="#" className="flex items-center gap-1 hover:text-primary"><Printer className="w-4 h-4" /> Yazdır</Link>
+                <Link href="#" className="flex items-center gap-1 hover:text-primary"><Star className="w-4 h-4" /> Favorilere Ekle</Link>
+                <Link href="#" className="flex items-center gap-1 hover:text-primary"><Printer className="w-4 h-4" /> Yazdır</Link>
+                <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" className="w-8 h-8 bg-[#3b5998] text-white hover:bg-[#3b5998]/90">f</Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 bg-[#1DA1F2] text-white hover:bg-[#1DA1F2]/90">t</Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 bg-[#E60023] text-white hover:bg-[#E60023]/90">P</Button>
+                </div>
             </div>
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-bold mb-6">{pet.name} - {pet.breed}</h1>
+        <h1 className="text-2xl font-bold mb-6">{pet.name} - {pet.breed}</h1>
       
-        <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-8 gap-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-8">
         
-        {/* --- 1. SOL SÜTUN (FOTOĞRAFLAR VE DETAY) --- */}
+        {/* --- 1. SOL SÜTUN (MEDYA VE AÇIKLAMA) --- */}
         <div className="lg:col-span-5 space-y-6">
             {/* Gallery */}
             <div>
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border bg-gray-100 mb-2">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border mb-2">
                     <Image src={mainImage} alt={pet.name} fill className="object-cover" />
+                     <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white hover:bg-black/70">
+                        <ChevronLeft />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white hover:bg-black/70">
+                        <ChevronRight />
+                    </Button>
                 </div>
-                {/* Küçük Resimler (Eğer birden fazla varsa) */}
-                {galleryImages.length > 1 && (
-                    <div className="grid grid-cols-5 gap-2">
-                        {galleryImages.map((img, idx) => (
-                            <button key={idx} onClick={() => setMainImage(img)} className={`aspect-square relative rounded-md overflow-hidden border-2 ${mainImage === img ? 'border-primary' : 'border-transparent'}`}>
-                                <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
-                            </button>
-                        ))}
-                    </div>
-                )}
+                <div className="grid grid-cols-5 gap-2">
+                    {galleryImages.map((img, idx) => (
+                        <button key={idx} onClick={() => setMainImage(img)} className={`aspect-square relative rounded-md overflow-hidden border-2 ${mainImage === img ? 'border-primary' : 'border-transparent'}`}>
+                             <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            {/* İlan Detayları Metni */}
+            {/* Tab Menu */}
+             <div className="flex items-center gap-4 text-sm border-b pb-2">
+                <button className="flex items-center gap-1 text-red-600 font-semibold">
+                    <Camera className="w-4 h-4"/> Fotoğrafı Büyüt
+                </button>
+                <button className="flex items-center gap-1 text-muted-foreground">
+                    <Video className="w-4 h-4"/> Video
+                </button>
+            </div>
+
+            {/* İlan Detayları */}
             <div className="space-y-2">
-                <div className="bg-gray-800 text-white font-bold text-sm py-2 px-4 rounded-t-md">
-                    İlan Açıklaması
+                <div className="bg-gray-700 text-white font-bold text-sm py-2 px-4 rounded-t-md">
+                    İlan Detayları
                 </div>
                 <div className="border bg-white p-4 rounded-b-md">
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                        {pet.description || "Açıklama belirtilmemiş."}
+                    <p className="text-sm leading-relaxed">
+                        EV ORTAMINDA SAĞLIKLI VE MUTLU BİR ŞEKİLDE BÜYÜTTÜĞÜMÜZ YAVRULARI VETERİNERİMİZ KONTROLÜNDE YENİ YUVALARINA TESLİM EDİYORUZ
                     </p>
                 </div>
             </div>
@@ -189,23 +161,31 @@ export default function IlanDetayPage() {
 
         {/* --- 2. ORTA SÜTUN (TEKNİK TABLO) --- */}
         <div className="lg:col-span-4">
-            <div className="border rounded-xl bg-white p-5 shadow-sm">
-                <h2 className="text-3xl font-bold text-[#f05a28] mb-1">{priceDisplay}</h2>
-                <div className="text-sm text-muted-foreground mb-4 flex items-center gap-1">
-                     <span className="font-semibold text-gray-700">Konum:</span> {pet.location}
+            <div className="border rounded-lg bg-white p-4">
+                <h2 className="text-2xl font-bold text-blue-600 mb-1">{priceDisplay}</h2>
+                <div className="text-sm text-muted-foreground mb-4">
+                    {pet.location}
                 </div>
 
-                <ul className="info-table text-sm space-y-3">
-                    <li className="flex justify-between border-b pb-2"><span className="text-gray-500">Türü</span><span className="font-medium">{pet.type}</span></li>
-                    <li className="flex justify-between border-b pb-2"><span className="text-gray-500">Cinsi</span><span className="font-medium text-primary">{pet.breed}</span></li>
-                    <li className="flex justify-between border-b pb-2"><span className="text-gray-500">İlan No</span><span className="font-medium text-red-600">{pet.id.slice(0, 8)}...</span></li>
-                    <li className="flex justify-between border-b pb-2"><span className="text-gray-500">Yaş</span><span className="font-medium">{pet.age}</span></li>
-                    <li className="flex justify-between border-b pb-2"><span className="text-gray-500">Durum</span><span className="font-medium">{pet.listingType === 'Sale' ? 'Satılık' : 'Sahiplendirme'}</span></li>
-                    <li className="flex justify-between border-b pb-2"><span className="text-gray-500">Şehir Dışına Gönderim</span><span className="font-medium">Görüşülür</span></li>
+                <ul className="info-table text-sm">
+                    <li><span className="label">Türü</span><span className="value">{pet.type} Cinsleri</span></li>
+                    <li><span className="label">Cinsi</span><span className="value"><Link href="#" className="text-red-600 hover:underline">{pet.breed}</Link></span></li>
+                    <li><span className="label">İlan No</span><span className="value text-red-600 font-semibold">{pet.id}</span></li>
+                    <li><span className="label">İlan Tarihi</span><span className="value">6 Ocak 2026</span></li>
+                    <li><span className="label">Yaş</span><span className="value">{pet.age}</span></li>
+                    <li><span className="label">Cinsiyet</span><span className="value">Erkek</span></li>
+                    <li><span className="label">Durum</span><span className="value">{pet.listingType === 'Sale' ? 'Satılık' : 'Sahiplenme'}</span></li>
+                    <li><span className="label">Aşı</span><span className="value">Var</span></li>
+                    <li><span className="label">İç Parazit</span><span className="value">Var</span></li>
+                    <li><span className="label">Dış Parazit</span><span className="value">Yok</span></li>
+                    <li><span className="label">Kredi Kartına Ödeme</span><span className="value">Yok</span></li>
+                    <li><span className="label">Şehir Dışına Gönderim</span><span className="value">Var</span></li>
                 </ul>
 
-                <div className="mt-6 pt-4 border-t text-sm space-y-1 text-muted-foreground text-center">
-                    <p>İlan <span className="font-bold text-primary">Aktif</span> ve yayında.</p>
+                <div className="mt-4 pt-4 border-t text-sm space-y-1 text-muted-foreground">
+                    <p>İlan Whatsapp'tan <span className="font-bold text-primary">5</span> İstek aldı</p>
+                    <p>İncelenen İlan <span className="font-bold text-primary">0</span> Arama aldı</p>
+                    <p>Görüntülenme: <span className="font-bold text-primary">57 kez</span> görüntülendi</p>
                 </div>
                 
                 <div className="mt-4 text-center">
@@ -218,50 +198,140 @@ export default function IlanDetayPage() {
 
         {/* --- 3. SAĞ SÜTUN (SATICI VE AKSİYON) --- */}
         <div className="lg:col-span-3 space-y-4">
-             {/* Aciliyet Bandı */}
-            <div className="bg-red-600 text-white text-center text-sm font-semibold p-2 rounded animate-pulse">
-                Popüler İlan 🔥
-            </div>
-
-            {/* Satıcı Kartı */}
-            <div className="border rounded-xl bg-white p-4 text-center shadow-sm">
-                <h3 className="text-xl font-bold text-gray-800">İlan Sahibi</h3>
-                <p className="text-xs text-muted-foreground mb-4">Onaylı Üye</p>
-
-                <div className="space-y-3 mt-4">
-                    <Button variant="secondary" className="w-full justify-start gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 h-12">
-                        <Phone className="w-5 h-5"/> Numarayı Göster
-                    </Button>
-                    <Button className="w-full justify-center gap-2 bg-green-500 hover:bg-green-600 text-white h-12 text-lg font-semibold shadow-md transition-transform active:scale-95">
-                        <WhatsappIcon /> WhatsApp
-                    </Button>
-                     <Button variant="outline" className="w-full justify-center gap-2 border-primary text-primary hover:bg-primary/10">
-                        <MessageSquare className="w-5 h-5"/> Mesaj Gönder
-                    </Button>
+             {/* İstatistik Kutuları */}
+            <div className="grid grid-cols-3 gap-2 text-center text-white">
+                <div className="bg-green-500 rounded p-2">
+                    <div className="font-bold text-2xl">2</div>
+                    <div className="text-xs">Aktif İlan</div>
+                </div>
+                <div className="bg-gray-400 rounded p-2">
+                    <div className="font-bold text-2xl">18</div>
+                    <div className="text-xs">Toplam İlan</div>
+                </div>
+                <div className="bg-yellow-400 rounded p-2 flex flex-col items-center justify-center">
+                    <Star className="w-6 h-6 text-white fill-white"/>
+                    <div className="text-xs font-bold text-gray-800">4 yıl</div>
                 </div>
             </div>
             
-            {/* Navigasyon */}
-            <div className="grid grid-cols-2 gap-2 mt-4">
-                <Link href="/" className="w-full">
-                    <Button variant="ghost" className="w-full border">
-                        <ArrowLeft className="mr-1 w-4 h-4"/> Geri Dön
+            {/* Aciliyet Bandı */}
+            <div className="bg-red-600 text-white text-center text-sm font-semibold p-2 rounded">
+                8 kişi şu anda bu ilanı inceliyor.
+            </div>
+
+            {/* Satıcı Kartı */}
+            <div className="border rounded-lg bg-white p-4 text-center">
+                <h3 className="text-xl font-bold text-primary">PATİLİ HOME</h3>
+                <p className="text-xs text-muted-foreground mb-2">Üyelik tarihi: 30 Eylül 2021</p>
+                <Link href="#" className="text-sm text-primary hover:underline">Üyenin Tüm İlanlarını Görüntüle</Link>
+
+                <div className="space-y-2 mt-4">
+                    <Button variant="secondary" className="w-full justify-start gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700">
+                        <Phone className="w-4 h-4"/> 0542 *** ** 93
                     </Button>
+                     <Button variant="secondary" className="w-full justify-start gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700">
+                        <Phone className="w-4 h-4"/> 0542 *** ** 93
+                    </Button>
+                    <Button className="w-full justify-center gap-2 bg-green-500 hover:bg-green-600 text-lg py-6">
+                        <WhatsappIcon /> WhatsApp
+                    </Button>
+                </div>
+                 <Link href="#" className="text-sm text-primary hover:underline mt-4 inline-flex items-center gap-1">
+                    <MessageSquare className="w-4 h-4"/> İlan Sahibine Mesaj Gönder
                 </Link>
+            </div>
+            
+            {/* Navigasyon */}
+            <div className="grid grid-cols-2 gap-2">
+                <Button variant="default" className="bg-orange-500 hover:bg-orange-600">
+                    <ChevronLeft className="mr-1"/> Önceki İlan
+                </Button>
+                <Button variant="default" className="bg-orange-500 hover:bg-orange-600">
+                    Sonraki İlan <ChevronRight className="ml-1"/>
+                </Button>
             </div>
         </div>
       </div>
       
-      {/* Makale Bölümü (Sabit İçerik) */}
+      {/* Benzer İlanlar Bölümü */}
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold mb-6">Benzer İlanlar</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {similarPets.map((pet) => (
+            <PetCard key={pet.id} pet={pet} />
+          ))}
+        </div>
+      </div>
+      
+       {/* İlan Değerlendirmeleri Bölümü */}
+       <div className="mt-16">
+        <h2 className="text-2xl font-bold mb-6">İlan Değerlendirmeleri</h2>
+        
+        {/* Yorum Yazma Formu */}
+        <Card className="mb-8">
+            <CardHeader>
+                <CardTitle>Yorumunuzu Paylaşın</CardTitle>
+                <CardDescription>Bu ilan hakkındaki düşüncelerinizi diğer kullanıcılarla paylaşın.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="font-medium">Puanınız:</span>
+                        <div className="flex items-center text-yellow-400">
+                            {[...Array(5)].map((_, i) => (
+                                <Star key={i} className="w-6 h-6 cursor-pointer fill-current" />
+                            ))}
+                        </div>
+                    </div>
+                    <Textarea placeholder="Yorumunuzu buraya yazın..." rows={4} />
+                    <div className="flex justify-end">
+                        <Button>Yorumu Gönder</Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
+        {/* Mevcut Yorumlar */}
+        <div className="space-y-6">
+          {mockReviews.map((review) => (
+            <Card key={review.id} className="p-0">
+              <CardContent className="p-6 flex gap-4">
+                  <Avatar>
+                      <AvatarImage src={review.avatar} alt={review.author} />
+                      <AvatarFallback>{review.author.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                      <div className="flex justify-between items-center mb-1">
+                          <h4 className="font-semibold">{review.author}</h4>
+                          <span className="text-xs text-muted-foreground">{review.date}</span>
+                      </div>
+                      <div className="flex items-center mb-2">
+                          {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                          ))}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{review.comment}</p>
+                  </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+       {/* Makale Bölümü */}
       <div className="mt-16 border-t pt-12">
-        <h2 className="text-3xl font-bold font-headline mb-4 text-gray-800 flex items-center gap-3"><BookOpen />{pet.breed} Hakkında Bilgiler</h2>
+        <h2 className="text-3xl font-bold font-headline mb-4 text-gray-800 flex items-center gap-3"><BookOpen />Pomeranian Bakımı: Bilmeniz Gerekenler</h2>
         <div className="prose-lg max-w-none text-muted-foreground space-y-4">
             <p>
-                {pet.breed}, karakteri ve fiziksel özellikleriyle dikkat çeken özel bir cinstir. Bu dostlarımız genellikle sadık, enerjik ve öğrenmeye açıktır.
+                Pomeranian, genellikle "Pom" olarak kısaltılan, Spitz tipi küçük bir köpek ırkıdır. Adını, Orta Avrupa'daki Pomeranya bölgesinden (bugünkü Polonya ve Almanya'nın bir kısmı) alır. Bu sevimli ve enerjik köpekler, canlı karakterleri, zekaları ve gür kürkleriyle tanınırlar.
             </p>
-            <h3 className="text-2xl font-bold font-headline text-gray-700 !mt-6 !mb-2">Bakım Önerileri</h3>
+            <h3 className="text-2xl font-bold font-headline text-gray-700 !mt-6 !mb-2">Tüy Bakımı</h3>
             <p>
-                Düzenli veteriner kontrolleri, kaliteli mama ile beslenme ve günlük egzersiz ihtiyaçlarının karşılanması, {pet.breed} cinsi dostunuzun sağlıklı ve uzun bir ömür sürmesi için gereklidir.
+                Pomeranian'ların çift katmanlı, yoğun bir kürkü vardır. Bu nedenle düzenli tüy bakımı çok önemlidir. Tüy dökülmesini kontrol altında tutmak ve tüy yumaklarının oluşmasını önlemek için haftada en az 2-3 kez fırçalanmalıdırlar. Özellikle tüy dökme mevsimlerinde bu sıklığı artırmak gerekebilir.
+            </p>
+            <h3 className="text-2xl font-bold font-headline text-gray-700 !mt-6 !mb-2">Eğitim ve Sosyalleşme</h3>
+            <p>
+                Zeki ve öğrenmeye hevesli olmalarına rağmen, Pomeranian'lar bazen inatçı olabilirler. Erken yaşta sosyalleşme ve pozitif pekiştirme yöntemleriyle temel itaat eğitimi, onların iyi huylu birer yetişkin olmalarını sağlar. Diğer köpekler ve insanlarla erken yaşta tanıştırılmaları, özgüvenli ve sosyal köpekler olmalarına yardımcı olur.
             </p>
         </div>
       </div>
