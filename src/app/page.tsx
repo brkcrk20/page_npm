@@ -20,22 +20,23 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react'; // Suspense eklendi
 import { categories, type CategoryInfo } from "@/lib/breeds";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-// URL OKUMA (Header'dan gelen filtreleri anlamak için gerekli)
+// URL OKUMA
 import { useSearchParams } from 'next/navigation';
+import { SearchFilters } from "@/components/SearchFilters";
 
 // FIREBASE
 import { db } from '@/lib/firebase';
 import { collectionGroup, getDocs, query } from 'firebase/firestore';
 import type { PetListing } from "@/lib/types";
 
+// --- YARDIMCI BİLEŞENLER ---
 const CategoryFilter = ({ category, onTriggerClick, isSelected }: { category: CategoryInfo, onTriggerClick: (value: string) => void, isSelected: boolean }) => {
   const [searchTerm, setSearchTerm] = useState('');
-
   const filteredBreeds = category.breeds.filter(breed =>
     breed.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -111,13 +112,13 @@ const blogPosts = [
   { id: 3, title: "Evcil Hayvanlarda Tüy Dökülmesi", category: "Bakım", excerpt: "Nedenleri ve tüy dökülmesini kontrol altına alma yolları." },
 ];
 
-export default function HomePage() {
+// --- ASIL SAYFA İÇERİĞİ (Search Params kullanan kısım burası) ---
+function HomeContent() {
   const [dbListings, setDbListings] = useState<PetListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [openAccordion, setOpenAccordion] = useState<string[]>(["dog", "cat"]);
 
-  // --- URL PARAMETRELERİNİ DİNLE ---
-  // Header'daki arama çubuğu URL'i değiştirdiğinde burası tetiklenir
+  // URL PARAMETRELERİNİ BURADA OKUYORUZ
   const searchParams = useSearchParams();
   const urlCity = searchParams.get('city');
   const urlDistrict = searchParams.get('district');
@@ -155,13 +156,11 @@ export default function HomePage() {
     isDb: true
   });
 
-  // --- FİLTRELEME MANTIĞI ---
   const allPets = useMemo(() => {
     const fromDb = dbListings.map(mapListingToPet);
     const fromStatic = staticPets.map(p => ({ ...p, isStatic: true }));
     let combined = [...fromDb, ...fromStatic];
 
-    // URL'den gelen filtrelere göre listeyi daralt
     if (urlCity && urlCity !== "tum_sehirler") {
         combined = combined.filter(pet => pet.location && pet.location.includes(urlCity));
     }
@@ -186,11 +185,7 @@ export default function HomePage() {
 
   const dogPets = useMemo(() => allPets.filter(p => p.type === 'Dog'), [allPets]);
   const catPets = useMemo(() => allPets.filter(p => p.type === 'Cat'), [allPets]);
-  const birdPets = useMemo(() => allPets.filter(p => p.type === 'Bird'), [allPets]);
-  
-  const featuredPets = useMemo(() => {
-    return allPets.filter(p => p.featured === true).slice(0, 8);
-  }, [allPets]);
+  const featuredPets = useMemo(() => allPets.filter(p => p.featured === true).slice(0, 8), [allPets]);
 
   const handleAccordionToggle = (value: string) => {
     setOpenAccordion(prev => 
@@ -224,7 +219,10 @@ export default function HomePage() {
           
           <main className="col-span-1 space-y-8">
             
-            {/* ARAMA SONUCU BİLGİSİ (Aktif Filtre Varsa Görünür) */}
+            {/* ÜSTTEKİ FAZLALIK ARAMA KUTUSU BURADAN SİLİNDİ */}
+            {/* Sadece Header'daki arama kutusu kullanılacak */}
+            {/* Ama alttaki filtreleme kodları Header'dan gelen emri dinleyecek */}
+
             {(urlCity || urlQuery || (urlType && urlType !== 'all') || (urlBreed && urlBreed !== 'all')) && (
                 <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-[#f05a28] flex justify-between items-center animate-in fade-in slide-in-from-top-2">
                     <div>
@@ -239,7 +237,6 @@ export default function HomePage() {
                 </div>
             )}
 
-            {/* BİLGİ KUTUSU */}
             {dbListings.length === 0 && !loading && (
               <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center gap-3 text-blue-800 text-sm">
                 <Info className="h-5 w-5" />
@@ -247,7 +244,6 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* YILDIZLI İLANLAR */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Yıldızlı İlanlar</h2>
@@ -263,7 +259,6 @@ export default function HomePage() {
               </div>
             </section>
 
-            {/* KÖPEK İLANLARI */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Köpek İlanları</h2>
@@ -275,7 +270,6 @@ export default function HomePage() {
               </div>
             </section>
 
-            {/* KEDİ İLANLARI */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Kedi İlanları</h2>
@@ -287,7 +281,6 @@ export default function HomePage() {
               </div>
             </section>
 
-            {/* BLOG KISMI */}
             <div className="space-y-8 pt-8 border-t">
                 <div className="flex items-center gap-2">
                     <BookText className="w-6 h-6" />
@@ -309,4 +302,12 @@ export default function HomePage() {
     </div>
   );
 }
-// Vercel build tetikleme
+
+// --- ANA BİLEŞEN: İÇERİĞİ SUSPENSE İLE SARMALIYOR ---
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>}>
+      <HomeContent />
+    </Suspense>
+  );
+}
