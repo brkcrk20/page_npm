@@ -6,6 +6,9 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 
+// 81 İL VERİSİNİ İÇEREN DOSYAYI ÇAĞIRIYORUZ
+import { citiesData, cityNames } from '@/lib/turkiye-data';
+
 export default function FaturaBilgileriPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -112,39 +115,53 @@ export default function FaturaBilgileriPage() {
                 />
               </div>
 
-              {/* İl ve İlçe */}
+              {/* --- GÜNCELLENEN İL VE İLÇE SEÇİMİ --- */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* İL SEÇİMİ */}
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
                     İl <span className="text-red-500 select-none">*</span>
                   </label>
                   <select
                     required
+                    value={formData.city}
                     className="w-full p-3.5 border border-gray-300 rounded-lg text-gray-700 bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition-all cursor-pointer"
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    onChange={(e) => setFormData({ 
+                        ...formData, 
+                        city: e.target.value, 
+                        district: '' // İl değişirse ilçe sıfırlanır
+                    })}
                   >
-                    <option value="">Seçiniz</option>
-                    <option value="İstanbul">İstanbul</option>
-                    <option value="Ankara">Ankara</option>
-                    <option value="İzmir">İzmir</option>
-                    <option value="Denizli">Denizli</option>
-                    <option value="Bursa">Bursa</option>
-                    <option value="Antalya">Antalya</option>
+                    <option value="">İl Seçiniz</option>
+                    {cityNames.map((city) => (
+                        <option key={city} value={city}>{city}</option>
+                    ))}
                   </select>
                 </div>
+
+                {/* İLÇE SEÇİMİ */}
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
                     İlçe <span className="text-red-500 select-none">*</span>
                   </label>
-                  <input
+                  <select
                     required
-                    type="text"
-                    placeholder="Örn: Kadıköy"
-                    className="w-full p-3.5 border border-gray-300 rounded-lg text-gray-700 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition-all"
+                    value={formData.district}
+                    disabled={!formData.city} // İl seçilmeden açılmaz
+                    className="w-full p-3.5 border border-gray-300 rounded-lg text-gray-700 bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition-all cursor-pointer disabled:bg-gray-100 disabled:text-gray-400"
                     onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                  />
+                  >
+                    <option value="">
+                        {formData.city ? "İlçe Seçiniz" : "Önce İl Seçiniz"}
+                    </option>
+                    {formData.city && citiesData[formData.city]?.map((dist) => (
+                        <option key={dist} value={dist}>{dist}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
+              {/* --- İL VE İLÇE SEÇİMİ BİTİŞ --- */}
 
               {/* Vergi Dairesi */}
               <div>
