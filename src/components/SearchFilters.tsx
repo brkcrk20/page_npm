@@ -12,15 +12,23 @@ import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
 import { collectionGroup, getDocs, query } from 'firebase/firestore';
 
-// --- YARDIMCI TİPLER ---
+// --- TİPLER ---
 type Option = {
   value: string;
   label: string;
-  count?: number; // İlan sayısı (opsiyonel)
+  count?: number; // İlan sayısı
 };
 
-// --- YENİDEN KULLANILABİLİR "ARAMALI SELECT" BİLEŞENİ ---
-// Bu bileşen hem İl, hem İlçe, hem Tür, hem Cins için çalışır.
+type ListingData = {
+  type?: string;     // veya species
+  species?: string;
+  breed?: string;
+  city?: string;
+  district?: string;
+  [key: string]: any;
+};
+
+// --- ARAMALI SELECT BİLEŞENİ (Sıralama Mantığı Burada) ---
 const SearchableSelect = ({ 
   placeholder, 
   searchPlaceholder, 
@@ -51,10 +59,9 @@ const SearchableSelect = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Seçili olanın etiketini bul (Görünen yazı)
   const selectedLabel = options.find(o => o.value === value)?.label || placeholder;
 
-  // Filtreleme ve Sıralama Mantığı
+  // FİLTRELEME VE SIRALAMA (En çok sayı -> En az sayı -> Alfabetik)
   const filteredOptions = useMemo(() => {
     let result = options;
 
@@ -65,12 +72,16 @@ const SearchableSelect = ({
       );
     }
 
-    // 2. Sıralama (Varsa sayıya göre, yoksa isme göre)
+    // 2. Sıralama
     return result.sort((a, b) => {
       const countA = a.count || 0;
       const countB = b.count || 0;
-      if (countB !== countA) return countB - countA; // Önce sayısı çok olan
-      return a.label.localeCompare(b.label, 'tr'); // Sonra alfabetik
+      
+      // Önce sayıya göre (Büyükten küçüğe)
+      if (countB !== countA) return countB - countA; 
+      
+      // Sayılar eşitse isme göre (A'dan Z'ye)
+      return a.label.localeCompare(b.label, 'tr'); 
     });
   }, [options, searchText]);
 
@@ -91,7 +102,6 @@ const SearchableSelect = ({
 
       {isOpen && (
         <div className="absolute z-50 mt-1 max-h-[300px] w-full min-w-[200px] overflow-hidden rounded-lg border bg-white text-popover-foreground shadow-xl animate-in fade-in-0 zoom-in-95">
-          {/* Arama Inputu */}
           <div className="flex items-center border-b px-3 pb-2 pt-3 sticky top-0 bg-white z-10">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
             <input
@@ -103,7 +113,6 @@ const SearchableSelect = ({
             />
           </div>
 
-          {/* Liste */}
           <div className="max-h-[220px] overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-gray-200">
             <div
                 className={cn(
@@ -140,12 +149,10 @@ const SearchableSelect = ({
                             <Check className={cn("mr-2 h-4 w-4 flex-shrink-0", value === option.value ? "opacity-100" : "opacity-0")} />
                             <span className="truncate">{option.label}</span>
                         </div>
-                        {/* İLAN SAYISI VARSA GÖSTER */}
-                        {option.count !== undefined && (
-                            <span className="ml-2 text-[10px] text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded-full flex-shrink-0">
-                                {option.count}
-                            </span>
-                        )}
+                        {/* SAYAÇ ROZETİ */}
+                        <span className={`ml-2 text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${option.count && option.count > 0 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-400'}`}>
+                             {option.count || 0}
+                        </span>
                     </div>
                 ))
             )}
@@ -160,17 +167,17 @@ const SearchableSelect = ({
 function SearchFiltersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isOpen, setIsOpen] = useState(false); // Mobil menü için
+  const [isOpen, setIsOpen] = useState(false);
   
-  // State Tanımları
+  // Seçim State'leri
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || "");
   const [selectedType, setSelectedType] = useState(searchParams.get('type') || "");
   const [selectedBreed, setSelectedBreed] = useState(searchParams.get('breed') || "");
   const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || "");
   const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || "");
 
-  // İlan Sayılarını Tutacak State
-  const [breedCounts, setBreedCounts] = useState<Record<string, number>>({});
+  // Tüm İlan Verisi (Hesaplama yapmak için)
+  const [listings, setListings] = useState<ListingData[]>([]);
 
   useEffect(() => {
     setSearchTerm(searchParams.get('q') || "");
@@ -180,73 +187,95 @@ function SearchFiltersContent() {
     setSelectedDistrict(searchParams.get('district') || "");
   }, [searchParams]);
 
-  // Firebase'den İlan Sayılarını Çek
+  // Firebase'den TÜM İlanları Çek ve Hafızaya Al
   useEffect(() => {
-    const fetchCounts = async () => {
+    const fetchListings = async () => {
       try {
         const q = query(collectionGroup(db, 'petListings'));
         const snapshot = await getDocs(q);
-        const counts: Record<string, number> = {};
-
+        const data: ListingData[] = [];
         snapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.breed) {
-            counts[data.breed] = (counts[data.breed] || 0) + 1;
-          }
+          data.push(doc.data() as ListingData);
         });
-        setBreedCounts(counts);
+        setListings(data);
       } catch (error) {
-        console.error("İlan sayıları çekilemedi:", error);
+        console.error("İlanlar çekilemedi:", error);
       }
     };
 
-    fetchCounts();
+    fetchListings();
   }, []);
 
-  // --- SEÇENEKLERİ HAZIRLA ---
+  // --- SEÇENEKLERİ HESAPLA ---
 
-  // 1. Tür Listesi (Sabit) - Value değerlerini veritabanı ile uyumlu (İngilizce/Büyük harf) yaptık
-  const typeOptions: Option[] = [
-    { value: "Dog", label: "Köpek" },
-    { value: "Cat", label: "Kedi" },
-    { value: "Bird", label: "Kuş" },
-    { value: "Fish", label: "Akvaryum" },
-    { value: "Other", label: "Diğer" }
-  ];
+  // 1. TÜR LİSTESİ (İlan Sayılı)
+  const typeOptions: Option[] = useMemo(() => {
+    const baseOptions = [
+      { value: "Dog", label: "Köpek" },
+      { value: "Cat", label: "Kedi" },
+      { value: "Bird", label: "Kuş" },
+      { value: "Fish", label: "Akvaryum" },
+      { value: "Other", label: "Diğer" }
+    ];
 
-  // 2. Cins Listesi (Dinamik)
+    return baseOptions.map(opt => {
+      // Veritabanında kaç tane bu türden var say
+      const count = listings.filter(l => (l.type === opt.value || l.species === opt.value)).length;
+      return { ...opt, count };
+    });
+  }, [listings]);
+
+  // 2. CİNS LİSTESİ (Dinamik ve Sayılı)
   const breedOptions: Option[] = useMemo(() => {
-    // Tür seçili değilse boş döndür
     if (!selectedType || selectedType === "all") return [];
     
-    // Tür kodunu küçük harfe çevirip petBreeds'den çek (örn: "Dog" -> "dog")
     const typeKey = selectedType.toLowerCase();
     const breeds = petBreeds[typeKey] || [];
 
-    return breeds.map(breed => ({
-      value: breed,
-      label: breed,
-      count: breedCounts[breed] || 0 // Sayıyı ekle
-    }));
-  }, [selectedType, breedCounts]);
+    // Seçilen türe göre ilanları filtrele
+    const filteredListings = listings.filter(l => 
+      (l.type === selectedType || l.species === selectedType)
+    );
 
-  // 3. İl Listesi
+    return breeds.map(breed => {
+      // Bu türdeki ilanların içinde bu cinsten kaç tane var?
+      const count = filteredListings.filter(l => l.breed === breed).length;
+      return { value: breed, label: breed, count };
+    });
+  }, [selectedType, listings]);
+
+  // 3. İL LİSTESİ (Sayılı)
   const cityOptions: Option[] = useMemo(() => {
-    return cityNames.map(city => ({
-      value: city,
-      label: city
-    }));
-  }, []);
+    return cityNames.map(city => {
+      // İlde kaç ilan var? (Eğer tür seçiliyse, o türden o ilde kaç tane var?)
+      const count = listings.filter(l => {
+        const matchesCity = l.city === city;
+        // Eğer tür seçiliyse, türü de kontrol et (Opsiyonel: Daha akıllı filtreleme)
+        const matchesType = !selectedType || selectedType === "all" || (l.type === selectedType || l.species === selectedType);
+        return matchesCity && matchesType;
+      }).length;
+      
+      return { value: city, label: city, count };
+    });
+  }, [listings, selectedType]);
 
-  // 4. İlçe Listesi
+  // 4. İLÇE LİSTESİ (Sayılı)
   const districtOptions: Option[] = useMemo(() => {
     if (!selectedCity || selectedCity === "tum_sehirler") return [];
     const districts = citiesData[selectedCity] || [];
-    return districts.map(dist => ({
-      value: dist,
-      label: dist
-    }));
-  }, [selectedCity]);
+
+    return districts.map(dist => {
+      const count = listings.filter(l => {
+        const matchesCity = l.city === selectedCity;
+        const matchesDistrict = l.district === dist;
+        // Eğer tür seçiliyse onu da hesaba kat
+        const matchesType = !selectedType || selectedType === "all" || (l.type === selectedType || l.species === selectedType);
+        return matchesCity && matchesDistrict && matchesType;
+      }).length;
+
+      return { value: dist, label: dist, count };
+    });
+  }, [selectedCity, listings, selectedType]);
 
 
   const handleSearch = () => {
@@ -300,7 +329,7 @@ function SearchFiltersContent() {
           value={selectedType}
           onChange={(val) => {
              setSelectedType(val);
-             setSelectedBreed(""); // Tür değişince cins sıfırla
+             setSelectedBreed(""); 
           }}
         />
 
@@ -322,7 +351,7 @@ function SearchFiltersContent() {
           value={selectedCity}
           onChange={(val) => {
              setSelectedCity(val);
-             setSelectedDistrict(""); // İl değişince ilçe sıfırla
+             setSelectedDistrict(""); 
           }}
         />
 
