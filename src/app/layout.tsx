@@ -8,8 +8,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'petsemti - Find Your Best Friend',
-  description: 'List pets for adoption, sale, or find pet-related services near you.',
+  title: 'Evcil Hayvan Sahiplenme İlanları',
+  description: 'Petsemti: Evcil hayvan ilanları, kedi sahiplendirme, köpek satış ve ücretsiz sahiplenme platformu. Semtinizdeki en güncel ilanlara ulaşmak ve güvenle hayvan sahiplenmek için tıklayın.',
   icons: {
     icon: '/favicon.ico',
   },
