@@ -117,9 +117,9 @@ export function Footer() {
         <div className="border-t mt-10 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex flex-col md:flex-row items-center gap-6 text-sm text-gray-700">
                 <h3 className="font-bold text-base hidden md:block">BİZE ULAŞIN</h3>
-                <Link href="tel:05550873777" className="flex items-center gap-2 hover:text-primary"><Phone className="w-4 h-4"/> 0555 087 37 77</Link>
+                <Link href="tel:05555555555" className="flex items-center gap-2 hover:text-primary"><Phone className="w-4 h-4"/> 0555 555 55 55</Link>
                 <Link href="mailto:info@petsemti.com" className="flex items-center gap-2 hover:text-primary"><Mail className="w-4 h-4"/> info@petsemti.com</Link>
-                <Link href="https://wa.me/905550873777" target="_blank" className="flex items-center gap-2 hover:text-primary"><MessageCircle className="w-4 h-4"/> Whatsapp: 0555 087 37 77</Link>
+                <Link href="https://wa.me/905555555555" target="_blank" className="flex items-center gap-2 hover:text-primary"><MessageCircle className="w-4 h-4"/> Whatsapp: 0555 555 55 55</Link>
             </div>
             <div className="flex space-x-2">
                 <Link href="#" className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center hover:opacity-80"><Facebook className="w-5 h-5"/></Link>

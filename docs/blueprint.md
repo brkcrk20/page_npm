@@ -1,4 +1,4 @@
-# **App Name**: PatiBul Global
+# **App Name**: Petsemti Global
 
 ## Core Features:
 
