@@ -42,7 +42,7 @@ export default function RegisterPage() {
             <RegisterForm />
             <div className="mt-4 text-center text-sm">
               Zaten hesabın var mı?{' '}
-              <Link href="/login" className="underline font-semibold text-primary">
+              <Link href="/giris" className="underline font-semibold text-primary">
                 Giriş Yap
               </Link>
             </div>

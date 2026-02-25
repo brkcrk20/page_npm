@@ -66,9 +66,9 @@ const serviceCategories = [
   { icon: Stethoscope, label: 'Veteriner', href: '/veteriner' },
   { icon: Building, label: 'Pet Oteli', href: '/pet-oteli' },
   { icon: Award, label: 'Eğitmen', href: '/egitmen' },
-  { icon: Scissors, label: 'Pet Kuaför', href: '/pet_kuafor' },
+  { icon: Scissors, label: 'Pet Kuaför', href: '/pet-kuafor' },
   { icon: ShoppingCart, label: 'Petshop', href: '/petshop' },
-  { icon: Car, label: 'Pet Taksi', href: '/pet_taksi' },
+  { icon: Car, label: 'Pet Taksi', href: '/pet-taksi' },
   { icon: PersonStanding, label: 'Gezdirici', href: '/gezdirici' },
 ];
 
@@ -97,9 +97,9 @@ export function Header() {
     if (pathname === '/veteriner') return <VetSearchFilters pageType="vet" />;
     if (pathname === '/pet-oteli') return <VetSearchFilters pageType="hotel" />;
     if (pathname === '/egitmen') return <VetSearchFilters pageType="trainer" />;
-    if (pathname === '/pet_kuafor') return <VetSearchFilters pageType="groomer" />;
+    if (pathname === '/pet-kuafor' || pathname === '/pet_kuafor') return <VetSearchFilters pageType="groomer" />;
     if (pathname === '/petshop') return <VetSearchFilters pageType="petshop" />;
-    if (pathname === '/pet_taksi') return <VetSearchFilters pageType="pet_taksi" />;
+    if (pathname === '/pet-taksi' || pathname === '/pet_taksi') return <VetSearchFilters pageType="pet_taksi" />;
     if (pathname === '/gezdirici') return <VetSearchFilters pageType="walker" />;
     if (pathname === '/guvercinler') return <SearchFilters />;
     if (pathname === '/al-sat') return <SearchFilters />;
@@ -107,7 +107,7 @@ export function Header() {
     return <SearchFilters />;
   };
 
-  const showCategoriesAndFilters = pathname !== '/login' && pathname !== '/kayit' && pathname !== '/profil';
+  const showCategoriesAndFilters = pathname !== '/giris' && pathname !== '/login' && pathname !== '/kayit' && pathname !== '/profil';
 
   const renderAuthContent = () => {
     if (isLoading) {
@@ -118,7 +118,7 @@ export function Header() {
       return (
         <div className="hidden md:flex items-center space-x-2">
           <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white">
-            <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
+            <Link href="/giris" className="text-sm font-medium">Giriş Yap</Link>
           </Button>
           <Button variant="outline" asChild className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-white/20 hover:text-white">
             <Link href="/kayit">
@@ -212,7 +212,7 @@ export function Header() {
                 {renderAuthContent()}
               </div>
             <Button asChild variant="secondary">
-              <Link href={user ? '/listings/new' : '/login'}>İlan Ver</Link>
+              <Link href={user ? '/ilanlar/yeni' : '/giris'}>İlan Ver</Link>
             </Button>
           </div>
 
@@ -240,12 +240,12 @@ export function Header() {
                 ))}
                 <div className="border-t pt-4 flex flex-col space-y-2">
                   <Button asChild onClick={() => setSheetOpen(false)}>
-                    <Link href={user ? '/listings/new' : '/login'}>İlan Ver</Link>
+                    <Link href={user ? '/ilanlar/yeni' : '/giris'}>İlan Ver</Link>
                   </Button>
                   {!isLoading && !user && (
                     <>
                       <Button variant="outline" asChild onClick={() => setSheetOpen(false)}>
-                        <Link href="/login">Giriş Yap</Link>
+                        <Link href="/giris">Giriş Yap</Link>
                       </Button>
                       <Button variant="secondary" asChild onClick={() => setSheetOpen(false)}>
                         <Link href="/kayit">Kayıt Ol</Link>

@@ -27,7 +27,7 @@ export default function FaturaBilgileriPage() {
       if (user) {
         setUserName(user.displayName || user.email?.split('@')[0] || 'Kullanıcı');
       } else {
-        router.push('/login');
+        router.push('/giris');
       }
     });
     return () => unsubscribe();
@@ -44,7 +44,7 @@ export default function FaturaBilgileriPage() {
         billingInfo: formData,
         hasBillingInfo: true
       });
-      router.push('/listings/new');
+      router.push('/ilanlar/yeni');
     } catch (error) {
       console.error(error);
       alert("Bir hata oluştu.");

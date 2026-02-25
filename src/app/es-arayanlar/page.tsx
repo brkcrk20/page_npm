@@ -17,7 +17,7 @@ export default function MatingPage() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold font-headline">Eş Arayanlar</h1>
         <Button asChild>
-          <Link href={user ? "/es-arayanlar/yeni" : "/login"}>
+          <Link href={user ? "/es-arayanlar/yeni" : "/giris"}>
             <PlusCircle className="mr-2 h-4 w-4" /> İlan Ekle
           </Link>
         </Button>

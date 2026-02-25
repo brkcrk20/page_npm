@@ -8,8 +8,23 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'Evcil Hayvan Sahiplenme İlanları',
-  description: 'Petsemti: Evcil hayvan ilanları, kedi sahiplendirme, köpek satış ve ücretsiz sahiplenme platformu. Semtinizdeki en güncel ilanlara ulaşmak ve güvenle hayvan sahiplenmek için tıklayın.',
+  metadataBase: new URL('https://petsemti.com'),
+  title: {
+    default: 'Petsemti | Evcil Hayvan Ilanlari',
+    template: '%s | Petsemti',
+  },
+  description: 'Petsemti: Evcil hayvan ilanlari, kedi sahiplendirme, kopek satis ve ucretsiz sahiplenme platformu.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'Petsemti | Evcil Hayvan Ilanlari',
+    description: 'Petsemti ile semtinizdeki guncel evcil hayvan ilanlarini kesfedin.',
+    url: '/',
+    siteName: 'Petsemti',
+    locale: 'tr_TR',
+    type: 'website',
+  },
   icons: {
     icon: '/favicon.ico',
   },
@@ -21,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="tr" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

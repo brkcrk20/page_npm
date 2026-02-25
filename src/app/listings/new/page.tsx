@@ -21,7 +21,7 @@ export default function NewListingPage() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       // 1. Giriş kontrolü
       if (!user) {
-        router.replace('/login');
+        router.replace('/giris');
         return;
       }
 

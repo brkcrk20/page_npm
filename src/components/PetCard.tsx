@@ -27,7 +27,7 @@ export function PetCard({ pet }: PetCardProps) {
 
   // 4. ROTA MANTIĞI: Veritabanı ilanları için /listings/, statik olanlar için /ilan/ 
   // veya hepsini yeni rotamız olan /listings/ üzerine yönlendirebiliriz.
-  const href = pet.imageUrl ? `/listings/${pet.id}` : `/ilan/${pet.id}`;
+  const href = pet.imageUrl ? `/ilanlar/${pet.id}` : `/ilan/${pet.id}`;
 
   return (
     <Link href={href} className="group block h-full">

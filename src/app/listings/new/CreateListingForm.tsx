@@ -203,7 +203,7 @@ export function CreateListingForm({ isAdmin = false }: CreateListingFormProps) {
             description: `${values.name} başarıyla listelendi.`,
         });
 
-        router.push(`/listings/${docRef.id}`); 
+        router.push(`/ilanlar/${docRef.id}`); 
 
     } catch (error) {
         console.error("Error creating listing:", error);
