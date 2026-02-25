@@ -20,7 +20,7 @@ const initialMockReviews = [
       id: 1,
       author: "KopekSever",
       avatar: "https://i.pravatar.cc/150?img=9",
-      comment: "Kedi sahiplenmek isteyenler için harika bir platform. Çok çeşitli cinsler var ve ilan sahipleri genellikle ilgili oluyor.",
+      comment: "Kopek sahiplenmek isteyenler icin harika bir platform. Cok cesitli cinsler var ve ilan sahipleri genellikle ilgili oluyor.",
       date: "1 gün önce"
     },
     {
