@@ -1,6 +1,6 @@
 // This file defines the core data types based on the backend.json schema.
 
-import type { entities } from '@/docs/backend.json';
+import type { entities } from '../../docs/backend.json';
 
 // Utility type to extract property types from the JSON schema
 type SchemaProperties<T extends { properties: any }> = T['properties'];

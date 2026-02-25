@@ -5,13 +5,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { allDogBreeds, allCatBreeds, allBirdBreeds, allAquariumBreeds, allOtherBreeds } from "@/lib/breeds";
+import {
+  allDogBreeds,
+  allCatBreeds,
+  allBirdBreeds,
+  allAquariumBreeds,
+  allOtherBreeds,
+  type Breed,
+} from "@/lib/breeds";
 import { Trash2, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type BreedCategory = 'Dog' | 'Cat' | 'Bird' | 'Aquarium' | 'Other';
 
-const breedData: Record<BreedCategory, string[]> = {
+const breedData: Record<BreedCategory, Breed[]> = {
   Dog: allDogBreeds,
   Cat: allCatBreeds,
   Bird: allBirdBreeds,
@@ -30,7 +37,7 @@ export function BreedManagement() {
       toast({ variant: 'destructive', title: 'Hata', description: 'Cins adı boş olamaz.' });
       return;
     }
-    if (breeds[selectedCategory].includes(newBreed)) {
+    if (breeds[selectedCategory].some((breed) => breed.name === newBreed.trim())) {
         toast({ variant: 'destructive', title: 'Hata', description: 'Bu cins zaten mevcut.' });
         return;
     }
@@ -39,7 +46,13 @@ export function BreedManagement() {
     // trigger a server action to update the source file or a database.
     const updatedBreeds = {
       ...breeds,
-      [selectedCategory]: [...breeds[selectedCategory], newBreed].sort((a, b) => a.localeCompare(b, 'tr')),
+      [selectedCategory]: [
+        ...breeds[selectedCategory],
+        {
+          id: `${selectedCategory.toLowerCase()}-${crypto.randomUUID()}`,
+          name: newBreed.trim(),
+        },
+      ].sort((a, b) => a.name.localeCompare(b.name, 'tr')),
     };
     setBreeds(updatedBreeds);
     setNewBreed('');
@@ -47,15 +60,15 @@ export function BreedManagement() {
     console.log(`(Simulated) Added breed: ${newBreed} to ${selectedCategory}. Update 'src/lib/breeds.ts' to make it permanent.`);
   };
 
-  const handleDeleteBreed = (category: BreedCategory, breedToDelete: string) => {
+  const handleDeleteBreed = (category: BreedCategory, breedToDelete: Breed) => {
      // This is a client-side only update.
     const updatedBreeds = {
         ...breeds,
-        [category]: breeds[category].filter(b => b !== breedToDelete),
+        [category]: breeds[category].filter((breed) => breed.id !== breedToDelete.id),
     };
     setBreeds(updatedBreeds);
-    toast({ title: 'Başarılı', description: `"${breedToDelete}" cinsi silindi.` });
-    console.log(`(Simulated) Deleted breed: ${breedToDelete} from ${category}. Update 'src/lib/breeds.ts' to make it permanent.`);
+    toast({ title: 'Başarılı', description: `"${breedToDelete.name}" cinsi silindi.` });
+    console.log(`(Simulated) Deleted breed: ${breedToDelete.name} from ${category}. Update 'src/lib/breeds.ts' to make it permanent.`);
   };
 
   return (
@@ -94,8 +107,8 @@ export function BreedManagement() {
               <h3 className="font-bold mb-3 text-lg">{category} Cinsleri</h3>
               <ul className="space-y-2 max-h-60 overflow-y-auto pr-2">
                 {breeds[category].map((breed) => (
-                  <li key={breed} className="flex items-center justify-between text-sm bg-secondary p-2 rounded-md">
-                    <span>{breed}</span>
+                  <li key={breed.id} className="flex items-center justify-between text-sm bg-secondary p-2 rounded-md">
+                    <span>{breed.name}</span>
                     <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDeleteBreed(category, breed)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>

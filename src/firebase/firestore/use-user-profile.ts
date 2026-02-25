@@ -1,6 +1,6 @@
 'use client';
 
-import { doc, DocumentData } from 'firebase/firestore';
+import { doc, DocumentData, DocumentReference } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { useDoc, UseDocResult } from '@/firebase/firestore/use-doc';
 import type { UserProfile } from '@/lib/types';
@@ -24,7 +24,7 @@ export function useUserProfile(userId: string | null | undefined): UseDocResult<
       return null;
     }
     // Create and return the document reference.
-    return doc(firestore, 'users', userId) as DocumentData;
+    return doc(firestore, 'users', userId) as DocumentReference<DocumentData>;
   }, [firestore, userId]);
 
   // Use the generic `useDoc` hook to subscribe to the document.

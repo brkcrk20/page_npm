@@ -185,14 +185,14 @@ export function CreateListingForm({ isAdmin = false }: CreateListingFormProps) {
             name: values.name,
             species: values.animalType,
             breed: values.breed,
-            age: parseInt(values.age), 
+            age: parseInt(values.age) as unknown as PetListing['age'], 
             description: values.description,
             listingType: values.listingType,
-            price: values.listingType === 'Sale' ? parseInt(values.price!) : 0,
+            price: (values.listingType === 'Sale' ? parseInt(values.price!) : 0) as unknown as PetListing['price'],
             location: values.location,
             imageUrl: imageUrl,
             userId: user.uid,
-            isFeatured: isAdmin || userProfile?.userStatus === 'premium', 
+            isFeatured: (isAdmin || userProfile?.userStatus === 'premium') as unknown as PetListing['isFeatured'], 
         };
 
         const listingsRef = collection(firestore, `users/${user.uid}/petListings`);

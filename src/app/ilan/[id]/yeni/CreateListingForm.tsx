@@ -27,8 +27,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { useUser, useFirestore, useStorage } from '@/lib/firebase'; // Yolu kontrol et
-import { useUserProfile } from '@/lib/firebase/firestore/use-user-profile'; // Yolu kontrol et
+import { useUser, useFirestore, useStorage } from '@/firebase';
+import { useUserProfile } from '@/firebase/firestore/use-user-profile';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
