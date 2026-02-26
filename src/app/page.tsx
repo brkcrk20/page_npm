@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import { useSearchParams } from 'next/navigation';
 import { SearchFilters } from "@/components/SearchFilters";
 
-// FIREBASE BAĞLANTISI BURADA DÜZELTİLDİ
+// FIREBASE BAĞLANTISI
 import { initializeFirebase } from '@/firebase';
 import { collectionGroup, getDocs, query } from 'firebase/firestore';
 import type { PetListing } from "@/lib/types";
@@ -126,7 +126,8 @@ function HomeContent() {
   useEffect(() => {
     const fetchAllListings = async () => {
       try {
-        const q = query(collectionGroup(db, 'petListings'));
+        // BURASI DÜZELTİLDİ: 'ilanlar' koleksiyonunu sorgula
+        const q = query(collectionGroup(db, 'ilanlar'));
         const querySnapshot = await getDocs(q);
         const allListings = querySnapshot.docs.map(doc => ({
           id: doc.id,
@@ -145,11 +146,11 @@ function HomeContent() {
   const mapListingToPet = (listing: any) => ({
     ...listing,
     image: listing.imageUrl ? [listing.imageUrl] : (Array.isArray(listing.image) ? listing.image : []),
-    type: listing.species || listing.type,
-    age: listing.age ? String(listing.age) : "0", 
-    price: listing.price || 0,
-    location: listing.location || "Belirtilmemiş",
-    featured: listing.isFeatured === true,
+    type: listing.hayvanTuru || listing.type || 'bilinmiyor',
+    age: listing.yas || listing.age || "0", 
+    price: listing.fiyat || listing.price || 0,
+    location: listing.sehir || listing.city || "Belirtilmemiş",
+    featured: listing.vitrinMi === true || listing.isFeatured === true,
     isDb: true
   });
 
@@ -166,12 +167,12 @@ function HomeContent() {
     }
     if (urlQuery) {
         combined = combined.filter(pet => 
-            pet.name.toLowerCase().includes(urlQuery.toLowerCase()) ||
+            pet.name?.toLowerCase().includes(urlQuery.toLowerCase()) ||
             (pet.breed && pet.breed.toLowerCase().includes(urlQuery.toLowerCase()))
         );
     }
     if (urlType && urlType !== 'all') {
-       combined = combined.filter(pet => pet.type === urlType);
+       combined = combined.filter(pet => pet.type?.toLowerCase() === urlType.toLowerCase());
     }
     if (urlBreed && urlBreed !== 'all') {
        combined = combined.filter(pet => pet.breed && pet.breed.toLowerCase().includes(urlBreed.toLowerCase()));
@@ -180,8 +181,8 @@ function HomeContent() {
     return combined;
   }, [dbListings, urlCity, urlDistrict, urlQuery, urlType, urlBreed]);
 
-  const dogPets = useMemo(() => allPets.filter(p => p.type === 'Dog'), [allPets]);
-  const catPets = useMemo(() => allPets.filter(p => p.type === 'Cat'), [allPets]);
+  const dogPets = useMemo(() => allPets.filter(p => p.type?.toLowerCase() === 'köpek' || p.type?.toLowerCase() === 'kopek' || p.type === 'Dog'), [allPets]);
+  const catPets = useMemo(() => allPets.filter(p => p.type?.toLowerCase() === 'kedi' || p.type === 'Cat'), [allPets]);
   const featuredPets = useMemo(() => allPets.filter(p => p.featured === true).slice(0, 8), [allPets]);
 
   const handleAccordionToggle = (value: string) => {
