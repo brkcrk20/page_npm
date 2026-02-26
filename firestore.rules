@@ -1,182 +1,58 @@
-/**
- * Core Philosophy: This ruleset enforces a strict user-ownership model, with a special exception for an admin role.
- * - Standard Users: All data is private to the user who created it.
- * - Admin User: Has read-only access across all user data for management purposes.
- *
- * Data Structure: Data is organized hierarchically under a top-level `/users` collection.
- *
- * Key Security Decisions:
- * - Admin Read-Only Access: A designated admin user can list and read data across the entire database but cannot write outside their own data tree. This is managed via the `isAdmin()` function.
- * - No Public Data: By default, no data is readable or writable by the public or other authenticated users.
- * - User Listing Disabled (for non-admins): To protect user privacy, non-admin users cannot query or list all documents in the `/users` collection.
- * - Path-Based Security: Authorization for non-admins is primarily determined by the `{userId}` wildcard in the document path.
- *
- * Denormalization for Authorization: Subcollection documents contain a `userId` field mirroring the `{userId}` from the path. This avoids costly and slow `get()` calls in security rules, allowing for simpler, more robust validation.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ----------------------------------------------------------------------
-    // Helper Functions
-    // ----------------------------------------------------------------------
+    // =====================================================
+    // HELPER FUNCTIONS
+    // =====================================================
 
-    /**
-     * Checks if the user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * Checks if the user is the designated admin based on their email.
-     * IMPORTANT: For production, it's highly recommended to use custom claims instead of hardcoding an email.
+     * Admin: Custom claim 'admin' true olan users
      */
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email == 'admin@petsemti.com';
+      return isSignedIn() && request.auth.token.admin == true;
     }
 
-    /**
-     * Checks if the authenticated user's UID matches the provided userId from the path.
-     * Ensures a user can only access their own data.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * For update and delete operations, confirms the document exists AND the user is the owner.
-     * This prevents modifying or deleting non-existent data.
-     */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
 
-    /**
-     * On create, validates that the UserProfile's internal `id` field matches the document's path ID.
-     * Enforces relational integrity between the path and the data payload.
-     */
-    function hasValidUserProfileData(userId) {
-      return request.resource.data.id == userId;
-    }
-
-    /**
-     * On update, ensures the UserProfile's internal `id` field cannot be changed.
-     * Prevents re-assigning the profile to a different user path.
-     */
-    function isUserProfileIdImmutable() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-    /**
-     * On create, validates that a new PetListing's internal `userId` field matches its owner's path.
-     * Enforces the ownership link at the moment of creation.
-     */
-    function hasValidPetListingData(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    /**
-     * On update, ensures a PetListing's `userId` ownership field cannot be changed.
-     * Prevents a listing from being transferred to another user.
-     */
-    function isPetListingOwnerImmutable() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-    
-    /**
-     * On create, validates that a new Service's internal `userId` field matches its owner's path.
-     * Enforces the ownership link at the moment of creation.
-     */
-    function hasValidServiceData(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    /**
-     * On update, ensures a Service's `userId` ownership field cannot be changed.
-     * Prevents a service listing from being transferred to another user.
-     */
-    function isServiceOwnerImmutable() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    // ----------------------------------------------------------------------
-    // Collection Rules
-    // ----------------------------------------------------------------------
-
-    /**
-     * @description Manages user profile documents.
-     * - Profile owners can perform all write operations on their own document.
-     * - Admins can read any profile and list all users.
-     * - Unauthenticated users can query the collection to find a user's email by their username for login purposes, but can only read the 'email' and 'username' fields.
-     * @path /users/{userId}
-     * @allow (get) An admin or the profile owner retrieving a specific profile.
-     * @allow (list) An admin querying the /users collection.
-     * @allow (list) An unauthenticated user querying to find an email by username.
-     * @deny (list) A non-admin authenticated user attempting to list all users.
-     * @principle Grants read-only admin oversight, enables username-based login, and maintains user-specific write controls.
-     */
+    // =====================================================
+    // USERS COLLECTION - TOP LEVEL
+    // =====================================================
     match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
-      // Admins can list all fields. Non-admins (including unauthenticated users) can only list to find a username,
-      // but the `read` rule below will restrict which fields they see.
-      allow list: if isAdmin() || request.query.where.size() == 1 && 'username' in request.query.where[0];
-      // Only allow reads of specific fields for username-based login to prevent data leakage.
-      allow read: if isOwner(userId) || isAdmin() || (request.auth == null && keys().hasAll(['username', 'email']));
-      allow create: if isOwner(userId) && hasValidUserProfileData(userId);
-      allow update: if isExistingOwner(userId) && isUserProfileIdImmutable();
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
 
-      /**
-       * @description Manages pet listings. Only the owner can write. Admin can read all listings.
-       * @path /users/{userId}/petListings/{petListingId}
-       * @principle Inherits ownership from the user path, but allows admin read access.
-       */
-      match /petListings/{petListingId} {
-        allow get: if isOwner(userId) || isAdmin();
-        allow list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && hasValidPetListingData(userId);
-        allow update: if isExistingOwner(userId) && isPetListingOwnerImmutable();
-        allow delete: if isExistingOwner(userId);
+      // =====================================================
+      // PET LISTINGS SUBCOLLECTION
+      // =====================================================
+      match /petListings/{listingId} {
+        allow read: if isSignedIn();
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if (isOwner(userId) || isAdmin()) && resource.data.userId == request.resource.data.userId;
+        allow delete: if isOwner(userId) || isAdmin();
       }
 
-      /**
-       * @description Manages service listings. Only the owner can write. Admin can read all listings.
-       * @path /users/{userId}/services/{serviceId}
-       * @principle Inherits ownership from the user path, but allows admin read access.
-       */
+      // =====================================================
+      // SERVICES SUBCOLLECTION
+      // =====================================================
       match /services/{serviceId} {
-        allow get: if isOwner(userId) || isAdmin();
-        allow list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && hasValidServiceData(userId);
-        allow update: if isExistingOwner(userId) && isServiceOwnerImmutable();
-        allow delete: if isExistingOwner(userId);
+        allow read: if isSignedIn();
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if (isOwner(userId) || isAdmin()) && resource.data.userId == request.resource.data.userId;
+        allow delete: if isOwner(userId) || isAdmin();
       }
-    }
-
-    // ----------------------------------------------------------------------
-    // Collection Group Rules
-    // ----------------------------------------------------------------------
-
-    /**
-     * @description Allows admin to query across all pet listings in the application. Also allows authenticated users to query for their favorite listings.
-     * @path /petListings/{petListingId}
-     * @allow (get, list) Admin can read any pet listing. Authenticated users can read listings if their ID is in the user's favoritePetIds list.
-     * @principle Enables global read access for admin and targeted access for users' favorites via collection group query.
-     */
-    match /{path=**}/petListings/{petListingId} {
-      allow get, list: if isAdmin();
-      allow get, list: if isSignedIn() && resource.id in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.favoritePetIds;
-    }
-
-    /**
-     * @description Allows admin to query across all service listings in the application.
-     * @path /services/{serviceId}
-     * @allow (get) Admin can read any single service from any user.
-     * @principle Enables global read access for admin role via collection group query.
-     */
-    match /{path=**}/services/{serviceId} {
-      allow get, list: if isAdmin();
     }
   }
 }

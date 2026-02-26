@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, Suspense, useReducer } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Search, SlidersHorizontal, ChevronDown, ChevronUp, Check } from 'lucide-react';
@@ -8,19 +8,20 @@ import { citiesData, cityNames } from '@/lib/turkiye-data';
 import { petBreeds } from '@/lib/pet-data';
 import { cn } from '@/lib/utils';
 
-// Firebase Verisi Çekmek İçin
-import { db } from '@/lib/firebase';
+// FIREBASE BAĞLANTISI BURADA DÜZELTİLDİ
+import { initializeFirebase } from '@/firebase';
 import { collectionGroup, getDocs, query } from 'firebase/firestore';
 
-// --- TİPLER ---
+const { firestore: db } = initializeFirebase();
+
 type Option = {
   value: string;
   label: string;
-  count?: number; // İlan sayısı
+  count?: number; 
 };
 
 type ListingData = {
-  type?: string;     // veya species
+  type?: string; 
   species?: string;
   breed?: string;
   city?: string;
@@ -28,7 +29,41 @@ type ListingData = {
   [key: string]: any;
 };
 
-// --- ARAMALI SELECT BİLEŞENİ (Sıralama Mantığı Burada) ---
+interface SearchState {
+  searchTerm: string;
+  selectedType: string;
+  selectedBreed: string;
+  selectedCity: string;
+  selectedDistrict: string;
+}
+
+type SearchAction =
+  | { type: 'SET_STATE_FROM_PARAMS'; payload: SearchState }
+  | { type: 'SET_SEARCH_TERM'; payload: string }
+  | { type: 'SET_TYPE'; payload: string }
+  | { type: 'SET_BREED'; payload:string }
+  | { type: 'SET_CITY'; payload: string }
+  | { type: 'SET_DISTRICT'; payload: string };
+
+const searchReducer = (state: SearchState, action: SearchAction): SearchState => {
+  switch (action.type) {
+    case 'SET_STATE_FROM_PARAMS':
+      return action.payload;
+    case 'SET_SEARCH_TERM':
+      return { ...state, searchTerm: action.payload };
+    case 'SET_TYPE':
+      return { ...state, selectedType: action.payload, selectedBreed: "" };
+    case 'SET_BREED':
+      return { ...state, selectedBreed: action.payload };
+    case 'SET_CITY':
+      return { ...state, selectedCity: action.payload, selectedDistrict: "" };
+    case 'SET_DISTRICT':
+      return { ...state, selectedDistrict: action.payload };
+    default:
+      return state;
+  }
+};
+
 const SearchableSelect = ({ 
   placeholder, 
   searchPlaceholder, 
@@ -48,7 +83,6 @@ const SearchableSelect = ({
   const [searchText, setSearchText] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Dışarı tıklayınca kapat
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -61,26 +95,17 @@ const SearchableSelect = ({
 
   const selectedLabel = options.find(o => o.value === value)?.label || placeholder;
 
-  // FİLTRELEME VE SIRALAMA (En çok sayı -> En az sayı -> Alfabetik)
   const filteredOptions = useMemo(() => {
     let result = options;
-
-    // 1. Arama Filtresi
     if (searchText.length > 0) {
       result = result.filter(item => 
         item.label.toLowerCase().includes(searchText.toLowerCase())
       );
     }
-
-    // 2. Sıralama
     return result.sort((a, b) => {
       const countA = a.count || 0;
       const countB = b.count || 0;
-      
-      // Önce sayıya göre (Büyükten küçüğe)
       if (countB !== countA) return countB - countA; 
-      
-      // Sayılar eşitse isme göre (A'dan Z'ye)
       return a.label.localeCompare(b.label, 'tr'); 
     });
   }, [options, searchText]);
@@ -149,7 +174,6 @@ const SearchableSelect = ({
                             <Check className={cn("mr-2 h-4 w-4 flex-shrink-0", value === option.value ? "opacity-100" : "opacity-0")} />
                             <span className="truncate">{option.label}</span>
                         </div>
-                        {/* SAYAÇ ROZETİ */}
                         <span className={`ml-2 text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${option.count && option.count > 0 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-400'}`}>
                              {option.count || 0}
                         </span>
@@ -163,33 +187,42 @@ const SearchableSelect = ({
   );
 };
 
-// --- ANA İÇERİK ---
 function SearchFiltersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
-  
-  // Seçim State'leri
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || "");
-  const [selectedType, setSelectedType] = useState(searchParams.get('type') || "");
-  const [selectedBreed, setSelectedBreed] = useState(searchParams.get('breed') || "");
-  const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || "");
-  const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || "");
 
-  // Tüm İlan Verisi (Hesaplama yapmak için)
+  const initialState: SearchState = {
+    searchTerm: searchParams.get('q') || "",
+    selectedType: searchParams.get('type') || "",
+    selectedBreed: searchParams.get('breed') || "",
+    selectedCity: searchParams.get('city') || "",
+    selectedDistrict: searchParams.get('district') || "",
+  };
+
+  const [state, dispatch] = useReducer(searchReducer, initialState);
+
   const [listings, setListings] = useState<ListingData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setSearchTerm(searchParams.get('q') || "");
-    setSelectedType(searchParams.get('type') || "");
-    setSelectedBreed(searchParams.get('breed') || "");
-    setSelectedCity(searchParams.get('city') || "");
-    setSelectedDistrict(searchParams.get('district') || "");
+    dispatch({
+      type: 'SET_STATE_FROM_PARAMS',
+      payload: {
+        searchTerm: searchParams.get('q') || "",
+        selectedType: searchParams.get('type') || "",
+        selectedBreed: searchParams.get('breed') || "",
+        selectedCity: searchParams.get('city') || "",
+        selectedDistrict: searchParams.get('district') || "",
+      }
+    });
   }, [searchParams]);
 
-  // Firebase'den TÜM İlanları Çek ve Hafızaya Al
   useEffect(() => {
     const fetchListings = async () => {
+      setLoading(true);
+      setError(null);
       try {
         const q = query(collectionGroup(db, 'petListings'));
         const snapshot = await getDocs(q);
@@ -200,15 +233,14 @@ function SearchFiltersContent() {
         setListings(data);
       } catch (error) {
         console.error("İlanlar çekilemedi:", error);
+        setError("İlanlar yüklenirken bir hata oluştu.");
+      } finally {
+        setLoading(false);
       }
     };
-
     fetchListings();
   }, []);
 
-  // --- SEÇENEKLERİ HESAPLA ---
-
-  // 1. TÜR LİSTESİ (İlan Sayılı)
   const typeOptions: Option[] = useMemo(() => {
     const baseOptions = [
       { value: "Dog", label: "Köpek" },
@@ -217,155 +249,74 @@ function SearchFiltersContent() {
       { value: "Fish", label: "Akvaryum" },
       { value: "Other", label: "Diğer" }
     ];
-
-    return baseOptions.map(opt => {
-      // Veritabanında kaç tane bu türden var say
-      const count = listings.filter(l => (l.type === opt.value || l.species === opt.value)).length;
-      return { ...opt, count };
-    });
+    return baseOptions.map(opt => ({ ...opt, count: listings.filter(l => (l.type === opt.value || l.species === opt.value)).length }));
   }, [listings]);
 
-  // 2. CİNS LİSTESİ (Dinamik ve Sayılı)
   const breedOptions: Option[] = useMemo(() => {
-    if (!selectedType || selectedType === "all") return [];
-    
-    const typeKey = selectedType.toLowerCase();
+    if (!state.selectedType || state.selectedType === "all") return [];
+    const typeKey = state.selectedType.toLowerCase();
     const breeds = petBreeds[typeKey] || [];
+    const filteredListings = listings.filter(l => (l.type === state.selectedType || l.species === state.selectedType));
+    return breeds.map(breed => ({ value: breed, label: breed, count: filteredListings.filter(l => l.breed === breed).length }));
+  }, [state.selectedType, listings]);
 
-    // Seçilen türe göre ilanları filtrele
-    const filteredListings = listings.filter(l => 
-      (l.type === selectedType || l.species === selectedType)
-    );
+  const cityOptions: Option[] = useMemo(() => cityNames.map(city => ({
+    value: city, label: city, count: listings.filter(l => l.city === city && (!state.selectedType || state.selectedType === "all" || (l.type === state.selectedType || l.species === state.selectedType))).length
+  })), [listings, state.selectedType]);
 
-    return breeds.map(breed => {
-      // Bu türdeki ilanların içinde bu cinsten kaç tane var?
-      const count = filteredListings.filter(l => l.breed === breed).length;
-      return { value: breed, label: breed, count };
-    });
-  }, [selectedType, listings]);
-
-  // 3. İL LİSTESİ (Sayılı)
-  const cityOptions: Option[] = useMemo(() => {
-    return cityNames.map(city => {
-      // İlde kaç ilan var? (Eğer tür seçiliyse, o türden o ilde kaç tane var?)
-      const count = listings.filter(l => {
-        const matchesCity = l.city === city;
-        // Eğer tür seçiliyse, türü de kontrol et (Opsiyonel: Daha akıllı filtreleme)
-        const matchesType = !selectedType || selectedType === "all" || (l.type === selectedType || l.species === selectedType);
-        return matchesCity && matchesType;
-      }).length;
-      
-      return { value: city, label: city, count };
-    });
-  }, [listings, selectedType]);
-
-  // 4. İLÇE LİSTESİ (Sayılı)
   const districtOptions: Option[] = useMemo(() => {
-    if (!selectedCity || selectedCity === "tum_sehirler") return [];
-    const districts = citiesData[selectedCity] || [];
-
-    return districts.map(dist => {
-      const count = listings.filter(l => {
-        const matchesCity = l.city === selectedCity;
-        const matchesDistrict = l.district === dist;
-        // Eğer tür seçiliyse onu da hesaba kat
-        const matchesType = !selectedType || selectedType === "all" || (l.type === selectedType || l.species === selectedType);
-        return matchesCity && matchesDistrict && matchesType;
-      }).length;
-
-      return { value: dist, label: dist, count };
-    });
-  }, [selectedCity, listings, selectedType]);
+    if (!state.selectedCity || state.selectedCity === "tum_sehirler") return [];
+    const districts = citiesData[state.selectedCity] || [];
+    return districts.map(dist => ({
+      value: dist, label: dist, count: listings.filter(l => l.city === state.selectedCity && l.district === dist && (!state.selectedType || state.selectedType === "all" || (l.type === state.selectedType || l.species === state.selectedType))).length
+    }));
+  }, [state.selectedCity, listings, state.selectedType]);
 
 
   const handleSearch = () => {
     const params = new URLSearchParams(searchParams.toString());
-
-    if (searchTerm) params.set('q', searchTerm); else params.delete('q');
-    if (selectedType && selectedType !== "all") params.set('type', selectedType); else params.delete('type');
-    if (selectedBreed && selectedBreed !== "all") params.set('breed', selectedBreed); else params.delete('breed');
-    if (selectedCity && selectedCity !== "tum_sehirler") params.set('city', selectedCity); else params.delete('city');
-    if (selectedDistrict && selectedDistrict !== "tum_ilceler") params.set('district', selectedDistrict); else params.delete('district');
-
+    if (state.searchTerm) params.set('q', state.searchTerm); else params.delete('q');
+    if (state.selectedType && state.selectedType !== "all") params.set('type', state.selectedType); else params.delete('type');
+    if (state.selectedBreed && state.selectedBreed !== "all") params.set('breed', state.selectedBreed); else params.delete('breed');
+    if (state.selectedCity && state.selectedCity !== "tum_sehirler") params.set('city', state.selectedCity); else params.delete('city');
+    if (state.selectedDistrict && state.selectedDistrict !== "tum_ilceler") params.set('district', state.selectedDistrict); else params.delete('district');
     router.push(`/?${params.toString()}`);
   };
 
+  if (loading) {
+    return <div className="h-48 w-full flex items-center justify-center"><div className="text-gray-500">Filtreler yükleniyor...</div></div>;
+  }
+
+  if (error) {
+    return <div className="h-48 w-full flex items-center justify-center"><div className="text-red-500">{error}</div></div>;
+  }
+
   return (
     <div className="py-2 w-full max-w-full">
-      
-      {/* MOBİL FİLTRE BUTONU */}
       <Button 
         onClick={() => setIsOpen(!isOpen)} 
         className={`w-full flex items-center justify-between mb-2 md:hidden h-12 rounded-2xl transition-all duration-300 shadow-sm border ${isOpen ? 'bg-primary text-primary-foreground border-primary' : 'bg-white text-gray-700 border-gray-100 hover:border-primary/30 hover:bg-orange-50'}`}
       >
         <span className="flex items-center gap-2.5 font-semibold text-base">
-          <div className={`p-1.5 rounded-full ${isOpen ? 'bg-white/20' : 'bg-orange-100 text-primary'}`}>
-             <SlidersHorizontal className="w-4 h-4" />
-          </div>
           İlan Ara & Filtrele
         </span>
         {isOpen ? <ChevronUp className="w-5 h-5 opacity-80" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
       </Button>
 
-      {/* ARAMA FORMU */}
       <div className={`${isOpen ? 'grid' : 'hidden'} md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3 items-end w-full animate-in slide-in-from-top-4 fade-in duration-300 ease-out`}>
-        
-        {/* 1. İsim/No Arama Inputu */}
         <div className="relative lg:col-span-2 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input 
             placeholder="Ne arıyorsun? (İlan no, başlık...)" 
-            className="flex h-11 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 pl-9 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 focus:border-primary focus:ring-primary/20" 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex h-11 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 pl-9 text-sm focus:border-primary focus:ring-primary/20 outline-none" 
+            value={state.searchTerm}
+            onChange={(e) => dispatch({ type: 'SET_SEARCH_TERM', payload: e.target.value })}
           />
         </div>
-
-        {/* 2. TÜR SEÇİMİ (Aramalı) */}
-        <SearchableSelect
-          placeholder="Tüm Türler"
-          searchPlaceholder="Tür ara..."
-          options={typeOptions}
-          value={selectedType}
-          onChange={(val) => {
-             setSelectedType(val);
-             setSelectedBreed(""); 
-          }}
-        />
-
-        {/* 3. CİNS SEÇİMİ (Aramalı + Sayılı) */}
-        <SearchableSelect
-          placeholder="Tüm Cinsler"
-          searchPlaceholder="Cins ara..."
-          options={breedOptions}
-          value={selectedBreed}
-          onChange={setSelectedBreed}
-          disabled={!selectedType || selectedType === "all"}
-        />
-        
-        {/* 4. İL SEÇİMİ (Aramalı) */}
-        <SearchableSelect
-          placeholder="İl Seçiniz"
-          searchPlaceholder="Şehir ara..."
-          options={cityOptions}
-          value={selectedCity}
-          onChange={(val) => {
-             setSelectedCity(val);
-             setSelectedDistrict(""); 
-          }}
-        />
-
-        {/* 5. İLÇE SEÇİMİ (Aramalı) */}
-        <SearchableSelect
-          placeholder="İlçe Seçiniz"
-          searchPlaceholder="İlçe ara..."
-          options={districtOptions}
-          value={selectedDistrict}
-          onChange={setSelectedDistrict}
-          disabled={!selectedCity || selectedCity === "tum_sehirler"}
-        />
-
-        {/* BUL BUTONU */}
+        <SearchableSelect placeholder="Tüm Türler" searchPlaceholder="Tür ara..." options={typeOptions} value={state.selectedType} onChange={(val) => dispatch({ type: 'SET_TYPE', payload: val })} />
+        <SearchableSelect placeholder="Tüm Cinsler" searchPlaceholder="Cins ara..." options={breedOptions} value={state.selectedBreed} onChange={(val) => dispatch({ type: 'SET_BREED', payload: val })} disabled={!state.selectedType || state.selectedType === "all"} />
+        <SearchableSelect placeholder="İl Seçiniz" searchPlaceholder="Şehir ara..." options={cityOptions} value={state.selectedCity} onChange={(val) => dispatch({ type: 'SET_CITY', payload: val })} />
+        <SearchableSelect placeholder="İlçe Seçiniz" searchPlaceholder="İlçe ara..." options={districtOptions} value={state.selectedDistrict} onChange={(val) => dispatch({ type: 'SET_DISTRICT', payload: val })} disabled={!state.selectedCity || state.selectedCity === "tum_sehirler"} />
         <Button onClick={handleSearch} className="w-full h-11 text-base font-bold bg-primary hover:bg-primary/90 text-white rounded-xl shadow-md transition-transform active:scale-95">Bul</Button>
       </div>
     </div>

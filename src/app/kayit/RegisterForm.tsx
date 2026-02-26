@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -18,14 +17,13 @@ import { Input } from '@/components/ui/input';
 import React, { useState } from 'react';
 import { useAuth, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
 
 const individualSchema = z.object({
   userType: z.literal('bireysel'),
@@ -88,47 +86,89 @@ export function RegisterForm() {
     form.setValue('userType', newUserType);
   };
 
-
   async function onSubmit(values: FormValues) {
     setIsLoading(true);
     try {
+      // 1. Authentication'da kullanıcı oluştur
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
-      // Now, save the user's profile to Firestore
+      // 2. Kullanıcı profilini güncelle (displayName)
+      await updateProfile(user, {
+        displayName: values.name
+      });
+
+      // 3. ONLİNE KOD: Benzersiz onay kodu oluştur
+      const onayKodu = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // 4. Firestore'a kullanıcı bilgilerini kaydet (TÜM ALANLARLA)
       const userProfile = {
+        // Temel bilgiler
         id: user.uid,
-        name: values.name,
+        adSoyad: values.name,
         username: values.username,
         email: values.email,
-        phoneNumber: values.phone,
-        userStatus: 'standart' as const, // Assign default status
-        credit: 0, // Assign default credit
-        // Add corporate fields if they exist
+        telefon: values.phone,
+        
+        // Durum bilgileri
+        durum: 'aktif',
+        rol: values.userType === 'kurumsal' ? 'kurumsal' : 'kullanici',
+        userStatus: 'standart',
+        
+        // İstatistikler
+        credit: 0,
+        toplamIlan: 0,
+        aktifIlan: 0,
+        
+        // Tarihler
+        kayitTarihi: serverTimestamp(),
+        sonGiris: serverTimestamp(),
+        
+        // Onay bilgileri
+        emailOnay: false,
+        smsOnay: false,
+        onayKodu: onayKodu,
+        
+        // Konum bilgileri (boş, sonra doldurulacak)
+        sehir: '',
+        ilce: '',
+        adres: '',
+        
+        // Kurumsal alanlar (varsa)
         ...(values.userType === 'kurumsal' && {
+          tcNo: values.tcNo,
           companyType: values.companyType,
           companyTitle: values.companyTitle,
           taxNo: values.taxNo,
           taxOffice: values.taxOffice,
           companyAddress: values.companyAddress,
-          tcNo: values.tcNo
+          isCorporate: true
         }),
+        
+        // Bireysel için boş kurumsal alanlar
+        ...(values.userType === 'bireysel' && {
+          isCorporate: false,
+          tcNo: ''
+        })
       };
 
+      // 5. users koleksiyonuna kaydet
       const userDocRef = doc(firestore, "users", user.uid);
+      await setDoc(userDocRef, userProfile);
       
-      // Use non-blocking write and handle potential errors with the emitter
-      setDoc(userDocRef, userProfile).catch(error => {
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: userDocRef.path,
-            operation: 'create',
-            requestResourceData: userProfile
-          })
-        );
+      // 6. kullanicilar koleksiyonuna da kaydet (opsiyonel)
+      const kullaniciDocRef = doc(firestore, "kullanicilar", user.uid);
+      await setDoc(kullaniciDocRef, {
+        adSoyad: values.name,
+        email: values.email,
+        telefon: values.phone,
+        durum: 'aktif',
+        rol: values.userType === 'kurumsal' ? 'kurumsal' : 'kullanici',
+        kayitTarihi: serverTimestamp(),
+        sonGiris: serverTimestamp(),
       });
 
+      // 7. Başarılı kayıt sonrası ana sayfaya yönlendir
       router.push('/');
       toast({
         title: "Kayıt Başarılı!",
@@ -140,6 +180,8 @@ export function RegisterForm() {
       let description = "Kayıt sırasında bir hata oluştu.";
       if (error.code === 'auth/email-already-in-use') {
         description = "Bu e-posta adresi zaten kullanılıyor.";
+      } else if (error.code === 'permission-denied') {
+        description = "Veritabanı izin hatası. Lütfen daha sonra tekrar deneyin.";
       }
       toast({
         variant: "destructive",

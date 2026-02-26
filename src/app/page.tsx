@@ -20,21 +20,20 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
-import React, { useState, useMemo, useEffect, Suspense } from 'react'; // Suspense eklendi
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { categories, type CategoryInfo } from "@/lib/breeds";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-
-// URL OKUMA
 import { useSearchParams } from 'next/navigation';
 import { SearchFilters } from "@/components/SearchFilters";
 
-// FIREBASE
-import { db } from '@/lib/firebase';
+// FIREBASE BAĞLANTISI BURADA DÜZELTİLDİ
+import { initializeFirebase } from '@/firebase';
 import { collectionGroup, getDocs, query } from 'firebase/firestore';
 import type { PetListing } from "@/lib/types";
 
-// --- YARDIMCI BİLEŞENLER ---
+const { firestore: db } = initializeFirebase();
+
 const CategoryFilter = ({ category, onTriggerClick, isSelected }: { category: CategoryInfo, onTriggerClick: (value: string) => void, isSelected: boolean }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const filteredBreeds = category.breeds.filter(breed =>
@@ -112,13 +111,11 @@ const blogPosts = [
   { id: 3, title: "Evcil Hayvanlarda Tüy Dökülmesi", category: "Bakım", excerpt: "Nedenleri ve tüy dökülmesini kontrol altına alma yolları." },
 ];
 
-// --- ASIL SAYFA İÇERİĞİ (Search Params kullanan kısım burası) ---
 function HomeContent() {
   const [dbListings, setDbListings] = useState<PetListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [openAccordion, setOpenAccordion] = useState<string[]>(["dog", "cat"]);
 
-  // URL PARAMETRELERİNİ BURADA OKUYORUZ
   const searchParams = useSearchParams();
   const urlCity = searchParams.get('city');
   const urlDistrict = searchParams.get('district');
@@ -201,7 +198,6 @@ function HomeContent() {
     <div className="bg-secondary/50 overflow-x-hidden">
       <div className="w-full px-5 md:container md:mx-auto pt-2 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
-          
           <aside className="col-span-1 hidden md:block">
             <div className="bg-white p-4 rounded-lg shadow-sm sticky top-4">
               <Accordion type="multiple" value={openAccordion} onValueChange={setOpenAccordion} className="w-full space-y-1">
@@ -218,11 +214,6 @@ function HomeContent() {
           </aside>
           
           <main className="col-span-1 space-y-8">
-            
-            {/* ÜSTTEKİ FAZLALIK ARAMA KUTUSU BURADAN SİLİNDİ */}
-            {/* Sadece Header'daki arama kutusu kullanılacak */}
-            {/* Ama alttaki filtreleme kodları Header'dan gelen emri dinleyecek */}
-
             {(urlCity || urlQuery || (urlType && urlType !== 'all') || (urlBreed && urlBreed !== 'all')) && (
                 <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-[#f05a28] flex justify-between items-center animate-in fade-in slide-in-from-top-2">
                     <div>
@@ -303,7 +294,6 @@ function HomeContent() {
   );
 }
 
-// --- ANA BİLEŞEN: İÇERİĞİ SUSPENSE İLE SARMALIYOR ---
 export default function HomePage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>}>

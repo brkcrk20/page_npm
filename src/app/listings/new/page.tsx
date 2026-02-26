@@ -12,8 +12,8 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 export default function NewListingPage() {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
-  // Admin olup olmadığını alt bileşene (form) iletmek için bir state ekleyebiliriz
   const [userRole, setUserRole] = useState<'standart' | 'admin'>('standart');
+  const [userId, setUserId] = useState<string | null>(null);
   
   const heroImage = PlaceHolderImages.find((img) => img.id === 'listing-new-hero');
 
@@ -25,29 +25,44 @@ export default function NewListingPage() {
         return;
       }
 
-      // ADMIN KONTROLÜ: Eğer mail admin@petsemti.com ise doğrudan yetki ver
+      // Kullanıcı ID'sini kaydet
+      setUserId(user.uid);
+
+      // ADMIN KONTROLÜ
       const isAdmin = user.email === 'admin@petsemti.com';
       if (isAdmin) {
         setUserRole('admin');
         setIsAuthorized(true);
-        return; // Admin ise fatura kontrolüne girmeden devam et
+        return;
       }
 
       try {
         // 2. Normal kullanıcılar için Fatura bilgisi kontrolü
+        // Önce 'users' koleksiyonunda ara
         const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
+        let userSnap = await getDoc(userRef);
+        
+        // 'users'da yoksa 'kullanicilar' koleksiyonunda ara
+        if (!userSnap.exists()) {
+          const kullaniciRef = doc(db, 'kullanicilar', user.uid);
+          userSnap = await getDoc(kullaniciRef);
+        }
         
         if (userSnap.exists()) {
           const userData = userSnap.data();
           
-          // billingInfo alanı yoksa fatura sayfasına yönlendir
-          if (!userData.billingInfo) {
+          // faturaBilgileri alanı yoksa fatura sayfasına yönlendir
+          // 'faturaBilgileri' koleksiyonunda kontrol et
+          const faturaRef = doc(db, 'faturaBilgileri', user.uid);
+          const faturaSnap = await getDoc(faturaRef);
+          
+          if (!faturaSnap.exists()) {
             router.replace('/fatura-bilgileri');
           } else {
             setIsAuthorized(true);
           }
         } else {
+          // Kullanıcı belgesi hiç yoksa fatura sayfasına yönlendir
           router.replace('/fatura-bilgileri');
         }
       } catch (error) {
@@ -94,8 +109,7 @@ export default function NewListingPage() {
       </section>
 
       <div className="container mx-auto py-10 -mt-20 relative z-10">
-        {/* Formun içine admin bilgisini gönderiyoruz */}
-        <CreateListingForm isAdmin={userRole === 'admin'} />
+        <CreateListingForm isAdmin={userRole === 'admin'} userId={userId} />
       </div>
     </div>
   );

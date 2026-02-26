@@ -1,11 +1,10 @@
 'use client';
 
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query } from 'firebase/firestore';
+import { collectionGroup, collection } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useFirestore } from '@/firebase/provider';
 import type { PetListing, UserProfile, Service } from '@/lib/types';
-
 
 /**
  * Hook to fetch all pet listings from all users.
@@ -16,8 +15,7 @@ export function useAllPetListings() {
 
   const listingsCollectionGroup = useMemoFirebase(() => {
     if (!firestore) return null;
-    // collectionGroup query to get all documents from all 'petListings' subcollections
-    return query(collection(firestore, 'petListings'));
+    return collectionGroup(firestore, 'petListings');
   }, [firestore]);
 
   return useCollection<PetListing>(listingsCollectionGroup);
@@ -47,8 +45,7 @@ export function useAllServices() {
 
   const servicesCollectionGroup = useMemoFirebase(() => {
     if (!firestore) return null;
-    // collectionGroup query to get all documents from all 'services' subcollections
-    return query(collection(firestore, 'services'));
+    return collectionGroup(firestore, 'services');
   }, [firestore]);
 
   return useCollection<Service>(servicesCollectionGroup);
