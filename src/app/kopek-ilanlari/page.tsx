@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { initializeFirebase } from '@/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
-export default function KediIlanlariPage() {
+export default function KopekIlanlariPage() {
   const [realPets, setRealPets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,7 +32,7 @@ export default function KediIlanlariPage() {
         
         const q = query(
           collection(firestore, 'ilanlar'),
-          where('hayvanTuru', '==', 'kedi'),
+          where('hayvanTuru', '==', 'kopek'),
           where('onayDurumu', '==', 'onaylandi')
         );
         
@@ -67,9 +67,9 @@ export default function KediIlanlariPage() {
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
         <aside className="col-span-1">
           <BreedPageSidebar 
-            categoryName={category?.title || 'Kedi'}
+            categoryName={category?.title || 'Köpek'}
             categoryCount={realPets.length}
-            categorySlug={category?.slug || 'kedi'}
+            categorySlug={category?.slug || 'kopek'}
             breeds={category?.breeds || []}
           />
         </aside>
@@ -78,11 +78,11 @@ export default function KediIlanlariPage() {
           <div className="text-sm text-muted-foreground mb-4 flex items-center">
             <Link href="/" className="hover:text-primary">Anasayfa</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
-            <span className="font-semibold text-foreground">Kedi İlanları</span>
+            <span className="font-semibold text-foreground">Köpek İlanları</span>
           </div>
 
           <p className="text-sm text-muted-foreground mb-6">
-            <span className='font-bold text-primary'>Kedi İlanları</span> kategorisinde <span className='font-bold text-foreground'>{realPets.length}</span> ilan bulundu.
+            <span className='font-bold text-primary'>Köpek İlanları</span> kategorisinde <span className='font-bold text-foreground'>{realPets.length}</span> ilan bulundu.
           </p>
           
           {/* Vitrin Section */}

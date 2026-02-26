@@ -11,7 +11,7 @@ interface PetCardProps {
 }
 
 export function PetCard({ pet }: PetCardProps) {
-  // 1. ALAN ADI DÖNÜŞÜMLERİ - Veritabanındaki Türkçe alanları kullan
+  // 1. ALAN ADI DÖNÜŞÜMLERİ
   const baslik = pet.baslik || pet.name || pet.title || 'Başlıksız İlan';
   const cins = pet.cins || pet.breed || 'Belirtilmemiş';
   const sehir = pet.sehir || pet.city || pet.location || 'Belirtilmemiş';
@@ -35,9 +35,24 @@ export function PetCard({ pet }: PetCardProps) {
   // 4. YAŞ MANTIĞI
   const displayAge = String(yas).replace(/years?/, 'yaşında');
 
-  // 5. ROTA MANTIĞI
-  const href = `/ilan/${pet.id}`;
+  // 5. ROTA MANTIĞI - SEO dostu link (FONKSİYON BURADA TANIMLANMALI!)
+  const createSlug = (baslik: string, id: string) => {
+    const charMap: { [key: string]: string } = {
+      'ı': 'i', 'ğ': 'g', 'ü': 'u', 'ş': 's', 'ö': 'o', 'ç': 'c',
+      'İ': 'i', 'Ğ': 'g', 'Ü': 'u', 'Ş': 's', 'Ö': 'o', 'Ç': 'c'
+    };
+    let slug = baslik
+      .toLowerCase()
+      .replace(/[ığüşöç]/g, char => charMap[char])
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    return `${slug}-${id}`;
+  };
 
+  const href = `/ilan/${createSlug(baslik, pet.id)}`;
+
+  // 6. JSX - GÖRÜNÜM (BU KISIM FONKSİYONUN İÇİNDE OLMALI!)
   return (
     <Link href={href} className="group block h-full">
       <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-transparent hover:border-primary">

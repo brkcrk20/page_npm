@@ -1,22 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react'; // useEffect eklendi
-// import { pets } from '@/lib/data'; // Bu satırı artık kullanmıyoruz, Firebase'den çekeceğiz.
+import { PaginationLink } from '@/components/ui/pagination';
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { PetCard } from '@/components/PetCard';
-import { PawPrint, MessageCircle, Star, BookOpen, ChevronRight } from 'lucide-react';
+import { PawPrint, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { categories } from '@/lib/breeds';
 import { ListingRow } from '@/components/ListingRow';
 import { Button } from '@/components/ui/button';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 
-// --- FIREBASE BAĞLANTISI ---
-import { db } from '@/firebase'; 
+// FIREBASE BAĞLANTISI
+import { initializeFirebase } from '@/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const initialMockReviews = [
@@ -27,62 +28,87 @@ const initialMockReviews = [
       comment: "Bu siteden sahiplendiğim Golden Retriever cinsi köpeğimle çok mutluyuz.",
       date: "3 gün önce"
     }
-  ];
+];
 
-export default function DogPage() {
-  // --- STATE (DURUM) YÖNETİMİ ---
-  const [realPets, setRealPets] = useState([]); // Firebase'den gelen köpekler buraya gelecek
-  const [loading, setLoading] = useState(true); // Yüklenme durumu
-  const [reviews, setReviews] = useState(initialMockReviews);
+export default function CategoryPage() {
+  const params = useParams();
+  const catId = params.catId as string;
+  const slug = params.slug as string;
+  
+  // --- STATE YÖNETİMİ ---
+  const [realPets, setRealPets] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [reviews] = useState(initialMockReviews);
   const [newComment, setNewComment] = useState("");
-  const [newRating, setNewRating] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const listingsPerPage = 20;
 
+  // Kategori belirleme
+  const getCategoryType = () => {
+    if (catId.includes('kopek')) return 'kopek';
+    if (catId.includes('kedi')) return 'kedi';
+    return 'kopek';
+  };
+
+  const categoryType = getCategoryType();
+  const category = categories.find(c => 
+    categoryType === 'kopek' ? c.type === 'Dog' : c.type === 'Cat'
+  );
+
   // --- FIREBASE'DEN VERİLERİ ÇEK ---
   useEffect(() => {
-    const getDogs = async () => {
+    const fetchPets = async () => {
       try {
         setLoading(true);
-        // Veritabanında "tur" alanı "kopek" olan her şeyi getir
-        const q = query(collection(db, "ilanlar"), where("tur", "==", "kopek"));
+        const { firestore } = initializeFirebase();
+        
+        // Slug'a göre filtreleme
+        let q;
+        if (slug === 'kopek-ilanlari' || slug === 'kedi-ilanlari') {
+          // Ana kategori sayfası
+          q = query(
+            collection(firestore, 'ilanlar'),
+            where('hayvanTuru', '==', categoryType),
+            where('onayDurumu', '==', 'onaylandi')
+          );
+        } else {
+          // Cins sayfası - Firestore'da cins slug'ı var mı kontrol et
+          const cinsAdi = slug.split('-').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+          ).join(' ');
+          
+          q = query(
+            collection(firestore, 'ilanlar'),
+            where('hayvanTuru', '==', categoryType),
+            where('cins', '>=', cinsAdi),
+            where('cins', '<=', cinsAdi + '\uf8ff'),
+            where('onayDurumu', '==', 'onaylandi')
+          );
+        }
+        
         const querySnapshot = await getDocs(q);
-        const dogData = querySnapshot.docs.map(doc => ({
+        const petData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
-        setRealPets(dogData);
+        setRealPets(petData);
       } catch (error) {
         console.error("Veri çekme hatası:", error);
       } finally {
         setLoading(false);
       }
     };
-    getDogs();
-  }, []);
+    fetchPets();
+  }, [catId, slug, categoryType]);
 
-  // Mantıksal Filtrelemeler (Artık realPets üzerinden)
-  const category = categories.find(c => c.type === 'Dog');
-  const featuredPets = realPets.filter((p: any) => p.featured).slice(0, 4);
+  // Mantıksal Filtrelemeler
+  const featuredPets = realPets.filter((p: any) => p.vitrinMi === true).slice(0, 4);
   
   const totalPages = Math.ceil(realPets.length / listingsPerPage);
   const paginatedListings = realPets.slice(
     (currentPage - 1) * listingsPerPage,
     currentPage * listingsPerPage
   );
-
-  const handleCommentSubmit = () => {
-    if (newComment.trim() === "") return;
-    const newReview = {
-      id: reviews.length + 1,
-      author: "Yeni Kullanıcı",
-      avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
-      comment: newComment,
-      date: "şimdi"
-    };
-    setReviews([newReview, ...reviews]);
-    setNewComment("");
-  };
 
   if (loading) {
     return <div className="flex h-screen items-center justify-center font-bold">Veritabanına bağlanılıyor, lütfen bekle...</div>;
@@ -91,6 +117,11 @@ export default function DogPage() {
   if (!category) {
     return <div>Kategori bulunamadı.</div>;
   }
+
+  // Sayfa başlığını belirle
+  const pageTitle = slug === 'kopek-ilanlari' || slug === 'kedi-ilanlari' 
+    ? `${categoryType === 'kopek' ? 'Köpek' : 'Kedi'} İlanları`
+    : slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
   return (
      <div className="container mx-auto py-8">
@@ -108,11 +139,11 @@ export default function DogPage() {
             <div className="text-sm text-muted-foreground mb-4 flex items-center">
             <Link href="/" className="hover:text-primary">Anasayfa</Link>
             <ChevronRightIcon className="h-4 w-4 mx-1" />
-            <span className="font-semibold text-foreground">Köpek İlanları</span>
+            <span className="font-semibold text-foreground">{pageTitle}</span>
             </div>
 
             <p className="text-sm text-muted-foreground mb-6">
-            <span className='font-bold text-primary'>Köpek İlanları</span> kategorisinde <span className='font-bold text-foreground'>{realPets.length}</span> ilan bulundu.
+            <span className='font-bold text-primary'>{pageTitle}</span> kategorisinde <span className='font-bold text-foreground'>{realPets.length}</span> ilan bulundu.
             </p>
             
             {/* Vitrin Section */}
@@ -133,7 +164,7 @@ export default function DogPage() {
             </div>
 
             <div className="my-8 p-3 bg-red-100/50 border border-red-200 text-red-700 text-sm text-center rounded-lg">
-                İlanınız yukarıda yer alsın, alıcılara daha kısa sürede ulaşın! <Link href="#" className="font-bold underline hover:text-red-800">Detaylı bilgi için tıklayın.</Link>
+                İlanınız yukarıda yer alsın, alıcılara daha kısa sürede ulaşın! <Link href="/listings/new" className="font-bold underline hover:text-red-800">Hemen İlan Ver</Link>
             </div>
 
             {/* Liste Kısmı */}
@@ -166,7 +197,29 @@ export default function DogPage() {
                         className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                     />
                     </PaginationItem>
-                    {/* Sayfalar... */}
+                    {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                      let pageNum = i + 1;
+                      if (totalPages > 5 && currentPage > 3) {
+                        pageNum = currentPage - 3 + i;
+                      }
+                      if (pageNum <= totalPages) {
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink 
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(pageNum);
+                              }}
+                              isActive={currentPage === pageNum}
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
+                      return null;
+                    })}
                     <PaginationItem>
                     <PaginationNext 
                         href="#"
@@ -181,8 +234,50 @@ export default function DogPage() {
                 </Pagination>
             )}
 
-            {/* Diğer kısımlar (Yorumlar vs) senin kodunla aynı devam ediyor... */}
-            {/* Kod çok uzun olduğu için özetledim, kalan kısımları aynen koruyabilirsin. */}
+            {/* Yorumlar Bölümü */}
+            <div className="mt-16">
+              <h2 className="text-2xl font-bold mb-6">Kullanıcı Yorumları</h2>
+              
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle>Yorum Yap</CardTitle>
+                  <CardDescription>Düşüncelerinizi paylaşın</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Textarea 
+                      placeholder="Yorumunuz..." 
+                      rows={3}
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                    />
+                    <div className="flex justify-end">
+                      <Button>Gönder</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <Card key={review.id}>
+                    <CardContent className="p-4 flex gap-3">
+                      <Avatar>
+                        <AvatarImage src={review.avatar} />
+                        <AvatarFallback>{review.author[0]}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold">{review.author}</span>
+                          <span className="text-xs text-muted-foreground">{review.date}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{review.comment}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
         </main>
       </div>
     </div>
