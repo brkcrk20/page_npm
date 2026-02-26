@@ -23,7 +23,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Firebase
-import { db } from '@/lib/firebase';
+import { db } from '@/firebase';
 import { collectionGroup, getDocs, query } from 'firebase/firestore';
 // PetListing tipini import etmesek de olur çünkü 'any' kullanacağız, ama dursun.
 import type { PetListing } from '@/lib/types';

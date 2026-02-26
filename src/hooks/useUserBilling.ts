@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { auth, db } from '@/lib/firebase';
+import { auth, db } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
 export function useUserBilling() {

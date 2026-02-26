@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 
 // --- FIREBASE BAĞLANTISI ---
-import { db } from '@/lib/firebase'; 
+import { db } from '@/firebase'; 
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const initialMockReviews = [
