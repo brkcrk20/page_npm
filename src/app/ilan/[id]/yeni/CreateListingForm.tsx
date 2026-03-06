@@ -155,27 +155,27 @@ export function CreateListingForm() {
         // İL / İLÇE Ayrıştırma
         const [city, district] = values.location.split(' / ');
 
-        // B. Verileri Firestore'a Kaydet
-        const newListing = {
-            name: values.name,
-            species: values.animalType, // Seçilen tür (Dog, Cat vb.)
-            type: values.animalType,    // Listing sayfasında uyumluluk için
-            breed: values.breed,
-            age: values.age, 
-            description: values.description,
-            listingType: values.listingType,
-            price: values.listingType === 'Sale' ? parseInt(values.price || '0') : 0,
-            location: values.location, // Tam string "İstanbul / Kadıköy"
-            city: city?.trim(),        // Filtreleme için ayrı
-            district: district?.trim(),// Filtreleme için ayrı
-            imageUrl: imageUrl,        // Sadece linki kaydediyoruz
-            userId: user.uid,
-            isFeatured: userProfile?.userStatus === 'premium',
-            createdAt: serverTimestamp(),
-            status: 'active'
+        const yeniIlan = {
+          baslik: values.name,
+          hayvanTuru: values.animalType === 'Dog' ? 'kopek' : 
+                       values.animalType === 'Cat' ? 'kedi' : 
+                       values.animalType === 'Bird' ? 'kus' : 
+                       values.animalType === 'Fish' ? 'balik' : 'diger',
+          cins: values.breed,
+          yas: values.age,
+          aciklama: values.description,
+          ilan_tipi: values.listingType === 'Adoption' ? 'Sahiplendirme' : 'Satilik',
+          fiyat: values.listingType === 'Sale' ? parseInt(values.price || '0') : 0,
+          sehir: city?.trim(),
+          ilce: district?.trim(),
+          resimler: [imageUrl],
+          kullanici_id: user.uid,
+          olusturma_tarihi: serverTimestamp(),
+          durum: 'aktif',
+          onayDurumu: 'onaylandi' // Direkt onaylı olsun
         };
 
-        const docRef = await addDoc(collection(firestore, `petListings`), newListing);
+        const docRef = await addDoc(collection(firestore, `ilanlar`), yeniIlan);
         
         toast({ 
             title: "Tebrikler! 🎉", 
