@@ -6,6 +6,7 @@ import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firesto
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useParams } from 'next/navigation'; // Bunu ekleyin!
 import { ChevronRight, Star, Phone, MessageSquare, Eye, MapPin, Calendar, Award, Shield, Truck, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -47,7 +48,10 @@ interface Ilan {
   garanti?: boolean;
 }
 
-export default function IlanDetayPage({ params }: { params: { slug: string } }) {
+export default function IlanDetayPage() {
+  const params = useParams();
+  const slug = params.id as string; // URL'deki [id] parametresi
+  
   const [ilan, setIlan] = useState<Ilan | null>(null);
   const [benzerIlanlar, setBenzerIlanlar] = useState<Ilan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,16 +59,26 @@ export default function IlanDetayPage({ params }: { params: { slug: string } }) 
   useEffect(() => {
     const fetchIlan = async () => {
       try {
+        console.log("Slug:", slug); // Debug için
+        
+        if (!slug) {
+          setLoading(false);
+          return;
+        }
+        
         const { firestore } = initializeFirebase();
         
         // Slug'dan ID'yi çıkar (son rakamlar)
-        const idMatch = params.slug.match(/-(\d+)$/);
+        const idMatch = slug.match(/-(\d+)$/);
+        console.log("ID Match:", idMatch); // Debug için
+        
         if (!idMatch) {
           setLoading(false);
           return;
         }
         
         const ilanId = idMatch[1];
+        console.log("İlan ID:", ilanId); // Debug için
         
         // İlanı getir
         const ilanRef = doc(firestore, 'ilanlar', ilanId);
@@ -102,8 +116,10 @@ export default function IlanDetayPage({ params }: { params: { slug: string } }) 
       }
     };
     
-    fetchIlan();
-  }, [params.slug]);
+    if (slug) {
+      fetchIlan();
+    }
+  }, [slug]);
 
   if (loading) {
     return <div className="flex h-screen items-center justify-center">Yükleniyor...</div>;
