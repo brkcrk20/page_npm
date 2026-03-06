@@ -264,6 +264,7 @@ export function CreateListingForm({ isAdmin = false }: { isAdmin?: boolean }) {
         baslik_slug: slug,
         aciklama: values.aciklama,
         fiyat: values.ilan_tipi === 'Satilik' ? parseInt(values.fiyat || '0') : 0,
+        hayvanTuru: values.kategori_id === '1' ? 'kopek' : 'kedi',
         kategori_id: values.kategori_id,
         kategori_slug: values.kategori_id === '1' ? 'kopek-ilanlari' : 'kedi-ilanlari',
         cins: values.cins,

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { initializeFirebase } from '@/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -68,31 +68,25 @@ export default function IlanDetayPage() {
         
         const { firestore } = initializeFirebase();
         
-        // Slug'un sonundaki SAYIYI bul (12345)
-        // elle-eklenmis-test-ilani-12345
-        const noMatch = slug.match(/-(\d+)$/);
-        console.log("No Match:", noMatch);
+        // Link'teki Firebase ID'sini al (son tireden sonrası)
+        const firebaseId = slug.split('-').pop();
+        console.log("Firebase ID:", firebaseId);
         
-        if (!noMatch) {
+        if (!firebaseId) {
           setLoading(false);
           return;
         }
         
-        const ilanNo = parseInt(noMatch[1], 10);
-        console.log("İlan No:", ilanNo);
+        // Firebase ID'sine göre direkt getir
+        const ilanDocRef = doc(firestore, 'ilanlar', firebaseId);
+        const ilanDocSnap = await getDoc(ilanDocRef);
         
-        // ilan_no alanına göre ara (Firebase ID'si değil!)
-        const ilanlarRef = collection(firestore, 'ilanlar');
-        const q = query(ilanlarRef, where('ilan_no', '==', ilanNo));
-        const querySnapshot = await getDocs(q);
-        
-        if (querySnapshot.empty) {
+        if (!ilanDocSnap.exists()) {
           setLoading(false);
           return;
         }
         
-        const ilanDoc = querySnapshot.docs[0];
-        const ilanData = { id: ilanDoc.id, ...ilanDoc.data() } as Ilan;
+        const ilanData = { id: ilanDocSnap.id, ...ilanDocSnap.data() } as Ilan;
         setIlan(ilanData);
         
         // Benzer ilanları getir (aynı cins)
