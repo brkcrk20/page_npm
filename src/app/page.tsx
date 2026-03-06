@@ -29,7 +29,7 @@ import { SearchFilters } from "@/components/SearchFilters";
 
 // FIREBASE BAĞLANTISI
 import { initializeFirebase } from '@/firebase';
-import { collectionGroup, getDocs, query } from 'firebase/firestore';
+import { collectionGroup, getDocs, query, where } from 'firebase/firestore';
 import type { PetListing } from "@/lib/types";
 
 const { firestore: db } = initializeFirebase();
@@ -127,7 +127,10 @@ function HomeContent() {
     const fetchAllListings = async () => {
       try {
         // BURASI DÜZELTİLDİ: 'ilanlar' koleksiyonunu sorgula
-        const q = query(collectionGroup(db, 'ilanlar'));
+        const q = query(
+          collectionGroup(db, 'ilanlar'),
+          where('onayDurumu', '==', 'onaylandi')
+        );
         const querySnapshot = await getDocs(q);
         const allListings = querySnapshot.docs.map(doc => ({
           id: doc.id,
