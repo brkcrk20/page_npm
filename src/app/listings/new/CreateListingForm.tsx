@@ -274,7 +274,7 @@ export function CreateListingForm({ isAdmin = false }: { isAdmin?: boolean }) {
         kullanici_id: user.uid,
         olusturma_tarihi: serverTimestamp(),
         durum: 'aktif',
-        onayDurumu: isAdmin ? 'onaylandi' : 'onayBekliyor'
+        onayDurumu: 'onaylandi' // Admin değilse bile direkt onaylı olsun
       };
 
       await addDoc(collection(firestore, 'ilanlar'), yeniIlan);
