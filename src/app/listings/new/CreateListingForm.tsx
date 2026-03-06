@@ -35,26 +35,29 @@ import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { citiesData, cityNames } from '@/lib/turkiye-data';
 
-// Yazıyı Link Dostu (Slug) Yapan Yardımcı Fonksiyon - DÜZELTİLDİ
+// GÜNCELLENMİŞ YAZIYI LINK DOSTU (SLUG) YAPAN YARDIMCI FONKSİYON
 const slugify = (text: string) => {
-  // Türkçe karakterleri İngilizce karşılıklarına çevir
-  const trMap: Record<string, string> = { 
-    'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
-    'Ç': 'c', 'Ğ': 'g', 'İ': 'i', 'Ö': 'o', 'Ş': 's', 'Ü': 'u',
-    'i': 'i', 'I': 'i' // Hem büyük I hem küçük i için
+  // Türkçe karakterleri İngilizce karşılıklarına çevir (hem büyük hem küçük)
+  const charMap: Record<string, string> = {
+    'ç': 'c', 'Ç': 'c',
+    'ğ': 'g', 'Ğ': 'g',
+    'ı': 'i', 'I': 'i', 'İ': 'i',  // I ve İ -> i
+    'ö': 'o', 'Ö': 'o',
+    'ş': 's', 'Ş': 's',
+    'ü': 'u', 'Ü': 'u'
   };
   
   return text
     .toString()
-    // Önce tüm Türkçe karakterleri dönüştür
-    .replace(/[çğıöşüÇĞİÖŞÜIİ]/g, (m) => trMap[m] || m)
-    // Kalan tüm harfleri küçült
+    // Özel karakterleri dönüştür
+    .replace(/[çÇğĞıİöÖşŞüÜ]/g, (m) => charMap[m] || m)
+    // Tümünü küçük harf yap
     .toLowerCase()
-    // Boşlukları tireye çevir
+    // Boşlukları tire yap
     .replace(/\s+/g, '-')
-    // Geçersiz karakterleri temizle (sadece harf, rakam ve tire kalabilir)
+    // Geçersiz karakterleri (sadece harf, rakam, tire) dışındakileri temizle
     .replace(/[^a-z0-9-]/g, '')
-    // Birden fazla tireyi tek tire yap
+    // Birden çok tireyi tek tire yap
     .replace(/--+/g, '-')
     // Baştaki ve sondaki tireleri temizle
     .replace(/^-+/, '')
