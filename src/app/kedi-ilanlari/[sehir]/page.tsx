@@ -6,14 +6,13 @@ import { PetCard } from '@/components/PetCard';
 import { ListingRow } from '@/components/ListingRow';
 import { ChevronRight, LayoutGrid, List } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 import { initializeFirebase } from '@/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
-export default function KopekSehirPage() {
+export default function KediSehirPage() {
   const params = useParams();
   const sehir = params.sehir as string;
   
@@ -22,7 +21,6 @@ export default function KopekSehirPage() {
                    sehir === 'ankara' ? 'Ankara' :
                    sehir === 'bursa' ? 'Bursa' :
                    sehir === 'antalya' ? 'Antalya' :
-                   sehir === 'adana' ? 'Adana' :
                    sehir.charAt(0).toUpperCase() + sehir.slice(1);
   
   const [realPets, setRealPets] = useState<any[]>([]);
@@ -39,7 +37,7 @@ export default function KopekSehirPage() {
         
         const q = query(
           collection(firestore, 'ilanlar'),
-          where('hayvanTuru', '==', 'kopek'),
+          where('hayvanTuru', '==', 'kedi'),
           where('sehir', '==', sehirAdi),
           where('onayDurumu', '==', 'onaylandi')
         );
@@ -74,31 +72,28 @@ export default function KopekSehirPage() {
     return (
       <div className="container mx-auto py-16 text-center">
         <h1 className="text-4xl font-bold mb-4">İlan Bulunamadı</h1>
-        <p className="text-muted-foreground mb-8">{sehirAdi} şehrinde ilan bulunamadı.</p>
-        <Link href="/kopek-ilanlari" className="text-primary hover:underline">← Tüm Köpek İlanlarına Dön</Link>
+        <p className="text-muted-foreground mb-8">{sehirAdi} şehrinde kedi ilanı bulunamadı.</p>
+        <Link href="/kedi-ilanlari" className="text-primary hover:underline">← Tüm Kedi İlanlarına Dön</Link>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto py-8">
-      {/* Breadcrumb */}
       <div className="text-sm text-muted-foreground mb-4 flex items-center">
         <Link href="/" className="hover:text-primary">Anasayfa</Link>
         <ChevronRight className="h-4 w-4 mx-1" />
-        <Link href="/kopek-ilanlari" className="hover:text-primary">Köpek İlanları</Link>
+        <Link href="/kedi-ilanlari" className="hover:text-primary">Kedi İlanları</Link>
         <ChevronRight className="h-4 w-4 mx-1" />
         <span className="font-semibold text-foreground">{sehirAdi}</span>
       </div>
 
-      {/* Başlık ve Görünüm Değiştirme */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">{sehirAdi} Köpek İlanları</h1>
+          <h1 className="text-3xl font-bold mb-2">{sehirAdi} Kedi İlanları</h1>
           <p className="text-muted-foreground">{realPets.length} ilan bulundu</p>
         </div>
         
-        {/* Görünüm Değiştirme Butonları */}
         <ToggleGroup 
           type="single" 
           value={viewMode} 
@@ -117,9 +112,8 @@ export default function KopekSehirPage() {
         </ToggleGroup>
       </div>
 
-      {/* İlanlar - Grid veya Liste Görünümü */}
       {viewMode === 'grid' ? (
-        <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-5 xl:grid-cols-6 gap-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {paginatedListings.map((pet: any) => (
             <PetCard key={pet.id} pet={pet} />
           ))}
@@ -132,31 +126,28 @@ export default function KopekSehirPage() {
         </div>
       )}
 
-      {/* Sayfalama */}
       {totalPages > 1 && (
         <Pagination className="mt-8">
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious 
                 href="#" 
-                onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                onClick={(e) => {
                   e.preventDefault();
-                  setCurrentPage((p: number) => Math.max(1, p - 1));
+                  setCurrentPage(p => Math.max(1, p - 1));
                 }}
                 className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
             <PaginationItem>
-              <span className="px-4 py-2">
-                Sayfa {currentPage} / {totalPages}
-              </span>
+              <span className="px-4 py-2">Sayfa {currentPage} / {totalPages}</span>
             </PaginationItem>
             <PaginationItem>
               <PaginationNext 
                 href="#"
-                onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                onClick={(e) => {
                   e.preventDefault();
-                  setCurrentPage((p: number) => Math.min(totalPages, p + 1));
+                  setCurrentPage(p => Math.min(totalPages, p + 1));
                 }}
                 className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
               />

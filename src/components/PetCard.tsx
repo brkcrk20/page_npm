@@ -55,7 +55,7 @@ export function PetCard({ pet }: PetCardProps) {
   // 6. JSX - GÖRÜNÜM (BU KISIM FONKSİYONUN İÇİNDE OLMALI!)
   return (
     <Link href={href} className="group block h-full">
-      <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-transparent hover:border-primary">
+      <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-transparent hover:border-primary scale-95 hover:scale-100">
         <div className="relative overflow-hidden aspect-square bg-gray-100">
           
           {/* Rozetler */}

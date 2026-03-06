@@ -8,11 +8,9 @@ import { BreedPageSidebar } from '@/components/BreedPageSidebar';
 import { categories } from '@/lib/breeds';
 import { ListingRow } from '@/components/ListingRow';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious, PaginationLink } from '@/components/ui/pagination';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { LayoutGrid, List } from 'lucide-react';
 
-// FIREBASE BAĞLANTISI
 import { initializeFirebase } from '@/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
@@ -20,9 +18,11 @@ export default function KediIlanlariPage() {
   const [realPets, setRealPets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const listingsPerPage = 20;
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const listingsPerPage = viewMode === 'grid' ? 12 : 20;
 
-  const category = categories.find(c => c.type === 'Dog');
+  // Kedi kategorisini bul
+  const category = categories.find(c => c.type === 'Cat');
 
   useEffect(() => {
     const fetchPets = async () => {
@@ -59,12 +59,13 @@ export default function KediIlanlariPage() {
   );
 
   if (loading) {
-    return <div className="flex h-screen items-center justify-center font-bold">Yükleniyor...</div>;
+    return <div className="flex h-screen items-center justify-center">Yükleniyor...</div>;
   }
 
   return (
     <div className="container mx-auto py-8">
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
+        {/* Sidebar - KEDİ cinsleri gösterilmeli! */}
         <aside className="col-span-1">
           <BreedPageSidebar 
             categoryName={category?.title || 'Kedi'}
@@ -75,18 +76,40 @@ export default function KediIlanlariPage() {
         </aside>
 
         <main className="col-span-1">
+          {/* Breadcrumb */}
           <div className="text-sm text-muted-foreground mb-4 flex items-center">
             <Link href="/" className="hover:text-primary">Anasayfa</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
             <span className="font-semibold text-foreground">Kedi İlanları</span>
           </div>
 
-          <p className="text-sm text-muted-foreground mb-6">
-            <span className='font-bold text-primary'>Kedi İlanları</span> kategorisinde <span className='font-bold text-foreground'>{realPets.length}</span> ilan bulundu.
-          </p>
+          {/* Başlık ve Görünüm Değiştirme */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Kedi İlanları</h1>
+              <p className="text-muted-foreground">{realPets.length} ilan bulundu</p>
+            </div>
+            
+            <ToggleGroup 
+              type="single" 
+              value={viewMode} 
+              onValueChange={(value: string) => {
+                if (value === 'grid' || value === 'list') {
+                  setViewMode(value);
+                }
+              }}
+            >
+              <ToggleGroupItem value="grid" aria-label="Grid görünüm">
+                <LayoutGrid className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="list" aria-label="Liste görünüm">
+                <List className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
           
           {/* Vitrin Section */}
-          <div>
+          <div className="mb-8">
             <h2 className="text-xl font-bold mb-4">Yıldızlı İlanlar</h2>
             {featuredPets.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -95,29 +118,31 @@ export default function KediIlanlariPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-10 col-span-full border-2 border-dashed rounded-lg bg-secondary/30">
+              <div className="text-center py-10 border-2 border-dashed rounded-lg bg-secondary/30">
                 <PawPrint className="mx-auto h-12 w-12 text-muted-foreground" />
                 <p className="mt-4 font-semibold">Bu kategoride yıldızlı ilan bulunamadı.</p>
               </div>
             )}
           </div>
 
+          {/* Reklam Bandı */}
           <div className="my-8 p-3 bg-red-100/50 border border-red-200 text-red-700 text-sm text-center rounded-lg">
             İlanınız yukarıda yer alsın! <Link href="/listings/new" className="font-bold underline hover:text-red-800">Hemen İlan Ver</Link>
           </div>
 
           {/* Liste Kısmı */}
           <div>
-            {paginatedListings.length > 0 ? (
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {paginatedListings.map((pet: any) => (
+                  <PetCard key={pet.id} pet={pet} />
+                ))}
+              </div>
+            ) : (
               <div className="space-y-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden">
                 {paginatedListings.map((pet: any) => (
                   <ListingRow key={pet.id} pet={pet} />
                 ))}
-              </div>
-            ) : (
-              <div className="text-center py-20 col-span-full border-2 border-dashed rounded-lg bg-secondary/30">
-                <PawPrint className="mx-auto h-16 w-16 text-muted-foreground" />
-                <p className="mt-4 text-lg font-semibold">Bu kategoride henüz ilan bulunamadı.</p>
               </div>
             )}
           </div>
@@ -136,29 +161,11 @@ export default function KediIlanlariPage() {
                     className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                   />
                 </PaginationItem>
-                {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                  let pageNum = i + 1;
-                  if (totalPages > 5 && currentPage > 3) {
-                    pageNum = currentPage - 3 + i;
-                  }
-                  if (pageNum <= totalPages) {
-                    return (
-                      <PaginationItem key={pageNum}>
-                        <PaginationLink 
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setCurrentPage(pageNum);
-                          }}
-                          isActive={currentPage === pageNum}
-                        >
-                          {pageNum}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  }
-                  return null;
-                })}
+                <PaginationItem>
+                  <span className="px-4 py-2">
+                    Sayfa {currentPage} / {totalPages}
+                  </span>
+                </PaginationItem>
                 <PaginationItem>
                   <PaginationNext 
                     href="#"

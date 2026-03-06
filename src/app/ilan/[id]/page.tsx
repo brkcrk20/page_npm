@@ -1,124 +1,99 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Camera,
-  Video,
-  Star,
-  MessageSquare,
-  AlertTriangle,
-  Printer,
-  Phone,
-  BookOpen,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { PetCard } from '@/components/PetCard';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import NotFound from '@/app/not-found';
-
-// FIREBASE BAĞLANTISI
 import { initializeFirebase } from '@/firebase';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { notFound } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { ChevronRight, Star, Phone, MessageSquare, Eye, MapPin, Calendar, Award, Shield, Truck, CreditCard } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { PetCard } from '@/components/PetCard';
 
+// İLAN TİPİ TANIMLAMA
 interface Ilan {
   id: string;
+  ilan_no?: number;
   baslik?: string;
-  name?: string;
+  baslik_slug?: string;
   aciklama?: string;
-  hayvanTuru?: string;
+  fiyat?: number;
+  kategori_id?: string;
+  kategori_slug?: string;
   cins?: string;
-  cinsId?: string;
   yas?: string;
   cinsiyet?: string;
   sehir?: string;
   ilce?: string;
-  fiyat?: number;
+  resimler?: string[];
+  kullanici_id?: string;
+  kullanici_adi?: string;
+  uyelik_tarihi?: string;
   telefon?: string;
-  fotoUrl?: string[];
-  imageUrls?: string[];
-  vitrinMi?: boolean;
-  goruntulenme?: number;
-  olusturmaTarihi?: any;
+  olusturma_tarihi?: any;
+  durum?: string;
   onayDurumu?: string;
-  kategori?: string;
+  goruntulenme?: number;
+  whatsapp_istek?: number;
+  arama_sayisi?: number;
+  favori_sayisi?: number;
+  asliVar?: boolean;
+  pedili?: boolean;
+  krediKartı?: boolean;
+  islemTuru?: string;
+  kargo?: boolean;
+  garanti?: boolean;
 }
 
-const WhatsappIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M.052 24l1.688-6.164a11.93 11.93 0 01-1.67-6.202A11.948 11.948 0 0111.942 0a11.95 11.95 0 0111.943 11.943c0 6.59-5.352 11.943-11.943 11.943a11.928 11.928 0 01-5.753-1.503L.052 24zm6.568-3.435a9.955 9.955 0 005.322 1.493c5.514 0 9.98-4.466 9.98-9.98s-4.466-9.98-9.98-9.98-9.98 4.466-9.98 9.98a9.94 9.94 0 001.55 5.257l-1.025 3.743 3.82-1.01zM9.462 7.25c-.21-.06-.44-.1-.703-.122-.26-.02-.553.05-.774.242-.22.193-.78.763-.954.93-.173.166-.347.188-.49.188-.142 0-.284-.02-.426-.042-.26-.042-.574-.21-.868-.42-1.04-.72-1.72-1.57-1.95-1.84-.23-.27-.46-.58-.46-.94s.16-.53.28-.67c.12-.14.26-.23.38-.23.1 0 .22-.02.33 0 .1.02.24-.29.28-.37.04-.08.06-.17.02-.25-.04-.08-.37-.88-.51-1.2-.14-.32-.28-.28-.39-.28-.11 0-.24 0-.38.01-.28.02-.68.16-.92.38-1.01.9-1.23 2.13-1.02 3.1.21 1.05 1.01 2.29 2.45 3.72 1.77 1.76 3.33 2.74 5.24 3.49.53.21 1.04.33 1.54.43.68.14 1.28.12 1.74.08.5-.04 1.54-.62 1.76-1.22.22-.6.22-1.1.15-1.28-.07-.18-.26-.28-.53-.39z" />
-  </svg>
-);
-
-export default function IlanPage() {
-  const params = useParams();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  
-  const [pet, setPet] = useState<Ilan | null>(null);
+export default function IlanDetayPage({ params }: { params: { slug: string } }) {
+  const [ilan, setIlan] = useState<Ilan | null>(null);
+  const [benzerIlanlar, setBenzerIlanlar] = useState<Ilan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [similarPets, setSimilarPets] = useState<Ilan[]>([]);
-  const [mainImage, setMainImage] = useState('');
-
-  const mockReviews = [
-    {
-      id: 1,
-      author: "Ayşe Yılmaz",
-      avatar: "https://i.pravatar.cc/150?img=1",
-      rating: 5,
-      comment: "İlan sahibi çok ilgiliydi, yavruyu sağlıklı bir şekilde teslim aldık. Herkese tavsiye ederim!",
-      date: "2 gün önce"
-    },
-    {
-      id: 2,
-      author: "Mehmet Kaya",
-      avatar: "https://i.pravatar.cc/150?img=2",
-      rating: 4,
-      comment: "İletişim kurmak kolay oldu. Köpeğin aşıları tamdı. Sadece buluşma yerinde biraz bekledik ama genel olarak memnun kaldık.",
-      date: "1 hafta önce"
-    }
-  ];
 
   useEffect(() => {
     const fetchIlan = async () => {
       try {
-        setLoading(true);
         const { firestore } = initializeFirebase();
         
-        if (!id) return;
+        // Slug'dan ID'yi çıkar (son rakamlar)
+        const idMatch = params.slug.match(/-(\d+)$/);
+        if (!idMatch) {
+          setLoading(false);
+          return;
+        }
         
-        // İlanı ID'ye göre çek
-        const ilanRef = doc(firestore, 'ilanlar', id);
+        const ilanId = idMatch[1];
+        
+        // İlanı getir
+        const ilanRef = doc(firestore, 'ilanlar', ilanId);
         const ilanSnap = await getDoc(ilanRef);
         
-        if (ilanSnap.exists()) {
-          const ilanData = { id: ilanSnap.id, ...ilanSnap.data() } as Ilan;
-          setPet(ilanData);
+        if (!ilanSnap.exists()) {
+          setLoading(false);
+          return;
+        }
+        
+        const ilanData = { id: ilanSnap.id, ...ilanSnap.data() } as Ilan;
+        setIlan(ilanData);
+        
+        // Benzer ilanları getir (aynı cins)
+        if (ilanData.cins && ilanData.kategori_id) {
+          const q = query(
+            collection(firestore, 'ilanlar'),
+            where('cins', '==', ilanData.cins),
+            where('kategori_id', '==', ilanData.kategori_id),
+            where('onayDurumu', '==', 'onaylandi')
+          );
           
-          // Ana resmi ayarla
-          const fotoUrl = ilanData.fotoUrl || ilanData.imageUrls || [];
-          setMainImage(fotoUrl[0] || PlaceHolderImages.find(img => img.id === 'placeholder')?.imageUrl || '/placeholder-pet.png');
+          const snapshot = await getDocs(q);
+          const benzer = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() } as Ilan))
+            .filter(item => item.id !== ilanData.id)
+            .slice(0, 4);
           
-          // Benzer ilanları çek (aynı cins)
-          if (ilanData.cins) {
-            const q = query(
-              collection(firestore, 'ilanlar'),
-              where('cins', '==', ilanData.cins),
-              where('onayDurumu', '==', 'onaylandi')
-            );
-            const snapshot = await getDocs(q);
-            const similar = snapshot.docs
-              .map(doc => ({ id: doc.id, ...doc.data() } as Ilan))
-              .filter(item => item.id !== id)
-              .slice(0, 4);
-            setSimilarPets(similar);
-          }
+          setBenzerIlanlar(benzer);
         }
       } catch (error) {
         console.error("İlan yüklenirken hata:", error);
@@ -127,186 +102,271 @@ export default function IlanPage() {
       }
     };
     
-    if (id) fetchIlan();
-  }, [id]);
+    fetchIlan();
+  }, [params.slug]);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Yükleniyor...</div>;
+    return <div className="flex h-screen items-center justify-center">Yükleniyor...</div>;
   }
 
-  if (!pet) {
-    return <NotFound />;
+  if (!ilan) {
+    return notFound();
   }
-
-  // Galeri resimleri
-  const galleryImages = pet.fotoUrl || pet.imageUrls || [
-    PlaceHolderImages.find(img => img.id === 'placeholder')?.imageUrl || '/placeholder-pet.png'
-  ];
-
-  const priceDisplay = pet.fiyazt && pet.fiyat > 0 ? `${pet.fiyat} TL` : 'Görüşülür';
-
+  
+  const kategoriAdi = ilan.kategori_id === '1' ? 'Köpek İlanları' : 'Kedi İlanları';
+  const kategoriSlug = ilan.kategori_id === '1' ? 'kopek-ilanlari' : 'kedi-ilanlari';
+  const fiyatGosterim = ilan.fiyat && ilan.fiyat > 0 ? `${ilan.fiyat.toLocaleString()} TL` : 'Görüşülür';
+  
+  // Tarih formatlama
+  let ilanTarihi = 'Belirtilmemiş';
+  if (ilan.olusturma_tarihi) {
+    try {
+      ilanTarihi = new Date(ilan.olusturma_tarihi.seconds * 1000).toLocaleDateString('tr-TR');
+    } catch {
+      ilanTarihi = 'Belirtilmemiş';
+    }
+  }
+  
   return (
-    <div className="container mx-auto py-8">
-        {/* Breadcrumb */}
-<div className="text-sm text-muted-foreground mb-4 flex items-center">
-  <Link href="/" className="hover:text-primary">Anasayfa</Link>
-  <ChevronRight className="h-4 w-4 mx-1" />
-  <Link href={pet.hayvanTuru === 'kopek' ? '/kopek-ilanlari' : '/kedi-ilanlari'} className="hover:text-primary">
-    {pet.hayvanTuru === 'kopek' ? 'Köpek İlanları' : 'Kedi İlanları'}
-  </Link>
-  {pet.sehir && (
-    <>
-      <ChevronRight className="h-4 w-4 mx-1" />
-      <Link href={`/${pet.hayvanTuru === 'kopek' ? 'kopek-ilanlari' : 'kedi-ilanlari'}/${pet.sehir.toLowerCase()}`} className="hover:text-primary">
-        {pet.sehir}
-      </Link>
-    </>
-  )}
-  <ChevronRight className="h-4 w-4 mx-1" />
-  <Link href={`/cins/${pet.cinsId || ''}`} className="hover:text-primary">{pet.cins}</Link>
-  <ChevronRight className="h-4 w-4 mx-1" />
-  <span className="font-semibold text-foreground">{pet.baslik || pet.name}</span>
-</div>
-
-        <h1 className="text-2xl font-bold mb-6">{pet.baslik || pet.name}</h1>
+    <div className="container mx-auto py-6 px-4">
+      {/* Breadcrumb */}
+      <div className="flex items-center text-sm text-muted-foreground mb-4">
+        <Link href="/" className="hover:text-primary">Anasayfa</Link>
+        <ChevronRight className="h-4 w-4 mx-1" />
+        <Link href={`/${kategoriSlug}`} className="hover:text-primary">{kategoriAdi}</Link>
+        <ChevronRight className="h-4 w-4 mx-1" />
+        {ilan.cins && (
+          <>
+            <Link href={`/cins/${ilan.cins}`} className="hover:text-primary">{ilan.cins}</Link>
+            <ChevronRight className="h-4 w-4 mx-1" />
+          </>
+        )}
+        <span className="font-semibold text-foreground">{ilan.baslik}</span>
+      </div>
       
-        <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-8">
+      {/* Ana Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* SOL SÜTUN */}
-        <div className="lg:col-span-5 space-y-6">
-            <div>
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border mb-2">
-                    <Image src={mainImage} alt={pet.baslik || pet.name || ''} fill className="object-cover" />
+        {/* SOL KOLON - Fotoğraflar ve Açıklama */}
+        <div className="lg:col-span-7">
+          {/* Ana Fotoğraf */}
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border mb-2">
+            <Image 
+              src={ilan.resimler?.[0] || '/placeholder-pet.png'} 
+              alt={ilan.baslik || 'İlan görseli'}
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
+          
+          {/* Küçük Resimler */}
+          {ilan.resimler && ilan.resimler.length > 1 && (
+            <div className="grid grid-cols-5 gap-2 mb-4">
+              {ilan.resimler.slice(1, 6).map((img: string, idx: number) => (
+                <div key={idx} className="relative aspect-square rounded-md overflow-hidden border">
+                  <Image src={img} alt={`Resim ${idx+2}`} fill className="object-cover" />
                 </div>
-                <div className="grid grid-cols-5 gap-2">
-                    {galleryImages.map((img: string, idx: number) => (
-                        <button key={idx} onClick={() => setMainImage(img)} className={`aspect-square relative rounded-md overflow-hidden border-2 ${mainImage === img ? 'border-primary' : 'border-transparent'}`}>
-                             <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
-                        </button>
-                    ))}
-                </div>
+              ))}
             </div>
-
-            <div className="space-y-2">
-                <div className="bg-gray-700 text-white font-bold text-sm py-2 px-4 rounded-t-md">
-                    İlan Detayları
-                </div>
-                <div className="border bg-white p-4 rounded-b-md">
-                    <p className="text-sm leading-relaxed">
-                        {pet.aciklama}
-                    </p>
-                </div>
+          )}
+          
+          {/* İlan Detayları Başlık */}
+          <div className="bg-gray-800 text-white font-bold py-3 px-4 rounded-t-md mt-6">
+            İlan Detayları
+          </div>
+          
+          {/* Açıklama */}
+          <div className="border border-t-0 rounded-b-md p-6 bg-white mb-6">
+            <p className="whitespace-pre-line leading-relaxed">{ilan.aciklama}</p>
+          </div>
+          
+          {/* Özellikler Tablosu */}
+          <div className="border rounded-md overflow-hidden bg-white">
+            <div className="grid grid-cols-2 border-b">
+              <div className="p-3 font-semibold bg-gray-50">Türü</div>
+              <div className="p-3">{ilan.kategori_id === '1' ? 'Köpek' : 'Kedi'}</div>
             </div>
+            <div className="grid grid-cols-2 border-b">
+              <div className="p-3 font-semibold bg-gray-50">Cinsi</div>
+              <div className="p-3 text-orange-600 font-medium">{ilan.cins || 'Belirtilmemiş'}</div>
+            </div>
+            <div className="grid grid-cols-2 border-b">
+              <div className="p-3 font-semibold bg-gray-50">İlan No</div>
+              <div className="p-3 font-mono">{ilan.ilan_no || 'Belirtilmemiş'}</div>
+            </div>
+            <div className="grid grid-cols-2 border-b">
+              <div className="p-3 font-semibold bg-gray-50">İlan Tarihi</div>
+              <div className="p-3">{ilanTarihi}</div>
+            </div>
+            <div className="grid grid-cols-2 border-b">
+              <div className="p-3 font-semibold bg-gray-50">Yaş</div>
+              <div className="p-3">{ilan.yas || 'Belirtilmemiş'}</div>
+            </div>
+            <div className="grid grid-cols-2 border-b">
+              <div className="p-3 font-semibold bg-gray-50">Cinsiyet</div>
+              <div className="p-3">{ilan.cinsiyet || 'Belirtilmemiş'}</div>
+            </div>
+            <div className="grid grid-cols-2">
+              <div className="p-3 font-semibold bg-gray-50">Şehir</div>
+              <div className="p-3">{ilan.sehir} / {ilan.ilce}</div>
+            </div>
+          </div>
         </div>
-
-        {/* ORTA SÜTUN */}
-        <div className="lg:col-span-4">
-            <div className="border rounded-lg bg-white p-4">
-                <h2 className="text-2xl font-bold text-blue-600 mb-1">{priceDisplay}</h2>
-                <div className="text-sm text-muted-foreground mb-4">
-                    {pet.sehir} / {pet.ilce}
-                </div>
-
-                <ul className="info-table text-sm">
-                    <li><span className="label">Türü</span><span className="value">{pet.hayvanTuru === 'kopek' ? 'Köpek' : 'Kedi'} Cinsleri</span></li>
-                    <li><span className="label">Cinsi</span><span className="value"><Link href={`/cins/${pet.cinsId || ''}`} className="text-red-600 hover:underline">{pet.cins}</Link></span></li>
-                    <li><span className="label">İlan No</span><span className="value text-red-600 font-semibold">{pet.id?.slice(-6)}</span></li>
-                    <li><span className="label">İlan Tarihi</span><span className="value">{pet.olusturmaTarihi ? new Date(pet.olusturmaTarihi.seconds * 1000).toLocaleDateString('tr-TR') : 'Belirtilmemiş'}</span></li>
-                    <li><span className="label">Yaş</span><span className="value">{pet.yas}</span></li>
-                    <li><span className="label">Cinsiyet</span><span className="value">{pet.cinsiyet || 'Belirtilmemiş'}</span></li>
-                    <li><span className="label">Durum</span><span className="value">{pet.kategori === 'satilik' ? 'Satılık' : 'Sahiplenme'}</span></li>
-                </ul>
-
-                <div className="mt-4 pt-4 border-t text-sm space-y-1 text-muted-foreground">
-                    <p>Görüntülenme: <span className="font-bold text-primary">{pet.goruntulenme || 0} kez</span> görüntülendi</p>
-                </div>
-            </div>
-        </div>
-
-        {/* SAĞ SÜTUN */}
-        <div className="lg:col-span-3 space-y-4">
-            <div className="grid grid-cols-3 gap-2 text-center text-white">
-                <div className="bg-green-500 rounded p-2">
-                    <div className="font-bold text-2xl">2</div>
-                    <div className="text-xs">Aktif İlan</div>
-                </div>
-                <div className="bg-gray-400 rounded p-2">
-                    <div className="font-bold text-2xl">18</div>
-                    <div className="text-xs">Toplam İlan</div>
-                </div>
-                <div className="bg-yellow-400 rounded p-2 flex flex-col items-center justify-center">
-                    <Star className="w-6 h-6 text-white fill-white"/>
-                    <div className="text-xs font-bold text-gray-800">4 yıl</div>
-                </div>
+        
+        {/* ORTA KOLON - Bilgiler */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-xl border p-5 sticky top-4">
+            {/* Fiyat */}
+            <div className="text-center mb-4">
+              <div className="text-3xl font-bold text-orange-600">{fiyatGosterim}</div>
             </div>
             
-            <div className="border rounded-lg bg-white p-4 text-center">
-                <h3 className="text-xl font-bold text-primary">İlan Sahibi</h3>
-                <div className="space-y-2 mt-4">
-                    <Button variant="secondary" className="w-full justify-start gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700">
-                        <Phone className="w-4 h-4"/> {pet.telefon || 'Belirtilmemiş'}
-                    </Button>
-                    <Button className="w-full justify-center gap-2 bg-green-500 hover:bg-green-600 text-lg py-6">
-                        <WhatsappIcon /> WhatsApp
-                    </Button>
-                </div>
+            {/* Kısa Bilgiler */}
+            <div className="space-y-3 text-sm mb-4">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-gray-400" />
+                <span>{ilan.sehir} / {ilan.ilce}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-gray-400" />
+                <span>{ilanTarihi}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4 text-gray-400" />
+                <span>{ilan.goruntulenme || 0} görüntülenme</span>
+              </div>
             </div>
+            
+            {/* Rozetler */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {ilan.asliVar && <Badge className="bg-green-100 text-green-800 border-green-200">Aşılı</Badge>}
+              {ilan.pedili && <Badge className="bg-blue-100 text-blue-800 border-blue-200">Pedigrili</Badge>}
+              {ilan.krediKartı && <Badge className="bg-purple-100 text-purple-800 border-purple-200">Kredi Kartı</Badge>}
+              <Badge className="bg-amber-100 text-amber-800 border-amber-200">{ilan.islemTuru || 'Sahiplendirme'}</Badge>
+            </div>
+            
+            {/* İlan Sahibi */}
+            <div className="border-t pt-4 mb-4">
+              <h3 className="font-bold mb-3">İlan Sahibi</h3>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-xl">
+                  {ilan.kullanici_adi?.charAt(0) || 'P'}
+                </div>
+                <div>
+                  <div className="font-medium">{ilan.kullanici_adi || 'Patili Üye'}</div>
+                  <div className="text-xs text-muted-foreground">Üyelik: {ilan.uyelik_tarihi || 'Belirtilmemiş'}</div>
+                </div>
+              </div>
+              
+              {/* İletişim Butonları */}
+              <div className="space-y-2">
+                <Button className="w-full bg-orange-600 hover:bg-orange-700 gap-2">
+                  <Phone className="h-4 w-4" /> {ilan.telefon || 'Telefon'}
+                </Button>
+                <Button className="w-full bg-green-600 hover:bg-green-700 gap-2">
+                  <MessageSquare className="h-4 w-4" /> WhatsApp
+                </Button>
+                <Button variant="outline" className="w-full gap-2">
+                  <MessageSquare className="h-4 w-4" /> Mesaj Gönder
+                </Button>
+              </div>
+            </div>
+            
+            {/* Ek Hizmetler */}
+            <div className="border-t pt-4">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {ilan.kargo && (
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <Truck className="h-3 w-3" /> Kargo Var
+                  </div>
+                )}
+                {ilan.krediKartı && (
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <CreditCard className="h-3 w-3" /> Kredi Kartı
+                  </div>
+                )}
+                {ilan.garanti && (
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <Shield className="h-3 w-3" /> Sağlık Garantili
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* SAĞ KOLON - İstatistikler */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-xl border p-4 sticky top-4">
+            <h3 className="font-bold mb-3">İlan İstatistikleri</h3>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center pb-2 border-b">
+                <span className="text-sm text-gray-600">Görüntülenme</span>
+                <span className="font-bold">{ilan.goruntulenme || 0}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b">
+                <span className="text-sm text-gray-600">Whatsapp İstek</span>
+                <span className="font-bold">{ilan.whatsapp_istek || 0}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b">
+                <span className="text-sm text-gray-600">Arama Aldı</span>
+                <span className="font-bold">{ilan.arama_sayisi || 0}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Favori</span>
+                <span className="font-bold">{ilan.favori_sayisi || 0}</span>
+              </div>
+            </div>
+            
+            {/* Anlık İnceleyen */}
+            <div className="mt-4 bg-red-50 text-red-600 text-center py-2 rounded-lg text-sm font-medium">
+              4 kişi şu anda bu ilanı inceliyor.
+            </div>
+            
+            {/* Navigasyon */}
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <Button variant="outline" size="sm" className="text-xs">
+                ← Önceki İlan
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs">
+                Sonraki İlan →
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
       
       {/* Benzer İlanlar */}
-      <div className="mt-16">
-        <h2 className="text-2xl font-bold mb-6">Benzer İlanlar</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {similarPets.map((pet) => (
-            <PetCard key={pet.id} pet={pet} />
-          ))}
+      {benzerIlanlar.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold mb-6">Benzer İlanlar</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {benzerIlanlar.map((benzer: any) => (
+              <PetCard key={benzer.id} pet={benzer} />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
       
-       {/* Yorumlar */}
-       <div className="mt-16">
+      {/* Değerlendirmeler */}
+      <div className="mt-12 border-t pt-8">
         <h2 className="text-2xl font-bold mb-6">İlan Değerlendirmeleri</h2>
         
-        <Card className="mb-8">
-            <CardHeader>
-                <CardTitle>Yorumunuzu Paylaşın</CardTitle>
-                <CardDescription>Bu ilan hakkındaki düşüncelerinizi paylaşın.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="grid gap-4">
-                    <Textarea placeholder="Yorumunuzu buraya yazın..." rows={4} />
-                    <div className="flex justify-end">
-                        <Button>Yorumu Gönder</Button>
-                    </div>
-                </div>
-            </CardContent>
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-center text-muted-foreground py-8">
+              Bu ilana henüz yorum yapılmamış. İlk yorumu siz yapın!
+            </p>
+          </CardContent>
         </Card>
-
-        <div className="space-y-6">
-          {mockReviews.map((review) => (
-            <Card key={review.id} className="p-0">
-              <CardContent className="p-6 flex gap-4">
-                  <Avatar>
-                      <AvatarImage src={review.avatar} alt={review.author} />
-                      <AvatarFallback>{review.author.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                      <div className="flex justify-between items-center mb-1">
-                          <h4 className="font-semibold">{review.author}</h4>
-                          <span className="text-xs text-muted-foreground">{review.date}</span>
-                      </div>
-                      <div className="flex items-center mb-2">
-                          {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                          ))}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{review.comment}</p>
-                  </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      </div>
+      
+      {/* Uyarı */}
+      <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+        <p className="font-medium mb-1">⚠️ Tanımadığınız Kişilere Dikkat!</p>
+        <p>petsemti.com, pet arayanlar ve sahiplendirme yapanları buluşturan bir platform olup, satış yapmamaktadır. Yüz yüze görüşülmeyen kişilere hiçbir şekilde kaparo ya da bir benzeri ödeme yapılmaması gerekmektedir.</p>
       </div>
     </div>
   );

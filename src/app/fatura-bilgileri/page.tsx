@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { auth, db } from '@/firebase';
+import { initializeFirebase } from '@/firebase'; // DEĞİŞTİ: auth, db yerine initializeFirebase
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -13,6 +13,7 @@ export default function FaturaBilgileriPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState('...');
+  const [currentUser, setCurrentUser] = useState<any>(null);
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -23,9 +24,31 @@ export default function FaturaBilgileriPage() {
   });
 
   useEffect(() => {
+    const { auth } = initializeFirebase(); // Firebase servislerini al
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        setCurrentUser(user);
         setUserName(user.displayName || user.email?.split('@')[0] || 'Kullanıcı');
+        
+        // Kullanıcının mevcut fatura bilgilerini getir
+        try {
+          const { firestore } = initializeFirebase();
+          const userRef = doc(firestore, 'users', user.uid);
+          const userSnap = await getDoc(userRef);
+          
+          if (userSnap.exists() && userSnap.data().billingInfo) {
+            const billing = userSnap.data().billingInfo;
+            setFormData({
+              fullName: billing.fullName || '',
+              taxNumber: billing.taxNumber || '',
+              city: billing.city || '',
+              district: billing.district || '',
+              taxOffice: billing.taxOffice || ''
+            });
+          }
+        } catch (error) {
+          console.error("Fatura bilgileri getirilemedi:", error);
+        }
       } else {
         router.push('/login');
       }
@@ -35,20 +58,39 @@ export default function FaturaBilgileriPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser) return;
+    console.log("1. Form gönderildi");
+    console.log("2. currentUser:", currentUser?.uid);
+    
+    if (!currentUser) {
+      console.log("3. Kullanıcı yok!");
+      return;
+    }
+    
     setLoading(true);
-
+    console.log("4. Loading başladı");
+  
     try {
-      const userRef = doc(db, 'users', auth.currentUser.uid);
+      const { firestore } = initializeFirebase();
+      console.log("5. Firestore alındı");
+      
+      const userRef = doc(firestore, 'users', currentUser.uid);
+      console.log("6. UserRef oluşturuldu:", userRef.path);
+      
       await updateDoc(userRef, {
         billingInfo: formData,
         hasBillingInfo: true
       });
+      console.log("7. Firestore güncellemesi başarılı");
+      
+      console.log("8. Yönlendirme yapılıyor...");
       router.push('/listings/new');
+      console.log("9. Yönlendirme komutu verildi");
+      
     } catch (error) {
-      console.error(error);
-      alert("Bir hata oluştu.");
+      console.error("10. HATA YAKALANDI:", error);
+      alert("Bir hata oluştu: " + error);
     } finally {
+      console.log("11. Finally bloğu çalıştı");
       setLoading(false);
     }
   };
@@ -96,6 +138,7 @@ export default function FaturaBilgileriPage() {
                   type="text"
                   placeholder="Örn: Ahmet Yılmaz veya petsemti Ltd. Şti."
                   className="w-full p-3.5 border border-gray-300 rounded-lg text-gray-700 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition-all"
+                  value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 />
               </div>
@@ -111,11 +154,12 @@ export default function FaturaBilgileriPage() {
                   placeholder="11 haneli TC veya 10 haneli Vergi No"
                   maxLength={11}
                   className="w-full p-3.5 border border-gray-300 rounded-lg text-gray-700 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition-all"
+                  value={formData.taxNumber}
                   onChange={(e) => setFormData({ ...formData, taxNumber: e.target.value })}
                 />
               </div>
 
-              {/* --- GÜNCELLENEN İL VE İLÇE SEÇİMİ --- */}
+              {/* İL VE İLÇE SEÇİMİ */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* İL SEÇİMİ */}
@@ -161,7 +205,6 @@ export default function FaturaBilgileriPage() {
                   </select>
                 </div>
               </div>
-              {/* --- İL VE İLÇE SEÇİMİ BİTİŞ --- */}
 
               {/* Vergi Dairesi */}
               <div>
@@ -172,6 +215,7 @@ export default function FaturaBilgileriPage() {
                   type="text"
                   placeholder="Vergi Dairesi Adı"
                   className="w-full p-3.5 border border-gray-300 rounded-lg text-gray-700 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition-all"
+                  value={formData.taxOffice}
                   onChange={(e) => setFormData({ ...formData, taxOffice: e.target.value })}
                 />
               </div>

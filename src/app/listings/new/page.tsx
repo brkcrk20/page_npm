@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { initializeFirebase } from '@/firebase';  // DOĞRU IMPORT!
+import { initializeFirebase } from '@/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { CreateListingForm } from './CreateListingForm';
@@ -17,7 +17,6 @@ export default function NewListingPage() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'listing-new-hero');
 
   useEffect(() => {
-    // Firebase servislerini al
     const { auth, firestore } = initializeFirebase();
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -34,28 +33,18 @@ export default function NewListingPage() {
       }
 
       try {
+        // users koleksiyonundan hasBillingInfo kontrolü
         const userRef = doc(firestore, 'users', user.uid);
-        let userSnap = await getDoc(userRef);
+        const userSnap = await getDoc(userRef);
         
-        if (!userSnap.exists()) {
-          const kullaniciRef = doc(firestore, 'kullanicilar', user.uid);
-          userSnap = await getDoc(kullaniciRef);
-        }
-        
-        if (userSnap.exists()) {
-          const faturaRef = doc(firestore, 'faturaBilgileri', user.uid);
-          const faturaSnap = await getDoc(faturaRef);
-          
-          if (!faturaSnap.exists()) {
-            router.replace('/fatura-bilgileri');
-          } else {
-            setIsAuthorized(true);
-          }
+        if (userSnap.exists() && userSnap.data().hasBillingInfo) {
+          setIsAuthorized(true);
         } else {
           router.replace('/fatura-bilgileri');
         }
       } catch (error) {
         console.error("Yetki hatası:", error);
+        router.replace('/fatura-bilgileri');
       }
     });
 
