@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { initializeFirebase } from '@/firebase';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams } from 'next/navigation'; // Bunu ekleyin!
+import { useParams } from 'next/navigation';
 import { ChevronRight, Star, Phone, MessageSquare, Eye, MapPin, Calendar, Award, Shield, Truck, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -50,7 +50,7 @@ interface Ilan {
 
 export default function IlanDetayPage() {
   const params = useParams();
-  const slug = params.id as string; // URL'deki [id] parametresi
+  const slug = params.id as string;
   
   const [ilan, setIlan] = useState<Ilan | null>(null);
   const [benzerIlanlar, setBenzerIlanlar] = useState<Ilan[]>([]);
@@ -59,7 +59,7 @@ export default function IlanDetayPage() {
   useEffect(() => {
     const fetchIlan = async () => {
       try {
-        console.log("Slug:", slug); // Debug için
+        console.log("Slug:", slug);
         
         if (!slug) {
           setLoading(false);
@@ -68,40 +68,43 @@ export default function IlanDetayPage() {
         
         const { firestore } = initializeFirebase();
         
-        // Slug'dan ID'yi çıkar (son rakamlar)
-        const idMatch = slug.match(/-(\d+)$/);
-        console.log("ID Match:", idMatch); // Debug için
+        // Slug'un sonundaki SAYIYI bul (12345)
+        // elle-eklenmis-test-ilani-12345
+        const noMatch = slug.match(/-(\d+)$/);
+        console.log("No Match:", noMatch);
         
-        if (!idMatch) {
+        if (!noMatch) {
           setLoading(false);
           return;
         }
         
-        const ilanId = idMatch[1];
-        console.log("İlan ID:", ilanId); // Debug için
+        const ilanNo = parseInt(noMatch[1], 10);
+        console.log("İlan No:", ilanNo);
         
-        // İlanı getir
-        const ilanRef = doc(firestore, 'ilanlar', ilanId);
-        const ilanSnap = await getDoc(ilanRef);
+        // ilan_no alanına göre ara (Firebase ID'si değil!)
+        const ilanlarRef = collection(firestore, 'ilanlar');
+        const q = query(ilanlarRef, where('ilan_no', '==', ilanNo));
+        const querySnapshot = await getDocs(q);
         
-        if (!ilanSnap.exists()) {
+        if (querySnapshot.empty) {
           setLoading(false);
           return;
         }
         
-        const ilanData = { id: ilanSnap.id, ...ilanSnap.data() } as Ilan;
+        const ilanDoc = querySnapshot.docs[0];
+        const ilanData = { id: ilanDoc.id, ...ilanDoc.data() } as Ilan;
         setIlan(ilanData);
         
         // Benzer ilanları getir (aynı cins)
         if (ilanData.cins && ilanData.kategori_id) {
-          const q = query(
+          const benzerQuery = query(
             collection(firestore, 'ilanlar'),
             where('cins', '==', ilanData.cins),
             where('kategori_id', '==', ilanData.kategori_id),
             where('onayDurumu', '==', 'onaylandi')
           );
           
-          const snapshot = await getDocs(q);
+          const snapshot = await getDocs(benzerQuery);
           const benzer = snapshot.docs
             .map(doc => ({ id: doc.id, ...doc.data() } as Ilan))
             .filter(item => item.id !== ilanData.id)
