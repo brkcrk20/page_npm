@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PetCard } from '@/components/PetCard';
 import { PawPrint, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -16,7 +17,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { initializeFirebase } from '@/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
-export default function KopekIlanlariPage() {
+function KopekIlanlariContent() {
+  const searchParams = useSearchParams();
+  const cinsFiltre = searchParams.get('cins') || '';
+
   const [realPets, setRealPets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,10 +34,17 @@ export default function KopekIlanlariPage() {
         setLoading(true);
         const { firestore } = initializeFirebase();
         
+        const baseFilters = [
+          where('hayvanTuru', '==', 'kopek'),
+          where('onayDurumu', '==', 'onaylandi'),
+        ];
+        if (cinsFiltre) {
+          baseFilters.push(where('cins', '==', cinsFiltre));
+        }
+
         const q = query(
           collection(firestore, 'ilanlar'),
-          where('hayvanTuru', '==', 'kopek'),
-          where('onayDurumu', '==', 'onaylandi')
+          ...baseFilters
         );
         
         const querySnapshot = await getDocs(q);
@@ -49,7 +60,7 @@ export default function KopekIlanlariPage() {
       }
     };
     fetchPets();
-  }, []);
+  }, [cinsFiltre]);
 
   const featuredPets = realPets.filter((p: any) => p.vitrinMi === true).slice(0, 4);
   const totalPages = Math.ceil(realPets.length / listingsPerPage);
@@ -71,6 +82,7 @@ export default function KopekIlanlariPage() {
             categoryCount={realPets.length}
             categorySlug={category?.slug || 'kopek'}
             breeds={category?.breeds || []}
+            breedName={cinsFiltre || undefined}
           />
         </aside>
 
@@ -78,11 +90,17 @@ export default function KopekIlanlariPage() {
           <div className="text-sm text-muted-foreground mb-4 flex items-center">
             <Link href="/" className="hover:text-primary">Anasayfa</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
-            <span className="font-semibold text-foreground">Köpek İlanları</span>
+            <Link href="/kopek-ilanlari" className="hover:text-primary">Köpek İlanları</Link>
+            {cinsFiltre && (
+              <>
+                <ChevronRight className="h-4 w-4 mx-1" />
+                <span className="font-semibold text-foreground">{cinsFiltre}</span>
+              </>
+            )}
           </div>
 
           <p className="text-sm text-muted-foreground mb-6">
-            <span className='font-bold text-primary'>Köpek İlanları</span> kategorisinde <span className='font-bold text-foreground'>{realPets.length}</span> ilan bulundu.
+            <span className='font-bold text-primary'>{cinsFiltre ? cinsFiltre : 'Köpek İlanları'}</span> kategorisinde <span className='font-bold text-foreground'>{realPets.length}</span> ilan bulundu.
           </p>
           
           {/* Vitrin Section */}
@@ -175,5 +193,13 @@ export default function KopekIlanlariPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function KopekIlanlariPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center font-bold">Yükleniyor...</div>}>
+      <KopekIlanlariContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PetCard } from '@/components/PetCard';
 import { PawPrint, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -14,7 +15,10 @@ import { LayoutGrid, List } from 'lucide-react';
 import { initializeFirebase } from '@/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
-export default function KediIlanlariPage() {
+function KediIlanlariContent() {
+  const searchParams = useSearchParams();
+  const cinsFiltre = searchParams.get('cins') || '';
+
   const [realPets, setRealPets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,10 +34,17 @@ export default function KediIlanlariPage() {
         setLoading(true);
         const { firestore } = initializeFirebase();
         
+        const baseFilters = [
+          where('hayvanTuru', '==', 'kedi'),
+          where('onayDurumu', '==', 'onaylandi'),
+        ];
+        if (cinsFiltre) {
+          baseFilters.push(where('cins', '==', cinsFiltre));
+        }
+
         const q = query(
           collection(firestore, 'ilanlar'),
-          where('hayvanTuru', '==', 'kedi'),
-          where('onayDurumu', '==', 'onaylandi')
+          ...baseFilters
         );
         
         const querySnapshot = await getDocs(q);
@@ -49,7 +60,7 @@ export default function KediIlanlariPage() {
       }
     };
     fetchPets();
-  }, []);
+  }, [cinsFiltre]);
 
   const featuredPets = realPets.filter((p: any) => p.vitrinMi === true).slice(0, 4);
   const totalPages = Math.ceil(realPets.length / listingsPerPage);
@@ -72,6 +83,7 @@ export default function KediIlanlariPage() {
             categoryCount={realPets.length}
             categorySlug={category?.slug || 'kedi'}
             breeds={category?.breeds || []}
+            breedName={cinsFiltre || undefined}
           />
         </aside>
 
@@ -80,13 +92,19 @@ export default function KediIlanlariPage() {
           <div className="text-sm text-muted-foreground mb-4 flex items-center">
             <Link href="/" className="hover:text-primary">Anasayfa</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
-            <span className="font-semibold text-foreground">Kedi İlanları</span>
+            <Link href="/kedi-ilanlari" className="hover:text-primary">Kedi İlanları</Link>
+            {cinsFiltre && (
+              <>
+                <ChevronRight className="h-4 w-4 mx-1" />
+                <span className="font-semibold text-foreground">{cinsFiltre}</span>
+              </>
+            )}
           </div>
 
           {/* Başlık ve Görünüm Değiştirme */}
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Kedi İlanları</h1>
+              <h1 className="text-3xl font-bold mb-2">{cinsFiltre ? cinsFiltre : 'Kedi İlanları'}</h1>
               <p className="text-muted-foreground">{realPets.length} ilan bulundu</p>
             </div>
             
@@ -182,5 +200,13 @@ export default function KediIlanlariPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function KediIlanlariPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Yükleniyor...</div>}>
+      <KediIlanlariContent />
+    </Suspense>
   );
 }

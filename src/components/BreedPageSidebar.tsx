@@ -69,10 +69,17 @@ export function BreedPageSidebar({
                <ul className="space-y-1 p-2 h-auto">
                  {breeds.map(breed => {
                    const isActive = breed.name === breedName;
+                   // Köpek ve Kedi kategorilerinde bu path segmenti şehir filtresine ayrılmış
+                   // (/kopek-ilanlari/[sehir], /kedi-ilanlari/[sehir]). Bu yüzden ırk linkini
+                   // ayrı bir sayfaya değil, aynı sayfada ?cins= filtresine yönlendiriyoruz.
+                   const isCityBasedCategory = categorySlug === 'kopek-ilanlari' || categorySlug === 'kedi-ilanlari';
+                   const breedHref = isCityBasedCategory
+                     ? `/${categorySlug}?cins=${encodeURIComponent(breed.name)}`
+                     : `/${categorySlug}/${breed.slug}`;
                    return (
                    <li key={breed.id}>
                      <Link 
-                       href={`/${categorySlug}/${breed.slug}`} 
+                       href={breedHref} 
                        className={cn(
                          "flex justify-between items-center text-sm p-3 rounded-lg border transition-all duration-300 ease-in-out group",
                          isActive 
