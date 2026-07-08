@@ -212,7 +212,7 @@ export function Header() {
                 {renderAuthContent()}
               </div>
             <Button asChild variant="secondary">
-              <Link href={user ? '/listings/new' : '/login'}>İlan Ver</Link>
+              <Link href={user ? '/ilan/yeni' : '/login'}>İlan Ver</Link>
             </Button>
           </div>
 
@@ -240,7 +240,7 @@ export function Header() {
                 ))}
                 <div className="border-t pt-4 flex flex-col space-y-2">
                   <Button asChild onClick={() => setSheetOpen(false)}>
-                    <Link href={user ? '/listings/new' : '/login'}>İlan Ver</Link>
+                    <Link href={user ? '/ilan/yeni' : '/login'}>İlan Ver</Link>
                   </Button>
                   {!isLoading && !user && (
                     <>

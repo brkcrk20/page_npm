@@ -184,7 +184,7 @@ export function CreateListingForm() {
         });
 
         // Listings (İlan Detay) sayfasına yönlendir
-        router.push(`/ilan/${docRef.id}`); 
+        router.push(`/${docRef.id}`); 
 
     } catch (error) {
         console.error("Yükleme hatası:", error);

@@ -154,7 +154,7 @@ function FavoriteListings() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {favoriteListings.map(pet => (
                 <Card key={pet.id} className="overflow-hidden group">
-                    <Link href={`/ilan/${pet.id}`} className="block">
+                    <Link href={`/${pet.id}`} className="block">
                         <div className="relative aspect-square">
                             <Image src={pet.imageUrl} alt={pet.name} fill className="object-cover transition-transform group-hover:scale-105" loading="lazy"/>
                         </div>

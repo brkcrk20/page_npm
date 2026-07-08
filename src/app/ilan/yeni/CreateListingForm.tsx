@@ -281,7 +281,7 @@ export function CreateListingForm({ isAdmin = false }: { isAdmin?: boolean }) {
       await addDoc(collection(firestore, 'ilanlar'), yeniIlan);
       
       toast({ title: "Başarılı!", description: "İlanınız yayına alındı." });
-      router.push(`/ilan/${slugify(values.baslik)}-${yeniIlanNo}`);
+      router.push(`/${slugify(values.baslik)}-${yeniIlanNo}`);
     } catch (error: any) {
       console.error(error);
       toast({ variant: "destructive", title: "Hata", description: "İlan eklenemedi: " + error.message });

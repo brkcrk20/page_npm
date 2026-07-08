@@ -17,7 +17,7 @@ export function ListingRow({ pet }: ListingRowProps) {
   const hasBadge = pet.badge === 'Guvenli Uye' || pet.badge === 'Doping';
 
   return (
-    <Link href={`/ilan/${pet.id}`} className="block w-full">
+    <Link href={`/${pet.id}`} className="block w-full">
       <div className={cn(
         "flex flex-col sm:flex-row items-center w-full border-b p-2 bg-white hover:bg-secondary/50 relative overflow-hidden transition-colors duration-200",
         hasBadge && "border-l-4 border-l-red-500"

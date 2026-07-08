@@ -15,7 +15,7 @@ import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firesto
 
 export default function CinsPage() {
   const params = useParams();
-  const id = params.id as string;
+  const id = params.slug as string;
   
   const [realPets, setRealPets] = useState<any[]>([]);
   const [cinsAdi, setCinsAdi] = useState('');

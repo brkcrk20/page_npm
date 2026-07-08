@@ -31,7 +31,7 @@ export default function ListingCard({ data }: { data: ListingProps }) {
   const lokasyon = ilce ? `${sehir} / ${ilce}` : sehir;
 
   return (
-    <Link href={`/ilan/${data.id}`} className="group block bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 overflow-hidden">
+    <Link href={`/${data.id}`} className="group block bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 overflow-hidden">
       <div className="relative h-48 w-full bg-gray-100">
         {fotoUrl && fotoUrl[0] ? (
           <Image

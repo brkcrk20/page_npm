@@ -50,7 +50,7 @@ export function PetCard({ pet }: PetCardProps) {
     return `${slug}-${id}`;
   };
 
-  const href = `/ilan/${createSlug(baslik, pet.id)}`;
+  const href = `/${createSlug(baslik, pet.id)}`;
 
   // 6. JSX - GÖRÜNÜM (BU KISIM FONKSİYONUN İÇİNDE OLMALI!)
   return (

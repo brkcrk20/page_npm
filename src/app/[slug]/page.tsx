@@ -50,7 +50,7 @@ interface Ilan {
 
 export default function IlanDetayPage() {
   const params = useParams();
-  const slug = params.id as string;
+  const slug = params.slug as string;
   
   const [ilan, setIlan] = useState<Ilan | null>(null);
   const [benzerIlanlar, setBenzerIlanlar] = useState<Ilan[]>([]);
@@ -150,7 +150,7 @@ export default function IlanDetayPage() {
         <ChevronRight className="h-4 w-4 mx-1" />
         {ilan.cins && (
           <>
-            <Link href={`/cins/${ilan.cins}`} className="hover:text-primary">{ilan.cins}</Link>
+            <Link href={`/${kategoriSlug}`} className="hover:text-primary">{ilan.cins}</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
           </>
         )}
