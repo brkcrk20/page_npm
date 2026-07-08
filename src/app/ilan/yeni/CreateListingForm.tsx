@@ -44,13 +44,10 @@ const slugify = (text: string) => {
   
   return text
     .toString()
-    .toLowerCase()
     .replace(/[çğıöşüÇĞİÖŞÜ]/g, (m) => trMap[m] || m)
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/--+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 };
 
 // FOTOĞRAF BOYUTLANDIRMA FONKSİYONU

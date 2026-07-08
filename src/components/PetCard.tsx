@@ -42,11 +42,10 @@ export function PetCard({ pet }: PetCardProps) {
       'İ': 'i', 'Ğ': 'g', 'Ü': 'u', 'Ş': 's', 'Ö': 'o', 'Ç': 'c'
     };
     let slug = baslik
+      .replace(/[ığüşöçİĞÜŞÖÇ]/g, char => charMap[char] || char)
       .toLowerCase()
-      .replace(/[ığüşöç]/g, char => charMap[char])
-      .replace(/[^a-z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
     return `${slug}-${id}`;
   };
 
