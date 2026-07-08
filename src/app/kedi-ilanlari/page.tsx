@@ -127,7 +127,7 @@ export default function KediIlanlariPage() {
 
           {/* Reklam Bandı */}
           <div className="my-8 p-3 bg-red-100/50 border border-red-200 text-red-700 text-sm text-center rounded-lg">
-            İlanınız yukarıda yer alsın! <Link href="/listings/new" className="font-bold underline hover:text-red-800">Hemen İlan Ver</Link>
+            İlanınız yukarıda yer alsın! <Link href="/ilan/yeni" className="font-bold underline hover:text-red-800">Hemen İlan Ver</Link>
           </div>
 
           {/* Liste Kısmı */}

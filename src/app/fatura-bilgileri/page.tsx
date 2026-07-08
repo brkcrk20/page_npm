@@ -83,7 +83,7 @@ export default function FaturaBilgileriPage() {
       console.log("7. Firestore güncellemesi başarılı");
       
       console.log("8. Yönlendirme yapılıyor...");
-      router.push('/listings/new');
+      router.push('/ilan/yeni');
       console.log("9. Yönlendirme komutu verildi");
       
     } catch (error) {

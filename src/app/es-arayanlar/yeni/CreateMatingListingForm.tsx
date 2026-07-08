@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 // Note: Using existing actions, can be specialized later
-import { handleImproveDescription, handleSuggestBreeds } from '@/app/listings/new/actions';
+import { handleImproveDescription, handleSuggestBreeds } from '@/app/ilan/yeni/actions';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'İsim en az 2 karakter olmalıdır.' }),
