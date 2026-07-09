@@ -29,6 +29,29 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
+    /* Design System — semantic status colors (ek renk sistemi) */
+    --success: 142 71% 35%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 26 40% 12%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+    --neutral: 220 9% 46%;
+    --neutral-foreground: 0 0% 100%;
+
+    /* Design System — spacing scale (4px base) */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+
+    /* Design System — shadow (elevation) scale */
+    --shadow-color: 240 10% 3.9%;
   }
 
   .dark {
@@ -56,6 +79,18 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
+    /* Design System — semantic status colors (dark mode) */
+    --success: 142 65% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 26 40% 10%;
+    --info: 199 89% 58%;
+    --info-foreground: 0 0% 100%;
+    --neutral: 220 9% 65%;
+    --neutral-foreground: 240 10% 3.9%;
+
+    --shadow-color: 0 0% 0%;
   }
 }
 
