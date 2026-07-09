@@ -44,7 +44,6 @@ export function BreedManagement() {
     setBreeds(updatedBreeds);
     setNewBreed('');
     toast({ title: 'Başarılı', description: `"${newBreed}" cinsi "${selectedCategory}" kategorisine eklendi.` });
-    console.log(`(Simulated) Added breed: ${newBreed} to ${selectedCategory}. Update 'src/lib/breeds.ts' to make it permanent.`);
   };
 
   const handleDeleteBreed = (category: BreedCategory, breedToDelete: string) => {
@@ -55,7 +54,6 @@ export function BreedManagement() {
     };
     setBreeds(updatedBreeds);
     toast({ title: 'Başarılı', description: `"${breedToDelete}" cinsi silindi.` });
-    console.log(`(Simulated) Deleted breed: ${breedToDelete} from ${category}. Update 'src/lib/breeds.ts' to make it permanent.`);
   };
 
   return (

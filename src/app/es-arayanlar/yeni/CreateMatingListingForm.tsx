@@ -107,7 +107,6 @@ export function CreateMatingListingForm() {
   };
 
   function onSubmit(values: FormValues) {
-    console.log({ ...values, listingType: 'Mating', photo: photoPreview ? 'has_photo' : 'no_photo' });
     // TODO: Implement mating listing creation logic
   }
 

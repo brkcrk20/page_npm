@@ -58,39 +58,29 @@ export default function FaturaBilgileriPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("1. Form gönderildi");
-    console.log("2. currentUser:", currentUser?.uid);
-    
+
     if (!currentUser) {
-      console.log("3. Kullanıcı yok!");
       return;
     }
     
     setLoading(true);
-    console.log("4. Loading başladı");
   
     try {
       const { firestore } = initializeFirebase();
-      console.log("5. Firestore alındı");
       
       const userRef = doc(firestore, 'users', currentUser.uid);
-      console.log("6. UserRef oluşturuldu:", userRef.path);
       
       await updateDoc(userRef, {
         billingInfo: formData,
         hasBillingInfo: true
       });
-      console.log("7. Firestore güncellemesi başarılı");
       
-      console.log("8. Yönlendirme yapılıyor...");
       router.push('/ilan/yeni');
-      console.log("9. Yönlendirme komutu verildi");
       
     } catch (error) {
-      console.error("10. HATA YAKALANDI:", error);
+      console.error("HATA YAKALANDI:", error);
       alert("Bir hata oluştu: " + error);
     } finally {
-      console.log("11. Finally bloğu çalıştı");
       setLoading(false);
     }
   };

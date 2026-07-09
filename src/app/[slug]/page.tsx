@@ -59,8 +59,6 @@ export default function IlanDetayPage() {
   useEffect(() => {
     const fetchIlan = async () => {
       try {
-        console.log("Slug:", slug);
-        
         if (!slug) {
           setLoading(false);
           return;
@@ -70,7 +68,6 @@ export default function IlanDetayPage() {
         
         // Link'teki Firebase ID'sini al (son tireden sonrası)
         const firebaseId = slug.split('-').pop();
-        console.log("Firebase ID:", firebaseId);
         
         if (!firebaseId) {
           setLoading(false);
