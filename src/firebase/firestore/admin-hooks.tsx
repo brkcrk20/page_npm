@@ -4,7 +4,8 @@ import { useMemoFirebase } from '@/firebase/provider';
 import { collectionGroup, collection } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useFirestore } from '@/firebase/provider';
-import type { PetListing, UserProfile, Service } from '@/lib/types';
+import type { PetListing, UserProfile } from '@/lib/types';
+import type { Service } from '@/types/firestore';
 
 /**
  * Hook to fetch all pet listings from all users.

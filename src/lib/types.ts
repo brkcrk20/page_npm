@@ -39,13 +39,10 @@ export type UserProfile = {
   credit?: SchemaProperties<typeof entities.UserProfile>['credit']['type'];
 };
 
-export type Service = {
-  id: string;
-  name: SchemaProperties<typeof entities.Service>['name']['type'];
-  type: SchemaProperties<typeof entities.Service>['type']['type'];
-  description: SchemaProperties<typeof entities.Service>['description']['type'];
-  address: SchemaProperties<typeof entities.Service>['address']['type'];
-  phoneNumber: SchemaProperties<typeof entities.Service>['phoneNumber']['type'];
-  websiteUrl?: SchemaProperties<typeof entities.Service>['websiteUrl']['type'];
-  userId: SchemaProperties<typeof entities.Service>['userId']['type'];
-};
+// NOT: `Service` tipi buradan kaldırıldı ve src/types/firestore.ts içindeki
+// yeni Firestore modeline taşındı (bkz. import { Service } from '@/types/firestore').
+// name/description/address/phoneNumber/websiteUrl?/userId alanları birebir
+// aynı kaldı; `type` alanı artık ServiceType enum'ı ile tipleniyor (değerler
+// aynı string'lere karşılık geliyor). Bu tip yalnızca @/firebase/firestore/admin-hooks.tsx
+// içinde generic parametre olarak kullanıldığından (runtime doğrulaması yok)
+// taşıma hiçbir component davranışını değiştirmez.
