@@ -21,7 +21,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { getSupabaseBrowserClient } from './client';
+import { getSupabaseBrowserClientOrNull } from './client';
 import type { Database } from './database.types';
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -39,7 +39,10 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
-  const supabase = getSupabaseBrowserClient();
+  // Yapılandırma eksikse null gelir. Bu durumda sağlayıcı oturumsuz çalışır:
+  // site açılmaya devam eder, yalnızca giriş yapılamaz. Eksik bir ortam
+  // değişkeninin tüm siteyi düşürmesini istemiyoruz.
+  const supabase = getSupabaseBrowserClientOrNull();
 
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -50,6 +53,15 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+
+    if (!supabase) {
+      console.error(
+        'Supabase yapılandırılmamış: NEXT_PUBLIC_SUPABASE_URL ve ' +
+          'NEXT_PUBLIC_SUPABASE_ANON_KEY tanımlı değil. Giriş devre dışı.'
+      );
+      setIsUserLoading(false);
+      return;
+    }
 
     // İlk yükleme: sunucudan doğrulanmış kullanıcıyı al.
     // getSession() yerine getUser() çünkü getSession çerezdeki veriyi
@@ -82,7 +94,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     let active = true;
     const userId = session?.user?.id;
 
-    if (!userId) {
+    if (!supabase || !userId) {
       setProfile(null);
       return;
     }
@@ -115,13 +127,13 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       isUserLoading,
       isProfileLoading,
       async signOut() {
-        await supabase.auth.signOut();
+        if (supabase) await supabase.auth.signOut();
         setSession(null);
         setProfile(null);
       },
       async refreshProfile() {
         const userId = session?.user?.id;
-        if (!userId) return;
+        if (!supabase || !userId) return;
         const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
         setProfile((data as Profile) ?? null);
       },
