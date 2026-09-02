@@ -60,7 +60,7 @@ function ProfileListings() {
             <p className="font-semibold">Henüz hiç ilan vermediniz.</p>
             <p className="text-sm">Yeni bir ilan oluşturarak başlayabilirsiniz.</p>
             <Button asChild className="mt-4">
-                <Link href="/ilan/yeni">Yeni İlan Oluştur</Link>
+                <Link href="/ilan-ver">Yeni İlan Oluştur</Link>
             </Button>
         </div>
     );
@@ -379,7 +379,7 @@ export default function ProfilePage() {
                                     Profili Düzenle
                                 </Button>
                                 <Button asChild className='flex-1'>
-                                    <Link href="/ilan/yeni">
+                                    <Link href="/ilan-ver">
                                         <Plus className="mr-2 h-4 w-4" />
                                         İlan Ekle
                                     </Link>

@@ -46,3 +46,13 @@ firestore-debug.log
 
 .env.local
 .env.*.local
+# Yerel sırlar — asla commit edilmemeli
+dbpassword.txt
+*.pem
+.supabase-credentials
+
+# .env* yukarıda tümüyle yok sayılıyor; örnek dosya bunun istisnası olmalı
+!.env.example
+
+# Supabase CLI geçici dosyaları
+supabase/.temp/

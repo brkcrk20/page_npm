@@ -20,7 +20,7 @@ export function BottomNav() {
       icon: Heart,
     },
     {
-      href: '/ilan/yeni',
+      href: '/ilan-ver',
       label: 'İlan Ver',
       icon: Plus,
       isMain: true,

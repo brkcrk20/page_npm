@@ -75,7 +75,7 @@ export default function FaturaBilgileriPage() {
         hasBillingInfo: true
       });
       
-      router.push('/ilan/yeni');
+      router.push('/ilan-ver');
       
     } catch (error) {
       console.error("HATA YAKALANDI:", error);
