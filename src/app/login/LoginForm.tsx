@@ -16,13 +16,10 @@ import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { Checkbox } from '@/components/ui/checkbox';
 import React, { useState } from 'react';
-import { useAuth, useFirestore } from '@/firebase';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import type { UserProfile } from '@/lib/types';
 
 const formSchema = z.object({
   loginId: z.string().min(1, { message: 'Kullanıcı adı veya e-posta gereklidir.' }),
@@ -31,8 +28,7 @@ const formSchema = z.object({
 });
 
 export function LoginForm() {
-  const auth = useAuth();
-  const firestore = useFirestore();
+  const supabase = getSupabaseBrowserClient();
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -46,63 +42,67 @@ export function LoginForm() {
     },
   });
 
+  /**
+   * Supabase Auth yalnızca e-posta ile giriş kabul ediyor. Kullanıcı adı
+   * girildiyse önce karşılığı olan e-postayı buluyoruz.
+   *
+   * Bunu doğrudan profiles tablosuna sorgu atarak yapamayız: RLS giriş
+   * yapmamış kullanıcıya hiçbir profil satırı göstermiyor. Bu yüzden yalnızca
+   * e-posta döndüren kontrollü bir RPC kullanılıyor
+   * (bkz. supabase/migrations/0007_auth_helpers.sql).
+   */
   async function getEmailFromUsername(username: string): Promise<string | null> {
-    try {
-      const usersRef = collection(firestore, 'users');
-      const q = query(usersRef, where('username', '==', username), limit(1));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        const userDoc = querySnapshot.docs[0].data() as UserProfile;
-        return userDoc.email;
-      }
-      return null;
-    } catch (error) {
-      console.error("Error fetching user by username:", error);
-      // This might fail due to security rules if not properly configured.
-      // We'll let the main login function handle the generic error message.
+    const { data, error } = await supabase.rpc('email_for_username', {
+      p_username: username,
+    });
+    if (error) {
+      console.error('Kullanıcı adı çözümlenemedi:', error.message);
       return null;
     }
+    return (data as string | null) ?? null;
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    let emailToLogin = values.loginId;
+    let emailToLogin = values.loginId.trim();
 
-    // Check if loginId is not an email, then assume it's a username
-    if (!values.loginId.includes('@')) {
-      const foundEmail = await getEmailFromUsername(values.loginId);
-      if (foundEmail) {
-        emailToLogin = foundEmail;
-      } else {
-        // If username is not found, we can fail early
+    if (!emailToLogin.includes('@')) {
+      const foundEmail = await getEmailFromUsername(emailToLogin);
+      if (!foundEmail) {
+        // Kullanıcı adı bulunamadı. Mesajı bilerek genel tutuyoruz: "böyle bir
+        // kullanıcı yok" demek, hangi kullanıcı adlarının kayıtlı olduğunu
+        // dışarıdan taranabilir hale getirirdi.
         toast({
-          variant: "destructive",
-          title: "Giriş Başarısız",
-          description: "Kullanıcı adı veya şifre hatalı. Lütfen bilgilerinizi kontrol edin.",
+          variant: 'destructive',
+          title: 'Giriş Başarısız',
+          description: 'Kullanıcı adı veya şifre hatalı. Lütfen bilgilerinizi kontrol edin.',
         });
         setIsLoading(false);
         return;
       }
+      emailToLogin = foundEmail;
     }
 
-    try {
-      await signInWithEmailAndPassword(auth, emailToLogin, values.password);
-      router.push('/');
-    } catch (error: any) {
-      console.error(error);
-      let description = "Giriş yapılırken bir hata oluştu.";
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        description = "Kullanıcı adı veya şifre hatalı. Lütfen bilgilerinizi kontrol edin.";
+    const { error } = await supabase.auth.signInWithPassword({
+      email: emailToLogin,
+      password: values.password,
+    });
+
+    if (error) {
+      let description = 'Giriş yapılırken bir hata oluştu.';
+      if (error.message.includes('Invalid login credentials')) {
+        description = 'Kullanıcı adı veya şifre hatalı. Lütfen bilgilerinizi kontrol edin.';
+      } else if (error.message.includes('Email not confirmed')) {
+        description = 'E-posta adresiniz henüz doğrulanmamış. Gelen kutunuzu kontrol edin.';
       }
-      toast({
-        variant: "destructive",
-        title: "Giriş Başarısız",
-        description: description,
-      });
-    } finally {
+      toast({ variant: 'destructive', title: 'Giriş Başarısız', description });
       setIsLoading(false);
+      return;
     }
+
+    // refresh(): sunucu component'leri yeni oturum çerezini görsün.
+    router.push('/');
+    router.refresh();
   }
 
   return (

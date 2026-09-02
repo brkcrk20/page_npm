@@ -1,6 +1,6 @@
 'use client';
 
-import { useUser } from '@/firebase';
+import { useUser } from '@/lib/supabase/auth-provider';
 import { Loader2, ShieldOff } from 'lucide-react';
 import { AdminShell } from './AdminShell';
 

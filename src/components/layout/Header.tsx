@@ -31,11 +31,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import { useUser } from '@/firebase';
-import { useUserProfile } from '@/firebase/firestore/use-user-profile';
-import { signOut, getAuth } from 'firebase/auth';
+import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,20 +73,21 @@ const serviceCategories = [
 export function Header() {
   const pathname = usePathname();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
-  const { user, isUserLoading } = useUser();
-  const { data: userProfile, isLoading: isProfileLoading } = useUserProfile(user?.uid);
+  const router = useRouter();
+  const { user, profile, isUserLoading, isProfileLoading, signOut } = useSupabaseAuth();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
   
-  const auth = getAuth();
   
   const isAdmin = user && user.email === 'admin@petsemti.com';
 
-  const handleLogout = () => {
-    signOut(auth);
+  const handleLogout = async () => {
+    await signOut();
+    // Sunucu component'leri eski oturum çerezini önbellekte tutmasın.
+    router.refresh();
   };
 
   const isLoading = !isMounted || isUserLoading || isProfileLoading;
@@ -135,14 +134,14 @@ export function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 hover:bg-white/20 hover:text-white px-3">
-              <span className="font-medium">{userProfile?.name ?? user.email}</span>
+              <span className="font-medium">{profile?.full_name ?? user.email}</span>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{userProfile?.name ?? 'Kullanıcı'}</p>
+                <p className="text-sm font-medium leading-none">{profile?.full_name ?? 'Kullanıcı'}</p>
                 <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
               </div>
             </DropdownMenuLabel>
@@ -167,7 +166,7 @@ export function Header() {
              </DropdownMenuGroup>
              <DropdownMenuSeparator />
              <DropdownMenuGroup>
-                <DropdownMenuItem><CreditCard className="mr-2 h-4 w-4" /><span>Krediniz: {userProfile?.credit ?? 0}</span></DropdownMenuItem>
+                <DropdownMenuItem><CreditCard className="mr-2 h-4 w-4" /><span>Krediniz: {0}</span></DropdownMenuItem>
                  <DropdownMenuItem asChild><Link href="/kredi-hareketleri"><CreditCard className="mr-2 h-4 w-4" /><span>Borç Hareketleri</span></Link></DropdownMenuItem>
              </DropdownMenuGroup>
             {isAdmin && (

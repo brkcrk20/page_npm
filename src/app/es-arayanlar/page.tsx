@@ -5,7 +5,7 @@ import { PetCard } from '@/components/PetCard';
 import { pets } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useUser } from '@/firebase';
+import { useUser } from '@/lib/supabase/auth-provider';
 
 export default function MatingPage() {
   const { user } = useUser();

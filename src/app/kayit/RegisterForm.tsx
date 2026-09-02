@@ -14,10 +14,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import React, { useState } from 'react';
-import { initializeFirebase } from '@/firebase';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -89,83 +87,85 @@ export function RegisterForm() {
 
   async function onSubmit(values: FormValues) {
     setIsLoading(true);
+    const supabase = getSupabaseBrowserClient();
+
     try {
-      const { auth, firestore } = initializeFirebase();
+      const username = values.username.trim().toLowerCase();
 
-      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-      const user = userCredential.user;
-
-      await updateProfile(user, {
-        displayName: values.name
+      // Kullanıcı adını önden kontrol et. Veritabanında zaten unique kısıt var
+      // ama o kısıt profil trigger'ı içinde patlarsa kullanıcı çoktan Auth'a
+      // kaydolmuş ama profilsiz kalmış olur; önden bakmak bu durumu önlüyor.
+      const { data: available, error: checkError } = await supabase.rpc('username_available', {
+        p_username: username,
       });
 
-      const onayKodu = Math.floor(100000 + Math.random() * 900000).toString();
+      if (checkError) {
+        throw new Error('Kullanıcı adı kontrol edilemedi: ' + checkError.message);
+      }
+      if (available === false) {
+        form.setError('username', { message: 'Bu kullanıcı adı zaten alınmış.' });
+        setIsLoading(false);
+        return;
+      }
 
-      const userProfile = {
-        id: user.uid,
-        adSoyad: values.name,
-        username: values.username,
-        email: values.email,
-        telefon: values.phone,
-        durum: 'aktif',
-        rol: values.userType === 'kurumsal' ? 'kurumsal' : 'kullanici',
-        userStatus: 'standart',
-        credit: 0,
-        toplamIlan: 0,
-        aktifIlan: 0,
-        kayitTarihi: serverTimestamp(),
-        sonGiris: serverTimestamp(),
-        emailOnay: false,
-        smsOnay: false,
-        onayKodu: onayKodu,
-        sehir: '',
-        ilce: '',
-        adres: '',
-        ...(values.userType === 'kurumsal' && {
-          tcNo: values.tcNo,
-          companyType: values.companyType,
-          companyTitle: values.companyTitle,
-          taxNo: values.taxNo,
-          taxOffice: values.taxOffice,
-          companyAddress: values.companyAddress,
-          isCorporate: true
-        }),
-        ...(values.userType === 'bireysel' && {
-          isCorporate: false,
-          tcNo: ''
-        })
+      // Profil alanları raw_user_meta_data içinde taşınıyor; auth.users'a kayıt
+      // düştüğü anda handle_new_user() trigger'ı bunları public.profiles'a
+      // yazıyor (bkz. 0007_auth_helpers.sql). Böylece profil oluşturma için
+      // ayrı bir istemci yazması gerekmiyor ve yarım kayıt kalmıyor.
+      const metadata: Record<string, string> = {
+        full_name: values.name,
+        username,
+        phone: values.phone,
+        account_type: values.userType,
       };
 
-      const userDocRef = doc(firestore, "users", user.uid);
-      await setDoc(userDocRef, userProfile);
-      
-      const kullaniciDocRef = doc(firestore, "kullanicilar", user.uid);
-      await setDoc(kullaniciDocRef, {
-        adSoyad: values.name,
-        email: values.email,
-        telefon: values.phone,
-        durum: 'aktif',
-        rol: values.userType === 'kurumsal' ? 'kurumsal' : 'kullanici',
-        kayitTarihi: serverTimestamp(),
-        sonGiris: serverTimestamp(),
-      });
-
-      router.push('/');
-      toast({
-        title: "Kayıt Başarılı!",
-        description: "petsemti'ye hoş geldiniz.",
-      });
-
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      let description = "Kayıt sırasında bir hata oluştu.";
-      if (error.code === 'auth/email-already-in-use') {
-        description = "Bu e-posta adresi zaten kullanılıyor.";
+      if (values.userType === 'kurumsal') {
+        metadata.national_id = values.tcNo;
+        metadata.company_type = values.companyType;
+        metadata.company_title = values.companyTitle;
+        metadata.tax_number = values.taxNo;
+        metadata.tax_office = values.taxOffice;
+        metadata.company_address = values.companyAddress;
       }
+
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: { data: metadata },
+      });
+
+      if (error) {
+        let description = 'Kayıt sırasında bir hata oluştu.';
+        if (error.message.includes('already registered')) {
+          description = 'Bu e-posta adresi zaten kullanılıyor.';
+        } else if (error.message.includes('Password')) {
+          description = 'Şifre yeterince güçlü değil. En az 6 karakter olmalı.';
+        }
+        toast({ variant: 'destructive', title: 'Kayıt Başarısız', description });
+        setIsLoading(false);
+        return;
+      }
+
+      // E-posta doğrulaması açıksa oturum gelmez; kullanıcıyı ana sayfaya
+      // atmak yerine ne yapması gerektiğini söylüyoruz.
+      if (!data.session) {
+        toast({
+          title: 'Kayıt Alındı',
+          description: 'E-posta adresinize gönderilen doğrulama bağlantısına tıklayın.',
+        });
+        router.push('/login');
+        return;
+      }
+
+      toast({ title: 'Kayıt Başarılı!', description: "petsemti'ye hoş geldiniz." });
+      router.push('/');
+      router.refresh();
+    } catch (error: any) {
+      console.error('Registration error:', error);
       toast({
-        variant: "destructive",
-        title: "Kayıt Başarısız",
-        description: description,
+        variant: 'destructive',
+        title: 'Kayıt Başarısız',
+        description: error?.message ?? 'Kayıt sırasında bir hata oluştu.',
       });
     } finally {
       setIsLoading(false);

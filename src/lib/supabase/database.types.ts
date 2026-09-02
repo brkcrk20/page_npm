@@ -833,6 +833,21 @@ export type Database = {
           },
         ]
       }
+      schema_migrations: {
+        Row: {
+          applied_at: string
+          filename: string
+        }
+        Insert: {
+          applied_at?: string
+          filename: string
+        }
+        Update: {
+          applied_at?: string
+          filename?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           auto_renew: boolean
@@ -968,23 +983,18 @@ export type Database = {
       }
     }
     Functions: {
-      dearmor: { Args: { "": string }; Returns: string }
-      gen_random_uuid: { Args: never; Returns: string }
-      gen_salt: { Args: { "": string }; Returns: string }
+      email_for_username: { Args: { p_username: string }; Returns: string }
       increment_listing_view: {
         Args: { p_listing_id: number }
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
       monetization_enabled: { Args: never; Returns: boolean }
-      pgp_armor_headers: {
-        Args: { "": string }
-        Returns: Record<string, unknown>[]
-      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       tr_slugify: { Args: { value: string }; Returns: string }
       unaccent: { Args: { "": string }; Returns: string }
+      username_available: { Args: { p_username: string }; Returns: boolean }
     }
     Enums: {
       account_type: "bireysel" | "kurumsal"
