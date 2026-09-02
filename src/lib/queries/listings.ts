@@ -15,77 +15,80 @@ import type { Database } from '@/lib/supabase/database.types';
 
 type ListingRow = Database['public']['Tables']['listings']['Row'];
 
-/** Kart göstermek için gereken alanlar — tüm satırı çekmeye gerek yok. */
+/**
+ * Kart için gereken alanlar.
+ *
+ * İlişkili tablolar `!inner` ile bağlanıyor. Bu şart: PostgREST'te gömülü bir
+ * tabloya `.eq('breeds.slug', ...)` uygulamak, join `!inner` değilse satırı
+ * elemiyor — yalnızca gömülü nesneyi null yapıyor. Yani `!inner` olmadan
+ * filtreler sessizce hiçbir şey yapmıyor ve tüm ilanlar dönüyordu.
+ */
 const CARD_COLUMNS = `
-  id,
-  slug,
-  title,
-  kind,
-  price,
-  currency,
-  is_negotiable,
-  age_months,
-  gender,
-  published_at,
-  breed_id,
-  breeds ( name, slug ),
-  categories ( slug, name ),
-  cities ( name, slug ),
-  districts ( name, slug ),
+  id, slug, title, kind, price, currency, is_negotiable,
+  age_months, gender, published_at,
+  breeds!inner ( id, name, slug ),
+  categories!inner ( id, slug, name ),
+  cities!inner ( id, name, slug ),
+  districts ( id, name, slug ),
   listing_photos ( storage_path, position )
-` as const;
+`;
 
 export type ListingCard = Pick<
   ListingRow,
-  'id' | 'slug' | 'title' | 'kind' | 'price' | 'currency' | 'is_negotiable' | 'age_months' | 'gender' | 'published_at' | 'breed_id'
+  'id' | 'slug' | 'title' | 'kind' | 'price' | 'currency' | 'is_negotiable' | 'age_months' | 'gender' | 'published_at'
 > & {
-  breeds: { name: string; slug: string } | null;
-  categories: { slug: string; name: string } | null;
-  cities: { name: string; slug: string } | null;
-  districts: { name: string; slug: string } | null;
+  breeds: { id: number; name: string; slug: string } | null;
+  categories: { id: number; slug: string; name: string } | null;
+  cities: { id: number; name: string; slug: string } | null;
+  districts: { id: number; name: string; slug: string } | null;
   listing_photos: { storage_path: string; position: number }[];
 };
 
 export type ListingFilters = {
-  categorySlug?: string;
-  breedSlug?: string;
-  citySlug?: string;
-  districtSlug?: string;
+  categoryId?: number;
+  breedId?: number;
+  cityId?: number;
+  districtId?: number;
   kind?: Database['public']['Enums']['listing_kind'];
+  gender?: Database['public']['Enums']['pet_gender'];
   search?: string;
   minPrice?: number;
   maxPrice?: number;
   minAgeMonths?: number;
   maxAgeMonths?: number;
-  gender?: Database['public']['Enums']['pet_gender'];
   isVaccinated?: boolean;
   hasPedigree?: boolean;
   acceptsCreditCard?: boolean;
   shipsIntercity?: boolean;
-  limit?: number;
-  offset?: number;
+  page?: number;
+  perPage?: number;
 };
+
+export const DEFAULT_PER_PAGE = 24;
 
 /**
  * Filtrelenmiş ilan listesi.
  *
- * Firestore'da bu filtrelerin her kombinasyonu ayrı composite index isterdi;
- * Postgres'te tek sorgu yetiyor.
+ * Filtreler kimlik (id) üzerinden çalışıyor, slug üzerinden değil: slug'dan
+ * kimliğe çeviriyi çağıran sayfa zaten yapıyor (kategori/cins/şehir kaydını
+ * göstermek için de ona ihtiyacı var), böylece burada ikinci bir join
+ * gerekmiyor ve kısmi indeksler doğrudan kullanılabiliyor.
  */
 export async function getListings(filters: ListingFilters = {}) {
   const supabase = createSupabasePublicClient();
-  const limit = filters.limit ?? 24;
-  const offset = filters.offset ?? 0;
+  const perPage = filters.perPage ?? DEFAULT_PER_PAGE;
+  const page = Math.max(1, filters.page ?? 1);
+  const from = (page - 1) * perPage;
 
   let query = supabase
     .from('listings')
     .select(CARD_COLUMNS, { count: 'exact' })
     .eq('status', 'yayinda');
 
-  if (filters.categorySlug) query = query.eq('categories.slug', filters.categorySlug);
-  if (filters.breedSlug) query = query.eq('breeds.slug', filters.breedSlug);
-  if (filters.citySlug) query = query.eq('cities.slug', filters.citySlug);
-  if (filters.districtSlug) query = query.eq('districts.slug', filters.districtSlug);
+  if (filters.categoryId !== undefined) query = query.eq('category_id', filters.categoryId);
+  if (filters.breedId !== undefined) query = query.eq('breed_id', filters.breedId);
+  if (filters.cityId !== undefined) query = query.eq('city_id', filters.cityId);
+  if (filters.districtId !== undefined) query = query.eq('district_id', filters.districtId);
   if (filters.kind) query = query.eq('kind', filters.kind);
   if (filters.gender) query = query.eq('gender', filters.gender);
 
@@ -110,19 +113,25 @@ export async function getListings(filters: ListingFilters = {}) {
 
   const { data, error, count } = await query
     .order('published_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+    .range(from, from + perPage - 1);
 
   if (error) throw new Error(`İlanlar getirilemedi: ${error.message}`);
 
-  return { listings: (data ?? []) as unknown as ListingCard[], total: count ?? 0 };
+  const total = count ?? 0;
+  return {
+    listings: (data ?? []) as unknown as ListingCard[],
+    total,
+    page,
+    perPage,
+    pageCount: Math.max(1, Math.ceil(total / perPage)),
+  };
 }
 
 /**
  * Tek ilan — URL'deki sayısal id ile.
  *
  * Slug'a hiç bakmıyoruz: başlık değiştiğinde slug değişse bile eski link
- * çalışmaya devam etsin. Kanonik slug dönen kayıttan okunup gerekiyorsa
- * yönlendirme yapılır.
+ * çalışmaya devam etsin. Kanonik slug dönen kayıttan okunur.
  */
 export async function getListingById(id: number) {
   const supabase = createSupabasePublicClient();
@@ -131,15 +140,11 @@ export async function getListingById(id: number) {
     .from('listings')
     .select(
       `*,
-       breeds ( name, slug ),
-       categories ( slug, name ),
-       cities ( name, slug ),
-       districts ( name, slug ),
-       listing_photos ( storage_path, position ),
-       public_profiles!listings_owner_id_fkey (
-         id, full_name, username, avatar_url, is_verified, account_type,
-         company_title, created_at
-       )`
+       breeds ( id, name, slug ),
+       categories ( id, slug, name ),
+       cities ( id, name, slug ),
+       districts ( id, name, slug ),
+       listing_photos ( storage_path, position )`
     )
     .eq('id', id)
     .eq('status', 'yayinda')
@@ -149,8 +154,8 @@ export async function getListingById(id: number) {
   return data;
 }
 
-/** Ana sayfa vitrini — aktif doping'i olan ilanlar. */
-export async function getFeaturedListings(limit = 8) {
+/** Ana sayfa vitrini — aktif "anasayfa_vitrin" dopingi olan ilanlar. */
+export async function getFeaturedListings(limit = 8): Promise<ListingCard[]> {
   const supabase = createSupabasePublicClient();
 
   const { data, error } = await supabase
@@ -159,38 +164,11 @@ export async function getFeaturedListings(limit = 8) {
     .contains('promotions', ['anasayfa_vitrin'])
     .limit(limit);
 
-  if (error) throw new Error(`Vitrin ilanları getirilemedi: ${error.message}`);
+  if (error) {
+    // Vitrin boşsa ana sayfa yine açılmalı; bu bölüm kritik değil.
+    console.error('Vitrin ilanları getirilemedi:', error.message);
+    return [];
+  }
 
-  return (data ?? [])
-    .map((row: any) => row.listings)
-    .filter(Boolean) as ListingCard[];
-}
-
-/** Kategori sayfası başlıkları ve sayaçları için. */
-export async function getCategoriesWithCounts() {
-  const supabase = createSupabasePublicClient();
-
-  const { data, error } = await supabase
-    .from('categories')
-    .select('id, slug, name, code, position')
-    .eq('is_active', true)
-    .order('position');
-
-  if (error) throw new Error(`Kategoriler getirilemedi: ${error.message}`);
-  return data ?? [];
-}
-
-/** Bir kategorinin cinsleri — sidebar ve cins sayfaları için. */
-export async function getBreedsByCategory(categorySlug: string) {
-  const supabase = createSupabasePublicClient();
-
-  const { data, error } = await supabase
-    .from('breeds')
-    .select('id, slug, name, position, categories!inner ( slug )')
-    .eq('categories.slug', categorySlug)
-    .eq('is_active', true)
-    .order('position');
-
-  if (error) throw new Error(`Cinsler getirilemedi: ${error.message}`);
-  return data ?? [];
+  return (data ?? []).map((row: any) => row.listings).filter(Boolean) as ListingCard[];
 }
