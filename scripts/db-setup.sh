@@ -61,6 +61,12 @@ create table if not exists public.schema_migrations (
   filename    text primary key,
   applied_at  timestamptz not null default now()
 );
+
+-- Supabase public şemasını PostgREST üzerinden dışarı açtığı için bu tablo da
+-- istemciye görünür olurdu. RLS açık ve hiç politika yok = herkese kapalı;
+-- yalnızca RLS'i atlayan service_role erişebilir.
+alter table public.schema_migrations enable row level security;
+revoke all on public.schema_migrations from anon, authenticated;
 SQL
 
 applied=0
