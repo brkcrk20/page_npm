@@ -1,248 +1,183 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { initializeFirebase } from '@/firebase'; // DEĞİŞTİ: auth, db yerine initializeFirebase
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged } from 'firebase/auth';
+import { Loader2 } from 'lucide-react';
 
-// 81 İL VERİSİNİ İÇEREN DOSYAYI ÇAĞIRIYORUZ
-import { citiesData, cityNames } from '@/lib/turkiye-data';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 
-export default function FaturaBilgileriPage() {
+/**
+ * Fatura bilgileri.
+ *
+ * Ücretlendirme şu an kapalı (app_settings.monetization.enabled = false), ama
+ * bilgiler önceden toplanabilsin diye sayfa duruyor. Ücretli özellikler
+ * açıldığında sipariş anında bu alanların anlık kopyası orders.billing_snapshot
+ * içine yazılacak — kullanıcı sonradan profilini değiştirse bile kesilmiş
+ * faturanın verisi bozulmasın.
+ */
+
+export default function BillingPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [userName, setUserName] = useState('...');
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  
-  const [formData, setFormData] = useState({
-    fullName: '',
-    taxNumber: '',
-    city: '',
-    district: '',
-    taxOffice: ''
-  });
+  const { toast } = useToast();
+  const { user, profile, isUserLoading, refreshProfile } = useSupabaseAuth();
+
+  const [accountType, setAccountType] = useState<'bireysel' | 'kurumsal'>('bireysel');
+  const [nationalId, setNationalId] = useState('');
+  const [companyTitle, setCompanyTitle] = useState('');
+  const [companyType, setCompanyType] = useState('');
+  const [taxNumber, setTaxNumber] = useState('');
+  const [taxOffice, setTaxOffice] = useState('');
+  const [companyAddress, setCompanyAddress] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const { auth } = initializeFirebase(); // Firebase servislerini al
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
-        setUserName(user.displayName || user.email?.split('@')[0] || 'Kullanıcı');
-        
-        // Kullanıcının mevcut fatura bilgilerini getir
-        try {
-          const { firestore } = initializeFirebase();
-          const userRef = doc(firestore, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
-          
-          if (userSnap.exists() && userSnap.data().billingInfo) {
-            const billing = userSnap.data().billingInfo;
-            setFormData({
-              fullName: billing.fullName || '',
-              taxNumber: billing.taxNumber || '',
-              city: billing.city || '',
-              district: billing.district || '',
-              taxOffice: billing.taxOffice || ''
-            });
-          }
-        } catch (error) {
-          console.error("Fatura bilgileri getirilemedi:", error);
-        }
-      } else {
-        router.push('/login');
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
+    if (!isUserLoading && !user) router.replace('/login');
+  }, [isUserLoading, user, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!profile) return;
+    setAccountType(profile.account_type as 'bireysel' | 'kurumsal');
+    setNationalId(profile.national_id ?? '');
+    setCompanyTitle(profile.company_title ?? '');
+    setCompanyType(profile.company_type ?? '');
+    setTaxNumber(profile.tax_number ?? '');
+    setTaxOffice(profile.tax_office ?? '');
+    setCompanyAddress(profile.company_address ?? '');
+  }, [profile]);
 
-    if (!currentUser) {
+  async function save() {
+    if (!user) return;
+
+    // Veritabanındaki profiles_corporate_requires_title kısıtının aynısı;
+    // kullanıcı ham kısıt hatası görmesin.
+    if (accountType === 'kurumsal' && !companyTitle.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Eksik bilgi',
+        description: 'Kurumsal hesapta firma ünvanı zorunludur.',
+      });
       return;
     }
-    
-    setLoading(true);
-  
-    try {
-      const { firestore } = initializeFirebase();
-      
-      const userRef = doc(firestore, 'users', currentUser.uid);
-      
-      await updateDoc(userRef, {
-        billingInfo: formData,
-        hasBillingInfo: true
-      });
-      
-      router.push('/ilan-ver');
-      
-    } catch (error) {
-      console.error("HATA YAKALANDI:", error);
-      alert("Bir hata oluştu: " + error);
-    } finally {
-      setLoading(false);
+
+    setIsSaving(true);
+    const supabase = getSupabaseBrowserClient();
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        account_type: accountType,
+        national_id: nationalId.trim() || null,
+        company_title: accountType === 'kurumsal' ? companyTitle.trim() : null,
+        company_type: accountType === 'kurumsal' ? companyType.trim() || null : null,
+        tax_number: accountType === 'kurumsal' ? taxNumber.trim() || null : null,
+        tax_office: accountType === 'kurumsal' ? taxOffice.trim() || null : null,
+        company_address: accountType === 'kurumsal' ? companyAddress.trim() || null : null,
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      toast({ variant: 'destructive', title: 'Kaydedilemedi', description: error.message });
+    } else {
+      await refreshProfile();
+      toast({ title: 'Fatura bilgileri kaydedildi' });
     }
-  };
+    setIsSaving(false);
+  }
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
-      <div className="max-w-5xl mx-auto px-4 py-12">
-        
-        {/* Başlık Alanı */}
-        <div className="text-center mb-10">
-          <h1 className="text-orange-600 text-3xl font-bold mb-4">
-            Fatura Bilgilerinizi Doğrulayın
-          </h1>
-          <p className="text-gray-600 text-[15px] leading-relaxed max-w-3xl mx-auto">
-            Sayın <span className="font-bold text-gray-800">{userName}</span>, yasal düzenlemeler gereği ilan vermeye devam edebilmeniz için fatura bilgilerinizi girmeniz gerekmektedir. İşlem sonrası otomatik yönlendirileceksiniz.
-          </p>
+    <Card className="mx-auto my-6 max-w-2xl">
+      <CardHeader>
+        <CardTitle>Fatura Bilgileri</CardTitle>
+        <CardDescription>
+          İlan vermek ücretsizdir. Bu bilgiler yalnızca ileride ücretli bir hizmet
+          satın alırsanız fatura kesmek için kullanılır.
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        <div className="space-y-1.5">
+          <Label>Hesap Türü</Label>
+          <Select value={accountType} onValueChange={(v) => setAccountType(v as 'bireysel' | 'kurumsal')}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="bireysel">Bireysel</SelectItem>
+              <SelectItem value="kurumsal">Kurumsal</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Form Kartı */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-          
-          {/* Kart Başlığı - Turuncu */}
-          <div className="bg-orange-600 px-8 py-5 flex items-center gap-3">
-            <div className="bg-white/20 p-2 rounded-full text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h2 className="text-white text-xl font-bold tracking-wide">Fatura Bilgileri</h2>
-          </div>
-
-          <form onSubmit={handleSubmit} className="p-8 md:p-10">
-            <p className="text-gray-500 text-sm mb-8 italic border-l-4 border-orange-200 pl-3">
-              Lütfen fatura kesilecek kişi veya kurum bilgilerini eksiksiz doldurunuz.
-            </p>
-
-            <div className="space-y-6">
-              {/* Ad Soyad */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Ad Soyad / Firma Ünvanı <span className="text-red-500 select-none">*</span>
-                </label>
-                <input
-                  required
-                  type="text"
-                  placeholder="Örn: Ahmet Yılmaz veya petsemti Ltd. Şti."
-                  className="w-full p-3.5 border border-gray-300 rounded-lg text-gray-700 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition-all"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                />
-              </div>
-
-              {/* TC / Vergi No */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  TC Kimlik No / Vergi No <span className="text-red-500 select-none">*</span>
-                </label>
-                <input
-                  required
-                  type="text"
-                  placeholder="11 haneli TC veya 10 haneli Vergi No"
-                  maxLength={11}
-                  className="w-full p-3.5 border border-gray-300 rounded-lg text-gray-700 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition-all"
-                  value={formData.taxNumber}
-                  onChange={(e) => setFormData({ ...formData, taxNumber: e.target.value })}
-                />
-              </div>
-
-              {/* İL VE İLÇE SEÇİMİ */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                {/* İL SEÇİMİ */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    İl <span className="text-red-500 select-none">*</span>
-                  </label>
-                  <select
-                    required
-                    value={formData.city}
-                    className="w-full p-3.5 border border-gray-300 rounded-lg text-gray-700 bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition-all cursor-pointer"
-                    onChange={(e) => setFormData({ 
-                        ...formData, 
-                        city: e.target.value, 
-                        district: '' // İl değişirse ilçe sıfırlanır
-                    })}
-                  >
-                    <option value="">İl Seçiniz</option>
-                    {cityNames.map((city) => (
-                        <option key={city} value={city}>{city}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* İLÇE SEÇİMİ */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    İlçe <span className="text-red-500 select-none">*</span>
-                  </label>
-                  <select
-                    required
-                    value={formData.district}
-                    disabled={!formData.city} // İl seçilmeden açılmaz
-                    className="w-full p-3.5 border border-gray-300 rounded-lg text-gray-700 bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition-all cursor-pointer disabled:bg-gray-100 disabled:text-gray-400"
-                    onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                  >
-                    <option value="">
-                        {formData.city ? "İlçe Seçiniz" : "Önce İl Seçiniz"}
-                    </option>
-                    {formData.city && citiesData[formData.city]?.map((dist) => (
-                        <option key={dist} value={dist}>{dist}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Vergi Dairesi */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Vergi Dairesi <span className="text-gray-400 font-normal text-xs ml-1">(Bireysel kullanıcılar için opsiyonel)</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Vergi Dairesi Adı"
-                  className="w-full p-3.5 border border-gray-300 rounded-lg text-gray-700 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition-all"
-                  value={formData.taxOffice}
-                  onChange={(e) => setFormData({ ...formData, taxOffice: e.target.value })}
-                />
-              </div>
-            </div>
-
-            {/* Butonlar */}
-            <div className="flex flex-col-reverse md:flex-row justify-between items-center mt-10 pt-6 border-t border-gray-100 gap-4">
-              
-              <button
-                type="button"
-                onClick={() => router.push('/')}
-                className="w-full md:w-auto px-6 py-3 rounded-lg text-gray-600 font-bold hover:bg-gray-100 hover:text-gray-800 transition-all flex items-center justify-center gap-2"
-              >
-                <span>←</span> Anasayfaya Dön
-              </button>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full md:w-auto bg-orange-600 hover:bg-orange-700 text-white px-8 py-3.5 rounded-lg font-bold shadow-lg shadow-orange-200 transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span>Kaydediliyor...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Bilgileri Kaydet ve Devam Et</span>
-                    <span>→</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+        <div className="space-y-1.5">
+          <Label htmlFor="nationalId">TC Kimlik No</Label>
+          <Input
+            id="nationalId"
+            value={nationalId}
+            onChange={(e) => setNationalId(e.target.value)}
+            maxLength={11}
+            placeholder="11 haneli"
+          />
         </div>
-      </div>
-    </div>
+
+        {accountType === 'kurumsal' && (
+          <>
+            <div className="space-y-1.5">
+              <Label htmlFor="companyTitle">Firma Ünvanı</Label>
+              <Input id="companyTitle" value={companyTitle} onChange={(e) => setCompanyTitle(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Şirket Türü</Label>
+              <Select value={companyType} onValueChange={setCompanyType}>
+                <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Sahis">Şahıs</SelectItem>
+                  <SelectItem value="Limited">Limited</SelectItem>
+                  <SelectItem value="Anonim">Anonim</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="taxNumber">Vergi No</Label>
+                <Input id="taxNumber" value={taxNumber} onChange={(e) => setTaxNumber(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="taxOffice">Vergi Dairesi</Label>
+                <Input id="taxOffice" value={taxOffice} onChange={(e) => setTaxOffice(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="companyAddress">Firma Adresi</Label>
+              <Textarea id="companyAddress" rows={3} value={companyAddress} onChange={(e) => setCompanyAddress(e.target.value)} />
+            </div>
+          </>
+        )}
+
+        <Button onClick={save} disabled={isSaving} className="w-full">
+          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Kaydet
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,308 +1,144 @@
-'use client';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import type { Metadata } from 'next';
 
-import { PetCard } from "@/components/PetCard";
-import { pets as staticPets } from "@/lib/data";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  ArrowRight,
-  Search,
-  BookText,
-  ChevronDown,
-  Loader2,
-  Info
-} from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import Image from "next/image";
-import React, { useState, useMemo, useEffect, Suspense } from 'react';
-import { categories, type CategoryInfo } from "@/lib/breeds";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { useSearchParams } from 'next/navigation';
-import { SearchFilters } from "@/components/SearchFilters";
+import { Button } from '@/components/ui/button';
+import { ListingGrid } from '@/components/listings/ListingGrid';
+import { getCategories, getBreedsByCategoryId, getCities } from '@/lib/queries/catalog';
+import { getListings, getFeaturedListings } from '@/lib/queries/listings';
 
-// FIREBASE BAĞLANTISI
-import { initializeFirebase } from '@/firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-//        ^^^^^^^^^^ collectionGroup yerine collection
-import type { PetListing } from "@/lib/types";
+/**
+ * Ana sayfa.
+ *
+ * Server component: veriyi sunucuda çekiyor, arama motoru dolu HTML görüyor.
+ * Eski sürüm 'use client' idi ve iki ayrı kaynaktan besleniyordu — Firestore
+ * ve koda gömülü statik "örnek" ilanlar. İkisi de kaldırıldı; tek kaynak
+ * Supabase'deki public.listings.
+ */
 
-const { firestore: db } = initializeFirebase();
-
-const CategoryFilter = ({ category, onTriggerClick, isSelected }: { category: CategoryInfo, onTriggerClick: (value: string) => void, isSelected: boolean }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const filteredBreeds = category.breeds.filter(breed =>
-    breed.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  return (
-    <AccordionItem value={category.type.toLowerCase()} className="border-b-0 mb-2 rounded-xl overflow-hidden data-[state=open]:shadow-lg">
-       <div className={cn(
-        "flex items-center justify-between whitespace-nowrap text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 w-full rounded-t-xl",
-        isSelected 
-            ? "bg-background text-primary shadow-sm [box-shadow:0_0_8px_hsl(var(--primary))] rounded-b-none"
-            : "bg-muted text-muted-foreground hover:text-primary rounded-xl"
-        )}>
-          <Link href={`/${category.slug}`} className="flex items-center gap-2 font-bold p-3 flex-grow">
-            <category.Icon className="transition-colors" /> {category.title}
-          </Link>
-          <AccordionTrigger
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onTriggerClick(category.type.toLowerCase())
-            }}
-            className="p-3 hover:bg-black/5 rounded-md"
-          >
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-          </AccordionTrigger>
-      </div>
-      <AccordionContent className="bg-white rounded-b-lg">
-        <div className="space-y-4 p-4">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Cins ara..."
-              className="pl-8 h-9"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-           <ul className="space-y-1 pr-2">
-            {filteredBreeds.length > 0 ? filteredBreeds.map((breed) => (
-              <li key={breed.name}>
-                 <Link href={`/${category.slug}/${breed.slug}`} className="flex items-center justify-between text-muted-foreground hover:text-primary group p-2 rounded-md hover:bg-secondary/50">
-                  <div className="flex items-center gap-3">
-                     <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-                       <Image 
-                         src={`https://picsum.photos/seed/${breed.name.replace(/\s/g, '-')}/40/40`} 
-                         alt={breed.name}
-                         fill
-                         className="object-cover"
-                         loading="lazy"
-                       />
-                     </div>
-                     <span className="text-sm font-medium group-hover:underline">{breed.name}</span>
-                  </div>
-                  <Badge variant="secondary" className="text-xs font-semibold">
-                    {breed.count}
-                  </Badge>
-                </Link>
-              </li>
-            )) : (
-                <li className="text-center text-sm text-muted-foreground py-4">Sonuç bulunamadı.</li>
-            )}
-          </ul>
-        </div>
-      </AccordionContent>
-    </AccordionItem>
-  );
+export const metadata: Metadata = {
+  title: 'Evcil Hayvan İlanları — Sahiplendirme, Satılık Kedi ve Köpek | PetSemti',
+  description:
+    'PetSemti: evcil hayvan ilanları, kedi ve köpek sahiplendirme, satılık yavru ilanları. Semtinizdeki en güncel ilanlara ulaşın, güvenle sahiplenin.',
 };
 
-const blogPosts = [
-  { id: 1, title: "Köpekler İçin Doğru Mama Seçimi", category: "Beslenme", excerpt: "Sağlıklı bir beslenme planı dostunuzun mutluluğunun anahtarıdır." },
-  { id: 2, title: "Kedi Tuvalet Eğitimi", category: "Eğitim", excerpt: "Sabır ve doğru tekniklerle bu süreci stressiz hale getirin." },
-  { id: 3, title: "Evcil Hayvanlarda Tüy Dökülmesi", category: "Bakım", excerpt: "Nedenleri ve tüy dökülmesini kontrol altına alma yolları." },
-];
+// Ana sayfa sık değişen içerik gösteriyor; her istekte taze veri çekiyoruz.
+// Trafik arttığında burada revalidate süresi tanımlanabilir.
+export const dynamic = 'force-dynamic';
 
-function HomeContent() {
-  const [dbListings, setDbListings] = useState<PetListing[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [openAccordion, setOpenAccordion] = useState<string[]>(["dog", "cat"]);
+export default async function HomePage() {
+  const categories = await getCategories();
 
-  const searchParams = useSearchParams();
-  const urlCity = searchParams.get('city');
-  const urlDistrict = searchParams.get('district');
-  const urlQuery = searchParams.get('q');
-  const urlType = searchParams.get('type');
-  const urlBreed = searchParams.get('breed');
+  const [featured, cities, categorySections] = await Promise.all([
+    getFeaturedListings(8),
+    getCities(),
+    Promise.all(
+      categories.map(async (category) => {
+        const [{ listings, total }, breeds] = await Promise.all([
+          getListings({ categoryId: category.id, perPage: 8 }),
+          getBreedsByCategoryId(category.id),
+        ]);
+        return { category, listings, total, breeds };
+      })
+    ),
+  ]);
 
-  useEffect(() => {
-    const fetchAllListings = async () => {
-      try {
-        // BURASI DÜZELTİLDİ: 'ilanlar' koleksiyonunu sorgula
-        const q = query(
-          collection(db, 'ilanlar'),
-          where('onayDurumu', '==', 'onaylandi')
-        );
-        const querySnapshot = await getDocs(q);
-        const allListings = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as PetListing[];
-        setDbListings(allListings);
-      } catch (error) {
-        console.error("İlanlar yüklenemedi:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAllListings();
-  }, []);
-
-  const mapListingToPet = (listing: any) => ({
-    ...listing,
-    image: listing.imageUrl ? [listing.imageUrl] : (Array.isArray(listing.image) ? listing.image : []),
-    type: listing.hayvanTuru || listing.type || 'bilinmiyor',
-    age: listing.yas || listing.age || "0", 
-    price: listing.fiyat || listing.price || 0,
-    location: listing.sehir || listing.city || "Belirtilmemiş",
-    featured: listing.vitrinMi === true || listing.isFeatured === true,
-    isDb: true
-  });
-
-  const allPets = useMemo(() => {
-    const fromDb = dbListings.map(mapListingToPet);
-    const fromStatic = staticPets.map(p => ({ ...p, isStatic: true }));
-    let combined = [...fromDb, ...fromStatic];
-
-    if (urlCity && urlCity !== "tum_sehirler") {
-        combined = combined.filter(pet => pet.location && pet.location.includes(urlCity));
-    }
-    if (urlDistrict && urlDistrict !== "tum_ilceler") {
-        combined = combined.filter(pet => pet.location && pet.location.includes(urlDistrict));
-    }
-    if (urlQuery) {
-        combined = combined.filter(pet => 
-            pet.name?.toLowerCase().includes(urlQuery.toLowerCase()) ||
-            (pet.breed && pet.breed.toLowerCase().includes(urlQuery.toLowerCase()))
-        );
-    }
-    if (urlType && urlType !== 'all') {
-       combined = combined.filter(pet => pet.type?.toLowerCase() === urlType.toLowerCase());
-    }
-    if (urlBreed && urlBreed !== 'all') {
-       combined = combined.filter(pet => pet.breed && pet.breed.toLowerCase().includes(urlBreed.toLowerCase()));
-    }
-
-    return combined;
-  }, [dbListings, urlCity, urlDistrict, urlQuery, urlType, urlBreed]);
-
-  const dogPets = useMemo(() => allPets.filter(p => p.type?.toLowerCase() === 'köpek' || p.type?.toLowerCase() === 'kopek' || p.type === 'Dog'), [allPets]);
-  const catPets = useMemo(() => allPets.filter(p => p.type?.toLowerCase() === 'kedi' || p.type === 'Cat'), [allPets]);
-  const featuredPets = useMemo(() => allPets.filter(p => p.featured === true).slice(0, 8), [allPets]);
-
-  const handleAccordionToggle = (value: string) => {
-    setOpenAccordion(prev => 
-      prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
-    );
-  };
-
-  if (loading && dbListings.length === 0) {
-    return <div className="min-h-screen flex items-center justify-center bg-secondary/50"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
-  }
+  const totalListings = categorySections.reduce((sum, s) => sum + s.total, 0);
 
   return (
-    <div className="bg-secondary/50 overflow-x-hidden">
-      <div className="w-full px-5 md:container md:mx-auto pt-2 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
-          <aside className="col-span-1 hidden md:block">
-            <div className="bg-white p-4 rounded-lg shadow-sm sticky top-4">
-              <Accordion type="multiple" value={openAccordion} onValueChange={setOpenAccordion} className="w-full space-y-1">
-                 {categories.map((cat) => (
-                    <CategoryFilter 
-                      key={cat.type} 
-                      category={cat} 
-                      onTriggerClick={handleAccordionToggle} 
-                      isSelected={openAccordion.includes(cat.type.toLowerCase())}
-                    />
-                 ))}
-              </Accordion>
+    <div className="bg-secondary/50">
+      <div className="w-full px-5 pb-10 pt-4 md:container md:mx-auto">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-[280px_1fr]">
+          {/* --- Yan menü: kategoriler ve cinsleri --- */}
+          <aside className="hidden md:block">
+            <div className="sticky top-4 space-y-4">
+              {categorySections.map(({ category, breeds }) => (
+                <div key={category.id} className="rounded-lg bg-white p-4 shadow-sm">
+                  <Link
+                    href={`/${category.slug}`}
+                    className="mb-3 flex items-center justify-between font-bold hover:text-primary"
+                  >
+                    {category.name}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <ul className="max-h-56 space-y-0.5 overflow-y-auto pr-1">
+                    {breeds.slice(0, 40).map((breed) => (
+                      <li key={breed.id}>
+                        <Link
+                          href={`/${category.slug}/${breed.slug}`}
+                          className="block rounded px-2 py-1 text-sm text-muted-foreground hover:bg-secondary hover:text-primary"
+                        >
+                          {breed.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+
+              <div className="rounded-lg bg-white p-4 shadow-sm">
+                <h2 className="mb-3 font-bold">Popüler Şehirler</h2>
+                <ul className="space-y-0.5">
+                  {['istanbul', 'ankara', 'izmir', 'bursa', 'antalya', 'adana']
+                    .map((slug) => cities.find((c) => c.slug === slug))
+                    .filter(Boolean)
+                    .map((city) => (
+                      <li key={city!.id}>
+                        <Link
+                          href={`/kopek-ilanlari/${city!.slug}`}
+                          className="block rounded px-2 py-1 text-sm text-muted-foreground hover:bg-secondary hover:text-primary"
+                        >
+                          {city!.name}
+                        </Link>
+                      </li>
+                    ))}
+                </ul>
+              </div>
             </div>
           </aside>
-          
-          <main className="col-span-1 space-y-8">
-            {(urlCity || urlQuery || (urlType && urlType !== 'all') || (urlBreed && urlBreed !== 'all')) && (
-                <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-[#f05a28] flex justify-between items-center animate-in fade-in slide-in-from-top-2">
-                    <div>
-                        <h2 className="text-lg font-bold text-gray-800">
-                           {urlCity ? `${urlCity} Sonuçları` : 'Arama Sonuçları'}
-                        </h2>
-                        <p className="text-sm text-gray-500">{allPets.length} ilan bulundu.</p>
-                    </div>
-                    <Link href="/" className="text-sm font-medium text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-md transition-colors">
-                        Filtreleri Temizle
-                    </Link>
-                </div>
-            )}
 
-            {dbListings.length === 0 && !loading && (
-              <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center gap-3 text-blue-800 text-sm">
-                <Info className="h-5 w-5" />
-                <span>Henüz veritabanında ilan yok, örnek veriler gösteriliyor. İlan vererek burayı canlandırabilirsiniz!</span>
-              </div>
-            )}
-
-            <section>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">Yıldızlı İlanlar</h2>
-                <Button variant="link" asChild className="text-primary">
-                  <Link href="/">Tümünü Gör <ArrowRight className="ml-1 w-4 h-4" /></Link>
+          {/* --- İçerik --- */}
+          <main className="space-y-10">
+            {totalListings === 0 && (
+              <section className="rounded-xl border border-dashed bg-white p-10 text-center">
+                <h1 className="text-2xl font-bold">Henüz yayında ilan yok</h1>
+                <p className="mx-auto mt-2 max-w-md text-muted-foreground">
+                  PetSemti yeni yayında. İlk ilanı vererek başlayabilirsin —
+                  sahiplendirme ilanları her zaman ücretsiz.
+                </p>
+                <Button asChild className="mt-6">
+                  <Link href="/ilan-ver">Hemen İlan Ver</Link>
                 </Button>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-                {featuredPets.map((pet) => (
-                  <PetCard key={pet.id} pet={pet as any} />
-                ))}
-                {featuredPets.length === 0 && <div className="col-span-full text-center text-gray-400 py-8 border border-dashed rounded-xl">Sonuç yok.</div>}
-              </div>
-            </section>
+              </section>
+            )}
 
-            <section>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">Köpek İlanları</h2>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-                {dogPets.slice(0, 4).map((pet) => (
-                  <PetCard key={pet.id} pet={pet as any} />
-                ))}
-              </div>
-            </section>
-
-            <section>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">Kedi İlanları</h2>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-                {catPets.slice(0, 4).map((pet) => (
-                  <PetCard key={pet.id} pet={pet as any} />
-                ))}
-              </div>
-            </section>
-
-            <div className="space-y-8 pt-8 border-t">
-                <div className="flex items-center gap-2">
-                    <BookText className="w-6 h-6" />
-                    <h2 className="text-2xl font-bold">petsemti Blog</h2>
+            {featured.length > 0 && (
+              <section>
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-2xl font-bold">Vitrin İlanları</h2>
                 </div>
-                <div className="space-y-8">
-                    {blogPosts.map((post) => (
-                        <div key={post.id}>
-                           <Badge variant="secondary" className="mb-2">{post.category}</Badge>
-                           <h3 className="text-2xl font-bold font-headline leading-tight text-primary mb-2">{post.title}</h3>
-                           <p className="text-base text-muted-foreground">{post.excerpt}</p>
-                       </div>
-                    ))}
-                </div>
-            </div>
+                <ListingGrid listings={featured} />
+              </section>
+            )}
+
+            {categorySections
+              .filter((section) => section.listings.length > 0)
+              .map(({ category, listings, total }) => (
+                <section key={category.id}>
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">{category.name}</h2>
+                    <Button variant="link" asChild className="text-primary">
+                      <Link href={`/${category.slug}`}>
+                        Tümünü Gör ({total}) <ArrowRight className="ml-1 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                  <ListingGrid listings={listings} />
+                </section>
+              ))}
           </main>
         </div>
       </div>
     </div>
-  );
-}
-
-export default function HomePage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>}>
-      <HomeContent />
-    </Suspense>
   );
 }

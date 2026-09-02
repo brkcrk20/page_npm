@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { Loader2, Upload, X } from 'lucide-react';
 import Image from 'next/image';
-import { Wand2, Loader2, Upload, X, ShieldAlert } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -19,7 +21,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -27,432 +28,559 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { initializeFirebase } from '@/firebase';
-import { useUserProfile } from '@/firebase/firestore/use-user-profile';
-import { collection, addDoc, doc, runTransaction, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { citiesData, cityNames } from '@/lib/turkiye-data';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
+import { LISTING_PHOTO_BUCKET } from '@/lib/supabase/storage';
 
-// Yazıyı Link Dostu (Slug) Yapan Yardımcı Fonksiyon
-const slugify = (text: string) => {
-  const trMap: Record<string, string> = { 
-    'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
-    'Ç': 'c', 'Ğ': 'g', 'İ': 'i', 'Ö': 'o', 'Ş': 's', 'Ü': 'u'
-  };
-  
-  return text
-    .toString()
-    .replace(/[çğıöşüÇĞİÖŞÜ]/g, (m) => trMap[m] || m)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-};
+const MAX_PHOTOS = 12;
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
-// FOTOĞRAF BOYUTLANDIRMA FONKSİYONU
-const resizeImage = (file: File, maxWidth = 1024, maxHeight = 1024, quality = 0.8): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new window.Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
-        
-        if (width > height) {
-          if (width > maxWidth) {
-            height *= maxWidth / width;
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width *= maxHeight / height;
-            height = maxHeight;
-          }
-        }
-        
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        
-        const resizedDataUrl = canvas.toDataURL('image/jpeg', quality);
-        resolve(resizedDataUrl);
-      };
-      img.onerror = (error) => reject(error);
-    };
-    reader.onerror = (error) => reject(error);
+const schema = z
+  .object({
+    kind: z.enum(['satilik', 'sahiplendirme']),
+    categoryId: z.string().min(1, 'Kategori seçin.'),
+    breedId: z.string().min(1, 'Cins seçin.'),
+    title: z.string().trim().min(5, 'Başlık en az 5 karakter olmalı.').max(120, 'Başlık en fazla 120 karakter olabilir.'),
+    description: z
+      .string()
+      .trim()
+      .min(20, 'Açıklama en az 20 karakter olmalı.')
+      .max(5000, 'Açıklama en fazla 5000 karakter olabilir.'),
+    price: z.string().optional(),
+    isNegotiable: z.boolean().default(false),
+    ageMonths: z.string().optional(),
+    gender: z.enum(['erkek', 'disi', 'belirtilmemis']).default('belirtilmemis'),
+    cityId: z.string().min(1, 'İl seçin.'),
+    districtId: z.string().optional(),
+    contactPhone: z.string().optional(),
+    isVaccinated: z.boolean().default(false),
+    isDewormedInternal: z.boolean().default(false),
+    isDewormedExternal: z.boolean().default(false),
+    hasPedigree: z.boolean().default(false),
+    hasHealthReport: z.boolean().default(false),
+    acceptsCreditCard: z.boolean().default(false),
+    shipsIntercity: z.boolean().default(false),
+  })
+  // Veritabanındaki listings_price_matches_kind kısıtının aynısı. Aynı kuralı
+  // burada da tutuyoruz ki kullanıcı sunucudan dönen ham kısıt hatası yerine
+  // alanın altında anlaşılır bir mesaj görsün.
+  .refine((v) => v.kind !== 'satilik' || (v.price && Number(v.price) > 0), {
+    message: 'Satılık ilanlarda fiyat zorunludur.',
+    path: ['price'],
   });
-};
 
-const formSchema = z.object({
-  baslik: z.string().min(5, { message: 'Başlık en az 5 karakter olmalıdır.' }),
-  kategori_id: z.string({ required_error: "Hayvan türü seçmelisiniz." }),
-  cins: z.string({ required_error: "Cins seçmelisiniz." }),
-  yas: z.string().min(1, { message: 'Yaş bilgisi gereklidir.' }),
-  aciklama: z.string().min(20, { message: 'Açıklama en az 20 karakter olmalıdır.' }),
-  ilan_tipi: z.enum(['Sahiplendirme', 'Satilik'], { required_error: "İlan tipi seçmelisiniz." }),
-  fiyat: z.string().optional(),
-  sehir: z.string({ required_error: "Şehir seçmelisiniz." }),
-  ilce: z.string({ required_error: "İlçe seçmelisiniz." }),
-});
+type FormValues = z.infer<typeof schema>;
 
-type FormValues = z.infer<typeof formSchema>;
+type Option = { id: number; name: string; slug: string };
 
-export function CreateListingForm({ isAdmin = false }: { isAdmin?: boolean }) {
+export function CreateListingForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const [firestore, setFirestore] = useState<any>(null);
-  const [storage, setStorage] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  
-  // Cins listesi için state
-  const [cinsler, setCinsler] = useState<any[]>([]);
-  const [selectedKategori, setSelectedKategori] = useState<string>('');
-  
-  const { data: userProfile } = useUserProfile(user?.uid);
-  
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const { user, isUserLoading } = useSupabaseAuth();
+
+  const [categories, setCategories] = useState<Option[]>([]);
+  const [breeds, setBreeds] = useState<(Option & { category_id: number })[]>([]);
+  const [cities, setCities] = useState<Option[]>([]);
+  const [districts, setDistricts] = useState<Option[]>([]);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-
-  useEffect(() => {
-    const { auth, firestore: fs, storage: st } = initializeFirebase();
-    setFirestore(fs);
-    setStorage(st);
-    
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    
-    return () => unsubscribe();
-  }, []);
-
-  // Kategori değiştiğinde cinsleri getir
-  useEffect(() => {
-    const fetchCinsler = async () => {
-      if (!firestore || !selectedKategori) return;
-      
-      try {
-        const hayvanTuru = selectedKategori === '1' ? 'kopek' : 'kedi';
-        const q = query(
-          collection(firestore, 'cinsler'),
-          where('hayvanTuru', '==', hayvanTuru)
-        );
-        const querySnapshot = await getDocs(q);
-        const cinsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setCinsler(cinsData);
-      } catch (error) {
-        console.error("Cinsler yüklenirken hata:", error);
-      }
-    };
-    
-    fetchCinsler();
-  }, [firestore, selectedKategori]);
+  const [progress, setProgress] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
-      baslik: '',
-      cins: '',
-      yas: '',
-      aciklama: '',
-      sehir: '',
-      ilce: '',
+      kind: 'satilik',
+      categoryId: '',
+      breedId: '',
+      title: '',
+      description: '',
+      price: '',
+      isNegotiable: false,
+      ageMonths: '',
+      gender: 'belirtilmemis',
+      cityId: '',
+      districtId: '',
+      contactPhone: '',
+      isVaccinated: false,
+      isDewormedInternal: false,
+      isDewormedExternal: false,
+      hasPedigree: false,
+      hasHealthReport: false,
+      acceptsCreditCard: false,
+      shipsIntercity: false,
     },
   });
 
-  // Şehir seçildiğinde ilçeyi sıfırla
-  const selectedCity = form.watch('sehir');
+  const kind = form.watch('kind');
+  const categoryId = form.watch('categoryId');
+  const cityId = form.watch('cityId');
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
-    setIsResizing(true);
-    
-    try {
-      const maxPhotos = 5;
-      const newPreviews: string[] = [];
-      
-      for (let i = 0; i < Math.min(files.length, maxPhotos); i++) {
-        const file = files[i];
-        const resizedDataUrl = await resizeImage(file, 1024, 1024, 0.8);
-        newPreviews.push(resizedDataUrl);
-      }
-      
-      setPhotoPreviews(prev => [...prev, ...newPreviews].slice(0, maxPhotos));
-      
-      toast({
-        title: "Başarılı",
-        description: `${newPreviews.length} fotoğraf yüklendi ve optimize edildi.`,
-      });
-    } catch (error: any) {
-      console.error("Fotoğraf işleme hatası:", error);
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Fotoğraf yüklenirken bir sorun oluştu.",
-      });
-    } finally {
-      setIsResizing(false);
+  // Giriş yapmamış kullanıcıyı giriş sayfasına gönder.
+  useEffect(() => {
+    if (!isUserLoading && !user) router.replace('/login');
+  }, [isUserLoading, user, router]);
+
+  // Katalog verisi. Kategori ve cins listeleri artık koda gömülü değil,
+  // veritabanından geliyor — admin panelinden cins eklendiğinde form
+  // kendiliğinden güncelleniyor.
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    (async () => {
+      const [cats, brs, cits] = await Promise.all([
+        supabase.from('categories').select('id, name, slug').eq('is_active', true).order('position'),
+        supabase.from('breeds').select('id, name, slug, category_id').eq('is_active', true).order('position'),
+        supabase.from('cities').select('id, name, slug').order('name'),
+      ]);
+      if (cats.data) setCategories(cats.data as Option[]);
+      if (brs.data) setBreeds(brs.data as (Option & { category_id: number })[]);
+      if (cits.data) setCities(cits.data as Option[]);
+    })();
+  }, []);
+
+  // İlçeler yalnızca il seçilince yükleniyor: 973 ilçeyi baştan çekmek gereksiz.
+  useEffect(() => {
+    if (!cityId) {
+      setDistricts([]);
+      return;
     }
-  };
+    const supabase = getSupabaseBrowserClient();
+    supabase
+      .from('districts')
+      .select('id, name, slug')
+      .eq('city_id', Number(cityId))
+      .order('name')
+      .then(({ data }) => setDistricts((data as Option[]) ?? []));
+    form.setValue('districtId', '');
+  }, [cityId]);
 
-  const removePhoto = (index: number) => {
-    setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
-  };
+  const filteredBreeds = useMemo(
+    () => breeds.filter((b) => !categoryId || b.category_id === Number(categoryId)),
+    [breeds, categoryId]
+  );
+
+  // Kategori değişince eski cins seçimi geçersiz kalır.
+  useEffect(() => {
+    form.setValue('breedId', '');
+  }, [categoryId]);
+
+  function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = '';
+
+    const accepted: File[] = [];
+    for (const file of files) {
+      if (photos.length + accepted.length >= MAX_PHOTOS) {
+        toast({ variant: 'destructive', title: 'Fotoğraf sınırı', description: `En fazla ${MAX_PHOTOS} fotoğraf ekleyebilirsiniz.` });
+        break;
+      }
+      if (file.size > MAX_PHOTO_BYTES) {
+        toast({ variant: 'destructive', title: 'Dosya çok büyük', description: `${file.name} 5 MB sınırını aşıyor.` });
+        continue;
+      }
+      accepted.push(file);
+    }
+
+    if (accepted.length === 0) return;
+    setPhotos((prev) => [...prev, ...accepted]);
+    setPreviews((prev) => [...prev, ...accepted.map((f) => URL.createObjectURL(f))]);
+  }
+
+  function removePhoto(index: number) {
+    URL.revokeObjectURL(previews[index]);
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
+  }
 
   async function onSubmit(values: FormValues) {
-    if (!user) {
-      toast({ variant: 'destructive', title: 'Hata', description: 'Giriş yapmalısınız.' });
-      return;
-    }
-    
-    if (!firestore || !storage) {
-      toast({ variant: 'destructive', title: 'Hata', description: 'Firebase bağlantısı kurulamadı.' });
-      return;
-    }
-    
-    if (photoPreviews.length === 0) {
-      toast({ variant: 'destructive', title: 'Hata', description: 'En az 1 fotoğraf yüklemelisiniz.' });
-      return;
-    }
+    if (!user) return;
 
     setIsSubmitting(true);
-    try {
-      // 1. İlan Numarasını Al (Transaction ile)
-      const sayacRef = doc(firestore, 'ayarlar', 'ilan_sayaci');
-      const yeniIlanNo = await runTransaction(firestore, async (transaction) => {
-        const sayacDoc = await transaction.get(sayacRef);
-        if (!sayacDoc.exists()) throw new Error("Sayaç bulunamadı!");
-        const yeniNo = sayacDoc.data().son_numara + 1;
-        transaction.update(sayacRef, { son_numara: yeniNo });
-        return yeniNo;
-      });
+    const supabase = getSupabaseBrowserClient();
+    const uploadedPaths: string[] = [];
 
-      // 2. Tüm Fotoğrafları Yükle
-      const imageUrls: string[] = [];
-      
-      for (let i = 0; i < photoPreviews.length; i++) {
-        const preview = photoPreviews[i];
-        const imageRef = ref(storage, `ilanlar/${user.uid}/${Date.now()}_${i}.jpg`);
-        const uploadResult = await uploadString(imageRef, preview, 'data_url');
-        const imageUrl = await getDownloadURL(uploadResult.ref);
-        imageUrls.push(imageUrl);
+    try {
+      // 1) İlan satırını önce oluştur.
+      //    Fotoğrafları önce yükleyip sonra ilan eklemek, ilan eklemesi
+      //    başarısız olduğunda kovada sahipsiz dosya bırakırdı.
+      setProgress('İlan kaydediliyor...');
+
+      const { data: listing, error: insertError } = await supabase
+        .from('listings')
+        .insert({
+          owner_id: user.id,
+          kind: values.kind,
+          category_id: Number(values.categoryId),
+          breed_id: Number(values.breedId),
+          title: values.title.trim(),
+          description: values.description.trim(),
+          price: values.kind === 'satilik' ? Number(values.price) : null,
+          is_negotiable: values.isNegotiable,
+          age_months: values.ageMonths ? Number(values.ageMonths) : null,
+          gender: values.gender,
+          city_id: Number(values.cityId),
+          district_id: values.districtId ? Number(values.districtId) : null,
+          contact_phone: values.contactPhone?.trim() || null,
+          is_vaccinated: values.isVaccinated,
+          is_dewormed_internal: values.isDewormedInternal,
+          is_dewormed_external: values.isDewormedExternal,
+          has_pedigree: values.hasPedigree,
+          has_health_report: values.hasHealthReport,
+          accepts_credit_card: values.acceptsCreditCard,
+          ships_intercity: values.shipsIntercity,
+          // slug, durum ve yayın tarihi sunucudaki trigger tarafından belirlenir
+          slug: 'placeholder',
+        })
+        .select('id, slug, status')
+        .single();
+
+      if (insertError) throw new Error(insertError.message);
+
+      // 2) Fotoğrafları yükle. Yol düzeni: <kullanici_id>/<ilan>-<sira>.<uzanti>
+      //    İlk parçanın kullanıcı kimliği olması Storage RLS'inin şartı.
+      for (let i = 0; i < photos.length; i++) {
+        setProgress(`Fotoğraf yükleniyor (${i + 1}/${photos.length})...`);
+        const file = photos[i];
+        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+        const path = `${user.id}/${listing.id}-${Date.now()}-${i}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from(LISTING_PHOTO_BUCKET)
+          .upload(path, file, { contentType: file.type, upsert: false });
+
+        if (uploadError) throw new Error(`Fotoğraf yüklenemedi: ${uploadError.message}`);
+        uploadedPaths.push(path);
       }
 
-      // 3. Patibul Tarzı Slug Oluştur (baslik-ilan-no)
-      const slug = `${slugify(values.baslik)}-${yeniIlanNo}`;
+      if (uploadedPaths.length > 0) {
+        setProgress('Fotoğraflar ilana bağlanıyor...');
+        const { error: photoError } = await supabase.from('listing_photos').insert(
+          uploadedPaths.map((storage_path, position) => ({
+            listing_id: listing.id,
+            storage_path,
+            position,
+          }))
+        );
+        if (photoError) throw new Error(`Fotoğraflar kaydedilemedi: ${photoError.message}`);
+      }
 
-      // 4. Veritabanına Kaydet (Türkçe Alanlar)
-      const yeniIlan = {
-        ilan_no: yeniIlanNo,
-        baslik: values.baslik,
-        baslik_slug: slug,
-        aciklama: values.aciklama,
-        fiyat: values.ilan_tipi === 'Satilik' ? parseInt(values.fiyat || '0') : 0,
-        hayvanTuru: values.kategori_id === '1' ? 'kopek' : 'kedi',
-        kategori_id: values.kategori_id,
-        kategori_slug: values.kategori_id === '1' ? 'kopek-ilanlari' : 'kedi-ilanlari',
-        cins: values.cins,
-        yas: values.yas,
-        sehir: values.sehir,
-        ilce: values.ilce,
-        resimler: imageUrls,
-        kullanici_id: user.uid,
-        olusturma_tarihi: serverTimestamp(),
-        durum: 'aktif',
-        onayDurumu: 'onaylandi' // Admin değilse bile direkt onaylı olsun
-      };
+      toast({
+        title: 'İlanınız oluşturuldu',
+        description:
+          listing.status === 'yayinda'
+            ? 'İlanınız yayına alındı.'
+            : 'İlanınız onay bekliyor, kısa sürede yayınlanacak.',
+      });
 
-      await addDoc(collection(firestore, 'ilanlar'), yeniIlan);
-      
-      toast({ title: "Başarılı!", description: "İlanınız yayına alındı." });
-      router.push(`/${slugify(values.baslik)}-${yeniIlanNo}`);
+      router.push(`/${listing.slug}-${listing.id}`);
+      router.refresh();
     } catch (error: any) {
       console.error(error);
-      toast({ variant: "destructive", title: "Hata", description: "İlan eklenemedi: " + error.message });
+      toast({
+        variant: 'destructive',
+        title: 'İlan oluşturulamadı',
+        description: error?.message ?? 'Beklenmeyen bir hata oluştu.',
+      });
     } finally {
       setIsSubmitting(false);
+      setProgress(null);
     }
   }
 
-  if (loading) {
-    return <div className="flex items-center justify-center p-8">Yükleniyor...</div>;
+  if (isUserLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
+  if (!user) return null;
+
   return (
-    <Card>
+    <Card className="mx-auto my-6 max-w-3xl">
       <CardHeader>
         <CardTitle>Yeni İlan Ver</CardTitle>
-        <CardDescription>Bilgileri Türkçe ve eksiksiz doldurun.</CardDescription>
+        <CardDescription>
+          Sahiplendirme ilanları ücretsizdir. Bilgileri eksiksiz doldurmanız ilanınızın daha
+          hızlı ilgi görmesini sağlar.
+        </CardDescription>
       </CardHeader>
+
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            
-            {/* Fotoğraf Alanı - Çoklu Yükleme */}
-            <div className="space-y-4">
-              <FormLabel>Fotoğraflar (En fazla 5 adet)</FormLabel>
-              
-              {photoPreviews.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
-                  {photoPreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square">
-                      <Image 
-                        src={preview} 
-                        alt={`Fotoğraf ${index + 1}`} 
-                        fill 
-                        className="object-cover rounded-md border"
-                      />
-                      <Button 
-                        size="icon" 
-                        variant="destructive" 
-                        className="absolute -top-2 -right-2 h-6 w-6"
-                        onClick={() => removePhoto(index)}
-                        type="button"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
+            <FormField
+              control={form.control}
+              name="kind"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>İlan Türü</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="satilik">Satılık</SelectItem>
+                      <SelectItem value="sahiplendirme">Ücretsiz Sahiplendirme</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
-              
-              {photoPreviews.length < 5 && (
-                <div className="flex flex-col items-center justify-center border-2 border-dashed p-6 rounded-lg">
-                  <label className="cursor-pointer text-center">
-                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                    <span className="text-sm text-muted-foreground">
-                      {isResizing ? 'Fotoğraflar işleniyor...' : 'Fotoğraf Seç'}
-                    </span>
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      onChange={handleFileChange} 
-                      accept="image/*"
-                      multiple
-                      disabled={isResizing || isSubmitting}
-                    />
-                    {isResizing && <Loader2 className="mx-auto mt-2 h-4 w-4 animate-spin" />}
+            />
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SelectField control={form.control} name="categoryId" label="Kategori" options={categories} placeholder="Kategori seçin" />
+              <SelectField
+                control={form.control}
+                name="breedId"
+                label="Cins"
+                options={filteredBreeds}
+                placeholder={categoryId ? 'Cins seçin' : 'Önce kategori seçin'}
+                disabled={!categoryId}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>İlan Başlığı</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Örn: Sevimli Toy Poodle Yavrularımız" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Açıklama</FormLabel>
+                  <FormControl>
+                    <Textarea rows={6} placeholder="Yaşı, karakteri, sağlık durumu ve teslim koşulları hakkında bilgi verin." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {kind === 'satilik' && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fiyat (TL)</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={0} placeholder="25000" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <CheckboxField control={form.control} name="isNegotiable" label="Pazarlık payı var" />
+              </div>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="ageMonths"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Yaş (ay)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={0} max={360} placeholder="3" {...field} />
+                    </FormControl>
+                    <FormDescription>2 aylık için 2, 1 yaşında için 12 yazın.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cinsiyet</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="belirtilmemis">Belirtilmemiş</SelectItem>
+                        <SelectItem value="erkek">Erkek</SelectItem>
+                        <SelectItem value="disi">Dişi</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SelectField control={form.control} name="cityId" label="İl" options={cities} placeholder="İl seçin" />
+              <SelectField
+                control={form.control}
+                name="districtId"
+                label="İlçe"
+                options={districts}
+                placeholder={cityId ? 'İlçe seçin' : 'Önce il seçin'}
+                disabled={!cityId}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="contactPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>İletişim Telefonu</FormLabel>
+                  <FormControl>
+                    <Input placeholder="5551112233" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <fieldset className="space-y-3 rounded-lg border p-4">
+              <legend className="px-1 text-sm font-semibold">Sağlık ve Teslimat</legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <CheckboxField control={form.control} name="isVaccinated" label="Aşıları tam" />
+                <CheckboxField control={form.control} name="isDewormedInternal" label="İç parazit yapıldı" />
+                <CheckboxField control={form.control} name="isDewormedExternal" label="Dış parazit yapıldı" />
+                <CheckboxField control={form.control} name="hasPedigree" label="Pedigrili" />
+                <CheckboxField control={form.control} name="hasHealthReport" label="Sağlık raporu var" />
+                <CheckboxField control={form.control} name="acceptsCreditCard" label="Kredi kartı kabul ediliyor" />
+                <CheckboxField control={form.control} name="shipsIntercity" label="Şehir dışına gönderim" />
+              </div>
+            </fieldset>
+
+            <div className="space-y-3">
+              <FormLabel>Fotoğraflar</FormLabel>
+              <div className="flex flex-wrap gap-3">
+                {previews.map((src, i) => (
+                  <div key={src} className="relative h-24 w-24 overflow-hidden rounded-md border">
+                    <Image src={src} alt={`Fotoğraf ${i + 1}`} fill className="object-cover" unoptimized />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white"
+                      aria-label={`${i + 1}. fotoğrafı kaldır`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                    {i === 0 && (
+                      <span className="absolute bottom-0 w-full bg-black/60 text-center text-[10px] text-white">
+                        Kapak
+                      </span>
+                    )}
+                  </div>
+                ))}
+
+                {photos.length < MAX_PHOTOS && (
+                  <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed text-xs text-muted-foreground hover:border-primary hover:text-primary">
+                    <Upload className="h-5 w-5" />
+                    Ekle
+                    <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={handlePhotoChange} />
                   </label>
-                </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                En fazla {MAX_PHOTOS} fotoğraf, her biri en çok 5 MB. İlk fotoğraf kapak olarak kullanılır.
+              </p>
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {progress ?? 'Kaydediliyor...'}
+                </>
+              ) : (
+                'İlanı Yayınla'
               )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField control={form.control} name="baslik" render={({ field }) => (
-                <FormItem><FormLabel>İlan Başlığı</FormLabel><Input placeholder="Örn: Çok oyuncu yavru kedi" {...field} /></FormItem>
-              )} />
-
-              <FormField control={form.control} name="kategori_id" render={({ field }) => (
-                <FormItem><FormLabel>Kategori</FormLabel>
-                  <Select onValueChange={(value) => {
-                    field.onChange(value);
-                    setSelectedKategori(value);
-                    form.setValue('cins', ''); // Cins seçimini sıfırla
-                  }} defaultValue={field.value}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Tür Seçin" /></SelectTrigger></FormControl>
-                    <SelectContent>
-                      <SelectItem value="1">Köpek</SelectItem>
-                      <SelectItem value="2">Kedi</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )} />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Cins Seçimi - Dinamik */}
-              <FormField control={form.control} name="cins" render={({ field }) => (
-                <FormItem><FormLabel>Cins</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!selectedKategori}>
-                    <FormControl><SelectTrigger><SelectValue placeholder={selectedKategori ? "Cins Seçin" : "Önce Kategori Seçin"} /></SelectTrigger></FormControl>
-                    <SelectContent>
-                      {cinsler.map((cins) => (
-                        <SelectItem key={cins.id} value={cins.cinsAdi}>{cins.cinsAdi}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )} />
-              
-              <FormField control={form.control} name="yas" render={({ field }) => (
-                <FormItem><FormLabel>Yaşı</FormLabel><Input placeholder="Örn: 3 Aylık" {...field} /></FormItem>
-              )} />
-              
-              {/* Şehir Seçimi */}
-              <FormField control={form.control} name="sehir" render={({ field }) => (
-                <FormItem><FormLabel>Şehir</FormLabel>
-                  <Select onValueChange={(value) => {
-                    field.onChange(value);
-                    form.setValue('ilce', ''); // İlçeyi sıfırla
-                  }} defaultValue={field.value}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Şehir Seçin" /></SelectTrigger></FormControl>
-                    <SelectContent>
-                      {cityNames.map((city) => (
-                        <SelectItem key={city} value={city}>{city}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )} />
-            </div>
-
-            {/* İlçe Seçimi - Şehre göre dinamik */}
-            <div className="grid grid-cols-1 gap-4">
-              <FormField control={form.control} name="ilce" render={({ field }) => (
-                <FormItem><FormLabel>İlçe</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!selectedCity}>
-                    <FormControl><SelectTrigger><SelectValue placeholder={selectedCity ? "İlçe Seçin" : "Önce Şehir Seçin"} /></SelectTrigger></FormControl>
-                    <SelectContent>
-                      {selectedCity && citiesData[selectedCity]?.map((district) => (
-                        <SelectItem key={district} value={district}>{district}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )} />
-            </div>
-
-            <FormField control={form.control} name="aciklama" render={({ field }) => (
-              <FormItem><FormLabel>Açıklama</FormLabel><Textarea placeholder="Dostunuzu anlatın..." {...field} /></FormItem>
-            )} />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField control={form.control} name="ilan_tipi" render={({ field }) => (
-                <FormItem><FormLabel>İlan Tipi</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Seçin" /></SelectTrigger></FormControl>
-                    <SelectContent>
-                      <SelectItem value="Sahiplendirme">Sahiplendirme (Ücretsiz)</SelectItem>
-                      <SelectItem value="Satilik">Satılık (Ücretli)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="fiyat" render={({ field }) => (
-                <FormItem><FormLabel>Fiyat (TL)</FormLabel><Input type="number" disabled={form.watch('ilan_tipi') !== 'Satilik'} {...field} /></FormItem>
-              )} />
-            </div>
-
-            <Button type="submit" className="w-full" disabled={isSubmitting || isResizing}>
-              {(isSubmitting || isResizing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              İlanı Yayınla
             </Button>
           </form>
         </Form>
       </CardContent>
     </Card>
+  );
+}
+
+function SelectField({
+  control,
+  name,
+  label,
+  options,
+  placeholder,
+  disabled,
+}: {
+  control: any;
+  name: keyof FormValues;
+  label: string;
+  options: Option[];
+  placeholder: string;
+  disabled?: boolean;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name as any}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <Select onValueChange={field.onChange} value={field.value as string} disabled={disabled}>
+            <FormControl>
+              <SelectTrigger><SelectValue placeholder={placeholder} /></SelectTrigger>
+            </FormControl>
+            <SelectContent className="max-h-72">
+              {options.map((option) => (
+                <SelectItem key={option.id} value={String(option.id)}>
+                  {option.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function CheckboxField({
+  control,
+  name,
+  label,
+}: {
+  control: any;
+  name: keyof FormValues;
+  label: string;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name as any}
+      render={({ field }) => (
+        <FormItem className="flex flex-row items-center gap-2 space-y-0">
+          <FormControl>
+            <Checkbox checked={field.value as boolean} onCheckedChange={field.onChange} />
+          </FormControl>
+          <FormLabel className="font-normal">{label}</FormLabel>
+        </FormItem>
+      )}
+    />
   );
 }

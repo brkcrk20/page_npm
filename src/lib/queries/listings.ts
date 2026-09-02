@@ -10,7 +10,11 @@ import 'server-only';
  * motoru gerçek içeriği görür.
  */
 
-import { createSupabasePublicClient } from '@/lib/supabase/server';
+import {
+  createSupabasePublicClient,
+  isSupabaseServerConfigured,
+  warnMissingConfig,
+} from '@/lib/supabase/server';
 import type { Database } from '@/lib/supabase/database.types';
 
 type ListingRow = Database['public']['Tables']['listings']['Row'];
@@ -75,9 +79,15 @@ export const DEFAULT_PER_PAGE = 24;
  * gerekmiyor ve kısmi indeksler doğrudan kullanılabiliyor.
  */
 export async function getListings(filters: ListingFilters = {}) {
-  const supabase = createSupabasePublicClient();
   const perPage = filters.perPage ?? DEFAULT_PER_PAGE;
   const page = Math.max(1, filters.page ?? 1);
+
+  if (!isSupabaseServerConfigured()) {
+    warnMissingConfig('getListings');
+    return { listings: [] as ListingCard[], total: 0, page, perPage, pageCount: 1 };
+  }
+
+  const supabase = createSupabasePublicClient();
   const from = (page - 1) * perPage;
 
   let query = supabase
@@ -134,6 +144,7 @@ export async function getListings(filters: ListingFilters = {}) {
  * çalışmaya devam etsin. Kanonik slug dönen kayıttan okunur.
  */
 export async function getListingById(id: number) {
+  if (!isSupabaseServerConfigured()) { warnMissingConfig('getListingById'); return null; }
   const supabase = createSupabasePublicClient();
 
   const { data, error } = await supabase
@@ -156,6 +167,7 @@ export async function getListingById(id: number) {
 
 /** Ana sayfa vitrini — aktif "anasayfa_vitrin" dopingi olan ilanlar. */
 export async function getFeaturedListings(limit = 8): Promise<ListingCard[]> {
+  if (!isSupabaseServerConfigured()) return [];
   const supabase = createSupabasePublicClient();
 
   const { data, error } = await supabase

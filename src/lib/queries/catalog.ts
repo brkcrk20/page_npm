@@ -8,7 +8,11 @@ import 'server-only';
  * önbelleği devrede kalıyor.
  */
 
-import { createSupabasePublicClient } from '@/lib/supabase/server';
+import {
+  createSupabasePublicClient,
+  isSupabaseServerConfigured,
+  warnMissingConfig,
+} from '@/lib/supabase/server';
 
 export type Category = {
   id: number;
@@ -28,6 +32,7 @@ export type City = { id: number; slug: string; name: string };
 export type District = { id: number; slug: string; name: string; city_id: number };
 
 export async function getCategories(): Promise<Category[]> {
+  if (!isSupabaseServerConfigured()) { warnMissingConfig('getCategories'); return []; }
   const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
     .from('categories')
@@ -40,6 +45,7 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
+  if (!isSupabaseServerConfigured()) { warnMissingConfig('getCategoryBySlug'); return null; }
   const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
     .from('categories')
@@ -52,6 +58,7 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
 }
 
 export async function getBreedsByCategoryId(categoryId: number): Promise<Breed[]> {
+  if (!isSupabaseServerConfigured()) return [];
   const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
     .from('breeds')
@@ -65,6 +72,7 @@ export async function getBreedsByCategoryId(categoryId: number): Promise<Breed[]
 }
 
 export async function getBreed(categoryId: number, breedSlug: string): Promise<Breed | null> {
+  if (!isSupabaseServerConfigured()) return null;
   const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
     .from('breeds')
@@ -78,6 +86,7 @@ export async function getBreed(categoryId: number, breedSlug: string): Promise<B
 }
 
 export async function getCityBySlug(slug: string): Promise<City | null> {
+  if (!isSupabaseServerConfigured()) return null;
   const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
     .from('cities')
@@ -90,6 +99,7 @@ export async function getCityBySlug(slug: string): Promise<City | null> {
 }
 
 export async function getDistrict(cityId: number, districtSlug: string): Promise<District | null> {
+  if (!isSupabaseServerConfigured()) return null;
   const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
     .from('districts')
@@ -103,6 +113,7 @@ export async function getDistrict(cityId: number, districtSlug: string): Promise
 }
 
 export async function getCities(): Promise<City[]> {
+  if (!isSupabaseServerConfigured()) return [];
   const supabase = createSupabasePublicClient();
   const { data, error } = await supabase.from('cities').select('id, slug, name').order('name');
   if (error) throw new Error(`Şehirler getirilemedi: ${error.message}`);

@@ -13,14 +13,45 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import type { Database } from './database.types';
 
-function requireEnv(name: string): string {
+function readEnv(name: string): string | null {
   const value = process.env[name];
+  if (!value || value.startsWith('BURAYA') || value.includes('xxxxxxxx')) return null;
+  return value;
+}
+
+function requireEnv(name: string): string {
+  const value = readEnv(name);
   if (!value) {
     throw new Error(
-      `Ortam değişkeni eksik: ${name}. .env.local dosyasını .env.example'a göre doldurun.`
+      `Ortam değişkeni eksik: ${name}. Yerelde .env.local, canlıda Vercel > ` +
+        'Settings > Environment Variables altında tanımlanmalı.'
     );
   }
   return value;
+}
+
+/**
+ * Supabase sunucu tarafında yapılandırılmış mı?
+ *
+ * Sorgu katmanı buna bakıp yapılandırma eksikken hata fırlatmak yerine boş
+ * sonuç dönüyor. Sebep: eksik bir ortam değişkeni yüzünden her sayfanın 500
+ * vermesi, "bu kategoride ilan yok" demekten çok daha kötü bir davranış.
+ * Yanlışlıkla sessiz kalmamak için konsola belirgin bir uyarı yazılıyor.
+ */
+export function isSupabaseServerConfigured(): boolean {
+  return readEnv('NEXT_PUBLIC_SUPABASE_URL') !== null
+    && readEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY') !== null;
+}
+
+let warned = false;
+export function warnMissingConfig(where: string) {
+  if (warned) return;
+  warned = true;
+  console.error(
+    `[Supabase] Yapılandırma eksik (${where}). NEXT_PUBLIC_SUPABASE_URL ve ` +
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY tanımlı değil; sayfalar boş veriyle ' +
+      'render ediliyor.'
+  );
 }
 
 /**

@@ -5,7 +5,6 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { BottomNav } from '@/components/layout/BottomNav'; // YENİ EKLENDİ
 import { Toaster } from '@/components/ui/toaster';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { SupabaseAuthProvider } from '@/lib/supabase/auth-provider';
 
 export const metadata: Metadata = {
@@ -30,11 +29,7 @@ export default function RootLayout({
       </head>
       {/* Scrollbar gizleme ve responsive ayarları global.css'teydi */}
       <body className={cn('min-h-screen bg-background font-body antialiased overflow-x-hidden w-full max-w-[100vw]')}>
-        {/* Geçiş dönemi: oturum Supabase'de, ancak profil ve ilan-ver
-            sayfaları hâlâ Firestore'dan okuduğu için iki sağlayıcı bir arada
-            duruyor. Bu sayfalar taşındıkça FirebaseClientProvider kalkacak. */}
         <SupabaseAuthProvider>
-        <FirebaseClientProvider>
           <div className="relative flex min-h-dvh flex-col">
             <Header />
             {/* pb-20 ekledik: Mobil menü içeriği kapatmasın diye alt boşluk */}
@@ -44,7 +39,6 @@ export default function RootLayout({
             <BottomNav />
           </div>
           <Toaster />
-        </FirebaseClientProvider>
         </SupabaseAuthProvider>
       </body>
     </html>
