@@ -1,65 +1,53 @@
-'use client';
+import type { Metadata } from 'next';
 
-import { Stethoscope, Phone, MapPin, Ambulance } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { services } from "@/lib/data";
-import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { VetDirectory } from '@/components/services/VetDirectory';
+import {
+  parseVetFilters,
+  buildVetBasePath,
+  loadVetPage,
+  type VetSearchParams,
+} from '@/lib/queries/vet-page';
 
-export default function VeterinarianPage() {
-  const vetServices = services.filter(s => s.type === 'Veterinarian');
-  const heroImage = PlaceHolderImages.find(img => img.id === 'vet-hero') ?? { imageUrl: 'https://picsum.photos/seed/vet-hero/1200/400', description: 'Veterinarian attending a pet', imageHint: 'veterinarian pet' };
+/**
+ * Veteriner rehberi — Türkiye geneli.
+ *
+ * Server component: filtreler URL'de tutulup sunucuda uygulandığı için
+ * filtrelenmiş sayfalar da arama motoruna dolu içerik olarak gidiyor.
+ */
+
+export const metadata: Metadata = {
+  title: 'Veteriner Klinikleri — Size En Yakın Veteriner Hekim | PetSemti',
+  description:
+    'Türkiye genelindeki veteriner klinikleri: 7/24 acil servis, röntgen, laboratuvar ve yatılı tedavi hizmeti verenler. Şehrinize göre filtreleyin, çalışma saatlerini görün.',
+};
+
+export const dynamic = 'force-dynamic';
+
+export default async function VeterinerPage({
+  searchParams,
+}: {
+  searchParams: Promise<VetSearchParams>;
+}) {
+  const params = await searchParams;
+  const filters = parseVetFilters(params);
+  const data = await loadVetPage(filters);
 
   return (
-    <div className="container mx-auto py-12">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold font-headline">Veteriner Hizmetleri</h1>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {vetServices.map((service) => (
-          <Card key={service.id} className="flex flex-col hover:shadow-lg transition-shadow duration-300">
-            <CardHeader className="flex-row items-start gap-4 pb-4">
-              <div className="w-16 h-16 flex-shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                <Stethoscope className="w-8 h-8" />
-              </div>
-              <div className="flex-1">
-                <CardTitle className="font-headline text-xl">{service.name}</CardTitle>
-                <CardDescription className="flex items-center gap-2 mt-1">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <span>{service.location}</span>
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-grow space-y-4">
-              <p className="text-sm text-muted-foreground italic">
-                "Sevgiyle ve uzmanlıkla, evcil hayvanlarınızın sağlığı bizim önceliğimizdir."
-              </p>
-              <div className="flex items-center text-sm">
-                <Phone className="w-4 h-4 mr-2 text-primary" />
-                <a href={`tel:${service.contact}`} className="hover:underline">{service.contact}</a>
-              </div>
-              <div className="flex items-center text-sm font-semibold text-green-600">
-                <Ambulance className="w-4 h-4 mr-2" />
-                <span>7/24 Acil Servis</span>
-              </div>
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Badge variant="secondary">Muayene</Badge>
-                <Badge variant="secondary">Aşı</Badge>
-                <Badge variant="secondary">Cerrahi</Badge>
-                <Badge variant="secondary">Laboratuvar</Badge>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      {vetServices.length === 0 && (
-        <div className="text-center py-20 col-span-full">
-          <Stethoscope className="mx-auto h-16 w-16 text-muted-foreground" />
-          <p className="mt-4 text-lg font-semibold">Şu anda listelenecek veteriner hizmeti bulunmamaktadır.</p>
-          <p className="text-muted-foreground">Lütfen daha sonra tekrar kontrol edin.</p>
-        </div>
-      )}
-    </div>
+    <VetDirectory
+      title="Veteriner Klinikleri"
+      intro="Türkiye geneli"
+      crumbs={[{ label: 'Veteriner' }]}
+      providers={data.providers}
+      total={data.total}
+      page={data.page}
+      pageCount={data.pageCount}
+      featureGroups={data.featureGroups}
+      activeFeatures={filters.featureSlugs}
+      activeSearch={filters.search}
+      verifiedOnly={filters.verifiedOnly}
+      cities={data.cities}
+      basePath={buildVetBasePath('/veteriner', filters)}
+      emptyMessage="Bu kriterlere uyan veteriner kliniği bulunamadı."
+    />
   );
 }

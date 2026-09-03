@@ -193,6 +193,13 @@ export type Database = {
             referencedRelation: "city_listing_counts"
             referencedColumns: ["city_id"]
           },
+          {
+            foreignKeyName: "districts_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "service_city_counts"
+            referencedColumns: ["city_id"]
+          },
         ]
       }
       favorites: {
@@ -586,6 +593,13 @@ export type Database = {
             referencedColumns: ["city_id"]
           },
           {
+            foreignKeyName: "listings_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "service_city_counts"
+            referencedColumns: ["city_id"]
+          },
+          {
             foreignKeyName: "listings_district_id_fkey"
             columns: ["district_id"]
             isOneToOne: false
@@ -948,6 +962,13 @@ export type Database = {
             referencedColumns: ["city_id"]
           },
           {
+            foreignKeyName: "profiles_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "service_city_counts"
+            referencedColumns: ["city_id"]
+          },
+          {
             foreignKeyName: "profiles_district_id_fkey"
             columns: ["district_id"]
             isOneToOne: false
@@ -970,6 +991,339 @@ export type Database = {
           filename?: string
         }
         Relationships: []
+      }
+      service_features: {
+        Row: {
+          group_name: string
+          id: number
+          is_active: boolean
+          name: string
+          position: number
+          service_type: Database["public"]["Enums"]["service_type"]
+          slug: string
+        }
+        Insert: {
+          group_name?: string
+          id?: never
+          is_active?: boolean
+          name: string
+          position?: number
+          service_type: Database["public"]["Enums"]["service_type"]
+          slug: string
+        }
+        Update: {
+          group_name?: string
+          id?: never
+          is_active?: boolean
+          name?: string
+          position?: number
+          service_type?: Database["public"]["Enums"]["service_type"]
+          slug?: string
+        }
+        Relationships: []
+      }
+      service_provider_features: {
+        Row: {
+          feature_id: number
+          provider_id: number
+        }
+        Insert: {
+          feature_id: number
+          provider_id: number
+        }
+        Update: {
+          feature_id?: number
+          provider_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_provider_features_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "service_features"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_provider_features_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_provider_hours: {
+        Row: {
+          closes_at: string | null
+          is_24h: boolean
+          is_closed: boolean
+          opens_at: string | null
+          provider_id: number
+          weekday: number
+        }
+        Insert: {
+          closes_at?: string | null
+          is_24h?: boolean
+          is_closed?: boolean
+          opens_at?: string | null
+          provider_id: number
+          weekday: number
+        }
+        Update: {
+          closes_at?: string | null
+          is_24h?: boolean
+          is_closed?: boolean
+          opens_at?: string | null
+          provider_id?: number
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_provider_hours_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_providers: {
+        Row: {
+          address: string | null
+          city_id: number
+          created_at: string
+          description: string | null
+          district_id: number | null
+          email: string | null
+          id: number
+          is_verified: boolean
+          latitude: number | null
+          license_number: string | null
+          longitude: number | null
+          name: string
+          owner_id: string | null
+          phone: string | null
+          phone_alt: string | null
+          phone_count: number
+          published_at: string | null
+          rating_average: number
+          rating_count: number
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          search_vector: unknown
+          service_type: Database["public"]["Enums"]["service_type"]
+          slug: string
+          status: Database["public"]["Enums"]["service_status"]
+          updated_at: string
+          verified_at: string | null
+          view_count: number
+          website: string | null
+          whatsapp: string | null
+          whatsapp_count: number
+        }
+        Insert: {
+          address?: string | null
+          city_id: number
+          created_at?: string
+          description?: string | null
+          district_id?: number | null
+          email?: string | null
+          id?: never
+          is_verified?: boolean
+          latitude?: number | null
+          license_number?: string | null
+          longitude?: number | null
+          name: string
+          owner_id?: string | null
+          phone?: string | null
+          phone_alt?: string | null
+          phone_count?: number
+          published_at?: string | null
+          rating_average?: number
+          rating_count?: number
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          search_vector?: unknown
+          service_type: Database["public"]["Enums"]["service_type"]
+          slug: string
+          status?: Database["public"]["Enums"]["service_status"]
+          updated_at?: string
+          verified_at?: string | null
+          view_count?: number
+          website?: string | null
+          whatsapp?: string | null
+          whatsapp_count?: number
+        }
+        Update: {
+          address?: string | null
+          city_id?: number
+          created_at?: string
+          description?: string | null
+          district_id?: number | null
+          email?: string | null
+          id?: never
+          is_verified?: boolean
+          latitude?: number | null
+          license_number?: string | null
+          longitude?: number | null
+          name?: string
+          owner_id?: string | null
+          phone?: string | null
+          phone_alt?: string | null
+          phone_count?: number
+          published_at?: string | null
+          rating_average?: number
+          rating_count?: number
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          search_vector?: unknown
+          service_type?: Database["public"]["Enums"]["service_type"]
+          slug?: string
+          status?: Database["public"]["Enums"]["service_status"]
+          updated_at?: string
+          verified_at?: string | null
+          view_count?: number
+          website?: string | null
+          whatsapp?: string | null
+          whatsapp_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_providers_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_providers_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "city_listing_counts"
+            referencedColumns: ["city_id"]
+          },
+          {
+            foreignKeyName: "service_providers_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "service_city_counts"
+            referencedColumns: ["city_id"]
+          },
+          {
+            foreignKeyName: "service_providers_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_providers_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_providers_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_providers_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "service_providers_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_providers_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_providers_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      service_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: number
+          is_published: boolean
+          provider_id: number
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: never
+          is_published?: boolean
+          provider_id: number
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: never
+          is_published?: boolean
+          provider_id?: number
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_reviews_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -1161,6 +1515,13 @@ export type Database = {
             referencedRelation: "city_listing_counts"
             referencedColumns: ["city_id"]
           },
+          {
+            foreignKeyName: "profiles_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "service_city_counts"
+            referencedColumns: ["city_id"]
+          },
         ]
       }
       seller_stats: {
@@ -1172,8 +1533,19 @@ export type Database = {
         }
         Relationships: []
       }
+      service_city_counts: {
+        Row: {
+          city_id: number | null
+          city_name: string | null
+          city_slug: string | null
+          provider_count: number | null
+          service_type: Database["public"]["Enums"]["service_type"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      counter_sync_active: { Args: never; Returns: boolean }
       email_for_username: { Args: { p_username: string }; Returns: string }
       increment_listing_phone: {
         Args: { p_listing_id: number }
@@ -1185,6 +1557,18 @@ export type Database = {
       }
       increment_listing_whatsapp: {
         Args: { p_listing_id: number }
+        Returns: undefined
+      }
+      increment_service_phone: {
+        Args: { p_provider_id: number }
+        Returns: undefined
+      }
+      increment_service_view: {
+        Args: { p_provider_id: number }
+        Returns: undefined
+      }
+      increment_service_whatsapp: {
+        Args: { p_provider_id: number }
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
@@ -1227,6 +1611,20 @@ export type Database = {
         | "acil"
         | "renkli_cerceve"
         | "ilan_yenileme"
+      service_status:
+        | "taslak"
+        | "onay_bekliyor"
+        | "yayinda"
+        | "reddedildi"
+        | "pasif"
+      service_type:
+        | "veteriner"
+        | "pet_oteli"
+        | "kuafor"
+        | "pet_taksi"
+        | "gezdirici"
+        | "egitmen"
+        | "petshop"
       user_role: "user" | "moderator" | "admin"
     }
     CompositeTypes: {
@@ -1389,6 +1787,22 @@ export const Constants = {
         "acil",
         "renkli_cerceve",
         "ilan_yenileme",
+      ],
+      service_status: [
+        "taslak",
+        "onay_bekliyor",
+        "yayinda",
+        "reddedildi",
+        "pasif",
+      ],
+      service_type: [
+        "veteriner",
+        "pet_oteli",
+        "kuafor",
+        "pet_taksi",
+        "gezdirici",
+        "egitmen",
+        "petshop",
       ],
       user_role: ["user", "moderator", "admin"],
     },

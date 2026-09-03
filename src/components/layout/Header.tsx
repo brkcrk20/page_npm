@@ -47,7 +47,6 @@ import {
   NavigationMenuLink,
 } from "@/components/ui/navigation-menu"
 import { SearchFilters } from '../SearchFilters';
-import { VetSearchFilters } from '../VetSearchFilters';
 import { Skeleton } from '../ui/skeleton';
 
 const navLinks = [
@@ -93,13 +92,6 @@ export function Header() {
   const isLoading = !isMounted || isUserLoading || isProfileLoading;
   
   const renderFilters = () => {
-    if (pathname === '/veteriner') return <VetSearchFilters pageType="vet" />;
-    if (pathname === '/pet-oteli') return <VetSearchFilters pageType="hotel" />;
-    if (pathname === '/egitmen') return <VetSearchFilters pageType="trainer" />;
-    if (pathname === '/pet_kuafor') return <VetSearchFilters pageType="groomer" />;
-    if (pathname === '/petshop') return <VetSearchFilters pageType="petshop" />;
-    if (pathname === '/pet_taksi') return <VetSearchFilters pageType="pet_taksi" />;
-    if (pathname === '/gezdirici') return <VetSearchFilters pageType="walker" />;
     if (pathname === '/guvercinler') return <SearchFilters />;
     if (pathname === '/al-sat') return <SearchFilters />;
     if (pathname === '/es-arayanlar') return <SearchFilters />;
