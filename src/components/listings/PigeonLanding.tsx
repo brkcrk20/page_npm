@@ -2,8 +2,7 @@ import Link from 'next/link';
 import { Film, MapPin, Play, Search, Trophy } from 'lucide-react';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
-import { CategorySidebar } from '@/components/layout/CategorySidebar';
-import { Badge } from '@/components/ui/badge';
+import { PigeonBreedSidebar } from '@/components/listings/PigeonBreedSidebar';
 import { Button } from '@/components/ui/button';
 import type { ListingCard } from '@/lib/queries/listings';
 import type { Category, SidebarData } from '@/lib/queries/catalog';
@@ -34,10 +33,20 @@ export function PigeonLanding({
 }) {
   const pigeonBreeds = sidebar.categories.find((c) => c.id === category.id)?.breeds ?? [];
 
-  // Taklacılar ayrı gösteriliyor: aranma hacminin büyük kısmı burada ve
-  // yirmi dört ırkı tek listede vermek en çok aranan dördünü gizliyordu.
-  const tumblers = pigeonBreeds.filter((b) => /taklaci|takla/i.test(b.slug));
-  const others = pigeonBreeds.filter((b) => !/taklaci|takla/i.test(b.slug));
+  // Menüde ırklar grup grup; burada, giriş bölümünün hemen altında yalnızca
+  // grupların kendisi duruyor. Elli dokuz ırkı sayfanın üstüne düz bir
+  // etiket bulutu olarak dökmek, en çok aranan dalları görünmez kılıyordu.
+  const groupSummary = ['Taklacı', 'Oyun', 'Posta ve Yarış', 'Süs', 'Yerli']
+    .map((group) => {
+      const items = pigeonBreeds.filter((b) => b.group === group);
+      return {
+        group,
+        breedCount: items.length,
+        listingCount: items.reduce((sum, b) => sum + b.count, 0),
+        sample: items.slice(0, 4),
+      };
+    })
+    .filter((g) => g.breedCount > 0);
 
   return (
     <div className="bg-secondary/30">
@@ -95,43 +104,42 @@ export function PigeonLanding({
       </section>
 
       <div className="mx-auto w-full max-w-7xl px-5 py-8">
-        {/* --- Irk seçimi --- */}
-        {pigeonBreeds.length > 0 && (
+        {/* --- Irk grupları ---
+             Güvercinciler ırkları kullanım amacına göre ayırıyor; sayfanın
+             girişinde de aynı ayrım var ki ziyaretçi hangi dala bakacağını
+             seçebilsin. */}
+        {groupSummary.length > 0 && (
           <section className="mb-8">
-            <h2 className="mb-3 text-lg font-bold">Taklacı Irkları</h2>
-            <ul className="mb-6 flex flex-wrap gap-2">
-              {tumblers.map((breed) => (
-                <li key={breed.id}>
-                  <Link
-                    href={`/${category.slug}/${breed.slug}`}
-                    className="flex items-center gap-2 rounded-full border bg-white px-3.5 py-1.5 text-sm transition-colors hover:border-primary hover:text-primary"
-                  >
-                    {breed.name}
-                    {breed.count > 0 && (
-                      <Badge variant="secondary" className="text-[10px]">
-                        {breed.count}
-                      </Badge>
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            <h2 className="mb-3 text-lg font-bold">Diğer Irklar</h2>
-            <ul className="flex flex-wrap gap-2">
-              {others.map((breed) => (
-                <li key={breed.id}>
-                  <Link
-                    href={`/${category.slug}/${breed.slug}`}
-                    className="flex items-center gap-2 rounded-full border bg-white px-3.5 py-1.5 text-sm transition-colors hover:border-primary hover:text-primary"
-                  >
-                    {breed.name}
-                    {breed.count > 0 && (
-                      <Badge variant="secondary" className="text-[10px]">
-                        {breed.count}
-                      </Badge>
-                    )}
-                  </Link>
+            <h2 className="mb-3 text-lg font-bold">Irk Grupları</h2>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {groupSummary.map((g) => (
+                <li key={g.group}>
+                  <div className="h-full rounded-xl border bg-white p-4">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <h3 className="font-bold">{g.group}</h3>
+                      <span className="text-xs text-muted-foreground">
+                        {g.breedCount} ırk
+                        {g.listingCount > 0 && ` · ${g.listingCount} ilan`}
+                      </span>
+                    </div>
+                    <ul className="mt-2 flex flex-wrap gap-1.5">
+                      {g.sample.map((breed) => (
+                        <li key={breed.id}>
+                          <Link
+                            href={`/${category.slug}/${breed.slug}`}
+                            className="inline-flex items-center gap-1.5 rounded-full border bg-secondary/40 px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
+                          >
+                            {breed.name}
+                            {breed.count > 0 && (
+                              <span className="font-semibold text-muted-foreground">
+                                {breed.count}
+                              </span>
+                            )}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -153,10 +161,10 @@ export function PigeonLanding({
         <div id="tum-ilanlar" className="grid grid-cols-1 gap-8 md:grid-cols-[280px_1fr]">
           <aside className="hidden md:block">
             <div className="sticky top-4">
-              <CategorySidebar
-                categories={sidebar.categories}
-                cities={sidebar.cities}
-                cityLinkCategorySlug={category.slug}
+              <PigeonBreedSidebar
+                breeds={pigeonBreeds}
+                categorySlug={category.slug}
+                categoryName={category.name}
               />
             </div>
           </aside>

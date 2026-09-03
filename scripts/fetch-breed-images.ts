@@ -22,11 +22,54 @@ import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import sharp from 'sharp';
 
-import { categories } from '../src/lib/breeds';
+import { categories as staticCategories } from '../src/lib/breeds';
 import { CATEGORY_DEFS } from '../src/lib/routing';
 import { breedImageFilename } from '../src/lib/breed-image';
 
 const UA = 'PetSemtiBot/1.0 (https://petsemti.com; iletisim@petsemti.com)';
+
+/**
+ * Irk listesi artık VERİTABANINDAN okunuyor.
+ *
+ * Eskiden src/lib/breeds.ts okunuyordu; o dosya yalnızca ilk tohumlamanın
+ * kaynağı ve göçlerle eklenen ırkları (ör. 59 güvercin ırkı) içermiyor.
+ * Sonuç: sonradan eklenen hiçbir ırk görsel almıyordu ve bu sessizce
+ * oluyordu — eksik görsel harf yedeğine düştüğü için fark edilmiyordu.
+ *
+ * Ortam değişkenleri yoksa eski dosyaya düşülüyor; betik bir veritabanı
+ * olmadan da çalışabilmeli.
+ */
+type SourceCategory = { slug: string; title: string; breeds: { name: string }[] };
+
+async function loadCategories(): Promise<SourceCategory[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key) {
+    console.warn('! Veritabanı bilgisi yok, src/lib/breeds.ts kullanılıyor.');
+    return staticCategories as unknown as SourceCategory[];
+  }
+
+  const res = await fetch(
+    `${url}/rest/v1/categories?select=slug,name,breeds(name,position)&order=position`,
+    { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+  );
+  if (!res.ok) {
+    console.warn('! Veritabanı okunamadı, src/lib/breeds.ts kullanılıyor.');
+    return staticCategories as unknown as SourceCategory[];
+  }
+
+  const rows = (await res.json()) as {
+    slug: string;
+    name: string;
+    breeds: { name: string; position: number }[];
+  }[];
+  return rows.map((r) => ({
+    slug: r.slug,
+    title: r.name,
+    breeds: [...(r.breeds ?? [])].sort((a, b) => a.position - b.position),
+  }));
+}
 const OUT_ROOT = resolve(__dirname, '../public/cins-gorselleri');
 
 /** Görsel 64px gösteriliyor; 2x ekranlar için 128px üretiyoruz. */
@@ -106,6 +149,40 @@ const TITLE_OVERRIDES: Record<string, string[]> = {
   'Beta': ['Siamese fighting fish'],
   'Melek Balığı': ['Pterophyllum'],
   'Moli': ['Poecilia sphenops', 'Molly (fish)'],
+  // --- Güvercin ırkları ---------------------------------------------------
+  // Yalnızca gerçekten kendi maddesi olan ırklar eşleniyor. Bölgesel
+  // taklacıların (Adana, Mardin, Urfa...) Wikipedia maddesi yok; hepsini
+  // "Turkish Tumbler" görseline bağlamak 16 ırkta aynı fotoğrafı tekrarlamak
+  // olurdu. Onlar harf yedeğine düşüyor — yedek her ırk için farklı renk
+  // üretiyor, tekrarlanan fotoğraftan daha dürüst duruyor.
+  'Posta Güvercini': ['Homing pigeon'],
+  'Yarış Güvercini': ['Racing Homer', 'Homing pigeon'],
+  'Belçika Postası': ['Homing pigeon'],
+  'Alman Postası': ['Homing pigeon'],
+  'Hollanda Postası': ['Homing pigeon'],
+  'Janssen Güvercini': ['Homing pigeon'],
+  'Süs Güvercini': ['Fancy pigeon'],
+  'Pofuduk (Jakoben) Güvercin': ['Jacobin pigeon'],
+  'Kuyruklu (Tavus) Güvercin': ['Fantail pigeon'],
+  'Guatrlı Güvercin': ['English Pouter', 'Pouter pigeon'],
+  'Modena Güvercini': ['Modena pigeon'],
+  'King Güvercini': ['King pigeon'],
+  'Rahibe (Nun) Güvercin': ['Nun pigeon', 'Old Dutch Capuchine'],
+  'Borazan (Trumpeter) Güvercin': ['English Trumpeter', 'Trumpeter pigeon'],
+  'Kıvırcık (Frillback) Güvercin': ['Frillback'],
+  'Arşanjel Güvercin': ['Archangel pigeon'],
+  'Buhara Güvercini': ['Bokhara Trumpeter'],
+  'Lahor Güvercini': ['Lahore pigeon'],
+  'Barb Güvercini': ['English Barb', 'Barb pigeon'],
+  'Satinet Güvercin': ['Oriental Frill', 'Satinette'],
+  'Şam Güvercini': ['Damascene pigeon'],
+  'Mısır Güvercini': ['Egyptian Swift'],
+  'Bağdat Güvercini': ['Scandaroon'],
+  'Taklacı Güvercin': ['Tumbler pigeon'],
+  'Makaracı Güvercin': ['Roller pigeon', 'Birmingham Roller'],
+  'Ankara Güvercini': ['Ankara pigeon'],
+  'Beyaz Güvercin': ['Domestic pigeon'],
+  'Karma / Melez Güvercin': ['Rock dove'],
   'Bernedoodle': ['Bernese Mountain Dog'],
 };
 
@@ -187,6 +264,8 @@ async function main() {
   let ok = 0;
   let skipped = 0;
   const missing: string[] = [];
+
+  const categories = await loadCategories();
 
   for (const category of categories) {
     if (only && category.slug !== only) continue;

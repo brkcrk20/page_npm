@@ -219,7 +219,7 @@ export type SidebarData = {
     name: string;
     code: string;
     count: number;
-    breeds: { id: number; slug: string; name: string; count: number }[];
+    breeds: { id: number; slug: string; name: string; count: number; group: string | null }[];
   }[];
   cities: { id: number; slug: string; name: string; count: number }[];
 };
@@ -263,7 +263,7 @@ export async function getSidebarData(): Promise<SidebarData> {
       breeds: byCountThenName(
         staticBreeds
           .filter((b) => b.category_id === category.id)
-          .map((b) => ({ id: b.id, slug: b.slug, name: b.name, count: 0 }))
+          .map((b) => ({ id: b.id, slug: b.slug, name: b.name, count: 0, group: null }))
       ),
     })),
     cities: byCountThenName(cities.map((c) => ({ ...c, count: 0 }))),
@@ -279,7 +279,7 @@ export async function getSidebarData(): Promise<SidebarData> {
     const [breedCounts, categoryCounts, cityCounts] = await Promise.all([
       supabase
         .from('breed_listing_counts')
-        .select('breed_id, category_id, breed_slug, breed_name, position, listing_count')
+        .select('breed_id, category_id, breed_slug, breed_name, group_name, position, listing_count')
         .order('position'),
       supabase.from('category_listing_counts').select('category_id, listing_count'),
       supabase.from('city_listing_counts').select('city_id, listing_count'),
@@ -311,6 +311,7 @@ export async function getSidebarData(): Promise<SidebarData> {
               slug: b.breed_slug,
               name: b.breed_name,
               count: Number(b.listing_count),
+              group: (b.group_name as string | null) ?? null,
             }))
         ),
       })),

@@ -28,7 +28,9 @@ export function breedImageFilename(breedName: string, categoryCode: string): str
           ? 'kus-turu-satilik-sahiplendirme-ilanlari'
           : categoryCode === 'Aquarium'
             ? 'akvaryum-baligi-turu-satilik-ilanlari'
-            : 'evcil-hayvan-turu-satilik-sahiplendirme-ilanlari';
+            : categoryCode === 'Pigeon'
+              ? 'guvercin-irki-taklaci-posta-sus-guvercini-satilik-ilanlari'
+              : 'evcil-hayvan-turu-satilik-sahiplendirme-ilanlari';
 
   return `${base}-${suffix}.webp`;
 }
@@ -65,11 +67,31 @@ function colorFor(seed: string): string {
   return FALLBACK_COLORS[hash % FALLBACK_COLORS.length];
 }
 
-/** "Toy Poodle" -> "TP", "Akbaş" -> "AK" */
+/**
+ * "Toy Poodle" -> "TP", "Akbaş" -> "AK", "Adana Taklacısı" -> "AD"
+ *
+ * Baş harfleri almak, ikinci kelimesi ortak olan ırk ailelerinde çöküyordu:
+ * on altı bölgesel taklacının hepsi "…T" oluyor, Kayseri ile Konya ikisi de
+ * "KT" çıkıyordu. Ayırt edici bilgi İLK kelimede olduğu için, sonraki kelime
+ * jenerik bir tür adıysa ilk kelimenin iki harfi kullanılıyor.
+ */
+const GENERIC_WORDS =
+  /^(taklacisi|taklaci|guvercin|guvercini|kedisi|kedi|kopegi|kopek|kusu|kus|papagani|baligi|terrier|kurdu)$/i;
+
 function initialsFor(name: string): string {
-  const words = name.trim().split(/\s+/).filter(Boolean);
+  const words = name.trim().replace(/[()\/]/g, ' ').split(/\s+/).filter(Boolean);
   if (words.length === 0) return '?';
   if (words.length === 1) return words[0].slice(0, 2).toLocaleUpperCase('tr');
+
+  const second = words[1]
+    .toLocaleLowerCase('tr')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ı/g, 'i');
+
+  if (GENERIC_WORDS.test(second)) {
+    return words[0].slice(0, 2).toLocaleUpperCase('tr');
+  }
   return (words[0][0] + words[1][0]).toLocaleUpperCase('tr');
 }
 

@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
+import { PigeonBreedSidebar } from '@/components/listings/PigeonBreedSidebar';
 import type { ListingCard } from '@/lib/queries/listings';
 import type { Category, SidebarData } from '@/lib/queries/catalog';
 
@@ -75,14 +76,34 @@ export function CategoryBrowser({
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-[260px_1fr]">
           <aside className="hidden md:block">
-            <div className="sticky top-4">
-              <CategorySidebar
-                categories={sidebar.categories}
-                cities={sidebar.cities}
-                activeBreedSlug={activeBreedSlug}
-                activeCitySlug={activeCitySlug}
-                cityLinkCategorySlug={category.slug}
-              />
+            {/* Güvercinde ırk menüsü kategoriye özel: 59 ırk gruplu
+                gösteriliyor ve kategori seçimi diye bir şey yok — ziyaretçi
+                zaten güvercinde. Şehir menüsü altında ayrıca duruyor. */}
+            <div className="sticky top-4 space-y-4">
+              {category.code === 'Pigeon' ? (
+                <>
+                  <PigeonBreedSidebar
+                    breeds={sidebar.categories.find((c) => c.id === category.id)?.breeds ?? []}
+                    categorySlug={category.slug}
+                    categoryName={category.name}
+                    activeBreedSlug={activeBreedSlug}
+                  />
+                  <CategorySidebar
+                    categories={[]}
+                    cities={sidebar.cities}
+                    activeCitySlug={activeCitySlug}
+                    cityLinkCategorySlug={category.slug}
+                  />
+                </>
+              ) : (
+                <CategorySidebar
+                  categories={sidebar.categories}
+                  cities={sidebar.cities}
+                  activeBreedSlug={activeBreedSlug}
+                  activeCitySlug={activeCitySlug}
+                  cityLinkCategorySlug={category.slug}
+                />
+              )}
             </div>
           </aside>
 
