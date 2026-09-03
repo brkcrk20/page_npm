@@ -49,6 +49,7 @@ import {
   NavigationMenuLink,
 } from "@/components/ui/navigation-menu"
 import { SearchFilters } from '../SearchFilters';
+import { SERVICE_CONFIGS } from '@/lib/services-config';
 import { Skeleton } from '../ui/skeleton';
 
 // /blog ve /guvenlik buradan KALDIRILDI: ikisi de mevcut değildi ve mobil
@@ -157,6 +158,21 @@ export function Header() {
   const showCategoriesAndFilters = !CHROME_FREE.some(
     (p) => pathname === p || pathname.startsWith(p + '/')
   );
+
+  /**
+   * İlan arama çubuğu yalnızca İLAN sayfalarında anlamlı.
+   *
+   * Hizmet rehberlerinde (veteriner, pet oteli, kuaför...) aranan şey ilan
+   * değil işletme; o sayfaların kendi arama kutusu ve kendi süzgeçleri var.
+   * "Tüm Türler / Tüm Cinsler" açılır listelerini veteriner rehberinde
+   * göstermek, alakasız bir filtreyi sayfanın en üstüne koymak demekti.
+   *
+   * Kategori şeridi duruyor: o bölümler arası gezinmenin yolu.
+   */
+  const isServiceDirectory = SERVICE_CONFIGS.some(
+    (svc) => pathname === `/${svc.slug}` || pathname.startsWith(`/${svc.slug}/`)
+  );
+  const showListingSearch = showCategoriesAndFilters && !isServiceDirectory;
 
   const renderAuthContent = () => {
     if (isLoading) {
@@ -401,9 +417,13 @@ export function Header() {
               </div>
             </div>
             
-            <div className="px-4 md:px-0 mt-2">
-               {renderFilters()}
-            </div>
+            {/* Hizmet rehberlerinde gösterilmiyor: orada aranan ilan değil
+                işletme ve sayfanın kendi süzgeçleri var. */}
+            {showListingSearch && (
+              <div className="px-4 md:px-0 mt-2">
+                {renderFilters()}
+              </div>
+            )}
           </div>
         </div>
       )}
