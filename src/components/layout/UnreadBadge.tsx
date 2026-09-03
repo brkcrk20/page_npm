@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
@@ -13,10 +13,18 @@ import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
  *
  * Yeni mesaj geldiğinde rozet kendiliğinden güncelleniyor: kullanıcı mesaj
  * sayfasında değilken de bildirim alması gerekiyor.
+ *
+ * KANAL ADI BİLEŞENE ÖZEL OLMAK ZORUNDA. Supabase aynı isimli kanal için aynı
+ * nesneyi döndürüyor; rozet ekranda iki kez birden bulunduğunda (alt menü ve
+ * hesap panelinin sol menüsü) ikinci bileşen zaten subscribe() edilmiş kanala
+ * on() demeye çalışıp "cannot add postgres_changes callbacks after subscribe()"
+ * hatasıyla patlıyordu. Sabit isimle bu, rozetin ikinci bir yere eklendiği
+ * anda tüm sayfayı düşüren gizli bir tuzak oluyor.
  */
 export function UnreadBadge() {
   const { user } = useSupabaseAuth();
   const [count, setCount] = useState(0);
+  const instanceId = useId();
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClientOrNull();
@@ -31,7 +39,7 @@ export function UnreadBadge() {
     refresh();
 
     const channel = supabase
-      .channel('okunmamis-mesaj')
+      .channel(`okunmamis-mesaj-${instanceId}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
@@ -42,7 +50,7 @@ export function UnreadBadge() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, instanceId]);
 
   if (count === 0) return null;
 
