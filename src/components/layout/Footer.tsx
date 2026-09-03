@@ -60,7 +60,9 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
               <span className="text-2xl font-bold font-headline">petsemti</span>
             </Link>
             <p className="text-sm text-gray-600">
-              Evcil Hayvan Sahiplendirme platformu petsemti, yavru evcil hayvan cinsleri ve diğer tüm sahiplendirme ilanları ile yayında!
+              Semtinizdeki evcil hayvan ilanlarını ve pet hizmetlerini tek yerde
+              topluyoruz. Sahiplendirmeden güvercinciliğe, veterinerden pet oteline
+              81 ilde. İlan vermek ücretsiz.
             </p>
           </div>
 
@@ -83,8 +85,8 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
               <li><Link href="/kedi-ilanlari/british-shorthair" className={footerLinkStyle}>British Shorthair</Link></li>
               <li><Link href="/kedi-ilanlari/scottish-fold" className={footerLinkStyle}>Scottish Fold</Link></li>
               <li><Link href="/kedi-ilanlari/iran-kedisi" className={footerLinkStyle}>İran Kedisi</Link></li>
-              <li><Link href="/kedi-ilanlari/siyam-kedisi" className={footerLinkStyle}>Siyam Kedisi</Link></li>
-              <li><Link href="/kedi-ilanlari/bengal-kedisi" className={footerLinkStyle}>Bengal Kedisi</Link></li>
+              <li><Link href="/kedi-ilanlari/siyam" className={footerLinkStyle}>Siyam</Link></li>
+              <li><Link href="/kedi-ilanlari/van-kedisi" className={footerLinkStyle}>Van Kedisi</Link></li>
             </ul>
           </div>
 

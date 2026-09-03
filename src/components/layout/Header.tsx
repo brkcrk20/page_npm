@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import {
+  ChevronRight,
   Menu,
   Heart,
   LogOut,
@@ -50,15 +51,12 @@ import {
 import { SearchFilters } from '../SearchFilters';
 import { Skeleton } from '../ui/skeleton';
 
-const navLinks = [
-  { href: '/', label: 'İlanlar' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/guvenlik', label: 'Güvenlik' },
-];
+// /blog ve /guvenlik buradan KALDIRILDI: ikisi de mevcut değildi ve mobil
+// menüden tıklayan herkes 404'e düşüyordu.
 
 const serviceCategories = [
-  { icon: Heart, label: 'Sahiplendirme', href: '/' },
-  { icon: Bird, label: 'Güvercinler', href: '/guvercinler' },
+  { icon: Heart, label: 'Sahiplendirme', href: '/sahiplendirme' },
+  { icon: Bird, label: 'Güvercinler', href: '/guvercin-ilanlari' },
   { icon: Banknote, label: 'Al & Sat', href: '/al-sat' },
   { icon: HeartHandshake, label: 'Eş Arayanlar', href: '/es-arayanlar' },
   { icon: Stethoscope, label: 'Veteriner', href: '/veteriner' },
@@ -69,6 +67,59 @@ const serviceCategories = [
   { icon: Car, label: 'Pet Taksi', href: '/pet-taksi' },
   { icon: PersonStanding, label: 'Gezdirici', href: '/gezdirici' },
 ];
+
+/** Menüdeki ilan bağlantıları. Şeritteki ile aynı hedefler; burada
+ *  hepsi görünür, orada yarısı ekran dışında kalıyor. */
+const LISTING_LINKS = [
+  { href: '/', label: 'Tüm İlanlar' },
+  { href: '/sahiplendirme', label: 'Ücretsiz Sahiplendirme' },
+  { href: '/al-sat', label: 'Satılık İlanlar' },
+  { href: '/guvercin-ilanlari', label: 'Güvercin İlanları' },
+  { href: '/es-arayanlar', label: 'Eş Arayanlar' },
+];
+
+/** Şeritteki hizmet rehberleri; ilan bağlantıları menüde ayrı bölümde. */
+const SERVICE_HREFS = new Set([
+  '/veteriner',
+  '/pet-oteli',
+  '/egitmen',
+  '/pet-kuafor',
+  '/petshop',
+  '/pet-taksi',
+  '/gezdirici',
+]);
+
+function MobileGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-4">
+      <p className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </p>
+      <div className="overflow-hidden rounded-lg border">{children}</div>
+    </div>
+  );
+}
+
+function MobileLink({
+  href,
+  label,
+  onNavigate,
+}: {
+  href: string;
+  label: string;
+  onNavigate: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      className="flex items-center justify-between border-b px-3 py-2.5 text-sm font-medium last:border-b-0 hover:bg-secondary"
+    >
+      {label}
+      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+    </Link>
+  );
+}
 
 export function Header() {
   const pathname = usePathname();
@@ -92,12 +143,9 @@ export function Header() {
 
   const isLoading = !isMounted || isUserLoading || isProfileLoading;
   
-  const renderFilters = () => {
-    if (pathname === '/guvercinler') return <SearchFilters />;
-    if (pathname === '/al-sat') return <SearchFilters />;
-    if (pathname === '/es-arayanlar') return <SearchFilters />;
-    return <SearchFilters />;
-  };
+  // Dört dalı da aynı şeyi döndüren bir fonksiyondu ve dallardan biri artık
+  // var olmayan bir adresi (/guvercinler) kontrol ediyordu.
+  const renderFilters = () => <SearchFilters />;
 
   /**
    * Kategori şeridi ve arama filtreleri yalnızca ilan gezinen sayfalarda
@@ -217,25 +265,64 @@ export function Header() {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <nav className="flex flex-col space-y-4 mt-8">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setSheetOpen(false)}
-                    className={cn(
-                      'text-lg font-medium transition-colors hover:text-primary',
-                      pathname === link.href ? 'text-primary' : 'text-foreground'
+            {/* MOBİL MENÜ
+                Eskiden burada üç bağlantı vardı ve ikisi (/blog, /guvenlik)
+                mevcut olmayan sayfalara gidiyordu.
+
+                Menü silinmedi çünkü mobilde gerçek bir işi var: üstteki
+                kategori şeridi yatay kaydırılabilir ve on bir öğenin yarısı
+                ekran dışında kalıyor — yedi hizmet rehberinin çoğuna oradan
+                ulaşılamıyor. Alt menü ise yalnızca beş temel eylemi taşıyor.
+                Bu çekmece, geri kalan her şeyin tek düzenli listesi. */}
+            <SheetContent side="right" className="w-[320px] overflow-y-auto p-0 sm:w-[380px]">
+              <div className="border-b p-4">
+                <p className="font-bold">Menü</p>
+              </div>
+
+              <nav className="p-4" aria-label="Mobil menü">
+                <MobileGroup title="İlanlar">
+                  {LISTING_LINKS.map((item) => (
+                    <MobileLink key={item.href} {...item} onNavigate={() => setSheetOpen(false)} />
+                  ))}
+                </MobileGroup>
+
+                <MobileGroup title="Hizmetler">
+                  {serviceCategories
+                    .filter((c) => SERVICE_HREFS.has(c.href))
+                    .map((item) => (
+                      <MobileLink
+                        key={item.href}
+                        href={item.href}
+                        label={item.label}
+                        onNavigate={() => setSheetOpen(false)}
+                      />
+                    ))}
+                </MobileGroup>
+
+                {user ? (
+                  <MobileGroup title="Hesabım">
+                    <MobileLink href="/profil" label="Hesabım" onNavigate={() => setSheetOpen(false)} />
+                    <MobileLink href="/profil/ilanlarim" label="İlanlarım" onNavigate={() => setSheetOpen(false)} />
+                    <MobileLink href="/mesajlarim" label="Mesajlarım" onNavigate={() => setSheetOpen(false)} />
+                    <MobileLink href="/profil/favoriler" label="Favorilerim" onNavigate={() => setSheetOpen(false)} />
+                    {profile?.role === 'admin' && (
+                      <MobileLink href="/admin" label="Yönetim Paneli" onNavigate={() => setSheetOpen(false)} />
                     )}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-                <div className="border-t pt-4 flex flex-col space-y-2">
+                  </MobileGroup>
+                ) : null}
+
+                <MobileGroup title="Kurumsal">
+                  <MobileLink href="/hakkimizda" label="Hakkımızda" onNavigate={() => setSheetOpen(false)} />
+                  <MobileLink href="/iletisim" label="İletişim" onNavigate={() => setSheetOpen(false)} />
+                  <MobileLink href="/kullanim-sartlari" label="Kullanım Şartları" onNavigate={() => setSheetOpen(false)} />
+                  <MobileLink href="/gizlilik-politikasi" label="Gizlilik Politikası" onNavigate={() => setSheetOpen(false)} />
+                </MobileGroup>
+
+                <div className="mt-4 flex flex-col gap-2 border-t pt-4">
                   <Button asChild onClick={() => setSheetOpen(false)}>
-                    <Link href={user ? '/ilan-ver' : '/login'}>İlan Ver</Link>
+                    <Link href={user ? '/ilan-ver' : '/login'}>Ücretsiz İlan Ver</Link>
                   </Button>
+
                   {!isLoading && !user && (
                     <>
                       <Button variant="outline" asChild onClick={() => setSheetOpen(false)}>
@@ -246,9 +333,17 @@ export function Header() {
                       </Button>
                     </>
                   )}
+
                   {user && (
-                      <Button variant="outline" onClick={() => { handleLogout(); setSheetOpen(false); }}>
-                      <LogOut className="mr-2" />Çıkış Yap
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        handleLogout();
+                        setSheetOpen(false);
+                      }}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Çıkış Yap
                     </Button>
                   )}
                 </div>

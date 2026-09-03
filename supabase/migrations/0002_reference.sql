@@ -39,7 +39,9 @@ create table public.breeds (
   name         text not null,
   position     smallint not null default 0,
   is_active    boolean not null default true,
-  -- Cins sayfasındaki SEO metni (patibul'un asıl trafik motoru burası).
+  -- Cins sayfasındaki SEO metni. Bu sayfalar aramadan gelen trafiğin
+  -- büyük kısmını karşılıyor: kullanıcı "golden retriever yavru" arıyor,
+  -- ana sayfaya değil doğrudan cins sayfasına düşüyor.
   -- Her cins için kendi özgün içeriğimizi yazacağız.
   seo_title        text,
   seo_description  text,

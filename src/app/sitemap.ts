@@ -33,6 +33,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, lastModified: now, changeFrequency: 'hourly', priority: 1 },
     { url: `${SITE_URL}/es-arayanlar`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
+    // İlan türüne göre listeler. "Ücretsiz sahiplendirme" yüksek niyetli bir
+    // arama ve tür ayrımı yapmayan kategori sayfasına değil buraya düşmeli.
+    { url: `${SITE_URL}/sahiplendirme`, lastModified: now, changeFrequency: 'hourly', priority: 0.9 },
+    { url: `${SITE_URL}/al-sat`, lastModified: now, changeFrequency: 'hourly', priority: 0.9 },
     // Bilgilendirme ve sözleşme sayfaları. Nadiren değişiyorlar ama
     // indekslenmeleri gerekiyor: arama motorları bir pazaryerinde kullanım
     // şartları, gizlilik ve iletişim sayfasının varlığını güven sinyali

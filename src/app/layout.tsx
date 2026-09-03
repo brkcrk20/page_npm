@@ -8,11 +8,52 @@ import { Toaster } from '@/components/ui/toaster';
 import { getSiteContact } from '@/lib/queries/site-settings';
 import { SupabaseAuthProvider } from '@/lib/supabase/auth-provider';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.petsemti.com';
+
+/**
+ * Site geneli metadata.
+ *
+ * Metin, sitenin gerçekten yaptığı işi anlatıyor: ilan + hizmet rehberi +
+ * güvercin bölümü. Genel pazaryeri kalıplarından bilerek uzak duruldu; hem
+ * özgünlük hem de arama sonuçlarında ayrışmak için.
+ *
+ * Paylaşım kartları (Open Graph / Twitter) daha önce hiç tanımlanmamıştı:
+ * WhatsApp veya X'te paylaşılan her bağlantı başlıksız ve açıklamasız
+ * görünüyordu. Bu sektörde paylaşım ciddi bir trafik kaynağı.
+ */
 export const metadata: Metadata = {
-  title: 'Evcil Hayvan Sahiplenme İlanları',
-  description: 'Petsemti: Evcil hayvan ilanları, kedi sahiplendirme, köpek satış ve ücretsiz sahiplenme platformu. Semtinizdeki en güncel ilanlara ulaşmak ve güvenle hayvan sahiplenmek için tıklayın.',
-  icons: {
-    icon: '/favicon.ico',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'PetSemti — Evcil Hayvan İlanları ve Hizmet Rehberi',
+    template: '%s | PetSemti',
+  },
+  description:
+    'Semtinizdeki kedi, köpek, kuş, akvaryum ve güvercin ilanları. Sahiplendirme ve satılık ilanları ırka, ile ve ilçeye göre inceleyin; veteriner, pet oteli, kuaför ve eğitmen rehberinden size en yakınını bulun. İlan vermek ücretsiz.',
+  applicationName: 'PetSemti',
+  keywords: [
+    'evcil hayvan ilanları',
+    'kedi sahiplendirme',
+    'köpek ilanları',
+    'güvercin ilanları',
+    'veteriner',
+    'pet oteli',
+  ],
+  icons: { icon: '/favicon.ico' },
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'tr_TR',
+    siteName: 'PetSemti',
+    url: SITE_URL,
+    title: 'PetSemti — Evcil Hayvan İlanları ve Hizmet Rehberi',
+    description:
+      'Semtinizdeki sahiplendirme ve satılık hayvan ilanları, 81 ilde veteriner ve pet hizmetleri rehberi. İlan vermek ücretsiz.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PetSemti — Evcil Hayvan İlanları ve Hizmet Rehberi',
+    description:
+      'Semtinizdeki sahiplendirme ve satılık hayvan ilanları, 81 ilde veteriner ve pet hizmetleri rehberi.',
   },
 };
 

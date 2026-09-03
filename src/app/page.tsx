@@ -16,9 +16,9 @@ import { getListings, getFeaturedListings } from '@/lib/queries/listings';
  */
 
 export const metadata: Metadata = {
-  title: 'Evcil Hayvan İlanları — Sahiplendirme, Satılık Kedi ve Köpek | PetSemti',
+  title: 'Evcil Hayvan İlanları — Semtinizdeki Sahiplendirme ve Satılık İlanlar',
   description:
-    'PetSemti: evcil hayvan ilanları, kedi ve köpek sahiplendirme, satılık yavru ilanları. Semtinizdeki en güncel ilanlara ulaşın, güvenle sahiplenin.',
+    'Kedi, köpek, kuş, akvaryum ve güvercin ilanları; ırka, ile ve ilçeye göre ayrılmış listeler. Sahibiyle doğrudan görüşün, ilanınızı ücretsiz yayınlayın.',
 };
 
 // Ana sayfa sık değişen içerik gösteriyor; her istekte taze veri çekiyoruz.

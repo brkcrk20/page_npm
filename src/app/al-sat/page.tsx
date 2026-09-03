@@ -1,0 +1,41 @@
+import type { Metadata } from 'next';
+
+import { KindBrowser } from '@/components/listings/KindBrowser';
+import { getSidebarData } from '@/lib/queries/catalog';
+import { getListings } from '@/lib/queries/listings';
+
+export const metadata: Metadata = {
+  title: 'Satılık Evcil Hayvan İlanları — Al & Sat',
+  description:
+    'Satılık kedi, köpek, kuş, akvaryum ve güvercin ilanları. Irka, şehre ve fiyata göre inceleyin, satıcıyla doğrudan görüşün.',
+  alternates: { canonical: '/al-sat' },
+};
+
+export const dynamic = 'force-dynamic';
+
+export default async function Page() {
+  const [sidebar, { listings, total }] = await Promise.all([
+    getSidebarData(),
+    getListings({ kind: 'satilik', perPage: 24 }),
+  ]);
+
+  return (
+    <KindBrowser
+      title="Satılık İlanlar"
+      lead="Fiyat belirtilmiş tüm ilanlar. Irk, şehir ve fiyat aralığına göre daraltabilirsiniz."
+      listings={listings}
+      total={total}
+      sidebar={sidebar}
+      emptyMessage="Şu an yayında satılık ilan yok."
+      seo={{
+        heading: 'Satın Alırken Nelere Dikkat Etmeli?',
+        paragraphs: [
+          'İlan fiyatı tek başına bir gösterge değildir. Aynı ırkta fiyat farkı genellikle yaş, şecere kaydı, aşı durumu ve yetiştiricinin koşullarından kaynaklanır. Alışılmışın belirgin şekilde altındaki fiyatlar dikkatle değerlendirilmelidir.',
+          'Hayvanı görmeden ödeme yapmayın. Kapora, rezervasyon ücreti veya kargo bedeli adı altında önceden para isteyen ilanlar bu sektördeki en yaygın dolandırıcılık yöntemidir. Görüşmeyi hayvanın bulunduğu yerde yapın.',
+          'Aşı karnesi, varsa şecere belgesi ve sağlık raporunu satın almadan önce isteyin. Yavru alıyorsanız anneyi görmek, hem yaş hem de yetiştirme koşulları hakkında fikir verir.',
+          'Ödemeyi teslim anında yapın ve satıcıyla iletişimi ilan üzerinden sürdürün. Site dışına yönlendiren, aceleye getiren taleplere karşı temkinli olun.',
+        ],
+      }}
+    />
+  );
+}
