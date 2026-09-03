@@ -42,6 +42,9 @@ const PRESETS: Record<string, ListingPreset & { metaTitle: string; metaDescripti
   },
   'al-sat': {
     categorySlug: 'pet-malzemeleri',
+    // İkinci el eşya satılır; "ücretsiz veriyorum" seçeneği burada
+    // gereksiz bir soru. Fiyat zaten zorunlu hâle geliyor.
+    kind: 'satilik',
     title: 'Pet Malzemesi İlanı Ver',
     backHref: '/al-sat',
     backLabel: 'İkinci El Pet Malzemeleri',
