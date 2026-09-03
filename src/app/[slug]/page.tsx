@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
 import { PigeonLanding } from '@/components/listings/PigeonLanding';
 import { ListingDetail } from '@/components/listings/ListingDetail';
-import { getCategoryBySlug, getSidebarData } from '@/lib/queries/catalog';
+import { getCategories, getCategoryBySlug, getSidebarData } from '@/lib/queries/catalog';
 import {
   getListings,
   getListingById,
@@ -38,6 +38,24 @@ type Params = { slug: string };
  * görüyor, o sayfalar önbelleğe alınmıyor.
  */
 export const revalidate = 60;
+
+/**
+ * Kategori sayfalarını önceden üret.
+ *
+ * Bu rota iki işi birden görüyor: kategori sayfaları (/kopek-ilanlari) ve
+ * tek tek ilan detayları (/baslik-123). revalidate tek başına yetmiyordu —
+ * generateStaticParams olmadan Next rotayı tamamen dinamik sayıyor ve her
+ * istekte React ağacını yeniden kuruyor. Ölçüm: kategori sayfası 0,5 sn,
+ * aynı işi yapan statik /al-sat 0,07 sn.
+ *
+ * Yalnızca altı kategori üretiliyor; ilan detayları listede olmadığı için
+ * istendiğinde render edilip önbelleğe alınıyor (dynamicParams varsayılan
+ * olarak açık). Yani derleme süresi uzamıyor.
+ */
+export async function generateStaticParams() {
+  const categories = await getCategories();
+  return categories.map((category) => ({ slug: category.slug }));
+}
 
 export async function generateMetadata({
   params,

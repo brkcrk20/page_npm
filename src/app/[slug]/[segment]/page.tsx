@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
 import {
+  getBreedsByCategoryId,
+  getCategories,
   getCategoryBySlug,
   getSidebarData,
   resolveCategorySegment,
@@ -42,6 +44,32 @@ async function load(params: Params) {
  * görüyor, o sayfalar önbelleğe alınmıyor.
  */
 export const revalidate = 60;
+
+/**
+ * Cins sayfalarını önceden üret.
+ *
+ * Bu rota hem cins (/kopek-ilanlari/golden-retriever) hem şehir
+ * (/kopek-ilanlari/istanbul) sayfalarını karşılıyor. Yalnızca CİNSLER
+ * üretiliyor:
+ *
+ *  - Arama trafiğinin ağırlığı burada. Kullanıcı "golden retriever yavru"
+ *    arıyor, ana sayfaya değil doğrudan bu sayfaya düşüyor.
+ *  - Cins sayısı yönetilebilir (~190). Altı kategori × 81 il = 486 şehir
+ *    sayfasını da üretmek derleme süresini gereksiz yere uzatırdı; onlar
+ *    ilk istekte render edilip önbelleğe alınıyor.
+ */
+export async function generateStaticParams() {
+  const categories = await getCategories();
+
+  const params = await Promise.all(
+    categories.map(async (category) => {
+      const breeds = await getBreedsByCategoryId(category.id);
+      return breeds.map((breed) => ({ slug: category.slug, segment: breed.slug }));
+    })
+  );
+
+  return params.flat();
+}
 
 export async function generateMetadata({
   params,
