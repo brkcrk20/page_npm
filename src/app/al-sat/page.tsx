@@ -4,6 +4,7 @@ import { PackageSearch } from 'lucide-react';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
+import { SupplyTypeSidebar } from '@/components/listings/SupplyTypeSidebar';
 import { Button } from '@/components/ui/button';
 import {
   getBreedsByCategoryId,
@@ -51,11 +52,29 @@ export default async function Page() {
 
   const groups = new Map<string, { slug: string; name: string; count: number }[]>();
   for (const t of types) {
-    const key = (t as { group_name?: string | null }).group_name ?? 'Diğer';
+    const key = (t as { group_name?: string | null }).group_name ?? 'Genel';
     const list = groups.get(key) ?? [];
     list.push({ slug: t.slug, name: t.name, count: countBySlug.get(t.slug) ?? 0 });
     groups.set(key, list);
   }
+
+  // Hayvan türleri önce, hepsine uyan ürünler ("Genel") en sonda: menüye
+  // bakan kişi önce kendi hayvanını arıyor.
+  const GROUP_ORDER = [
+    'Köpek Eşyaları',
+    'Kedi Eşyaları',
+    'Kuş ve Güvercin',
+    'Akvaryum ve Balık',
+    'Kemirgen ve Tavşan',
+    'Sürüngen ve Teraryum',
+    'Genel',
+  ];
+  const orderedGroups: [string, { slug: string; name: string; count: number }[]][] = [
+    ...GROUP_ORDER.filter((g) => groups.has(g)).map(
+      (g) => [g, groups.get(g)!] as [string, { slug: string; name: string; count: number }[]]
+    ),
+    ...[...groups.entries()].filter(([g]) => !GROUP_ORDER.includes(g)),
+  ];
 
   return (
     <div className="bg-secondary/50">
@@ -77,42 +96,25 @@ export default async function Page() {
           <p className="mt-1 text-sm text-muted-foreground">{total} ilan bulundu</p>
         </header>
 
-        {/* Eşya türleri: ırk menüsünün yerini alıyor. */}
-        {groups.size > 0 && (
-          <section className="mb-8">
-            <h2 className="mb-3 text-lg font-bold">Kategoriler</h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {[...groups.entries()].map(([group, items]) => (
-                <div key={group} className="rounded-xl border bg-white p-4">
-                  <h3 className="mb-2 font-bold">{group}</h3>
-                  <ul className="space-y-0.5">
-                    {items.map((item) => (
-                      <li key={item.slug}>
-                        <Link
-                          href={`/pet-malzemeleri/${item.slug}`}
-                          className="flex items-baseline justify-between gap-2 rounded px-1.5 py-1 text-sm hover:bg-secondary hover:text-primary"
-                        >
-                          <span className="min-w-0 truncate">{item.name}</span>
-                          {item.count > 0 && (
-                            <span className="shrink-0 text-xs font-semibold text-muted-foreground">
-                              {item.count}
-                            </span>
-                          )}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* Mobilde kenar menüsü gizli; hayvan türü kısayolları burada. */}
+        <div className="-mx-5 mb-5 flex gap-2 overflow-x-auto px-5 pb-1 md:hidden">
+          {orderedGroups.map(([group, items]) => (
+            <Link
+              key={group}
+              href={`/pet-malzemeleri/${items[0].slug}`}
+              className="shrink-0 whitespace-nowrap rounded-lg border bg-white px-3 py-2 text-sm font-medium hover:border-primary hover:text-primary"
+            >
+              {group}
+            </Link>
+          ))}
+        </div>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-[260px_1fr]">
           <aside className="hidden md:block">
-            {/* Kategori listesi verilmiyor: burada hayvan türü seçmek anlamsız,
-                yalnızca şehir filtresi gerekiyor. */}
-            <div className="sticky top-4">
+            {/* Malzeme türleri ve şehir. Hayvan kategorisi listesi
+                verilmiyor: burada tür seçmek anlamsız. */}
+            <div className="sticky top-4 space-y-4">
+              <SupplyTypeSidebar groups={orderedGroups} />
               <CategorySidebar
                 categories={[]}
                 cities={sidebar.cities}

@@ -68,6 +68,9 @@ const schema = z
     hasHealthReport: z.boolean().default(false),
     acceptsCreditCard: z.boolean().default(false),
     shipsIntercity: z.boolean().default(false),
+    // Yalnızca pet malzemesi ilanlarında kullanılıyor; hayvan ilanında
+    // gösterilmiyor ve gönderilmiyor.
+    condition: z.enum(['sifir', 'az_kullanilmis', 'kullanilmis']).default('kullanilmis'),
   })
   // Veritabanındaki listings_price_matches_kind kısıtının aynısı. Aynı kuralı
   // burada da tutuyoruz ki kullanıcı sunucudan dönen ham kısıt hatası yerine
@@ -140,11 +143,24 @@ export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
       hasHealthReport: false,
       acceptsCreditCard: false,
       shipsIntercity: false,
+      condition: 'kullanilmis',
     },
   });
 
   const kind = form.watch('kind');
   const categoryId = form.watch('categoryId');
+
+  /**
+   * Pet malzemesi ilanı mı?
+   *
+   * Malzeme ilanında yaş, cinsiyet, aşı, pedigri gibi alanların hiçbiri
+   * anlamlı değil — bir kafesin yaşı yok. Onların yerine ürünün durumu
+   * (sıfır / az kullanılmış / kullanılmış) soruluyor.
+   */
+  const isSupply = useMemo(
+    () => categories.find((c) => String(c.id) === categoryId)?.slug === 'pet-malzemeleri',
+    [categories, categoryId]
+  );
   const cityId = form.watch('cityId');
 
   // Giriş yapmamış kullanıcıyı giriş sayfasına gönder.
@@ -323,15 +339,17 @@ export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
           description: values.description.trim(),
           price: values.kind === 'satilik' ? Number(values.price) : null,
           is_negotiable: values.isNegotiable,
-          age_months: values.ageMonths ? Number(values.ageMonths) : null,
-          gender: values.gender,
+          age_months: isSupply || !values.ageMonths ? null : Number(values.ageMonths),
+          gender: isSupply ? 'belirtilmemis' : values.gender,
           city_id: Number(values.cityId),
           district_id: values.districtId ? Number(values.districtId) : null,
-          is_vaccinated: values.isVaccinated,
-          is_dewormed_internal: values.isDewormedInternal,
-          is_dewormed_external: values.isDewormedExternal,
-          has_pedigree: values.hasPedigree,
-          has_health_report: values.hasHealthReport,
+          is_vaccinated: isSupply ? false : values.isVaccinated,
+          is_dewormed_internal: isSupply ? false : values.isDewormedInternal,
+          is_dewormed_external: isSupply ? false : values.isDewormedExternal,
+          has_pedigree: isSupply ? false : values.hasPedigree,
+          has_health_report: isSupply ? false : values.hasHealthReport,
+          // Türe özgü alanlar details içinde; malzemede ürünün durumu.
+          details: isSupply ? { condition: values.condition } : {},
           accepts_credit_card: values.acceptsCreditCard,
           ships_intercity: values.shipsIntercity,
       };
@@ -595,7 +613,9 @@ export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="satilik">Satılık</SelectItem>
-                      <SelectItem value="sahiplendirme">Ücretsiz Sahiplendirme</SelectItem>
+                      <SelectItem value="sahiplendirme">
+                        {isSupply ? 'Ücretsiz Veriyorum' : 'Ücretsiz Sahiplendirme'}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -608,10 +628,16 @@ export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
               <SelectField
                 control={form.control}
                 name="breedId"
-                label="Cins"
+                label={isSupply ? 'Malzeme Türü' : 'Cins'}
                 options={filteredBreeds}
-                searchPlaceholder="Cins ara..."
-                placeholder={categoryId ? 'Cins seçin' : 'Önce kategori seçin'}
+                searchPlaceholder={isSupply ? 'Malzeme ara...' : 'Cins ara...'}
+                placeholder={
+                  categoryId
+                    ? isSupply
+                      ? 'Malzeme türü seçin'
+                      : 'Cins seçin'
+                    : 'Önce kategori seçin'
+                }
                 disabled={!categoryId}
               />
             </div>
@@ -637,7 +663,7 @@ export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
                 <FormItem>
                   <FormLabel>Açıklama</FormLabel>
                   <FormControl>
-                    <Textarea rows={6} placeholder="Yaşı, karakteri, sağlık durumu ve teslim koşulları hakkında bilgi verin." {...field} />
+                    <Textarea rows={6} placeholder={isSupply ? 'Marka, ölçüler, kullanım süresi ve varsa kusurları yazın.' : 'Yaşı, karakteri, sağlık durumu ve teslim koşulları hakkında bilgi verin.'} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -663,6 +689,34 @@ export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
               </div>
             )}
 
+            {/* Bir kafesin yaşı ve cinsiyeti yok; malzeme ilanında bu blok
+                yerine ürünün durumu soruluyor. */}
+            {isSupply ? (
+              <FormField
+                control={form.control}
+                name="condition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ürünün Durumu</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="sifir">Sıfır / Kullanılmamış</SelectItem>
+                        <SelectItem value="az_kullanilmis">Az Kullanılmış</SelectItem>
+                        <SelectItem value="kullanilmis">Kullanılmış</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Alıcının en çok merak ettiği bilgi bu; açıklamada varsa kusurları da
+                      belirtin.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -699,6 +753,7 @@ export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
                 )}
               />
             </div>
+            )}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <SelectField control={form.control} name="cityId" label="İl" options={cities} placeholder="İl seçin" searchPlaceholder="İl ara..." />
@@ -738,15 +793,27 @@ export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
             </div>
 
             <fieldset className="space-y-3 rounded-lg border p-4">
-              <legend className="px-1 text-sm font-semibold">Sağlık ve Teslimat</legend>
+              <legend className="px-1 text-sm font-semibold">
+                {isSupply ? 'Ödeme ve Teslimat' : 'Sağlık ve Teslimat'}
+              </legend>
               <div className="grid gap-3 sm:grid-cols-2">
-                <CheckboxField control={form.control} name="isVaccinated" label="Aşıları tam" />
-                <CheckboxField control={form.control} name="isDewormedInternal" label="İç parazit yapıldı" />
-                <CheckboxField control={form.control} name="isDewormedExternal" label="Dış parazit yapıldı" />
-                <CheckboxField control={form.control} name="hasPedigree" label="Pedigrili" />
-                <CheckboxField control={form.control} name="hasHealthReport" label="Sağlık raporu var" />
+                {/* Aşı, parazit, pedigri ve sağlık raporu yalnızca canlı
+                    hayvan ilanında anlamlı. */}
+                {!isSupply && (
+                  <>
+                    <CheckboxField control={form.control} name="isVaccinated" label="Aşıları tam" />
+                    <CheckboxField control={form.control} name="isDewormedInternal" label="İç parazit yapıldı" />
+                    <CheckboxField control={form.control} name="isDewormedExternal" label="Dış parazit yapıldı" />
+                    <CheckboxField control={form.control} name="hasPedigree" label="Pedigrili" />
+                    <CheckboxField control={form.control} name="hasHealthReport" label="Sağlık raporu var" />
+                  </>
+                )}
                 <CheckboxField control={form.control} name="acceptsCreditCard" label="Kredi kartı kabul ediliyor" />
-                <CheckboxField control={form.control} name="shipsIntercity" label="Şehir dışına gönderim" />
+                <CheckboxField
+                  control={form.control}
+                  name="shipsIntercity"
+                  label={isSupply ? 'Kargo ile gönderilebilir' : 'Şehir dışına gönderim'}
+                />
               </div>
             </fieldset>
 
