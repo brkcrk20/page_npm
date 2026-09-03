@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -48,9 +48,27 @@ function SearchFiltersSkeleton() {
   return <div className="h-11 w-full animate-pulse rounded-md bg-white/20" />;
 }
 
+/** Güvercin kategorisinin adres parçası. */
+const PIGEON_SLUG = 'guvercin-ilanlari';
+
 function SearchFiltersInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  /**
+   * Güvercin bölümünde miyiz?
+   *
+   * Güvercin ayrı bir dikey: kendi ırk sınıflandırması ve kendi sayfaları
+   * var. Bu filtre çubuğu her sayfada aynı listeyi gösteriyordu, yani
+   * güvercin sayfasında köpek ve kedi türleri, sahiplendirme sayfasında da
+   * güvercin görünüyordu. İkisi de yanlış.
+   *
+   * Güvercin bölümünde tür seçici hiç gösterilmiyor (zaten güvercindesiniz)
+   * ve cins listesi güvercin ırklarına kilitleniyor. Diğer sayfalarda ise
+   * güvercin tür listesinden çıkarılıyor.
+   */
+  const inPigeonSection = pathname === `/${PIGEON_SLUG}` || pathname.startsWith(`/${PIGEON_SLUG}/`);
 
   // Statik yedekle başlıyoruz: veritabanına ulaşılamasa bile (ortam değişkeni
   // eksik, geçici kesinti) açılır listeler dolu gelir. Veritabanı erişilebilirse
@@ -113,11 +131,31 @@ function SearchFiltersInner() {
       });
   }, [selectedCity]);
 
+  const pigeonCategory = useMemo(
+    () => categories.find((c) => c.slug === PIGEON_SLUG),
+    [categories]
+  );
+
+  /** Tür listesi: güvercin bölümünde gösterilmiyor, diğer yerlerde çıkarılıyor. */
+  const visibleCategories = useMemo(
+    () => categories.filter((c) => c.slug !== PIGEON_SLUG),
+    [categories]
+  );
+
   const filteredBreeds = useMemo(() => {
-    if (categorySlug === ALL) return breeds;
+    // Güvercin bölümünde cins listesi güvercin ırklarına kilitli.
+    if (inPigeonSection) {
+      return pigeonCategory ? breeds.filter((b) => b.category_id === pigeonCategory.id) : breeds;
+    }
+    // Diğer yerlerde güvercin ırkları hiç görünmüyor.
+    const withoutPigeon = pigeonCategory
+      ? breeds.filter((b) => b.category_id !== pigeonCategory.id)
+      : breeds;
+
+    if (categorySlug === ALL) return withoutPigeon;
     const category = categories.find((c) => c.slug === categorySlug);
-    return category ? breeds.filter((b) => b.category_id === category.id) : breeds;
-  }, [breeds, categories, categorySlug]);
+    return category ? withoutPigeon.filter((b) => b.category_id === category.id) : withoutPigeon;
+  }, [breeds, categories, categorySlug, inPigeonSection, pigeonCategory]);
 
   function handleSearch() {
     // Kategori seçiliyse yapısal URL'e git: /kopek-ilanlari/toy-poodle gibi.
@@ -135,6 +173,20 @@ function SearchFiltersInner() {
       return;
     }
 
+    // Güvercin bölümünde tür seçilemiyor; arama yine de güvercin
+    // kategorisinde kalmalı, ana sayfaya düşmemeli.
+    if (inPigeonSection) {
+      const segments = [PIGEON_SLUG];
+      if (breedSlug !== ALL) segments.push(breedSlug);
+      else if (citySlug !== ALL) {
+        segments.push(citySlug);
+        if (districtSlug !== ALL) segments.push(districtSlug);
+      }
+      const q = term.trim() ? `?q=${encodeURIComponent(term.trim())}` : '';
+      router.push(`/${segments.join('/')}${q}`);
+      return;
+    }
+
     const params = new URLSearchParams();
     if (term.trim()) params.set('q', term.trim());
     if (citySlug !== ALL) params.set('city', citySlug);
@@ -144,7 +196,14 @@ function SearchFiltersInner() {
   }
 
   return (
-    <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-[1fr_auto_auto_auto_auto_auto]">
+    <div
+      className={
+        'grid w-full grid-cols-1 gap-2 ' +
+        (inPigeonSection
+          ? 'md:grid-cols-[1fr_auto_auto_auto_auto]'
+          : 'md:grid-cols-[1fr_auto_auto_auto_auto_auto]')
+      }
+    >
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -156,24 +215,29 @@ function SearchFiltersInner() {
         />
       </div>
 
-      <FilterSelect
-        value={categorySlug}
-        onChange={(v) => {
-          setCategorySlug(v);
-          setBreedSlug(ALL);
-        }}
-        placeholder="Tüm Türler"
-        allLabel="Tüm Türler"
-        searchPlaceholder="Tür ara..."
-        options={categories}
-      />
+      {/* Güvercin bölümünde tür seçici yok: ziyaretçi zaten güvercinde ve
+          oradan köpek/kedi türüne geçmek filtre değil, başka bir bölüme
+          atlamak olurdu — o iş üstteki kategori şeridinin. */}
+      {!inPigeonSection && (
+        <FilterSelect
+          value={categorySlug}
+          onChange={(v) => {
+            setCategorySlug(v);
+            setBreedSlug(ALL);
+          }}
+          placeholder="Tüm Türler"
+          allLabel="Tüm Türler"
+          searchPlaceholder="Tür ara..."
+          options={visibleCategories}
+        />
+      )}
 
       <FilterSelect
         value={breedSlug}
         onChange={setBreedSlug}
-        placeholder="Tüm Cinsler"
-        allLabel="Tüm Cinsler"
-        searchPlaceholder="Cins ara..."
+        placeholder={inPigeonSection ? 'Tüm Güvercin Irkları' : 'Tüm Cinsler'}
+        allLabel={inPigeonSection ? 'Tüm Güvercin Irkları' : 'Tüm Cinsler'}
+        searchPlaceholder={inPigeonSection ? 'Irk ara...' : 'Cins ara...'}
         options={filteredBreeds}
       />
 
