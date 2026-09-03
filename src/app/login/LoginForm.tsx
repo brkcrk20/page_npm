@@ -19,7 +19,8 @@ import React, { useState } from 'react';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const formSchema = z.object({
   loginId: z.string().min(1, { message: 'Kullanıcı adı veya e-posta gereklidir.' }),
@@ -32,6 +33,11 @@ export function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  // Hata yalnızca toast ile gösterilirse mobilde fark edilmiyor: bildirim
+  // ekranın üstünde beliriyor, kullanıcı ise formun altındaki düğmeye bakıyor.
+  // Sonuç "düğme boşa basılıyor" hissi. Hatayı düğmenin hemen üstünde de
+  // gösteriyoruz.
+  const [formError, setFormError] = useState<{ title: string; description: string } | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,7 +68,23 @@ export function LoginForm() {
     return (data as string | null) ?? null;
   }
 
+  /** Doğrulama başarısızsa ilk hatalı alana kaydır — hata ekran dışındaysa
+   *  kullanıcı hiçbir şey olmadığını sanıyordu. */
+  function onInvalid(errors: Record<string, any>) {
+    const firstKey = Object.keys(errors)[0];
+    setFormError({
+      title: 'Eksik bilgi',
+      description: String(errors[firstKey]?.message ?? 'Lütfen alanları doldurun.'),
+    });
+    const el = document.querySelector<HTMLElement>(`#login-form [name="${firstKey}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.focus({ preventScroll: true });
+    }
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setFormError(null);
     setIsLoading(true);
     let emailToLogin = values.loginId.trim();
 
@@ -72,11 +94,12 @@ export function LoginForm() {
         // Kullanıcı adı bulunamadı. Mesajı bilerek genel tutuyoruz: "böyle bir
         // kullanıcı yok" demek, hangi kullanıcı adlarının kayıtlı olduğunu
         // dışarıdan taranabilir hale getirirdi.
-        toast({
-          variant: 'destructive',
+        const failure = {
           title: 'Giriş Başarısız',
           description: 'Kullanıcı adı veya şifre hatalı. Lütfen bilgilerinizi kontrol edin.',
-        });
+        };
+        setFormError(failure);
+        toast({ variant: 'destructive', ...failure });
         setIsLoading(false);
         return;
       }
@@ -110,6 +133,7 @@ export function LoginForm() {
         description = 'Güvenlik için bir süre beklemeniz gerekiyor.';
       }
 
+      setFormError({ title, description });
       toast({ variant: 'destructive', title, description });
       setIsLoading(false);
       return;
@@ -122,7 +146,7 @@ export function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" id="login-form" noValidate>
+      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-4" id="login-form" noValidate>
         <FormField
           control={form.control}
           name="loginId"
@@ -174,6 +198,14 @@ export function LoginForm() {
             </FormItem>
           )}
         />
+        {formError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>{formError.title}</AlertTitle>
+            <AlertDescription>{formError.description}</AlertDescription>
+          </Alert>
+        )}
+
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Giriş Yap

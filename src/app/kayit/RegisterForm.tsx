@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
+  AlertCircle,
   ArrowLeft,
   Building2,
   Check,
@@ -31,6 +32,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -139,6 +141,10 @@ export function RegisterForm() {
 
   const [accountType, setAccountType] = useState<AccountType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  // Toast tek başına yetmiyor: uzun formun altındayken ekranın üstünde beliren
+  // bildirim mobilde fark edilmiyor ve düğme boşa basılmış gibi hissettiriyor.
+  // Hata ayrıca formun içinde, gönder düğmesinin hemen üstünde gösteriliyor.
+  const [formError, setFormError] = useState<{ title: string; description: string } | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -168,7 +174,26 @@ export function RegisterForm() {
     }
   }
 
+  /**
+   * Doğrulama başarısızsa hiçbir şey olmuyormuş gibi görünüyordu: hatalı alan
+   * ekranın dışındaysa kullanıcı kırmızı yazıyı göremiyor. Artık ilk hatalı
+   * alana kaydırıp özet gösteriyoruz.
+   */
+  function onInvalid(errors: Record<string, any>) {
+    const firstKey = Object.keys(errors)[0];
+    const message = errors[firstKey]?.message ?? 'Lütfen eksik alanları doldurun.';
+
+    setFormError({ title: 'Eksik veya hatalı bilgi', description: String(message) });
+
+    const el = document.querySelector<HTMLElement>(`[name="${firstKey}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.focus({ preventScroll: true });
+    }
+  }
+
   async function onSubmit(values: FormValues) {
+    setFormError(null);
     setIsLoading(true);
     const supabase = getSupabaseBrowserClient();
 
@@ -208,8 +233,9 @@ export function RegisterForm() {
       });
 
       if (error) {
-        const { title, description } = translateSignUpError(error.message);
-        toast({ variant: 'destructive', title, description });
+        const translated = translateSignUpError(error.message);
+        setFormError(translated);
+        toast({ variant: 'destructive', ...translated });
         setIsLoading(false);
         return;
       }
@@ -218,11 +244,12 @@ export function RegisterForm() {
       // adına hatasız ama kimliksiz bir yanıt döndürüyor. Bunu sessiz başarı
       // gibi göstermek kullanıcıyı çıkmaza sokuyordu.
       if (data.user && (data.user.identities?.length ?? 0) === 0) {
-        toast({
-          variant: 'destructive',
+        const dup = {
           title: 'Bu e-posta zaten kayıtlı',
-          description: 'Giriş yapmayı deneyin.',
-        });
+          description: 'Giriş yapmayı ya da şifrenizi sıfırlamayı deneyin.',
+        };
+        setFormError(dup);
+        toast({ variant: 'destructive', ...dup });
         setIsLoading(false);
         return;
       }
@@ -240,11 +267,12 @@ export function RegisterForm() {
       router.push('/');
       router.refresh();
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
+      const failure = {
         title: 'Kayıt tamamlanamadı',
         description: error?.message ?? 'Beklenmeyen bir hata oluştu.',
-      });
+      };
+      setFormError(failure);
+      toast({ variant: 'destructive', ...failure });
     } finally {
       setIsLoading(false);
     }
@@ -349,7 +377,7 @@ export function RegisterForm() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-4" noValidate>
           <Field control={form.control} name="name" label="Ad Soyad" placeholder="Adınız ve soyadınız" />
           <Field
             control={form.control}
@@ -449,6 +477,14 @@ export function RegisterForm() {
               </FormItem>
             )}
           />
+
+          {formError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>{formError.title}</AlertTitle>
+              <AlertDescription>{formError.description}</AlertDescription>
+            </Alert>
+          )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
