@@ -88,6 +88,32 @@ const ALLOWED_LICENSE =
  * Türkçe cins adları Wikipedia başlıklarıyla her zaman örtüşmüyor.
  * Sadece otomatik aramanın tutmadığı adlar burada; gerisi ad üzerinden bulunuyor.
  */
+/**
+ * DOĞRUDAN COMMONS DOSYASI eşlemeleri.
+ *
+ * Bazı ırkların Wikipedia maddesi yok ama Commons'ta ırkı gerçekten
+ * gösteren, ticari kullanıma açık fotoğrafı var. Madde araması bunları
+ * bulamıyor — "Adana taklacısı" araması şehir kolajı döndürüyor, ki bunu
+ * ırk fotoğrafı diye koymak yanlış olurdu.
+ *
+ * Buradaki her dosya tek tek doğrulandı: ırkı gösterdiği ve lisansının
+ * ticari kullanıma izin verdiği kontrol edildi.
+ *
+ * Bölgesel taklacıların (Adana, Mardin, Antep, Konya...) özgür lisanslı
+ * fotoğrafı hiçbir yerde yok; onlar bilerek boş bırakılıyor ve arayüzde
+ * güvercin silueti yedeğine düşüyorlar. Yanlış ırkın fotoğrafını
+ * göstermektense siluet dürüst.
+ */
+const COMMONS_FILES: Record<string, string> = {
+  'Taklacı Güvercin':   'File:Takla tumbler(silver bar).jpg',
+  'Urfa Taklacısı':     'File:Urfa Pigeon sport 5279.jpg',
+  'Dolapçı Güvercin':   'File:Donek.jpg',
+  'Halep Güvercini':    'File:Syrian coop tumbler(blue bar).jpg',
+  'Şam Güvercini':      'File:Damascene(barred).jpg',
+  'Makaracı Güvercin':  'File:Anatolian ringbeater(blue bar).jpg',
+  'Kuyruklu (Tavus) Güvercin': 'File:Seldschuk fantail(white).jpg',
+};
+
 const TITLE_OVERRIDES: Record<string, string[]> = {
   'Toy Poodle': ['Poodle'],
   'Maltipoo': ['Maltipoo', 'Poodle crossbreed', 'Maltese dog'],
@@ -285,10 +311,22 @@ async function main() {
         continue;
       }
 
-      const candidates = TITLE_OVERRIDES[breed.name] ?? [breed.name];
       let found: Awaited<ReturnType<typeof imageInfo>> = null;
 
-      for (const candidate of candidates) {
+      // Elle doğrulanmış Commons dosyası varsa arama yapmadan onu kullan.
+      const direct = COMMONS_FILES[breed.name];
+      if (direct) {
+        try {
+          const info = await imageInfo(direct);
+          if (info && ALLOWED_LICENSE.test(info.license)) found = info;
+        } catch {
+          // Tek bir dosya alınamadıysa aramaya devam et.
+        }
+      }
+
+      const candidates = TITLE_OVERRIDES[breed.name] ?? [breed.name];
+
+      for (const candidate of found ? [] : candidates) {
         for (const host of ['tr.wikipedia.org', 'en.wikipedia.org']) {
           try {
             const fileTitle = await findImageTitle(host, candidate);

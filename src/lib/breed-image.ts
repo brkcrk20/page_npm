@@ -96,16 +96,49 @@ function initialsFor(name: string): string {
 }
 
 /**
- * Harf tabanlı yedek görsel — inline SVG data URI.
+ * Güvercin silueti — inline SVG.
+ *
+ * Türkiye'ye özgü bölgesel taklacıların (Adana, Mardin, Antep, Konya...)
+ * özgür lisanslı fotoğrafı hiçbir arşivde yok; Commons aramaları şehir
+ * kolajı ve harita döndürüyor. Yanlış ırkın fotoğrafını koymak, hele bir
+ * alım satım sitesinde, en kötü seçenek.
+ *
+ * Harf yedeği de bu kategoride işe yaramıyordu: on altı ırkın adı
+ * "... Taklacısı" ile bittiği için baş harfler birbirine giriyordu ve
+ * liste "eksik" görünüyordu. Siluet, eksik bir görselin yerini tutmak
+ * yerine bilinçli bir simge gibi duruyor.
+ */
+function pigeonGlyph(color: string): string {
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">` +
+    `<rect width="64" height="64" rx="32" fill="${color}"/>` +
+    // Gövde, boyun ve baş tek bir yolda; kuyruk ve kanat ayrı katmanlarda.
+    `<path d="M45 22c-2.6 0-4.7 1.5-5.9 3.6-1.4-.6-3-.9-4.6-.9-6.2 0-11.3 3.9-13.3 9.3l-6.7 2.4c-.9.3-1 1.6-.1 2l6.2 2.7c.6 5 4.6 8.9 9.7 8.9h4.4c.8 0 1.3-.9.9-1.6l-2.4-3.9c4.9-1.4 8.6-5.5 9.4-10.6l4.6-4.9c.5-.5.3-1.4-.4-1.6l-2.6-.8c.5-.8.8-1.8.8-2.8 0-.9-.4-1.8-1-2.4z" fill="#fff" fill-opacity=".92"/>` +
+    // Göz
+    `<circle cx="43.4" cy="27.4" r="1.3" fill="${color}"/>` +
+    // Kanat
+    `<path d="M30 32c3.4-.4 6.6.7 8.6 3.1-2.2 2.6-5.6 3.8-9 3.1-1.9-.4-3.3-1.7-3.8-3.3.9-1.5 2.4-2.6 4.2-2.9z" fill="${color}" fill-opacity=".28"/>` +
+    `</svg>`
+  );
+}
+
+/**
+ * Görsel yokken kullanılan yedek — inline SVG data URI.
  *
  * Ağ isteği yok: 100+ cins için eksik dosya başına bir 404 isteği hem yavaş
  * hem de sunucu günlüklerini kirletirdi.
  */
-export function breedFallbackImage(breedName: string, seed: string): string {
+export function breedFallbackImage(
+  breedName: string,
+  seed: string,
+  categoryCode?: string
+): string {
   const color = colorFor(seed);
-  const initials = initialsFor(breedName);
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" rx="32" fill="${color}"/><text x="32" y="41" font-family="system-ui,sans-serif" font-size="24" font-weight="600" fill="#fff" text-anchor="middle">${initials}</text></svg>`;
+  const svg =
+    categoryCode === 'Pigeon'
+      ? pigeonGlyph(color)
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" rx="32" fill="${color}"/><text x="32" y="41" font-family="system-ui,sans-serif" font-size="24" font-weight="600" fill="#fff" text-anchor="middle">${initialsFor(breedName)}</text></svg>`;
 
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }

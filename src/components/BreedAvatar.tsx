@@ -38,7 +38,7 @@ export function BreedAvatar({
   const [failed, setFailed] = useState(false);
 
   const src = failed
-    ? breedFallbackImage(breedName, breedSlug)
+    ? breedFallbackImage(breedName, breedSlug, categoryCode)
     : breedImagePath(breedName, categorySlug, categoryCode);
 
   return (
