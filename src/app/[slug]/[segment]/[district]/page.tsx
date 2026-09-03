@@ -34,6 +34,17 @@ async function load(params: Params) {
   return { category, city, district };
 }
 
+/**
+ * 60 saniyelik önbellek.
+ *
+ * Bu rota hem kategori/cins/şehir listelerini hem de tek tek ilan
+ * detaylarını karşılıyor. İkisi de dakikalar ölçeğinde değişen içerik;
+ * her istekte Singapur'daki veritabanına gitmek yalnızca beklemeye yol
+ * açıyordu. İlan sahibi kendi değişikliğini kendi panelinden anında
+ * görüyor, o sayfalar önbelleğe alınmıyor.
+ */
+export const revalidate = 60;
+
 export async function generateMetadata({
   params,
 }: {

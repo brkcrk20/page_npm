@@ -102,6 +102,7 @@ export function CategoryBrowser({
                   activeBreedSlug={activeBreedSlug}
                   activeCitySlug={activeCitySlug}
                   cityLinkCategorySlug={category.slug}
+                  activeCategoryId={category.id}
                 />
               )}
             </div>

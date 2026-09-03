@@ -12,7 +12,13 @@ import { breedImagePath, breedImageAlt, breedFallbackImage } from '@/lib/breed-i
  * SVG olduğu için ek ağ isteği yapmaz — 100+ cinsin her biri için 404 almak
  * hem yavaş olurdu hem de sunucu günlüklerini doldururdu.
  *
- * Görselleri eklemek için: npx tsx scripts/optimize-breed-images.ts
+ * Görselleri eklemek için: npx tsx scripts/fetch-breed-images.ts
+ *
+ * PERFORMANS: unoptimized=true. Dosyalar zaten 128px WebP ve ortalama 5 KB —
+ * indirme betiği onları o boyutta üretiyor. Next.js görsel optimizasyonundan
+ * geçirmek, her biri için sunucuya ayrı bir /_next/image isteği demek ve ana
+ * sayfada bu 72 ek gidiş dönüşe çıkıyordu. 5 KB'lık bir dosyayı yeniden
+ * kodlamanın kazancı yok, maliyeti bütün sayfayı bekletmek.
  */
 export function BreedAvatar({
   breedName,
@@ -48,8 +54,7 @@ export function BreedAvatar({
         className="h-full w-full object-cover"
         loading="lazy"
         onError={() => setFailed(true)}
-        // Yedek bir data URI; Next.js optimizasyonundan geçirmenin anlamı yok.
-        unoptimized={failed}
+        unoptimized
       />
     </span>
   );

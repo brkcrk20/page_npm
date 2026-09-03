@@ -20,7 +20,9 @@ export const metadata: Metadata = {
   description: config.seoDescription,
 };
 
-export const dynamic = 'force-dynamic';
+// İşletme kayıtları nadiren değişiyor; beş dakikalık önbellek
+// her istekte veritabanına gitmekten çok daha hızlı.
+export const revalidate = 300;
 
 export default async function Page({
   searchParams,

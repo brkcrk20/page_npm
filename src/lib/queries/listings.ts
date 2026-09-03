@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { unstable_cache } from 'next/cache';
+
 /**
  * İlan sorguları — sunucu tarafı.
  *
@@ -78,7 +80,24 @@ export const DEFAULT_PER_PAGE = 24;
  * göstermek için de ona ihtiyacı var), böylece burada ikinci bir join
  * gerekmiyor ve kısmi indeksler doğrudan kullanılabiliyor.
  */
-export async function getListings(filters: ListingFilters = {}) {
+/**
+ * Filtrelenmiş ilan listesi — ÖNBELLEKLİ.
+ *
+ * Kategori, cins ve şehir sayfalarının tamamı bu fonksiyondan besleniyor ve
+ * her istek Singapur'daki veritabanına iki gidiş dönüş demekti; ölçümde
+ * sayfa başına ~0,45 saniye. Önbellek anahtarı filtre nesnesinden türüyor,
+ * yani her kombinasyon ayrı saklanıyor.
+ *
+ * Altmış saniye: yeni ilan bir dakika içinde listeye giriyor. İlan sahibi
+ * kendi ilanını zaten kendi panelinden anında görüyor.
+ */
+export const getListings = unstable_cache(
+  async (filters: ListingFilters = {}) => fetchListings(filters),
+  ['listings'],
+  { revalidate: 60, tags: ['listings'] }
+);
+
+async function fetchListings(filters: ListingFilters = {}) {
   const perPage = filters.perPage ?? DEFAULT_PER_PAGE;
   const page = Math.max(1, filters.page ?? 1);
 

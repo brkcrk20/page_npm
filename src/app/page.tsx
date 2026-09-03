@@ -21,9 +21,16 @@ export const metadata: Metadata = {
     'Kedi, köpek, kuş, akvaryum ve güvercin ilanları; ırka, ile ve ilçeye göre ayrılmış listeler. Sahibiyle doğrudan görüşün, ilanınızı ücretsiz yayınlayın.',
 };
 
-// Ana sayfa sık değişen içerik gösteriyor; her istekte taze veri çekiyoruz.
-// Trafik arttığında burada revalidate süresi tanımlanabilir.
-export const dynamic = 'force-dynamic';
+/**
+ * Her istekte taze veri çekiliyordu (force-dynamic) ve sayfa sekiz sorgu
+ * yapıyor. Veritabanı Singapur'da olduğu için bu, kullanıcı başına birkaç
+ * saniyelik bekleme demekti.
+ *
+ * Bir ilan sitesinde ana sayfanın 60 saniye gecikmeyle güncellenmesinin
+ * pratik bir maliyeti yok; ilan sahibi kendi ilanını zaten kendi
+ * sayfasından görüyor.
+ */
+export const revalidate = 60;
 
 export default async function HomePage() {
   const sidebar = await getSidebarData();

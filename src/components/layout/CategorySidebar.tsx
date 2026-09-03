@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { ChevronDown, Search } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { BreedAvatar } from '@/components/BreedAvatar';
@@ -49,17 +49,53 @@ export function CategorySidebar({
   activeCitySlug,
   /** Şehir bağlantılarının hangi kategori altına gideceği. */
   cityLinkCategorySlug = 'kopek-ilanlari',
+  /** Bulunulan kategori; menüde yalnızca onun cinsleri açık başlar. */
+  activeCategoryId,
 }: {
   categories: SidebarCategory[];
   cities: SidebarCity[];
   activeBreedSlug?: string;
   activeCitySlug?: string;
   cityLinkCategorySlug?: string;
+  activeCategoryId?: number;
 }) {
   const [tab, setTab] = useState<'kategoriler' | 'sehirler'>('kategoriler');
   const [query, setQuery] = useState('');
 
+  /**
+   * Hangi kategorilerin cins listesi açık.
+   *
+   * Eskiden hepsi açıktı ve /al-sat gibi kategori ayrımı olmayan sayfalarda
+   * menü 161 cins satırı basıyordu: hem 161 avatar isteği hem de içinde
+   * gezinilemeyecek bir duvar. Köpek ilanına bakan birine kuş ırklarının
+   * tamamını göstermenin bir faydası yok.
+   *
+   * Bulunulan kategori açık başlıyor; diğerleri tek satıra kapanıyor ve
+   * tıklanınca açılıyor. Arama yapıldığında hepsi açılıyor — kullanıcı zaten
+   * kategoriler arasında arıyor.
+   */
+  const [openCategoryIds, setOpenCategoryIds] = useState<number[] | null>(null);
+
   const normalized = query.trim().toLocaleLowerCase('tr');
+
+  const isOpen = (categoryId: number, index: number) => {
+    if (query.trim()) return true;
+    if (openCategoryIds !== null) return openCategoryIds.includes(categoryId);
+    // Varsayılan: bulunulan kategori; belirlenemiyorsa yalnızca ilki.
+    if (activeCategoryId != null) return categoryId === activeCategoryId;
+    return index === 0;
+  };
+
+  const toggleCategory = (categoryId: number, currentlyOpen: boolean) => {
+    setOpenCategoryIds((prev) => {
+      const base =
+        prev ??
+        categories
+          .filter((c, i) => (activeCategoryId != null ? c.id === activeCategoryId : i === 0))
+          .map((c) => c.id);
+      return currentlyOpen ? base.filter((id) => id !== categoryId) : [...base, categoryId];
+    });
+  };
 
   const filteredCategories = useMemo(() => {
     if (!normalized) return categories;
@@ -111,16 +147,37 @@ export function CategorySidebar({
               Sonuç bulunamadı.
             </p>
           ) : (
-            filteredCategories.map((category) => (
+            filteredCategories.map((category, index) => {
+              const open = isOpen(category.id, index);
+              return (
               <section key={category.id}>
-                <Link
-                  href={`/${category.slug}`}
-                  className="flex items-center justify-between border-y bg-secondary/40 px-4 py-2.5 text-sm font-bold hover:text-primary"
-                >
-                  <span>{category.name}</span>
-                  <span className="text-primary">{category.count}</span>
-                </Link>
+                <div className="flex items-stretch border-y bg-secondary/40">
+                  <Link
+                    href={`/${category.slug}`}
+                    className="flex flex-1 items-center justify-between px-4 py-2.5 text-sm font-bold hover:text-primary"
+                  >
+                    <span>{category.name}</span>
+                    <span className="text-primary">{category.count}</span>
+                  </Link>
+                  {/* Başlığın kendisi kategori sayfasına gidiyor; açma
+                      kapama ayrı bir düğme olmalı ki ikisi çakışmasın. */}
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(category.id, open)}
+                    aria-expanded={open}
+                    aria-label={`${category.name} cinslerini ${open ? 'gizle' : 'göster'}`}
+                    className="px-3 text-muted-foreground hover:text-primary"
+                  >
+                    <ChevronDown
+                      className={cn('h-4 w-4 transition-transform', open && 'rotate-180')}
+                    />
+                  </button>
+                </div>
 
+                {/* Kapalı kategori HİÇ basılmıyor. hidden ile gizlemek
+                    yeterli değildi: 161 satır yine DOM'a giriyor, HTML'i
+                    şişiriyor ve React'e boşuna iş çıkarıyordu. */}
+                {open && (
                 <ul>
                   {category.breeds.map((breed) => (
                     <li key={breed.id}>
@@ -148,8 +205,10 @@ export function CategorySidebar({
                     </li>
                   ))}
                 </ul>
+                )}
               </section>
-            ))
+              );
+            })
           )}
         </div>
       ) : (

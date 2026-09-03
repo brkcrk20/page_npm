@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { unstable_cache } from 'next/cache';
+
 /**
  * Katalog sorguları: kategori, cins, şehir, ilçe.
  *
@@ -83,7 +85,18 @@ export async function getCategories(): Promise<Category[]> {
   return data.length > 0 ? data : staticCategories;
 }
 
-export async function getCategoryBySlug(slug: string): Promise<Category | null> {
+/**
+ * Kategori çözümlemesi her sayfa yüklemesinde yapılıyor ve sonucu neredeyse
+ * hiç değişmiyor (altı kategori, slug'ları sabit). Singapur'daki veritabanına
+ * bunun için gitmenin anlamı yok.
+ */
+export const getCategoryBySlug = unstable_cache(
+  async (slug: string): Promise<Category | null> => fetchCategoryBySlug(slug),
+  ['category-by-slug'],
+  { revalidate: 300, tags: ['catalog'] }
+);
+
+async function fetchCategoryBySlug(slug: string): Promise<Category | null> {
   return withFallback<Category | null>(
     'getCategoryBySlug',
     async () =>
@@ -253,7 +266,28 @@ function byCountThenName<T extends { name: string; count: number }>(items: T[]):
   });
 }
 
-export async function getSidebarData(): Promise<SidebarData> {
+/**
+ * Menü verisinin ÖNBELLEKLİ hâli.
+ *
+ * Bu veri her sayfa yüklemesinde çekiliyor ve beş sorgu artı iki gidiş
+ * dönüş demek. Veritabanı ap-southeast-1'de (Singapur), uygulama ise
+ * kullanıcıya yakın bir bölgede çalışıyor; her sorgu yarım saniyeye
+ * yaklaşabiliyor. Ölçüm: ana sayfa 7 saniyede açılıyordu.
+ *
+ * İçerik nadiren değişiyor — kategori, şehir ve ırk listesi neredeyse hiç,
+ * ilan sayıları ise iki dakikalık gecikmeyle gösterilmesinde sakınca
+ * olmayacak kadar yavaş. Bu yüzden 120 saniyelik önbellek.
+ *
+ * Oturum okunmuyor (public istemci, çerez yok), bu yüzden önbellek herkes
+ * için aynı ve güvenli.
+ */
+export const getSidebarData = unstable_cache(
+  async (): Promise<SidebarData> => fetchSidebarData(),
+  ['sidebar-data'],
+  { revalidate: 120, tags: ['catalog'] }
+);
+
+async function fetchSidebarData(): Promise<SidebarData> {
   const [categories, cities] = await Promise.all([getCategories(), getCities()]);
 
   const emptyCounts = (): SidebarData => ({

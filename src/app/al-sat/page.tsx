@@ -11,7 +11,9 @@ export const metadata: Metadata = {
   alternates: { canonical: '/al-sat' },
 };
 
-export const dynamic = 'force-dynamic';
+// 60 saniyelik önbellek: sekiz sorguluk bir sayfayı her istekte
+// yeniden çalıştırmanın pratik bir kazancı yok.
+export const revalidate = 60;
 
 export default async function Page() {
   const [sidebar, { listings, total }] = await Promise.all([

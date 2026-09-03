@@ -19,7 +19,9 @@ export const metadata: Metadata = {
     'Kedi ve köpekler için eş arayan ilanları. Cins, yaş ve şehre göre uygun eşi bulun.',
 };
 
-export const dynamic = 'force-dynamic';
+// 60 saniyelik önbellek: sekiz sorguluk bir sayfayı her istekte
+// yeniden çalıştırmanın pratik bir kazancı yok.
+export const revalidate = 60;
 
 export default async function MatingListingsPage() {
   const { listings, total } = await getListings({ kind: 'es_arayan' });
