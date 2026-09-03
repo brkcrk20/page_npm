@@ -52,3 +52,7 @@ dbpassword.txt
 
 # Supabase CLI geçici dosyaları
 supabase/.temp/
+
+# Taşıma yedeği — kullanıcı verisi içerir, depoya girmemeli
+petsemti-yedek/
+tasima/
