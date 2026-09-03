@@ -9,6 +9,7 @@ import {
   Loader2,
   MoreHorizontal,
   Pause,
+  Pencil,
   Play,
   Plus,
   Rocket,
@@ -357,6 +358,13 @@ export default function MyListingsPage() {
                       </Button>
                     )}
 
+                    <Button asChild size="sm" variant="outline" className="h-8">
+                      <Link href={`/ilan-duzenle/${listing.id}`}>
+                        <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                        Düzenle
+                      </Link>
+                    </Button>
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button size="sm" variant="outline" className="h-8">
@@ -369,6 +377,12 @@ export default function MyListingsPage() {
                           <Link href={`/${listing.slug}-${listing.id}`}>
                             <Eye className="mr-2 h-4 w-4" />
                             İlanı Görüntüle
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/ilan-duzenle/${listing.id}`}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Düzenle
                           </Link>
                         </DropdownMenuItem>
 

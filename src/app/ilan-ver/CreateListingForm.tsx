@@ -34,7 +34,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
-import { LISTING_PHOTO_BUCKET } from '@/lib/supabase/storage';
+import { LISTING_PHOTO_BUCKET, listingPhotoUrl } from '@/lib/supabase/storage';
 import { prepareImages, formatBytes } from '@/lib/image-pipeline';
 import { formatTrPhone } from '@/lib/phone';
 import { prepareVideo } from '@/lib/video-pipeline';
@@ -81,7 +81,14 @@ type FormValues = z.infer<typeof schema>;
 
 type Option = { id: number; name: string; slug: string };
 
-export function CreateListingForm() {
+/**
+ * Var olan bir ilanın fotoğrafı. Yeni seçilen dosyalardan ayrı tutuluyor:
+ * biri depoda duruyor ve silinmesi kova işlemi gerektiriyor, diğeri henüz
+ * yüklenmemiş bir File.
+ */
+type ExistingPhoto = { id: number; storage_path: string; position: number };
+
+export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
   const router = useRouter();
   const { toast } = useToast();
   const { user, profile, isUserLoading, isProfileLoading } = useSupabaseAuth();
@@ -104,6 +111,13 @@ export function CreateListingForm() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
+
+  // --- Düzenleme kipi ---
+  const isEdit = listingId !== undefined;
+  const [existingPhotos, setExistingPhotos] = useState<ExistingPhoto[]>([]);
+  const [removedPhotoIds, setRemovedPhotoIds] = useState<number[]>([]);
+  const [isLoadingListing, setIsLoadingListing] = useState(isEdit);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -225,6 +239,67 @@ export function CreateListingForm() {
     setPreviews((prev) => prev.filter((_, i) => i !== index));
   }
 
+  /**
+   * Düzenleme kipinde mevcut ilanı forma yükler.
+   *
+   * Sahiplik kontrolü burada da yapılıyor ama asıl koruma RLS'te: başkasının
+   * ilanı zaten sorguda dönmüyor. Buradaki kontrol, dönmeyen bir kayıt için
+   * boş form göstermek yerine anlaşılır bir mesaj verebilmek için.
+   */
+  useEffect(() => {
+    if (!isEdit || !user) return;
+
+    const supabase = getSupabaseBrowserClient();
+    (async () => {
+      const { data, error } = await supabase
+        .from('listings')
+        .select(
+          'id, owner_id, kind, category_id, breed_id, title, description, price, is_negotiable, age_months, gender, city_id, district_id, is_vaccinated, is_dewormed_internal, is_dewormed_external, has_pedigree, has_health_report, accepts_credit_card, ships_intercity, listing_photos(id, storage_path, position)'
+        )
+        .eq('id', listingId)
+        .maybeSingle();
+
+      if (error || !data) {
+        setLoadError('İlan bulunamadı ya da düzenleme yetkiniz yok.');
+        setIsLoadingListing(false);
+        return;
+      }
+      if (data.owner_id !== user.id) {
+        setLoadError('Bu ilan size ait değil.');
+        setIsLoadingListing(false);
+        return;
+      }
+
+      form.reset({
+        kind: data.kind as 'satilik' | 'sahiplendirme',
+        categoryId: String(data.category_id),
+        breedId: data.breed_id ? String(data.breed_id) : '',
+        title: data.title,
+        description: data.description,
+        price: data.price != null ? String(data.price) : '',
+        isNegotiable: data.is_negotiable,
+        ageMonths: data.age_months != null ? String(data.age_months) : '',
+        gender: data.gender as 'erkek' | 'disi' | 'belirtilmemis',
+        cityId: String(data.city_id),
+        districtId: data.district_id ? String(data.district_id) : '',
+        isVaccinated: data.is_vaccinated,
+        isDewormedInternal: data.is_dewormed_internal,
+        isDewormedExternal: data.is_dewormed_external,
+        hasPedigree: data.has_pedigree,
+        hasHealthReport: data.has_health_report,
+        acceptsCreditCard: data.accepts_credit_card,
+        shipsIntercity: data.ships_intercity,
+      });
+
+      setExistingPhotos(
+        [...((data.listing_photos as ExistingPhoto[]) ?? [])].sort(
+          (a, b) => a.position - b.position
+        )
+      );
+      setIsLoadingListing(false);
+    })();
+  }, [isEdit, listingId, user, form]);
+
   async function onSubmit(values: FormValues) {
     if (!user) return;
 
@@ -233,15 +308,14 @@ export function CreateListingForm() {
     const uploadedPaths: string[] = [];
 
     try {
-      // 1) İlan satırını önce oluştur.
+      // 1) İlan satırını önce yaz.
       //    Fotoğrafları önce yükleyip sonra ilan eklemek, ilan eklemesi
       //    başarısız olduğunda kovada sahipsiz dosya bırakırdı.
-      setProgress('İlan kaydediliyor...');
+      setProgress(isEdit ? 'Değişiklikler kaydediliyor...' : 'İlan kaydediliyor...');
 
-      const { data: listing, error: insertError } = await supabase
-        .from('listings')
-        .insert({
-          owner_id: user.id,
+      // Alan listesi iki kipte de aynı; ayrılan tek şey owner_id ve slug
+      // (ikisi de yalnızca oluştururken anlamlı, sonrasında muhafız koruyor).
+      const fields = {
           kind: values.kind,
           category_id: Number(values.categoryId),
           breed_id: Number(values.breedId),
@@ -260,13 +334,47 @@ export function CreateListingForm() {
           has_health_report: values.hasHealthReport,
           accepts_credit_card: values.acceptsCreditCard,
           ships_intercity: values.shipsIntercity,
-          // slug, durum ve yayın tarihi sunucudaki trigger tarafından belirlenir
-          slug: 'placeholder',
-        })
-        .select('id, slug, status')
-        .single();
+      };
 
-      if (insertError) throw new Error(insertError.message);
+      const { data: listing, error: writeError } = isEdit
+        ? await supabase
+            .from('listings')
+            .update(fields)
+            .eq('id', listingId!)
+            .select('id, slug, status')
+            .single()
+        : await supabase
+            .from('listings')
+            .insert({
+              ...fields,
+              owner_id: user.id,
+              // slug, durum ve yayın tarihi sunucudaki trigger tarafından belirlenir
+              slug: 'placeholder',
+            })
+            .select('id, slug, status')
+            .single();
+
+      if (writeError) throw new Error(writeError.message);
+
+      // 1b) Düzenlemede kaldırılan fotoğraflar: önce satır, sonra dosya.
+      //     Ters sırada bir hata, ilanda gösterilecek dosyası olmayan bir
+      //     satır bırakırdı.
+      if (isEdit && removedPhotoIds.length > 0) {
+        setProgress('Kaldırılan fotoğraflar siliniyor...');
+        const removed = existingPhotos.filter((p) => removedPhotoIds.includes(p.id));
+
+        const { error: deleteRowError } = await supabase
+          .from('listing_photos')
+          .delete()
+          .in('id', removedPhotoIds);
+        if (deleteRowError) throw new Error(deleteRowError.message);
+
+        if (removed.length > 0) {
+          await supabase.storage
+            .from(LISTING_PHOTO_BUCKET)
+            .remove(removed.map((p) => p.storage_path));
+        }
+      }
 
       // 2) Fotoğrafları hazırla: küçült, WebP'ye çevir, SEO uyumlu ad ver.
       //    Bu adım gönderim anında yapılıyor çünkü dosya adı ilan başlığından
@@ -367,21 +475,28 @@ export function CreateListingForm() {
 
       if (uploadedPaths.length > 0) {
         setProgress('Fotoğraflar ilana bağlanıyor...');
+
+        // listing_photos'ta (listing_id, position) tekil. Düzenlemede yeni
+        // fotoğraflar, KALAN fotoğrafların en büyük sırasından sonra
+        // başlamalı; sıfırdan başlatmak çakışma hatası verirdi.
+        const kept = existingPhotos.filter((p) => !removedPhotoIds.includes(p.id));
+        const offset = kept.length > 0 ? Math.max(...kept.map((p) => p.position)) + 1 : 0;
+
         const { error: photoError } = await supabase.from('listing_photos').insert(
-          uploadedPaths.map((storage_path, position) => ({
+          uploadedPaths.map((storage_path, index) => ({
             listing_id: listing.id,
             storage_path,
-            position,
+            position: offset + index,
           }))
         );
         if (photoError) throw new Error(`Fotoğraflar kaydedilemedi: ${photoError.message}`);
       }
 
       toast({
-        title: 'İlanınız oluşturuldu',
+        title: isEdit ? 'İlanınız güncellendi' : 'İlanınız oluşturuldu',
         description:
           listing.status === 'yayinda'
-            ? 'İlanınız yayına alındı.'
+            ? 'İlanınız yayında.'
             : 'İlanınız onay bekliyor, kısa sürede yayınlanacak.',
       });
 
@@ -391,7 +506,7 @@ export function CreateListingForm() {
       console.error(error);
       toast({
         variant: 'destructive',
-        title: 'İlan oluşturulamadı',
+        title: isEdit ? 'İlan güncellenemedi' : 'İlan oluşturulamadı',
         description: error?.message ?? 'Beklenmeyen bir hata oluştu.',
       });
     } finally {
@@ -435,10 +550,30 @@ export function CreateListingForm() {
     );
   }
 
+  if (isLoadingListing) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="mx-auto max-w-lg px-5 py-16 text-center">
+        <h1 className="text-2xl font-bold">İlan açılamadı</h1>
+        <p className="mt-2 text-muted-foreground">{loadError}</p>
+        <Button asChild className="mt-6">
+          <Link href="/profil/ilanlarim">İlanlarıma Dön</Link>
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <Card className="mx-auto my-6 max-w-3xl">
       <CardHeader>
-        <CardTitle>Yeni İlan Ver</CardTitle>
+        <CardTitle>{isEdit ? 'İlanı Düzenle' : 'Yeni İlan Ver'}</CardTitle>
         <CardDescription>
           Sahiplendirme ilanları ücretsizdir. Bilgileri eksiksiz doldurmanız ilanınızın daha
           hızlı ilgi görmesini sağlar.
@@ -618,6 +753,35 @@ export function CreateListingForm() {
             <div className="space-y-3">
               <FormLabel>Fotoğraflar</FormLabel>
               <div className="flex flex-wrap gap-3">
+                {/* Depoda duran fotoğraflar. Kaldırma işareti anında
+                    uygulanmıyor; kayıt anında satır ve dosya birlikte
+                    siliniyor — vazgeçen kullanıcı fotoğrafını kaybetmesin. */}
+                {existingPhotos
+                  .filter((photo) => !removedPhotoIds.includes(photo.id))
+                  .map((photo, i) => {
+                    const url = listingPhotoUrl(photo.storage_path);
+                    return (
+                      <div key={photo.id} className="relative h-24 w-24 overflow-hidden rounded-md border">
+                        {url && (
+                          <Image src={url} alt={`Mevcut fotoğraf ${i + 1}`} fill sizes="96px" className="object-cover" />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setRemovedPhotoIds((prev) => [...prev, photo.id])}
+                          className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white"
+                          aria-label="Fotoğrafı kaldır"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                        {i === 0 && (
+                          <span className="absolute bottom-0 w-full bg-black/60 text-center text-[10px] text-white">
+                            Kapak
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+
                 {previews.map((src, i) => (
                   <div key={src} className="relative h-24 w-24 overflow-hidden rounded-md border">
                     <Image src={src} alt={`Fotoğraf ${i + 1}`} fill className="object-cover" unoptimized />
@@ -645,6 +809,18 @@ export function CreateListingForm() {
                   </label>
                 )}
               </div>
+              {removedPhotoIds.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {removedPhotoIds.length} fotoğraf kaydettiğinizde silinecek.{' '}
+                  <button
+                    type="button"
+                    onClick={() => setRemovedPhotoIds([])}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Geri al
+                  </button>
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 En fazla {MAX_PHOTOS} fotoğraf. Yüklenirken otomatik küçültülüp WebP'ye çevrilir; ilk fotoğraf kapak olur.
               </p>
@@ -671,7 +847,7 @@ export function CreateListingForm() {
                   {progress ?? 'Kaydediliyor...'}
                 </>
               ) : (
-                'İlanı Yayınla'
+                isEdit ? 'Değişiklikleri Kaydet' : 'İlanı Yayınla'
               )}
             </Button>
           </form>
