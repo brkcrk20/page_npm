@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, Upload, X } from 'lucide-react';
+import { Loader2, Phone, Upload, X } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +36,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import { LISTING_PHOTO_BUCKET } from '@/lib/supabase/storage';
 import { prepareImages, formatBytes } from '@/lib/image-pipeline';
+import { formatTrPhone } from '@/lib/phone';
 import { prepareVideo } from '@/lib/video-pipeline';
 import { VideoUploader, type SelectedVideo } from '@/components/listings/VideoUploader';
 import { LISTING_VIDEO_BUCKET } from '@/lib/supabase/storage';
@@ -59,7 +61,6 @@ const schema = z
     gender: z.enum(['erkek', 'disi', 'belirtilmemis']).default('belirtilmemis'),
     cityId: z.string().min(1, 'İl seçin.'),
     districtId: z.string().optional(),
-    contactPhone: z.string().optional(),
     isVaccinated: z.boolean().default(false),
     isDewormedInternal: z.boolean().default(false),
     isDewormedExternal: z.boolean().default(false),
@@ -83,7 +84,7 @@ type Option = { id: number; name: string; slug: string };
 export function CreateListingForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, isUserLoading } = useSupabaseAuth();
+  const { user, profile, isUserLoading, isProfileLoading } = useSupabaseAuth();
 
   const [categories, setCategories] = useState<Option[]>([]);
   const [breeds, setBreeds] = useState<(Option & { category_id: number })[]>([]);
@@ -118,7 +119,6 @@ export function CreateListingForm() {
       gender: 'belirtilmemis',
       cityId: '',
       districtId: '',
-      contactPhone: '',
       isVaccinated: false,
       isDewormedInternal: false,
       isDewormedExternal: false,
@@ -253,7 +253,6 @@ export function CreateListingForm() {
           gender: values.gender,
           city_id: Number(values.cityId),
           district_id: values.districtId ? Number(values.districtId) : null,
-          contact_phone: values.contactPhone?.trim() || null,
           is_vaccinated: values.isVaccinated,
           is_dewormed_internal: values.isDewormedInternal,
           is_dewormed_external: values.isDewormedExternal,
@@ -402,7 +401,7 @@ export function CreateListingForm() {
     }
   }
 
-  if (isUserLoading) {
+  if (isUserLoading || isProfileLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -411,6 +410,30 @@ export function CreateListingForm() {
   }
 
   if (!user) return null;
+
+  /**
+   * Telefonsuz ilan verilemiyor — kural veritabanında (listings_guard) ama
+   * kullanıcıyı formun tamamını doldurup en sonda hataya çarptırmak kötü bir
+   * deneyim. Eksik olan tek şeyi baştan söyleyip doğrudan oraya gönderiyoruz.
+   */
+  if (!profile?.phone) {
+    return (
+      <div className="mx-auto max-w-lg px-5 py-16 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <Phone className="h-6 w-6 text-primary" />
+        </div>
+        <h1 className="mt-4 text-2xl font-bold">Önce telefon numaranızı ekleyin</h1>
+        <p className="mt-2 text-muted-foreground">
+          Alıcılar size ilanınızdaki numaradan ulaşacak. Numaranız profilinizde tutuluyor;
+          bir kez eklediğinizde bütün ilanlarınızda kullanılır ve değiştirdiğinizde
+          hepsinde birden güncellenir.
+        </p>
+        <Button asChild className="mt-6">
+          <Link href="/profil/hesap">Telefon Numarası Ekle</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <Card className="mx-auto my-6 max-w-3xl">
@@ -555,19 +578,29 @@ export function CreateListingForm() {
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="contactPhone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>İletişim Telefonu</FormLabel>
-                  <FormControl>
-                    <Input placeholder="5551112233" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Telefon artık ilana değil profile bağlı: kullanıcı numarasını
+                değiştirdiğinde eski ilanlarda ulaşılamaz bir numara kalıyordu.
+                Buradaki kutu yalnızca hangi numaranın görüneceğini bildiriyor;
+                değeri veritabanı yazıyor (bkz. listings_guard). */}
+            <div className="rounded-lg border bg-secondary/40 p-4">
+              <div className="flex items-start gap-3">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1 text-sm">
+                  <p className="font-medium">İlanda görünecek telefon</p>
+                  <p className="mt-0.5 font-mono text-base">{formatTrPhone(profile?.phone) || '—'}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Profilinizdeki numara kullanılıyor. Numaranızı değiştirdiğinizde tüm
+                    ilanlarınızda otomatik güncellenir.
+                  </p>
+                  <Link
+                    href="/profil/hesap"
+                    className="mt-1 inline-block text-xs font-medium text-primary hover:underline"
+                  >
+                    Numarayı değiştir
+                  </Link>
+                </div>
+              </div>
+            </div>
 
             <fieldset className="space-y-3 rounded-lg border p-4">
               <legend className="px-1 text-sm font-semibold">Sağlık ve Teslimat</legend>

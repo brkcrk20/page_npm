@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { Building2, Loader2, Phone } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -64,7 +65,7 @@ const DEFAULT_DAY: DayHours = { isClosed: false, is24h: false, opens: '09:00', c
 export function RegisterServiceForm({ config }: { config: ServiceConfig }) {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, isUserLoading } = useSupabaseAuth();
+  const { user, profile, isUserLoading, isProfileLoading } = useSupabaseAuth();
 
   const [cities, setCities] = useState<Option[]>([]);
   const [districts, setDistricts] = useState<Option[]>([]);
@@ -216,7 +217,7 @@ export function RegisterServiceForm({ config }: { config: ServiceConfig }) {
     }
   }
 
-  if (isUserLoading) {
+  if (isUserLoading || isProfileLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -224,6 +225,59 @@ export function RegisterServiceForm({ config }: { config: ServiceConfig }) {
     );
   }
   if (!user) return null;
+
+  /**
+   * Rehber kaydı işletmelere ait. Kural veritabanında
+   * (service_providers_guard) ama uzun formu doldurtup en sonda reddetmek
+   * kötü bir deneyim; eksik olan tek şey baştan söyleniyor.
+   *
+   * Kurumsala geçiş kapalı bir kapı değil: hesap bilgilerinden firma
+   * bilgileri doldurularak yükseltilebiliyor.
+   */
+  if (profile?.account_type !== 'kurumsal') {
+    return (
+      <div className="mx-auto max-w-lg px-5 py-16 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <Building2 className="h-6 w-6 text-primary" />
+        </div>
+        <h1 className="mt-4 text-2xl font-bold">Bu bölüm işletmelere özel</h1>
+        <p className="mt-2 text-muted-foreground">
+          {config.label} rehberine yalnızca kurumsal hesaplar kayıt açabilir. Hesabınız şu
+          an bireysel görünüyor.
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          İşletme sahibiyseniz firma ünvanı, vergi dairesi, vergi numarası ve adres
+          bilgilerinizi girerek kurumsal hesaba geçebilirsiniz.
+        </p>
+        <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
+          <Button asChild>
+            <Link href="/profil/hesap">Kurumsal Hesaba Geç</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/${config.slug}`}>{config.label} Rehberine Dön</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile?.phone) {
+    return (
+      <div className="mx-auto max-w-lg px-5 py-16 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <Phone className="h-6 w-6 text-primary" />
+        </div>
+        <h1 className="mt-4 text-2xl font-bold">Önce telefon numaranızı ekleyin</h1>
+        <p className="mt-2 text-muted-foreground">
+          Rehberdeki kayıtlara müşteriler telefonla ulaşıyor. Numaranız profilinizde
+          tutuluyor.
+        </p>
+        <Button asChild className="mt-6">
+          <Link href="/profil/hesap">Telefon Numarası Ekle</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <Card className="mx-auto my-6 max-w-3xl">

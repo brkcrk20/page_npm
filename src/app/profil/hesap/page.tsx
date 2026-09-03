@@ -23,7 +23,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
+import { formatTrPhone } from '@/lib/phone';
 import { AvatarUploader } from './AvatarUploader';
+import { UpgradeToCorporate } from './UpgradeToCorporate';
 
 /**
  * Hesap bilgilerim.
@@ -60,7 +62,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     setFullName(profile?.full_name ?? '');
-    setPhone(profile?.phone ?? '');
+    setPhone(formatTrPhone(profile?.phone));
     setBio(profile?.bio ?? '');
     setCompanyTitle(profile?.company_title ?? '');
   }, [profile?.full_name, profile?.phone, profile?.bio, profile?.company_title]);
@@ -181,8 +183,12 @@ export default function AccountPage() {
               id="phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="5xx xxx xx xx"
+              placeholder="05xx xxx xx xx"
             />
+            <p className="text-xs text-muted-foreground">
+              İlan verebilmek için gerekli. İlanlarınızda bu numara görünür; burada
+              değiştirdiğinizde hepsinde birden güncellenir.
+            </p>
           </div>
 
           {isCorporate && (
@@ -215,6 +221,8 @@ export default function AccountPage() {
           </div>
         </CardContent>
       </Card>
+
+      <UpgradeToCorporate />
 
       <Card>
         <CardHeader>

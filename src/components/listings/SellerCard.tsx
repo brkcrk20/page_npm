@@ -3,6 +3,7 @@
 import Image from 'next/image';
 
 import { avatarUrl } from '@/lib/supabase/storage';
+import { formatTrPhone, whatsappNumber } from '@/lib/phone';
 import Link from 'next/link';
 import { useState } from 'react';
 import { BadgeCheck, MessageCircle, Phone, Mail } from 'lucide-react';
@@ -61,8 +62,9 @@ export function SellerCard({
     window.location.href = `tel:${phone.replace(/\s/g, '')}`;
   }
 
-  const whatsappHref = phone
-    ? `https://wa.me/90${phone.replace(/\D/g, '').replace(/^90/, '').replace(/^0/, '')}`
+  const waNumber = whatsappNumber(phone);
+  const whatsappHref = waNumber
+    ? `https://wa.me/${waNumber}`
     : null;
 
   return (
@@ -116,7 +118,7 @@ export function SellerCard({
               className="flex w-full items-center gap-3 rounded-md border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary"
             >
               <Phone className="h-4 w-4 shrink-0 text-primary" />
-              {revealed && phone ? phone : 'Telefonu Göster'}
+              {revealed && phone ? formatTrPhone(phone) : 'Telefonu Göster'}
             </button>
           )}
 
