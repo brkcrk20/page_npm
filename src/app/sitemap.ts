@@ -33,6 +33,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, lastModified: now, changeFrequency: 'hourly', priority: 1 },
     { url: `${SITE_URL}/es-arayanlar`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
+    // Bilgilendirme ve sözleşme sayfaları. Nadiren değişiyorlar ama
+    // indekslenmeleri gerekiyor: arama motorları bir pazaryerinde kullanım
+    // şartları, gizlilik ve iletişim sayfasının varlığını güven sinyali
+    // olarak değerlendiriyor.
+    { url: `${SITE_URL}/hakkimizda`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${SITE_URL}/iletisim`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${SITE_URL}/kullanim-sartlari`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${SITE_URL}/gizlilik-politikasi`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${SITE_URL}/gorsel-kaynaklari`, lastModified: now, changeFrequency: 'monthly', priority: 0.2 },
     // Yedi hizmet rehberinin kök sayfaları
     ...SERVICE_CONFIGS.map((service) => ({
       url: `${SITE_URL}/${service.slug}`,
