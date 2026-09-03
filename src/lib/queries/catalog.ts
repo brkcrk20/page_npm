@@ -40,7 +40,14 @@ export type Category = {
   seo_title?: string | null;
   seo_description?: string | null;
 };
-export type Breed = { id: number; slug: string; name: string; category_id: number };
+export type Breed = {
+  id: number;
+  slug: string;
+  name: string;
+  category_id: number;
+  /** Alt tür grubu; güvercinde ırk grubu, malzemede eşya grubu. */
+  group_name?: string | null;
+};
 export type City = { id: number; slug: string; name: string };
 export type District = { id: number; slug: string; name: string; city_id: number };
 
@@ -115,7 +122,7 @@ export async function getBreedsByCategoryId(categoryId: number): Promise<Breed[]
     async () =>
       createSupabasePublicClient()
         .from('breeds')
-        .select('id, slug, name, category_id')
+        .select('id, slug, name, category_id, group_name')
         .eq('category_id', categoryId)
         .eq('is_active', true)
         .order('position'),
@@ -130,7 +137,7 @@ export async function getBreed(categoryId: number, breedSlug: string): Promise<B
     async () =>
       createSupabasePublicClient()
         .from('breeds')
-        .select('id, slug, name, category_id')
+        .select('id, slug, name, category_id, group_name')
         .eq('category_id', categoryId)
         .eq('slug', breedSlug)
         .maybeSingle(),
@@ -236,6 +243,33 @@ export async function resolveCategorySegment(
  */
 export function withoutPigeons<T extends { code: string }>(categories: T[]): T[] {
   return categories.filter((c) => c.code !== 'Pigeon');
+}
+
+/**
+ * Genel hayvan listelerinde görünmemesi gereken kategoriler.
+ *
+ * Güvercin kendi dikeyinde; pet malzemeleri ise hayvan bile değil — kafes ve
+ * akvaryum, sahiplendirme listesinde kedi köpeğin arasında görünmemeli.
+ */
+const NON_ANIMAL_CODES = ['Pigeon', 'Supply'];
+
+export function animalCategories<T extends { code: string }>(categories: T[]): T[] {
+  return categories.filter((c) => !NON_ANIMAL_CODES.includes(c.code));
+}
+
+export function categoryIdsByCode(
+  categories: { id: number; code: string }[],
+  codes: string[]
+): number[] {
+  return categories.filter((c) => codes.includes(c.code)).map((c) => c.id);
+}
+
+export function nonAnimalCategoryIds(categories: { id: number; code: string }[]): number[] {
+  return categoryIdsByCode(categories, NON_ANIMAL_CODES);
+}
+
+export function supplyCategoryId(categories: { id: number; code: string }[]): number | null {
+  return categories.find((c) => c.code === 'Supply')?.id ?? null;
 }
 
 export function pigeonCategoryId(categories: { id: number; code: string }[]): number | null {

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import { KindBrowser } from '@/components/listings/KindBrowser';
-import { getSidebarData, pigeonCategoryId, withoutPigeons } from '@/lib/queries/catalog';
+import { animalCategories, getSidebarData, nonAnimalCategoryIds } from '@/lib/queries/catalog';
 import { getListings } from '@/lib/queries/listings';
 
 export const metadata: Metadata = {
@@ -21,10 +21,11 @@ export default async function Page() {
   // Güvercin bu listede yok: kendi sayfası, kendi ırk menüsü ve kendi
   // terminolojisi var. Kedi ve köpeklerin arasında görünmesi güvercin
   // arayana da diğerlerine de yaramıyor.
-  const pigeonId = pigeonCategoryId(sidebar.categories);
+  // Güvercin kendi dikeyinde, pet malzemeleri hayvan bile değil.
+  const disaridakiler = nonAnimalCategoryIds(sidebar.categories);
 
   const { listings, total } = await getListings({
-    excludeCategoryIds: pigeonId ? [pigeonId] : undefined,
+    excludeCategoryIds: disaridakiler.length ? disaridakiler : undefined,
     kind: 'sahiplendirme', perPage: 24 });
 
   return (
@@ -33,7 +34,7 @@ export default async function Page() {
       lead="Yuva arayan dostlar. Bu sayfadaki ilanlarda ücret talep edilmez."
       listings={listings}
       total={total}
-      sidebar={{ ...sidebar, categories: withoutPigeons(sidebar.categories) }}
+      sidebar={{ ...sidebar, categories: animalCategories(sidebar.categories) }}
       emptyMessage="Şu an yayında sahiplendirme ilanı yok."
       seo={{
         heading: 'Sahiplendirme İlanları Hakkında',

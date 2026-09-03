@@ -48,8 +48,10 @@ function SearchFiltersSkeleton() {
   return <div className="h-11 w-full animate-pulse rounded-md bg-white/20" />;
 }
 
-/** Güvercin kategorisinin adres parçası. */
+/** Kendi dikeyi olan kategoriler; genel tür listesinde görünmezler. */
 const PIGEON_SLUG = 'guvercin-ilanlari';
+const SUPPLY_SLUG = 'pet-malzemeleri';
+const OWN_SECTION_SLUGS = [PIGEON_SLUG, SUPPLY_SLUG];
 
 function SearchFiltersInner() {
   const router = useRouter();
@@ -69,6 +71,18 @@ function SearchFiltersInner() {
    * güvercin tür listesinden çıkarılıyor.
    */
   const inPigeonSection = pathname === `/${PIGEON_SLUG}` || pathname.startsWith(`/${PIGEON_SLUG}/`);
+
+  /**
+   * Malzeme bölümü: /al-sat ve /pet-malzemeleri.
+   *
+   * Burada satılan hayvan değil eşya; tür ve ırk seçicilerinin ikisi de
+   * anlamsız. Yerlerini eşya türü listesi alıyor ve o listeyi sayfanın
+   * kendisi gösteriyor.
+   */
+  const inSupplySection =
+    pathname === '/al-sat' ||
+    pathname === `/${SUPPLY_SLUG}` ||
+    pathname.startsWith(`/${SUPPLY_SLUG}/`);
 
   // Statik yedekle başlıyoruz: veritabanına ulaşılamasa bile (ortam değişkeni
   // eksik, geçici kesinti) açılır listeler dolu gelir. Veritabanı erişilebilirse
@@ -136,9 +150,14 @@ function SearchFiltersInner() {
     [categories]
   );
 
-  /** Tür listesi: güvercin bölümünde gösterilmiyor, diğer yerlerde çıkarılıyor. */
+  const supplyCategory = useMemo(
+    () => categories.find((c) => c.slug === SUPPLY_SLUG),
+    [categories]
+  );
+
+  /** Genel tür listesi: kendi dikeyi olan kategoriler burada görünmez. */
   const visibleCategories = useMemo(
-    () => categories.filter((c) => c.slug !== PIGEON_SLUG),
+    () => categories.filter((c) => !OWN_SECTION_SLUGS.includes(c.slug)),
     [categories]
   );
 
@@ -147,15 +166,19 @@ function SearchFiltersInner() {
     if (inPigeonSection) {
       return pigeonCategory ? breeds.filter((b) => b.category_id === pigeonCategory.id) : breeds;
     }
-    // Diğer yerlerde güvercin ırkları hiç görünmüyor.
-    const withoutPigeon = pigeonCategory
-      ? breeds.filter((b) => b.category_id !== pigeonCategory.id)
-      : breeds;
+    // Malzeme bölümünde eşya türlerine kilitli.
+    if (inSupplySection) {
+      return supplyCategory ? breeds.filter((b) => b.category_id === supplyCategory.id) : [];
+    }
 
-    if (categorySlug === ALL) return withoutPigeon;
+    // Diğer yerlerde kendi dikeyi olan kategorilerin alt türleri görünmez.
+    const ownIds = [pigeonCategory?.id, supplyCategory?.id].filter(Boolean) as number[];
+    const animalsOnly = breeds.filter((b) => !ownIds.includes(b.category_id));
+
+    if (categorySlug === ALL) return animalsOnly;
     const category = categories.find((c) => c.slug === categorySlug);
-    return category ? withoutPigeon.filter((b) => b.category_id === category.id) : withoutPigeon;
-  }, [breeds, categories, categorySlug, inPigeonSection, pigeonCategory]);
+    return category ? animalsOnly.filter((b) => b.category_id === category.id) : animalsOnly;
+  }, [breeds, categories, categorySlug, inPigeonSection, inSupplySection, pigeonCategory, supplyCategory]);
 
   function handleSearch() {
     // Kategori seçiliyse yapısal URL'e git: /kopek-ilanlari/toy-poodle gibi.
@@ -175,8 +198,8 @@ function SearchFiltersInner() {
 
     // Güvercin bölümünde tür seçilemiyor; arama yine de güvercin
     // kategorisinde kalmalı, ana sayfaya düşmemeli.
-    if (inPigeonSection) {
-      const segments = [PIGEON_SLUG];
+    if (inPigeonSection || inSupplySection) {
+      const segments = [inPigeonSection ? PIGEON_SLUG : SUPPLY_SLUG];
       if (breedSlug !== ALL) segments.push(breedSlug);
       else if (citySlug !== ALL) {
         segments.push(citySlug);
@@ -199,7 +222,7 @@ function SearchFiltersInner() {
     <div
       className={
         'grid w-full grid-cols-1 gap-2 ' +
-        (inPigeonSection
+        (inPigeonSection || inSupplySection
           ? 'md:grid-cols-[1fr_auto_auto_auto_auto]'
           : 'md:grid-cols-[1fr_auto_auto_auto_auto_auto]')
       }
@@ -218,7 +241,7 @@ function SearchFiltersInner() {
       {/* Güvercin bölümünde tür seçici yok: ziyaretçi zaten güvercinde ve
           oradan köpek/kedi türüne geçmek filtre değil, başka bir bölüme
           atlamak olurdu — o iş üstteki kategori şeridinin. */}
-      {!inPigeonSection && (
+      {!inPigeonSection && !inSupplySection && (
         <FilterSelect
           value={categorySlug}
           onChange={(v) => {
@@ -235,9 +258,9 @@ function SearchFiltersInner() {
       <FilterSelect
         value={breedSlug}
         onChange={setBreedSlug}
-        placeholder={inPigeonSection ? 'Tüm Güvercin Irkları' : 'Tüm Cinsler'}
-        allLabel={inPigeonSection ? 'Tüm Güvercin Irkları' : 'Tüm Cinsler'}
-        searchPlaceholder={inPigeonSection ? 'Irk ara...' : 'Cins ara...'}
+        placeholder={inPigeonSection ? 'Tüm Güvercin Irkları' : inSupplySection ? 'Tüm Malzemeler' : 'Tüm Cinsler'}
+        allLabel={inPigeonSection ? 'Tüm Güvercin Irkları' : inSupplySection ? 'Tüm Malzemeler' : 'Tüm Cinsler'}
+        searchPlaceholder={inPigeonSection ? 'Irk ara...' : inSupplySection ? 'Malzeme ara...' : 'Cins ara...'}
         options={filteredBreeds}
       />
 
