@@ -57,7 +57,7 @@ export function slugify(text: string): string {
 // Kategoriler
 // ---------------------------------------------------------------------------
 
-export type CategoryType = 'Dog' | 'Cat' | 'Bird' | 'Aquarium' | 'Other';
+export type CategoryType = 'Dog' | 'Cat' | 'Bird' | 'Aquarium' | 'Other' | 'Pigeon';
 
 export type CategoryDef = {
   /** URL'de görünen slug. */
@@ -73,6 +73,7 @@ export const CATEGORY_DEFS: CategoryDef[] = [
   { slug: 'kedi-ilanlari', type: 'Cat', title: 'Kedi İlanları' },
   { slug: 'kus-ilanlari', type: 'Bird', title: 'Kuş İlanları' },
   { slug: 'akvaryum-ilanlari', type: 'Aquarium', title: 'Akvaryum İlanları' },
+  { slug: 'guvercin-ilanlari', type: 'Pigeon', title: 'Güvercin İlanları' },
   { slug: 'diger-ilanlar', type: 'Other', title: 'Diğer İlanlar' },
 ];
 

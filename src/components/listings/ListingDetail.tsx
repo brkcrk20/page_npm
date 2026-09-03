@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ChevronsLeft, ChevronsRight, Eye } from 'lucide-react';
 
 import { ListingGallery } from '@/components/listings/ListingGallery';
+import { ListingVideos } from '@/components/listings/ListingVideos';
 import { ListingActions } from '@/components/listings/ListingActions';
 import { SellerCard } from '@/components/listings/SellerCard';
 import { ListingGrid } from '@/components/listings/ListingGrid';
@@ -56,6 +57,16 @@ type DetailListing = {
   cities: { id: number; name: string; slug: string } | null;
   districts: { id: number; name: string; slug: string } | null;
   listing_photos: { storage_path: string; position: number }[];
+  listing_videos?: {
+    id: number;
+    provider: string;
+    storage_path: string | null;
+    playback_url: string | null;
+    duration_seconds: number | null;
+    position: number;
+    title: string | null;
+    status: string;
+  }[];
 };
 
 const GENDER_LABELS: Record<string, string> = {
@@ -237,7 +248,10 @@ export function ListingDetail({
 
         {/* --- Üç sütun --- */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
-          <ListingGallery photos={listing.listing_photos ?? []} title={listing.title} />
+          <div className="space-y-4">
+            <ListingGallery photos={listing.listing_photos ?? []} title={listing.title} />
+            <ListingVideos videos={listing.listing_videos ?? []} title={listing.title} />
+          </div>
 
           {/* Özellik tablosu */}
           <div>

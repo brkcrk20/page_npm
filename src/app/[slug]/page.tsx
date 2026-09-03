@@ -2,11 +2,13 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
+import { PigeonLanding } from '@/components/listings/PigeonLanding';
 import { ListingDetail } from '@/components/listings/ListingDetail';
 import { getCategoryBySlug, getSidebarData } from '@/lib/queries/catalog';
 import {
   getListings,
   getListingById,
+  getListingsWithVideo,
   getSellerInfo,
   getSimilarListings,
   getAdjacentListings,
@@ -37,9 +39,13 @@ export async function generateMetadata({
   if (resolution?.kind === 'category') {
     const category = await getCategoryBySlug(slug);
     if (category) {
+      // Kategoriye özel SEO metni varsa o kullanılıyor; güvercin gibi kendi
+      // terminolojisi olan kategorilerde genel şablon yetersiz kalıyor.
       return {
-        title: `${category.name} — Satılık ve Ücretsiz Sahiplendirme | PetSemti`,
-        description: `Türkiye genelindeki güncel ${category.name.toLowerCase()}. Semtinizdeki ilanları görün, güvenle sahiplenin.`,
+        title: `${category.seo_title ?? `${category.name} — Satılık ve Ücretsiz Sahiplendirme`} | PetSemti`,
+        description:
+          category.seo_description ??
+          `Türkiye genelindeki güncel ${category.name.toLowerCase()}. Semtinizdeki ilanları görün, güvenle sahiplenin.`,
       };
     }
   }
@@ -72,6 +78,22 @@ export default async function RootSlugPage({ params }: { params: Promise<Params>
       getListings({ categoryId: category.id }),
       getSidebarData(),
     ]);
+
+    // Güvercin kategorisinin kendine özgü giriş sayfası var: alıcı fotoğrafa
+    // değil uçuşa bakıyor, bu yüzden videolu ilanlar öne çıkarılıyor ve ırk
+    // seçimi görünür kılınıyor. Veri katmanı diğer kategorilerle ortak.
+    if (category.code === 'Pigeon') {
+      const withVideo = await getListingsWithVideo(category.id);
+      return (
+        <PigeonLanding
+          category={category}
+          sidebar={sidebar}
+          listings={listings}
+          withVideo={withVideo}
+          total={total}
+        />
+      );
+    }
 
     return (
       <CategoryBrowser

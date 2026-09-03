@@ -28,3 +28,27 @@ export function listingPhotoUrl(storagePath: string): string | null {
   const clean = storagePath.replace(/^\/+/, '');
   return `${base}/storage/v1/object/public/${LISTING_PHOTO_BUCKET}/${clean}`;
 }
+
+export const LISTING_VIDEO_BUCKET = 'ilan-videolari';
+
+/**
+ * Video oynatma adresi.
+ *
+ * Şu an yalnızca Supabase Storage yolu destekleniyor. Harici bir video
+ * platformuna geçildiğinde (listing_videos.provider) burada o platformun
+ * oynatma adresi döndürülecek; çağıran taraf değişmeyecek.
+ */
+export function listingVideoUrl(video: {
+  provider?: string | null;
+  storage_path?: string | null;
+  playback_url?: string | null;
+}): string | null {
+  if (video.playback_url) return video.playback_url;
+  if (!video.storage_path) return null;
+
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base) return null;
+
+  const clean = video.storage_path.replace(/^\/+/, '');
+  return `${base}/storage/v1/object/public/${LISTING_VIDEO_BUCKET}/${clean}`;
+}

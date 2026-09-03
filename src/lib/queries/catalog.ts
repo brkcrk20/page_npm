@@ -30,7 +30,14 @@ import {
   findStaticDistrict,
 } from '@/lib/static-catalog';
 
-export type Category = { id: number; slug: string; name: string; code: string };
+export type Category = {
+  id: number;
+  slug: string;
+  name: string;
+  code: string;
+  seo_title?: string | null;
+  seo_description?: string | null;
+};
 export type Breed = { id: number; slug: string; name: string; category_id: number };
 export type City = { id: number; slug: string; name: string };
 export type District = { id: number; slug: string; name: string; city_id: number };
@@ -68,7 +75,7 @@ export async function getCategories(): Promise<Category[]> {
     async () =>
       createSupabasePublicClient()
         .from('categories')
-        .select('id, slug, name, code')
+        .select('id, slug, name, code, seo_title, seo_description')
         .eq('is_active', true)
         .order('position'),
     () => staticCategories
@@ -82,7 +89,7 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
     async () =>
       createSupabasePublicClient()
         .from('categories')
-        .select('id, slug, name, code')
+        .select('id, slug, name, code, seo_title, seo_description')
         .eq('slug', slug)
         .maybeSingle(),
     () => findStaticCategory(slug)

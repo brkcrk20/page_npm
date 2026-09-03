@@ -155,7 +155,8 @@ export async function getListingById(id: number) {
        categories ( id, slug, name ),
        cities ( id, name, slug ),
        districts ( id, name, slug ),
-       listing_photos ( storage_path, position )`
+       listing_photos ( storage_path, position ),
+       listing_videos ( id, provider, storage_path, playback_url, duration_seconds, width, height, position, title, status )`
     )
     .eq('id', id)
     .eq('status', 'yayinda')
@@ -371,4 +372,33 @@ export async function getSellerListings(userId: string, page = 1, perPage = 24) 
     perPage,
     pageCount: Math.max(1, Math.ceil(total / perPage)),
   };
+}
+
+/**
+ * Videosu olan ilanlar.
+ *
+ * Güvercin giriş sayfasında uçuş videolu ilanlar öne çıkarılıyor: alıcı
+ * kuşun hareketini görmek istiyor ve videolu ilan bu kategoride belirgin bir
+ * fark yaratıyor.
+ */
+export async function getListingsWithVideo(categoryId: number, limit = 8): Promise<ListingCard[]> {
+  if (!isSupabaseServerConfigured()) return [];
+  const supabase = createSupabasePublicClient();
+
+  const { data, error } = await supabase
+    .from('listings')
+    // !inner: video kaydı olmayan ilanlar tamamen elensin. inner olmadan
+    // PostgREST satırı bırakıp yalnızca gömülü diziyi boşaltıyor.
+    .select(`${CARD_COLUMNS}, listing_videos!inner ( id )`)
+    .eq('status', 'yayinda')
+    .eq('category_id', categoryId)
+    .eq('listing_videos.status', 'hazir')
+    .order('published_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Videolu ilanlar alınamadı:', error.message);
+    return [];
+  }
+  return (data ?? []) as unknown as ListingCard[];
 }

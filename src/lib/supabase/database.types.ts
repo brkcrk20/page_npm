@@ -398,6 +398,68 @@ export type Database = {
           },
         ]
       }
+      listing_videos: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          external_id: string | null
+          height: number | null
+          id: number
+          listing_id: number
+          playback_url: string | null
+          position: number
+          provider: Database["public"]["Enums"]["video_provider"]
+          size_bytes: number | null
+          status: Database["public"]["Enums"]["video_status"]
+          storage_path: string | null
+          thumbnail_path: string | null
+          title: string | null
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          external_id?: string | null
+          height?: number | null
+          id?: never
+          listing_id: number
+          playback_url?: string | null
+          position?: number
+          provider?: Database["public"]["Enums"]["video_provider"]
+          size_bytes?: number | null
+          status?: Database["public"]["Enums"]["video_status"]
+          storage_path?: string | null
+          thumbnail_path?: string | null
+          title?: string | null
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          external_id?: string | null
+          height?: number | null
+          id?: never
+          listing_id?: number
+          playback_url?: string | null
+          position?: number
+          provider?: Database["public"]["Enums"]["video_provider"]
+          size_bytes?: number | null
+          status?: Database["public"]["Enums"]["video_status"]
+          storage_path?: string | null
+          thumbnail_path?: string | null
+          title?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_videos_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           accepts_credit_card: boolean
@@ -1611,6 +1673,7 @@ export type Database = {
         | "acil"
         | "renkli_cerceve"
         | "ilan_yenileme"
+        | "video"
       service_status:
         | "taslak"
         | "onay_bekliyor"
@@ -1626,6 +1689,8 @@ export type Database = {
         | "egitmen"
         | "petshop"
       user_role: "user" | "moderator" | "admin"
+      video_provider: "supabase" | "cloudflare" | "bunny"
+      video_status: "yukleniyor" | "isleniyor" | "hazir" | "basarisiz"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1787,6 +1852,7 @@ export const Constants = {
         "acil",
         "renkli_cerceve",
         "ilan_yenileme",
+        "video",
       ],
       service_status: [
         "taslak",
@@ -1805,6 +1871,8 @@ export const Constants = {
         "petshop",
       ],
       user_role: ["user", "moderator", "admin"],
+      video_provider: ["supabase", "cloudflare", "bunny"],
+      video_status: ["yukleniyor", "isleniyor", "hazir", "basarisiz"],
     },
   },
 } as const

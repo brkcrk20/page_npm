@@ -164,13 +164,40 @@ export type BreedInfo = {
 };
 
 export type CategoryInfo = {
-  type: 'Dog' | 'Cat' | 'Bird' | 'Aquarium' | 'Other';
+  type: 'Dog' | 'Cat' | 'Bird' | 'Aquarium' | 'Other' | 'Pigeon';
   breeds: BreedInfo[];
   Icon: React.ElementType;
   color: string;
   title: string;
   slug: string;
 };
+
+const allPigeonBreedsData: Breed[] = [
+  { id: 'p0', name: 'Taklacı Güvercin' },
+  { id: 'p1', name: 'Adana Taklacısı' },
+  { id: 'p2', name: 'Mardin Taklacısı' },
+  { id: 'p3', name: 'Urfa Taklacısı' },
+  { id: 'p4', name: 'Antep Taklacısı' },
+  { id: 'p5', name: 'Posta Güvercini' },
+  { id: 'p6', name: 'Yarış Güvercini' },
+  { id: 'p7', name: 'Dolapçı Güvercin' },
+  { id: 'p8', name: 'Miralay Güvercin' },
+  { id: 'p9', name: 'Şebab Güvercin' },
+  { id: 'p10', name: 'Bango Güvercin' },
+  { id: 'p11', name: 'Kelebek Güvercin' },
+  { id: 'p12', name: 'Makaracı Güvercin' },
+  { id: 'p13', name: 'Oynar Güvercin' },
+  { id: 'p14', name: 'Şam Güvercini' },
+  { id: 'p15', name: 'Halep Güvercini' },
+  { id: 'p16', name: 'Hünkari Güvercin' },
+  { id: 'p17', name: 'Kuşkuş Güvercin' },
+  { id: 'p18', name: 'Tekir Güvercin' },
+  { id: 'p19', name: 'Süs Güvercini' },
+  { id: 'p20', name: 'Pofuduk Güvercin' },
+  { id: 'p21', name: 'Kuyruklu (Tavus) Güvercin' },
+  { id: 'p22', name: 'Guatrlı Güvercin' },
+  { id: 'p23', name: 'Karma / Melez Güvercin' },
+];
 
 // Cins listesi ve sıralaması.
 //
@@ -221,6 +248,14 @@ export const categories: CategoryInfo[] = [
     Icon: Fish,
     color: 'text-blue-400',
     breeds: processBreeds(allAquariumBreedsData),
+  },
+  {
+    type: 'Pigeon',
+    title: 'Güvercin İlanları',
+    slug: 'guvercin-ilanlari',
+    Icon: Bird,
+    color: 'text-slate-500',
+    breeds: processBreeds(allPigeonBreedsData),
   },
    {
     type: 'Other',

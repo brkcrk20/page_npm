@@ -34,6 +34,10 @@ import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import { LISTING_PHOTO_BUCKET } from '@/lib/supabase/storage';
+import { prepareImages, formatBytes } from '@/lib/image-pipeline';
+import { prepareVideo } from '@/lib/video-pipeline';
+import { VideoUploader, type SelectedVideo } from '@/components/listings/VideoUploader';
+import { LISTING_VIDEO_BUCKET } from '@/lib/supabase/storage';
 
 const MAX_PHOTOS = 12;
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -87,6 +91,16 @@ export function CreateListingForm() {
   const [districts, setDistricts] = useState<Option[]>([]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [videos, setVideos] = useState<SelectedVideo[]>([]);
+  const [videoProgress, setVideoProgress] = useState<{ stage: string; ratio: number } | null>(null);
+  // Video kuralları app_settings'ten geliyor; ücretlendirme açıldığında kota
+  // buradan kısılacak ve kod değişikliği gerekmeyecek.
+  const [videoConfig, setVideoConfig] = useState({
+    enabled: true,
+    maxVideos: 5,
+    maxDurationSeconds: 180,
+    maxSizeMb: 120,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
 
@@ -135,6 +149,22 @@ export function CreateListingForm() {
         supabase.from('breeds').select('id, name, slug, category_id').eq('is_active', true).order('position'),
         supabase.from('cities').select('id, name, slug').order('name'),
       ]);
+      const settings = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'video')
+        .maybeSingle();
+
+      if (settings.data?.value) {
+        const v = settings.data.value as Record<string, any>;
+        setVideoConfig({
+          enabled: v.enabled !== false,
+          maxVideos: Number(v.max_videos_per_listing ?? 5),
+          maxDurationSeconds: Number(v.max_duration_seconds ?? 180),
+          maxSizeMb: Number(v.max_size_mb ?? 120),
+        });
+      }
+
       if (cats.data) setCategories(cats.data as Option[]);
       if (brs.data) setBreeds(brs.data as (Option & { category_id: number })[]);
       if (cits.data) setCities(cits.data as Option[]);
@@ -239,20 +269,101 @@ export function CreateListingForm() {
 
       if (insertError) throw new Error(insertError.message);
 
-      // 2) Fotoğrafları yükle. Yol düzeni: <kullanici_id>/<ilan>-<sira>.<uzanti>
+      // 2) Fotoğrafları hazırla: küçült, WebP'ye çevir, SEO uyumlu ad ver.
+      //    Bu adım gönderim anında yapılıyor çünkü dosya adı ilan başlığından
+      //    türetiliyor ve başlık seçim anından sonra değişmiş olabilir.
+      let prepared: Awaited<ReturnType<typeof prepareImages>> = [];
+
+      if (photos.length > 0) {
+        setProgress('Fotoğraflar hazırlanıyor...');
+        const cityName = cities.find((c) => String(c.id) === values.cityId)?.name;
+        const districtName = districts.find((d) => String(d.id) === values.districtId)?.name;
+        const breedName = filteredBreeds.find((b) => String(b.id) === values.breedId)?.name;
+        const categoryName = categories.find((c) => String(c.id) === values.categoryId)?.name;
+
+        prepared = await prepareImages(photos, {
+          title: values.title,
+          context: [breedName, categoryName?.replace(/ İlanları$/, '') , 'ilanı']
+            .filter(Boolean)
+            .join(' '),
+          city: cityName,
+          district: districtName,
+        });
+
+        const before = prepared.reduce((sum, p) => sum + p.originalBytes, 0);
+        const after = prepared.reduce((sum, p) => sum + p.file.size, 0);
+        console.info(
+          `[görsel] ${prepared.length} fotoğraf: ${formatBytes(before)} -> ${formatBytes(after)}`
+        );
+      }
+
+      // 3) Yükle. Yol düzeni: <kullanici_id>/<ilan>-<seo-adi>
       //    İlk parçanın kullanıcı kimliği olması Storage RLS'inin şartı.
-      for (let i = 0; i < photos.length; i++) {
-        setProgress(`Fotoğraf yükleniyor (${i + 1}/${photos.length})...`);
-        const file = photos[i];
-        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-        const path = `${user.id}/${listing.id}-${Date.now()}-${i}.${ext}`;
+      for (let i = 0; i < prepared.length; i++) {
+        setProgress(`Fotoğraf yükleniyor (${i + 1}/${prepared.length})...`);
+        const item = prepared[i];
+        const path = `${user.id}/${listing.id}-${item.file.name}`;
 
         const { error: uploadError } = await supabase.storage
           .from(LISTING_PHOTO_BUCKET)
-          .upload(path, file, { contentType: file.type, upsert: false });
+          .upload(path, item.file, { contentType: item.file.type, upsert: false });
 
         if (uploadError) throw new Error(`Fotoğraf yüklenemedi: ${uploadError.message}`);
         uploadedPaths.push(path);
+      }
+
+      // 4) Videolar: sıkıştır ve yükle.
+      if (videos.length > 0) {
+        const cityName = cities.find((c) => String(c.id) === values.cityId)?.name;
+        const breedName = filteredBreeds.find((b) => String(b.id) === values.breedId)?.name;
+
+        for (let i = 0; i < videos.length; i++) {
+          setProgress(`Video hazırlanıyor (${i + 1}/${videos.length})`);
+
+          const preparedVideo = await prepareVideo(
+            videos[i].file,
+            { title: values.title, context: breedName, city: cityName },
+            i,
+            (stage, ratio) => setVideoProgress({ stage: `${stage} (${i + 1}/${videos.length})`, ratio })
+          );
+
+          setVideoProgress(null);
+          setProgress(`Video yükleniyor (${i + 1}/${videos.length})`);
+
+          const videoPath = `${user.id}/${listing.id}-${preparedVideo.file.name}`;
+          const { error: videoUploadError } = await supabase.storage
+            .from(LISTING_VIDEO_BUCKET)
+            .upload(videoPath, preparedVideo.file, {
+              contentType: preparedVideo.file.type,
+              upsert: false,
+            });
+
+          if (videoUploadError) {
+            // Video ilanın tamamını düşürmemeli: fotoğraflar ve ilan zaten
+            // kaydedildi, kullanıcıya bilgi verip devam ediyoruz.
+            console.error('Video yüklenemedi:', videoUploadError.message);
+            toast({
+              variant: 'destructive',
+              title: 'Video yüklenemedi',
+              description: `${i + 1}. video eklenemedi, ilanınız videosuz yayınlandı.`,
+            });
+            continue;
+          }
+
+          const { error: videoRowError } = await supabase.from('listing_videos').insert({
+            listing_id: listing.id,
+            provider: 'supabase',
+            storage_path: videoPath,
+            status: 'hazir',
+            duration_seconds: preparedVideo.meta.durationSeconds,
+            size_bytes: preparedVideo.file.size,
+            width: preparedVideo.meta.width,
+            height: preparedVideo.meta.height,
+            position: i,
+            title: `${values.title} — video ${i + 1}`,
+          });
+          if (videoRowError) console.error('Video kaydedilemedi:', videoRowError.message);
+        }
       }
 
       if (uploadedPaths.length > 0) {
@@ -287,6 +398,7 @@ export function CreateListingForm() {
     } finally {
       setIsSubmitting(false);
       setProgress(null);
+      setVideoProgress(null);
     }
   }
 
@@ -501,9 +613,23 @@ export function CreateListingForm() {
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                En fazla {MAX_PHOTOS} fotoğraf, her biri en çok 5 MB. İlk fotoğraf kapak olarak kullanılır.
+                En fazla {MAX_PHOTOS} fotoğraf. Yüklenirken otomatik küçültülüp WebP'ye çevrilir; ilk fotoğraf kapak olur.
               </p>
             </div>
+
+            {videoConfig.enabled && (
+              <div className="space-y-3">
+                <FormLabel>Videolar</FormLabel>
+                <VideoUploader
+                  videos={videos}
+                  onChange={setVideos}
+                  maxVideos={videoConfig.maxVideos}
+                  maxDurationSeconds={videoConfig.maxDurationSeconds}
+                  maxSizeMb={videoConfig.maxSizeMb}
+                  progress={videoProgress}
+                />
+              </div>
+            )}
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? (
