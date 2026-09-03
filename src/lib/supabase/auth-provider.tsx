@@ -3,9 +3,7 @@
 /**
  * Supabase oturum sağlayıcısı.
  *
- * Firebase'deki useUser() hook'unun yerini alıyor ve bilerek AYNI şekli
- * döndürüyor ({ user, isUserLoading }) — böylece hook'u tüketen sekiz sayfa
- * tek satırlık import değişikliğiyle taşınabiliyor.
+ * Oturum ve profil bilgisini tek yerden dağıtır.
  *
  * Profil bilgisi de burada tutuluyor: neredeyse her tüketici hem oturumu hem
  * profili (ad, rol, kurumsal mı) istiyor; ayrı ayrı çekmek her sayfada ikinci
@@ -152,7 +150,7 @@ function useAuthContext(): AuthContextValue {
   return ctx;
 }
 
-/** Firebase'deki useUser() ile aynı şekil — taşımayı kolaylaştırmak için. */
+/** Oturum açmış kullanıcı ve yüklenme durumu. */
 export function useUser() {
   const { user, isUserLoading } = useAuthContext();
   return { user, isUserLoading };

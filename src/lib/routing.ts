@@ -66,34 +66,20 @@ export type CategoryDef = {
   type: CategoryType;
   /** Kullanıcıya gösterilen başlık. */
   title: string;
-  /** Firestore'daki `hayvanTuru` alanında geçen Türkçe değerler. */
-  aliases: string[];
 };
 
 export const CATEGORY_DEFS: CategoryDef[] = [
-  { slug: 'kopek-ilanlari', type: 'Dog', title: 'Köpek İlanları', aliases: ['köpek', 'kopek', 'dog'] },
-  { slug: 'kedi-ilanlari', type: 'Cat', title: 'Kedi İlanları', aliases: ['kedi', 'cat'] },
-  { slug: 'kus-ilanlari', type: 'Bird', title: 'Kuş İlanları', aliases: ['kuş', 'kus', 'bird'] },
-  { slug: 'akvaryum-ilanlari', type: 'Aquarium', title: 'Akvaryum İlanları', aliases: ['akvaryum', 'balık', 'balik', 'aquarium'] },
-  { slug: 'diger-ilanlar', type: 'Other', title: 'Diğer İlanlar', aliases: ['diğer', 'diger', 'other'] },
+  { slug: 'kopek-ilanlari', type: 'Dog', title: 'Köpek İlanları' },
+  { slug: 'kedi-ilanlari', type: 'Cat', title: 'Kedi İlanları' },
+  { slug: 'kus-ilanlari', type: 'Bird', title: 'Kuş İlanları' },
+  { slug: 'akvaryum-ilanlari', type: 'Aquarium', title: 'Akvaryum İlanları' },
+  { slug: 'diger-ilanlar', type: 'Other', title: 'Diğer İlanlar' },
 ];
 
 const categoryBySlug = new Map(CATEGORY_DEFS.map((c) => [c.slug, c]));
 
-const categoryByAlias = new Map<string, CategoryDef>();
-for (const def of CATEGORY_DEFS) {
-  categoryByAlias.set(def.type.toLowerCase(), def);
-  for (const alias of def.aliases) categoryByAlias.set(alias.toLowerCase(), def);
-}
-
 export function getCategoryBySlug(slug: string): CategoryDef | undefined {
   return categoryBySlug.get(slug);
-}
-
-/** Firestore'daki serbest biçimli tür değerini ("Köpek", "dog", "kopek") kategoriye çevirir. */
-export function getCategoryByType(value: string | undefined | null): CategoryDef | undefined {
-  if (!value) return undefined;
-  return categoryByAlias.get(value.toLowerCase().trim());
 }
 
 // ---------------------------------------------------------------------------

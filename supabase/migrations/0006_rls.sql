@@ -1,8 +1,8 @@
 -- ============================================================================
 -- 0006_rls.sql — Row Level Security politikaları
 --
--- Firestore kurallarının yerini alan katman. Temel ilke: her tabloda RLS AÇIK
--- ve varsayılan REDDET; erişim tek tek politikalarla veriliyor.
+-- Temel ilke: her tabloda RLS AÇIK ve varsayılan REDDET; erişim tek tek
+-- politikalarla veriliyor.
 --
 -- Rol karşılıkları (Supabase):
 --   anon          -> giriş yapmamış ziyaretçi

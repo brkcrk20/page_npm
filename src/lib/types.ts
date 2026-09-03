@@ -1,10 +1,8 @@
 /**
  * Uygulama tipleri.
  *
- * Eskiden bu dosya docs/backend.json (Firebase Studio şema dosyası) üzerinden
- * tip türetiyordu. Firebase kaldırıldığı için tipler artık doğrudan
- * veritabanından üretiliyor: src/lib/supabase/database.types.ts
- * (npm run db:types ile yeniden üretilir).
+ * Tipler doğrudan veritabanı şemasından üretiliyor:
+ * src/lib/supabase/database.types.ts (npm run db:types).
  */
 
 import type { Database } from '@/lib/supabase/database.types';

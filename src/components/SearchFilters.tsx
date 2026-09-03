@@ -18,10 +18,8 @@ import {
 /**
  * Başlıktaki arama çubuğu.
  *
- * Eski sürüm seçenekleri Firestore'dan collectionGroup sorgusuyla, yani tüm
- * ilanları çekip içlerinden tür/cins çıkararak üretiyordu — hem yavaş hem de
- * ilan yokken boş kalan bir yaklaşım. Artık kategori, cins ve il listeleri
- * doğrudan referans tablolarından geliyor; ilan olmasa da doludur.
+ * Kategori, cins ve il listeleri referans tablolarından geliyor — ilanlardan
+ * türetilmiyor, böylece henüz ilan yokken de dolu görünüyorlar.
  *
  * Arama, kategori seçiliyse o kategorinin sayfasına, değilse ana sayfaya
  * yönlendiriyor; böylece URL'ler site yapısıyla tutarlı kalıyor.

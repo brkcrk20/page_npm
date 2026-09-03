@@ -4,8 +4,8 @@ import 'server-only';
  * Sunucu tarafı Supabase istemcileri.
  *
  * Bu katman SEO'nun anahtarı: sayfalar server component olarak veriyi burada
- * çekerse Google gerçek içeriği görür. Eski Firebase kurulumunda tüm veri
- * istemcide çekildiği için arama motorları boş sayfa görüyordu.
+ * çekince arama motoru gerçek içeriği görüyor. Veri istemcide çekilseydi
+ * sayfalar boş indekslenirdi.
  */
 
 import { createServerClient } from '@supabase/ssr';

@@ -12,9 +12,7 @@ import { getListings, getFeaturedListings } from '@/lib/queries/listings';
  * Ana sayfa.
  *
  * Server component: veriyi sunucuda çekiyor, arama motoru dolu HTML görüyor.
- * Eski sürüm 'use client' idi ve iki ayrı kaynaktan besleniyordu — Firestore
- * ve koda gömülü statik "örnek" ilanlar. İkisi de kaldırıldı; tek kaynak
- * Supabase'deki public.listings.
+ * Tek veri kaynağı public.listings; koda gömülü örnek ilan yok.
  */
 
 export const metadata: Metadata = {
