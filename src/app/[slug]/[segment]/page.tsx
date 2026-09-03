@@ -4,8 +4,7 @@ import type { Metadata } from 'next';
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
 import {
   getCategoryBySlug,
-  getBreedsByCategoryId,
-  getCities,
+  getSidebarData,
   resolveCategorySegment,
 } from '@/lib/queries/catalog';
 import { getListings } from '@/lib/queries/listings';
@@ -69,10 +68,7 @@ export default async function CategorySegmentPage({
 
   const { category, resolved } = loaded;
 
-  const [breeds, cities] = await Promise.all([
-    getBreedsByCategoryId(category.id),
-    getCities(),
-  ]);
+  const sidebar = await getSidebarData();
 
   if (resolved.kind === 'breed') {
     const { listings, total } = await getListings({
@@ -89,8 +85,7 @@ export default async function CategorySegmentPage({
         ]}
         listings={listings}
         total={total}
-        breeds={breeds}
-        cities={cities}
+        sidebar={sidebar}
         category={category}
         activeBreedSlug={resolved.breed.slug}
         emptyMessage={`Şu an yayında ${resolved.breed.name} ilanı yok.`}
@@ -112,8 +107,7 @@ export default async function CategorySegmentPage({
       ]}
       listings={listings}
       total={total}
-      breeds={breeds}
-      cities={cities}
+      sidebar={sidebar}
       category={category}
       activeCitySlug={resolved.city.slug}
       emptyMessage={`${resolved.city.name} ilinde yayında ${category.name.toLowerCase()} yok.`}

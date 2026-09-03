@@ -1,9 +1,9 @@
 import Link from 'next/link';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
-import { Badge } from '@/components/ui/badge';
+import { CategorySidebar } from '@/components/layout/CategorySidebar';
 import type { ListingCard } from '@/lib/queries/listings';
-import type { Breed, Category, City } from '@/lib/queries/catalog';
+import type { Category, SidebarData } from '@/lib/queries/catalog';
 
 /**
  * Kategori / cins / şehir sayfalarının ortak gövdesi.
@@ -23,8 +23,7 @@ export function CategoryBrowser({
   crumbs,
   listings,
   total,
-  breeds,
-  cities,
+  sidebar,
   category,
   activeBreedSlug,
   activeCitySlug,
@@ -35,8 +34,7 @@ export function CategoryBrowser({
   crumbs: Crumb[];
   listings: ListingCard[];
   total: number;
-  breeds: Breed[];
-  cities: City[];
+  sidebar: SidebarData;
   category: Category;
   activeBreedSlug?: string;
   activeCitySlug?: string;
@@ -77,24 +75,13 @@ export function CategoryBrowser({
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-[260px_1fr]">
           <aside className="hidden md:block">
-            <div className="sticky top-4 space-y-6">
-              <FacetList
-                heading="Cinsler"
-                items={breeds.map((b) => ({
-                  key: b.slug,
-                  label: b.name,
-                  href: `/${category.slug}/${b.slug}`,
-                  active: b.slug === activeBreedSlug,
-                }))}
-              />
-              <FacetList
-                heading="Şehirler"
-                items={cities.map((c) => ({
-                  key: c.slug,
-                  label: c.name,
-                  href: `/${category.slug}/${c.slug}`,
-                  active: c.slug === activeCitySlug,
-                }))}
+            <div className="sticky top-4">
+              <CategorySidebar
+                categories={sidebar.categories}
+                cities={sidebar.cities}
+                activeBreedSlug={activeBreedSlug}
+                activeCitySlug={activeCitySlug}
+                cityLinkCategorySlug={category.slug}
               />
             </div>
           </aside>
@@ -104,45 +91,6 @@ export function CategoryBrowser({
           </main>
         </div>
       </div>
-    </div>
-  );
-}
-
-function FacetList({
-  heading,
-  items,
-}: {
-  heading: string;
-  items: { key: string; label: string; href: string; active: boolean }[];
-}) {
-  if (items.length === 0) return null;
-
-  return (
-    <div className="rounded-lg bg-white p-4 shadow-sm">
-      <h2 className="mb-3 font-bold">{heading}</h2>
-      {/* Uzun listeler (81 şehir, 100+ cins) sayfayı taşırmasın diye kendi
-          içinde kayıyor. */}
-      <ul className="max-h-80 space-y-1 overflow-y-auto pr-1">
-        {items.map((item) => (
-          <li key={item.key}>
-            <Link
-              href={item.href}
-              className={
-                item.active
-                  ? 'flex items-center justify-between rounded-md bg-primary/10 px-2 py-1.5 text-sm font-semibold text-primary'
-                  : 'flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-secondary hover:text-primary'
-              }
-            >
-              <span>{item.label}</span>
-              {item.active && (
-                <Badge variant="secondary" className="text-[10px]">
-                  seçili
-                </Badge>
-              )}
-            </Link>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

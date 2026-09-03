@@ -4,8 +4,7 @@ import type { Metadata } from 'next';
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
 import {
   getCategoryBySlug,
-  getBreedsByCategoryId,
-  getCities,
+  getSidebarData,
   getCityBySlug,
   getDistrict,
 } from '@/lib/queries/catalog';
@@ -56,10 +55,9 @@ export default async function DistrictPage({ params }: { params: Promise<Params>
 
   const { category, city, district } = loaded;
 
-  const [{ listings, total }, breeds, cities] = await Promise.all([
+  const [{ listings, total }, sidebar] = await Promise.all([
     getListings({ categoryId: category.id, cityId: city.id, districtId: district.id }),
-    getBreedsByCategoryId(category.id),
-    getCities(),
+    getSidebarData(),
   ]);
 
   return (
@@ -72,8 +70,7 @@ export default async function DistrictPage({ params }: { params: Promise<Params>
       ]}
       listings={listings}
       total={total}
-      breeds={breeds}
-      cities={cities}
+      sidebar={sidebar}
       category={category}
       activeCitySlug={city.slug}
       emptyMessage={`${district.name} bölgesinde yayında ${category.name.toLowerCase()} yok.`}

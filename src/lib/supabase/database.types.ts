@@ -84,6 +84,13 @@ export type Database = {
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "breeds_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_listing_counts"
+            referencedColumns: ["category_id"]
+          },
         ]
       }
       categories: {
@@ -178,6 +185,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cities"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "districts_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "city_listing_counts"
+            referencedColumns: ["city_id"]
           },
         ]
       }
@@ -473,6 +487,13 @@ export type Database = {
             foreignKeyName: "listings_breed_id_fkey"
             columns: ["breed_id"]
             isOneToOne: false
+            referencedRelation: "breed_listing_counts"
+            referencedColumns: ["breed_id"]
+          },
+          {
+            foreignKeyName: "listings_breed_id_fkey"
+            columns: ["breed_id"]
+            isOneToOne: false
             referencedRelation: "breeds"
             referencedColumns: ["id"]
           },
@@ -484,11 +505,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "listings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_listing_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
             foreignKeyName: "listings_city_id_fkey"
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listings_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "city_listing_counts"
+            referencedColumns: ["city_id"]
           },
           {
             foreignKeyName: "listings_district_id_fkey"
@@ -825,6 +860,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profiles_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "city_listing_counts"
+            referencedColumns: ["city_id"]
+          },
+          {
             foreignKeyName: "profiles_district_id_fkey"
             columns: ["district_id"]
             isOneToOne: false
@@ -931,6 +973,51 @@ export type Database = {
           },
         ]
       }
+      breed_listing_counts: {
+        Row: {
+          breed_id: number | null
+          breed_name: string | null
+          breed_slug: string | null
+          category_id: number | null
+          listing_count: number | null
+          position: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "breeds_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "breeds_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_listing_counts"
+            referencedColumns: ["category_id"]
+          },
+        ]
+      }
+      category_listing_counts: {
+        Row: {
+          category_id: number | null
+          category_name: string | null
+          category_slug: string | null
+          listing_count: number | null
+          position: number | null
+        }
+        Relationships: []
+      }
+      city_listing_counts: {
+        Row: {
+          city_id: number | null
+          city_name: string | null
+          city_slug: string | null
+          listing_count: number | null
+        }
+        Relationships: []
+      }
       public_profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"] | null
@@ -978,6 +1065,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cities"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "city_listing_counts"
+            referencedColumns: ["city_id"]
           },
         ]
       }

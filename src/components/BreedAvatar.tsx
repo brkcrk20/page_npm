@@ -1,0 +1,56 @@
+'use client';
+
+import { useState } from 'react';
+import Image from 'next/image';
+
+import { breedImagePath, breedImageAlt, breedFallbackImage } from '@/lib/breed-image';
+
+/**
+ * Cins küçük görseli.
+ *
+ * Görsel dosyası henüz eklenmemişse harf tabanlı yedeğe düşer. Yedek inline
+ * SVG olduğu için ek ağ isteği yapmaz — 100+ cinsin her biri için 404 almak
+ * hem yavaş olurdu hem de sunucu günlüklerini doldururdu.
+ *
+ * Görselleri eklemek için: npx tsx scripts/optimize-breed-images.ts
+ */
+export function BreedAvatar({
+  breedName,
+  breedSlug,
+  categorySlug,
+  categoryCode,
+  categoryName,
+  size = 32,
+}: {
+  breedName: string;
+  breedSlug: string;
+  categorySlug: string;
+  categoryCode: string;
+  categoryName: string;
+  size?: number;
+}) {
+  const [failed, setFailed] = useState(false);
+
+  const src = failed
+    ? breedFallbackImage(breedName, breedSlug)
+    : breedImagePath(breedName, categorySlug, categoryCode);
+
+  return (
+    <span
+      className="relative shrink-0 overflow-hidden rounded-full bg-muted"
+      style={{ width: size, height: size }}
+    >
+      <Image
+        src={src}
+        alt={breedImageAlt(breedName, categoryName)}
+        width={size}
+        height={size}
+        className="h-full w-full object-cover"
+        loading="lazy"
+        onError={() => setFailed(true)}
+        // Yedek bir data URI; Next.js optimizasyonundan geçirmenin anlamı yok.
+        unoptimized={failed}
+      />
+    </span>
+  );
+}

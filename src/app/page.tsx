@@ -4,7 +4,8 @@ import type { Metadata } from 'next';
 
 import { Button } from '@/components/ui/button';
 import { ListingGrid } from '@/components/listings/ListingGrid';
-import { getCategories, getBreedsByCategoryId, getCities } from '@/lib/queries/catalog';
+import { CategorySidebar } from '@/components/layout/CategorySidebar';
+import { getSidebarData } from '@/lib/queries/catalog';
 import { getListings, getFeaturedListings } from '@/lib/queries/listings';
 
 /**
@@ -27,18 +28,17 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const categories = await getCategories();
+  const sidebar = await getSidebarData();
 
-  const [featured, cities, categorySections] = await Promise.all([
+  const [featured, categorySections] = await Promise.all([
     getFeaturedListings(8),
-    getCities(),
     Promise.all(
-      categories.map(async (category) => {
-        const [{ listings, total }, breeds] = await Promise.all([
-          getListings({ categoryId: category.id, perPage: 8 }),
-          getBreedsByCategoryId(category.id),
-        ]);
-        return { category, listings, total, breeds };
+      sidebar.categories.map(async (category) => {
+        const { listings, total } = await getListings({
+          categoryId: category.id,
+          perPage: 8,
+        });
+        return { category, listings, total };
       })
     ),
   ]);
@@ -51,49 +51,8 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-[280px_1fr]">
           {/* --- Yan menü: kategoriler ve cinsleri --- */}
           <aside className="hidden md:block">
-            <div className="sticky top-4 space-y-4">
-              {categorySections.map(({ category, breeds }) => (
-                <div key={category.id} className="rounded-lg bg-white p-4 shadow-sm">
-                  <Link
-                    href={`/${category.slug}`}
-                    className="mb-3 flex items-center justify-between font-bold hover:text-primary"
-                  >
-                    {category.name}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <ul className="max-h-56 space-y-0.5 overflow-y-auto pr-1">
-                    {breeds.slice(0, 40).map((breed) => (
-                      <li key={breed.id}>
-                        <Link
-                          href={`/${category.slug}/${breed.slug}`}
-                          className="block rounded px-2 py-1 text-sm text-muted-foreground hover:bg-secondary hover:text-primary"
-                        >
-                          {breed.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-
-              <div className="rounded-lg bg-white p-4 shadow-sm">
-                <h2 className="mb-3 font-bold">Popüler Şehirler</h2>
-                <ul className="space-y-0.5">
-                  {['istanbul', 'ankara', 'izmir', 'bursa', 'antalya', 'adana']
-                    .map((slug) => cities.find((c) => c.slug === slug))
-                    .filter(Boolean)
-                    .map((city) => (
-                      <li key={city!.id}>
-                        <Link
-                          href={`/kopek-ilanlari/${city!.slug}`}
-                          className="block rounded px-2 py-1 text-sm text-muted-foreground hover:bg-secondary hover:text-primary"
-                        >
-                          {city!.name}
-                        </Link>
-                      </li>
-                    ))}
-                </ul>
-              </div>
+            <div className="sticky top-4">
+              <CategorySidebar categories={sidebar.categories} cities={sidebar.cities} />
             </div>
           </aside>
 

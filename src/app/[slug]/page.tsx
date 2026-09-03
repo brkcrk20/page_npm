@@ -3,11 +3,7 @@ import type { Metadata } from 'next';
 
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
 import { ListingDetail } from '@/components/listings/ListingDetail';
-import {
-  getCategoryBySlug,
-  getBreedsByCategoryId,
-  getCities,
-} from '@/lib/queries/catalog';
+import { getCategoryBySlug, getSidebarData } from '@/lib/queries/catalog';
 import { getListings, getListingById } from '@/lib/queries/listings';
 import { resolveRootSegment } from '@/lib/routing';
 
@@ -66,10 +62,9 @@ export default async function RootSlugPage({ params }: { params: Promise<Params>
     const category = await getCategoryBySlug(slug);
     if (!category) notFound();
 
-    const [{ listings, total }, breeds, cities] = await Promise.all([
+    const [{ listings, total }, sidebar] = await Promise.all([
       getListings({ categoryId: category.id }),
-      getBreedsByCategoryId(category.id),
-      getCities(),
+      getSidebarData(),
     ]);
 
     return (
@@ -78,8 +73,7 @@ export default async function RootSlugPage({ params }: { params: Promise<Params>
         crumbs={[{ label: category.name }]}
         listings={listings}
         total={total}
-        breeds={breeds}
-        cities={cities}
+        sidebar={sidebar}
         category={category}
         emptyMessage={`Şu an yayında ${category.name.toLowerCase()} yok. İlk ilanı sen ver!`}
       />

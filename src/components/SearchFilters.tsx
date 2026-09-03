@@ -14,6 +14,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
+import {
+  staticCategories,
+  staticBreeds,
+  staticCities,
+  staticDistrictsFor,
+} from '@/lib/static-catalog';
 
 /**
  * Başlıktaki arama çubuğu.
@@ -54,9 +60,12 @@ function SearchFiltersInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [categories, setCategories] = useState<Option[]>([]);
-  const [breeds, setBreeds] = useState<Breed[]>([]);
-  const [cities, setCities] = useState<Option[]>([]);
+  // Statik yedekle başlıyoruz: veritabanına ulaşılamasa bile (ortam değişkeni
+  // eksik, geçici kesinti) açılır listeler dolu gelir. Veritabanı erişilebilirse
+  // aşağıdaki effect gelen veriyle üzerine yazar.
+  const [categories, setCategories] = useState<Option[]>(staticCategories);
+  const [breeds, setBreeds] = useState<Breed[]>(staticBreeds);
+  const [cities, setCities] = useState<Option[]>(staticCities);
   const [districts, setDistricts] = useState<Option[]>([]);
 
   const [term, setTerm] = useState(searchParams.get('q') ?? '');
@@ -75,9 +84,11 @@ function SearchFiltersInner() {
         supabase.from('breeds').select('id, name, slug, category_id').eq('is_active', true).order('position'),
         supabase.from('cities').select('id, name, slug').order('name'),
       ]);
-      if (cats.data) setCategories(cats.data as Option[]);
-      if (brs.data) setBreeds(brs.data as Breed[]);
-      if (cits.data) setCities(cits.data as Option[]);
+      // Boş sonuç gelirse yedeği koruyoruz; boş listeyle değiştirmek
+      // kullanıcıya daha kötü bir deneyim verirdi.
+      if (cats.data?.length) setCategories(cats.data as Option[]);
+      if (brs.data?.length) setBreeds(brs.data as Breed[]);
+      if (cits.data?.length) setCities(cits.data as Option[]);
     })();
   }, []);
 
@@ -87,19 +98,27 @@ function SearchFiltersInner() {
   );
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClientOrNull();
-    if (!supabase || !selectedCity) {
+    setDistrictSlug(ALL);
+
+    if (!selectedCity) {
       setDistricts([]);
-      setDistrictSlug(ALL);
       return;
     }
+
+    // Önce yedekten doldur, sonra veritabanı cevap verirse tazele.
+    setDistricts(staticDistrictsFor(selectedCity.slug));
+
+    const supabase = getSupabaseBrowserClientOrNull();
+    if (!supabase) return;
+
     supabase
       .from('districts')
       .select('id, name, slug')
       .eq('city_id', selectedCity.id)
       .order('name')
-      .then(({ data }) => setDistricts((data as Option[]) ?? []));
-    setDistrictSlug(ALL);
+      .then(({ data }) => {
+        if (data?.length) setDistricts(data as Option[]);
+      });
   }, [selectedCity]);
 
   const filteredBreeds = useMemo(() => {

@@ -100,6 +100,9 @@ export function Footer() {
             <ul className="space-y-2">
               <li><Link href="#" className={footerLinkStyle}>Gizlilik Sözleşmesi</Link></li>
               <li><Link href="#" className={footerLinkStyle}>Kullanım Şartları</Link></li>
+              {/* CC BY / CC BY-SA lisanslı cins görselleri atıf zorunlu tutuyor;
+                  bu bağlantı yasal yükümlülüğün parçası, kaldırılmamalı. */}
+              <li><Link href="/gorsel-kaynaklari" className={footerLinkStyle}>Görsel Kaynakları</Link></li>
             </ul>
           </div>
 

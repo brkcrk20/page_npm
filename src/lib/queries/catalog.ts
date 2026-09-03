@@ -200,3 +200,94 @@ export async function resolveCategorySegment(
   if (city) return { kind: 'city', city };
   return { kind: 'unknown' };
 }
+
+// ---------------------------------------------------------------------------
+// Sol menü verisi
+// ---------------------------------------------------------------------------
+
+export type SidebarData = {
+  categories: {
+    id: number;
+    slug: string;
+    name: string;
+    code: string;
+    count: number;
+    breeds: { id: number; slug: string; name: string; count: number }[];
+  }[];
+  cities: { id: number; slug: string; name: string; count: number }[];
+};
+
+/**
+ * Sol menünün ihtiyaç duyduğu her şeyi tek seferde toplar.
+ *
+ * Sayımlar 0009'daki view'lardan geliyor. Cins başına ayrı sorgu atmak 100+
+ * istek demekti; PostgREST GROUP BY desteklemediği için sayım veritabanı
+ * tarafında view'a taşındı.
+ *
+ * Veritabanı erişilemezse statik katalogla sayımsız (0) olarak dönülüyor —
+ * menünün tamamen kaybolmasındansa sayaçların sıfır görünmesi yeğdir.
+ */
+export async function getSidebarData(): Promise<SidebarData> {
+  const [categories, cities] = await Promise.all([getCategories(), getCities()]);
+
+  const emptyCounts = (): SidebarData => ({
+    categories: categories.map((category) => ({
+      ...category,
+      count: 0,
+      breeds: staticBreeds
+        .filter((b) => b.category_id === category.id)
+        .map((b) => ({ id: b.id, slug: b.slug, name: b.name, count: 0 })),
+    })),
+    cities: cities.map((c) => ({ ...c, count: 0 })),
+  });
+
+  if (!isSupabaseServerConfigured()) {
+    warnMissingConfig('getSidebarData');
+    return emptyCounts();
+  }
+
+  try {
+    const supabase = createSupabasePublicClient();
+    const [breedCounts, categoryCounts, cityCounts] = await Promise.all([
+      supabase
+        .from('breed_listing_counts')
+        .select('breed_id, category_id, breed_slug, breed_name, position, listing_count')
+        .order('position'),
+      supabase.from('category_listing_counts').select('category_id, listing_count'),
+      supabase.from('city_listing_counts').select('city_id, listing_count'),
+    ]);
+
+    if (breedCounts.error || !breedCounts.data?.length) {
+      if (breedCounts.error) {
+        console.error('[katalog] getSidebarData sayımları alınamadı:', breedCounts.error.message);
+      }
+      return emptyCounts();
+    }
+
+    const categoryCountById = new Map(
+      (categoryCounts.data ?? []).map((r: any) => [r.category_id, Number(r.listing_count)])
+    );
+    const cityCountById = new Map(
+      (cityCounts.data ?? []).map((r: any) => [r.city_id, Number(r.listing_count)])
+    );
+
+    return {
+      categories: categories.map((category) => ({
+        ...category,
+        count: categoryCountById.get(category.id) ?? 0,
+        breeds: (breedCounts.data as any[])
+          .filter((b) => b.category_id === category.id)
+          .map((b) => ({
+            id: b.breed_id,
+            slug: b.breed_slug,
+            name: b.breed_name,
+            count: Number(b.listing_count),
+          })),
+      })),
+      cities: cities.map((c) => ({ ...c, count: cityCountById.get(c.id) ?? 0 })),
+    };
+  } catch (error: any) {
+    console.error('[katalog] getSidebarData hata verdi:', error?.message);
+    return emptyCounts();
+  }
+}
