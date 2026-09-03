@@ -37,6 +37,7 @@ export type Database = {
           content_intro: string | null
           created_at: string
           faq: Json
+          group_name: string | null
           id: number
           is_active: boolean
           name: string
@@ -52,6 +53,7 @@ export type Database = {
           content_intro?: string | null
           created_at?: string
           faq?: Json
+          group_name?: string | null
           id?: never
           is_active?: boolean
           name: string
@@ -67,6 +69,7 @@ export type Database = {
           content_intro?: string | null
           created_at?: string
           faq?: Json
+          group_name?: string | null
           id?: never
           is_active?: boolean
           name?: string
@@ -1634,6 +1637,7 @@ export type Database = {
           breed_name: string | null
           breed_slug: string | null
           category_id: number | null
+          group_name: string | null
           listing_count: number | null
           position: number | null
         }
@@ -1758,6 +1762,31 @@ export type Database = {
       }
     }
     Functions: {
+      admin_delete_user: { Args: { p_user_id: string }; Returns: undefined }
+      admin_list_users: {
+        Args: { p_limit?: number; p_offset?: number; p_search?: string }
+        Returns: {
+          account_type: string
+          banned_reason: string
+          company_title: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_banned: boolean
+          is_verified: boolean
+          last_sign_in_at: string
+          listing_count: number
+          listings_total: number
+          phone: string
+          role: string
+          username: string
+        }[]
+      }
+      admin_set_user_role: {
+        Args: { p_role: string; p_user_id: string }
+        Returns: undefined
+      }
       confirm_order_payment: {
         Args: { p_provider_ref?: string; p_public_ref: string }
         Returns: undefined
@@ -1804,6 +1833,7 @@ export type Database = {
         Returns: undefined
       }
       monetization_enabled: { Args: never; Returns: boolean }
+      normalize_tr_phone: { Args: { p_raw: string }; Returns: string }
       remaining_listing_credits: { Args: never; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }

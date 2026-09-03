@@ -1,307 +1,255 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Check, Loader2, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  Building2,
+  Eye,
+  Landmark,
+  List,
+  Loader2,
+  Receipt,
+  Settings,
+  Users,
+} from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
+import { cn } from '@/lib/utils';
 
 /**
- * Yönetim paneli.
+ * Yönetim özeti.
  *
- * Yetki kontrolü profiles.role = 'admin' üzerinden. Eski sürüm bunu sabit bir
- * e-posta adresine ("admin@petsemti.com") bakarak yapıyordu; o kontrol sadece
- * arayüzü gizliyor, veriye erişimi engellemiyordu. Artık asıl koruma
- * veritabanındaki RLS politikalarında (public.is_admin()); buradaki kontrol
- * yalnızca gereksiz bir ekran göstermemek için.
+ * Sayımlar head:true ile alınıyor: satırların kendisi gerekmiyor, yalnızca
+ * kaç tane olduğu. Binlerce ilanı çekip uzunluğuna bakmak, panelin
+ * açılışını ilan sayısıyla birlikte yavaşlatırdı.
  *
- * Admin yetkisi vermek için Supabase SQL editöründen:
- *   update public.profiles set role = 'admin' where id = '<kullanici-uuid>';
+ * Bekleyen işler ayrı bir blokta ve en üstte: panele girilmesinin başlıca
+ * sebebi "onay bekleyen bir şey var mı" sorusu.
  */
-
-type PendingListing = {
-  id: number;
-  slug: string;
-  title: string;
-  created_at: string;
-  status: string;
-  profiles: { full_name: string | null; username: string | null } | null;
-};
 
 type Stats = {
   listings: number;
   published: number;
-  pending: number;
+  pendingListings: number;
   users: number;
+  admins: number;
+  providers: number;
+  pendingProviders: number;
   pendingOrders: number;
+  monetization: boolean;
+  autoApprove: boolean;
 };
 
-type PendingOrder = {
-  id: number;
-  public_ref: string;
-  amount_minor: number;
-  created_at: string;
-  provider: string;
-  billing_snapshot: Record<string, any> | null;
-  order_items: { quantity: number; products: { name: string } | null }[];
-};
-
-export default function AdminPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const { user, profile, isUserLoading, isProfileLoading } = useSupabaseAuth();
-
+export default function AdminOverviewPage() {
   const [stats, setStats] = useState<Stats | null>(null);
-  const [pending, setPending] = useState<PendingListing[]>([]);
-  const [orders, setOrders] = useState<PendingOrder[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
-    if (!isUserLoading && !user) router.replace('/login');
-  }, [isUserLoading, user, router]);
-
-  const load = useCallback(async () => {
-    if (!isAdmin) return;
     const supabase = getSupabaseBrowserClient();
+    // Tablo adı şemadaki isimlerle sınırlı: serbest metin, tipli istemcinin
+    // yakalayabileceği bir yazım hatasını çalışma zamanına bırakırdı.
+    type Countable = 'listings' | 'profiles' | 'service_providers' | 'orders';
 
-    const [all, published, pendingCount, users, pendingRows, orderRows] = await Promise.all([
-      supabase.from('listings').select('*', { count: 'exact', head: true }),
-      supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'yayinda'),
-      supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'onay_bekliyor'),
-      supabase.from('profiles').select('*', { count: 'exact', head: true }),
-      supabase
-        .from('listings')
-        .select('id, slug, title, created_at, status, profiles!listings_owner_id_fkey(full_name, username)')
-        .eq('status', 'onay_bekliyor')
-        .order('created_at')
-        .limit(50),
-      supabase
-        .from('orders')
-        .select(
-          `id, public_ref, amount_minor, created_at, provider, billing_snapshot,
-           order_items ( quantity, products ( name ) )`
-        )
-        .eq('status', 'odeme_bekleniyor')
-        .order('created_at')
-        .limit(50),
-    ]);
+    const count = (table: Countable, apply?: (q: any) => any): Promise<number> => {
+      const q = supabase.from(table).select('*', { count: 'exact', head: true });
+      return (apply ? apply(q) : q).then((r: any) => r.count ?? 0);
+    };
 
-    setStats({
-      listings: all.count ?? 0,
-      published: published.count ?? 0,
-      pending: pendingCount.count ?? 0,
-      users: users.count ?? 0,
-      pendingOrders: (orderRows.data ?? []).length,
-    });
-    setOrders((orderRows.data as unknown as PendingOrder[]) ?? []);
-    setPending((pendingRows.data as unknown as PendingListing[]) ?? []);
-    setIsLoading(false);
-  }, [isAdmin]);
+    (async () => {
+      const counts = await Promise.all([
+        count('listings'),
+        count('listings', (q: any) => q.eq('status', 'yayinda')),
+        count('listings', (q: any) => q.eq('status', 'onay_bekliyor')),
+        count('profiles'),
+        count('profiles', (q: any) => q.eq('role', 'admin')),
+        count('service_providers'),
+        count('service_providers', (q: any) => q.eq('status', 'onay_bekliyor')),
+        count('orders', (q: any) => q.eq('status', 'odeme_bekleniyor')),
+      ]);
+      const [
+        listings, published, pendingListings, users, admins,
+        providers, pendingProviders, pendingOrders,
+      ] = counts as number[];
 
-  useEffect(() => {
-    if (isAdmin) load();
-    else if (!isProfileLoading) setIsLoading(false);
-  }, [isAdmin, isProfileLoading, load]);
+      const settings = await supabase
+        .from('app_settings')
+        .select('key, value')
+        .in('key', ['monetization', 'listing']);
 
-  async function confirmPayment(publicRef: string) {
-    const supabase = getSupabaseBrowserClient();
-    const { error } = await supabase.rpc('confirm_order_payment', {
-      p_public_ref: publicRef,
-      p_provider_ref: undefined,
-    });
+      const byKey = new Map(
+        ((settings.data as { key: string; value: any }[]) ?? []).map((r) => [r.key, r.value])
+      );
 
-    if (error) {
-      toast({ variant: 'destructive', title: 'Onaylanamadı', description: error.message });
-      return;
-    }
-    setOrders((prev) => prev.filter((o) => o.public_ref !== publicRef));
-    toast({ title: 'Ödeme onaylandı', description: 'Satın alınan haklar tanımlandı.' });
-    load();
-  }
+      setStats({
+        listings, published, pendingListings, users, admins,
+        providers, pendingProviders, pendingOrders,
+        monetization: Boolean(byKey.get('monetization')?.enabled),
+        autoApprove: byKey.get('listing')?.auto_approve !== false,
+      });
+    })();
+  }, []);
 
-  async function moderate(id: number, approve: boolean) {
-    const supabase = getSupabaseBrowserClient();
-    const { error } = await supabase
-      .from('listings')
-      .update({
-        status: approve ? 'yayinda' : 'reddedildi',
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: user?.id ?? null,
-        rejection_reason: approve ? null : 'Yayın kurallarına uymuyor.',
-      })
-      .eq('id', id);
-
-    if (error) {
-      toast({ variant: 'destructive', title: 'İşlem başarısız', description: error.message });
-      return;
-    }
-    setPending((prev) => prev.filter((l) => l.id !== id));
-    toast({ title: approve ? 'İlan yayına alındı' : 'İlan reddedildi' });
-    load();
-  }
-
-  if (isUserLoading || isProfileLoading || isLoading) {
+  if (!stats) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex justify-center py-16">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="mx-auto max-w-lg py-20 text-center">
-        <h1 className="text-xl font-bold">Bu sayfaya erişim yetkiniz yok</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Yönetim paneli yalnızca admin rolüne sahip hesaplara açıktır.
-        </p>
-        <Button asChild className="mt-6">
-          <Link href="/">Ana Sayfaya Dön</Link>
-        </Button>
-      </div>
-    );
-  }
+  const pendingTotal = stats.pendingListings + stats.pendingProviders + stats.pendingOrders;
 
   return (
-    <div className="w-full px-5 py-6 md:container md:mx-auto">
-      <h1 className="mb-6 text-2xl font-bold">Yönetim Paneli</h1>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Yönetim Paneli</h1>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Toplam İlan" value={stats?.listings ?? 0} />
-        <StatCard label="Yayında" value={stats?.published ?? 0} />
-        <StatCard label="Onay Bekleyen" value={stats?.pending ?? 0} />
-        <StatCard label="Kullanıcı" value={stats?.users ?? 0} />
-        <StatCard label="Bekleyen Ödeme" value={stats?.pendingOrders ?? 0} />
+      {pendingTotal > 0 ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-center gap-2 font-semibold text-amber-900">
+            <AlertTriangle className="h-5 w-5" />
+            Bekleyen {pendingTotal} iş var
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {stats.pendingListings > 0 && (
+              <Button asChild size="sm" variant="outline" className="bg-white">
+                <Link href="/admin/ilanlar?durum=onay_bekliyor">
+                  {stats.pendingListings} ilan onay bekliyor
+                </Link>
+              </Button>
+            )}
+            {stats.pendingProviders > 0 && (
+              <Button asChild size="sm" variant="outline" className="bg-white">
+                <Link href="/admin/isletmeler?durum=onay_bekliyor">
+                  {stats.pendingProviders} işletme onay bekliyor
+                </Link>
+              </Button>
+            )}
+            {stats.pendingOrders > 0 && (
+              <Button asChild size="sm" variant="outline" className="bg-white">
+                <Link href="/admin/siparisler">{stats.pendingOrders} ödeme bekliyor</Link>
+              </Button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-xl border bg-white p-4 text-sm text-muted-foreground">
+          Bekleyen iş yok. Onay bekleyen ilan, işletme kaydı ve ödeme bulunmuyor.
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat icon={List} label="Toplam İlan" value={stats.listings} href="/admin/ilanlar" />
+        <Stat icon={Eye} label="Yayında" value={stats.published} href="/admin/ilanlar?durum=yayinda" />
+        <Stat icon={Users} label="Kullanıcı" value={stats.users} href="/admin/kullanicilar" />
+        <Stat icon={Building2} label="İşletme" value={stats.providers} href="/admin/isletmeler" />
       </div>
 
-      <Tabs defaultValue="moderation">
-        <TabsList>
-          <TabsTrigger value="moderation">Moderasyon</TabsTrigger>
-          <TabsTrigger value="orders">Ödemeler</TabsTrigger>
-        </TabsList>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <SettingCard
+          icon={Settings}
+          title="İlan Onayı"
+          state={stats.autoApprove ? 'Otomatik' : 'Elle onay'}
+          note={
+            stats.autoApprove
+              ? 'İlanlar verildiği anda yayına giriyor.'
+              : 'Her ilan yönetici onayından geçiyor.'
+          }
+          good={stats.autoApprove}
+        />
+        <SettingCard
+          icon={Landmark}
+          title="Ücretlendirme"
+          state={stats.monetization ? 'Açık' : 'Kapalı'}
+          note={
+            stats.monetization
+              ? 'Öne çıkarma ve paket satışı aktif.'
+              : 'Tüm ilanlar ücretsiz; satış ekranı gizli.'
+          }
+          good={stats.monetization}
+        />
+      </div>
 
-        <TabsContent value="moderation" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Onay Bekleyen İlanlar</CardTitle>
-              <CardDescription>
-                Otomatik onay açıkken bu liste boş kalır. Kapatmak için app_settings
-                tablosunda listing.auto_approve değerini false yapın.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {pending.length === 0 ? (
-                <p className="py-8 text-center text-muted-foreground">
-                  Onay bekleyen ilan yok.
-                </p>
-              ) : (
-                <ul className="space-y-3">
-                  {pending.map((listing) => (
-                    <li
-                      key={listing.id}
-                      className="flex items-center gap-4 rounded-lg border p-3"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <Link
-                          href={`/${listing.slug}-${listing.id}`}
-                          className="line-clamp-1 font-medium hover:text-primary"
-                        >
-                          {listing.title}
-                        </Link>
-                        <p className="text-xs text-muted-foreground">
-                          #{listing.id} ·{' '}
-                          {listing.profiles?.full_name ?? listing.profiles?.username ?? 'Bilinmeyen'} ·{' '}
-                          {new Date(listing.created_at).toLocaleDateString('tr-TR')}
-                        </p>
-                      </div>
-                      <Badge variant="secondary">Onay Bekliyor</Badge>
-                      <Button size="sm" onClick={() => moderate(listing.id, true)}>
-                        <Check className="mr-1 h-4 w-4" />
-                        Onayla
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => moderate(listing.id, false)}>
-                        <X className="mr-1 h-4 w-4" />
-                        Reddet
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="orders" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ödeme Bekleyen Siparişler</CardTitle>
-              <CardDescription>
-                Havale/EFT geldiğini gördüğünüzde onaylayın. Onay anında doping,
-                abonelik veya ilan hakkı otomatik olarak tanımlanır.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {orders.length === 0 ? (
-                <p className="py-8 text-center text-muted-foreground">
-                  Ödeme bekleyen sipariş yok.
-                </p>
-              ) : (
-                <ul className="space-y-3">
-                  {orders.map((order) => (
-                    <li key={order.id} className="flex flex-wrap items-center gap-4 rounded-lg border p-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium">
-                          {order.order_items
-                            .map((i) => `${i.products?.name ?? 'Ürün'} × ${i.quantity}`)
-                            .join(', ')}
-                        </p>
-                        <p className="break-all text-xs text-muted-foreground">
-                          {order.public_ref} ·{' '}
-                          {order.billing_snapshot?.company_title ??
-                            order.billing_snapshot?.full_name ??
-                            'İsimsiz'}{' '}
-                          · {new Date(order.created_at).toLocaleDateString('tr-TR')}
-                        </p>
-                      </div>
-                      <span className="font-bold text-primary">
-                        {new Intl.NumberFormat('tr-TR', {
-                          style: 'currency',
-                          currency: 'TRY',
-                          maximumFractionDigits: 0,
-                        }).format(order.amount_minor / 100)}
-                      </span>
-                      <Button size="sm" onClick={() => confirmPayment(order.public_ref)}>
-                        <Check className="mr-1 h-4 w-4" />
-                        Ödemeyi Onayla
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <div className="rounded-xl border bg-white p-4 text-sm">
+        <p className="font-medium">Hızlı erişim</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link href="/admin/kullanicilar">Kullanıcı Ara</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/admin/ayarlar">Site Ayarları</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/admin/siparisler">
+              <Receipt className="mr-1.5 h-3.5 w-3.5" />
+              Siparişler
+            </Link>
+          </Button>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Sistemde {stats.admins} yönetici hesabı var.
+        </p>
+      </div>
     </div>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function Stat({
+  icon: Icon,
+  label,
+  value,
+  href,
+}: {
+  icon: any;
+  label: string;
+  value: number;
+  href: string;
+}) {
   return (
-    <Card>
-      <CardContent className="p-5">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="mt-1 text-3xl font-bold">{value}</p>
-      </CardContent>
-    </Card>
+    <Link href={href} className="rounded-xl border bg-white p-4 transition-colors hover:border-primary/40">
+      <Icon className="h-5 w-5 text-muted-foreground" />
+      <p className="mt-2 text-2xl font-bold leading-none">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+    </Link>
+  );
+}
+
+function SettingCard({
+  icon: Icon,
+  title,
+  state,
+  note,
+  good,
+}: {
+  icon: any;
+  title: string;
+  state: string;
+  note: string;
+  good: boolean;
+}) {
+  return (
+    <div className="rounded-xl border bg-white p-4">
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2 font-medium">
+          <Icon className="h-4 w-4 text-muted-foreground" />
+          {title}
+        </span>
+        <span
+          className={cn(
+            'rounded-full px-2 py-0.5 text-[11px] font-semibold',
+            good ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'
+          )}
+        >
+          {state}
+        </span>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">{note}</p>
+      <Link
+        href="/admin/ayarlar"
+        className="mt-2 inline-block text-xs font-medium text-primary hover:underline"
+      >
+        Ayarlardan değiştir
+      </Link>
+    </div>
   );
 }
