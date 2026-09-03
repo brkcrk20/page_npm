@@ -1,42 +1,41 @@
 import type { Metadata } from 'next';
 
-import { VetDirectory } from '@/components/services/VetDirectory';
+import { ServiceDirectory } from '@/components/services/ServiceDirectory';
+import { getServiceConfigBySlug } from '@/lib/services-config';
 import {
-  parseVetFilters,
-  buildVetBasePath,
-  loadVetPage,
-  type VetSearchParams,
-} from '@/lib/queries/vet-page';
+  parseServiceFilters,
+  buildServiceBasePath,
+  loadServicePage,
+  type ServiceSearchParams,
+} from '@/lib/queries/service-page';
 
-/**
- * Veteriner rehberi — Türkiye geneli.
- *
- * Server component: filtreler URL'de tutulup sunucuda uygulandığı için
- * filtrelenmiş sayfalar da arama motoruna dolu içerik olarak gidiyor.
- */
+// ÜRETİLMİŞ DOSYA — scripts/generate-service-pages.ts
+// Yedi hizmet kategorisi aynı bileşenleri kullanıyor; sayfalar yalnızca
+// yapılandırmayı bağlayan ince sarmalayıcılar.
+
+const config = getServiceConfigBySlug('veteriner')!;
 
 export const metadata: Metadata = {
-  title: 'Veteriner Klinikleri — Size En Yakın Veteriner Hekim | PetSemti',
-  description:
-    'Türkiye genelindeki veteriner klinikleri: 7/24 acil servis, röntgen, laboratuvar ve yatılı tedavi hizmeti verenler. Şehrinize göre filtreleyin, çalışma saatlerini görün.',
+  title: `${config.seoTitle} | PetSemti`,
+  description: config.seoDescription,
 };
 
 export const dynamic = 'force-dynamic';
 
-export default async function VeterinerPage({
+export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<VetSearchParams>;
+  searchParams: Promise<ServiceSearchParams>;
 }) {
-  const params = await searchParams;
-  const filters = parseVetFilters(params);
-  const data = await loadVetPage(filters);
+  const filters = parseServiceFilters(await searchParams);
+  const data = await loadServicePage(config.type, filters);
 
   return (
-    <VetDirectory
-      title="Veteriner Klinikleri"
+    <ServiceDirectory
+      config={config}
+      title={config.label}
       intro="Türkiye geneli"
-      crumbs={[{ label: 'Veteriner' }]}
+      crumbs={[{ label: config.label }]}
       providers={data.providers}
       total={data.total}
       page={data.page}
@@ -46,8 +45,8 @@ export default async function VeterinerPage({
       activeSearch={filters.search}
       verifiedOnly={filters.verifiedOnly}
       cities={data.cities}
-      basePath={buildVetBasePath('/veteriner', filters)}
-      emptyMessage="Bu kriterlere uyan veteriner kliniği bulunamadı."
+      basePath={buildServiceBasePath(`/${config.slug}`, filters)}
+      emptyMessage={`Bu kriterlere uyan ${config.unit} bulunamadı.`}
     />
   );
 }

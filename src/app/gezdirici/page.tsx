@@ -1,100 +1,52 @@
-'use client';
+import type { Metadata } from 'next';
 
+import { ServiceDirectory } from '@/components/services/ServiceDirectory';
+import { getServiceConfigBySlug } from '@/lib/services-config';
 import {
-  PersonStanding,
-  Phone,
-  MapPin,
-  Star,
-  Clock,
-  Map,
-  ShieldCheck,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { services } from "@/lib/data";
-import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+  parseServiceFilters,
+  buildServiceBasePath,
+  loadServicePage,
+  type ServiceSearchParams,
+} from '@/lib/queries/service-page';
 
-export default function WalkerPage() {
-  const walkerServices = services.filter(s => s.type === 'Walker');
-  const heroImage = PlaceHolderImages.find(img => img.id === 'walker-hero') ?? { imageUrl: 'https://picsum.photos/seed/walker-hero/1200/400', description: 'Person walking a dog in a park', imageHint: 'dog walking' };
+// ÜRETİLMİŞ DOSYA — scripts/generate-service-pages.ts
+// Yedi hizmet kategorisi aynı bileşenleri kullanıyor; sayfalar yalnızca
+// yapılandırmayı bağlayan ince sarmalayıcılar.
+
+const config = getServiceConfigBySlug('gezdirici')!;
+
+export const metadata: Metadata = {
+  title: `${config.seoTitle} | PetSemti`,
+  description: config.seoDescription,
+};
+
+export const dynamic = 'force-dynamic';
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<ServiceSearchParams>;
+}) {
+  const filters = parseServiceFilters(await searchParams);
+  const data = await loadServicePage(config.type, filters);
 
   return (
-    <div>
-      <section className="relative w-full h-64 bg-primary/10">
-        <Image
-          src={heroImage.imageUrl}
-          alt={heroImage.description}
-          data-ai-hint={heroImage.imageHint}
-          fill
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20" />
-        <div className="relative container mx-auto h-full flex flex-col items-start justify-end text-white pb-12">
-          <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight">
-            Evcil Hayvan Gezdiricileri
-          </h1>
-          <p className="mt-2 max-w-2xl text-lg text-primary-foreground/80">
-            Siz meşgulken dostlarınızın enerjisini atacağı güvenilir eller.
-          </p>
-        </div>
-      </section>
-
-      <div className="container mx-auto py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {walkerServices.map((service) => (
-            <Card key={service.id} className="flex flex-col hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden group">
-              <div className='relative h-48 w-full'>
-                 <Image
-                    src="https://picsum.photos/seed/dog-walker/400/300"
-                    alt={`${service.name} bir köpeği gezdiriyor`}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    data-ai-hint="dog walker"
-                />
-              </div>
-              <CardHeader className="flex-row items-start gap-4 pb-4">
-                <div className="w-16 h-16 flex-shrink-0 rounded-full bg-accent/10 text-accent flex items-center justify-center">
-                  <PersonStanding className="w-8 h-8" />
-                </div>
-                <div className="flex-1">
-                  <CardTitle className="font-headline text-xl">{service.name}</CardTitle>
-                  <CardDescription className="flex items-center gap-2 mt-1">
-                    <MapPin className="w-4 h-4 text-muted-foreground" />
-                    <span>{service.location}</span>
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow space-y-4">
-                <div className="flex items-center text-sm">
-                  <Phone className="w-4 h-4 mr-2 text-primary" />
-                  <a href={`tel:${service.contact}`} className="hover:underline">{service.contact}</a>
-                </div>
-                 <div className="flex items-center text-sm text-yellow-500 font-semibold">
-                  <Star className="w-4 h-4 mr-1 fill-current" />
-                  <Star className="w-4 h-4 mr-1 fill-current" />
-                  <Star className="w-4 h-4 mr-1 fill-current" />
-                  <Star className="w-4 h-4 mr-1 fill-current" />
-                  <Star className="w-4 h-4 mr-2 fill-current" />
-                  <span>5.0 (12 yorum)</span>
-                </div>
-                <div className="flex flex-wrap gap-2 pt-2 border-t mt-4">
-                  <Badge variant="outline" className="flex items-center gap-1"><Clock className="w-3 h-3" /> Saatlik Hizmet</Badge>
-                  <Badge variant="outline" className="flex items-center gap-1"><Map className="w-3 h-3" /> GPS ile Takip</Badge>
-                  <Badge variant="outline" className="flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> Sigortalı</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        {walkerServices.length === 0 && (
-          <div className="text-center py-20 col-span-full">
-            <PersonStanding className="mx-auto h-16 w-16 text-muted-foreground" />
-            <p className="mt-4 text-lg font-semibold">Şu anda listelenecek gezdirici bulunmamaktadır.</p>
-            <p className="text-muted-foreground">Lütfen daha sonra tekrar kontrol edin.</p>
-          </div>
-        )}
-      </div>
-    </div>
+    <ServiceDirectory
+      config={config}
+      title={config.label}
+      intro="Türkiye geneli"
+      crumbs={[{ label: config.label }]}
+      providers={data.providers}
+      total={data.total}
+      page={data.page}
+      pageCount={data.pageCount}
+      featureGroups={data.featureGroups}
+      activeFeatures={filters.featureSlugs}
+      activeSearch={filters.search}
+      verifiedOnly={filters.verifiedOnly}
+      cities={data.cities}
+      basePath={buildServiceBasePath(`/${config.slug}`, filters)}
+      emptyMessage={`Bu kriterlere uyan ${config.unit} bulunamadı.`}
+    />
   );
 }

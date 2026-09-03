@@ -1,6 +1,4 @@
 
-import { pets } from './data';
-import type { Pet } from './data';
 import type { ReactNode } from 'react';
 import { Dog, Cat, Bird, Fish, PawPrint } from 'lucide-react';
 
@@ -161,6 +159,7 @@ export type BreedInfo = {
   id: string;
   name: string;
   slug: string;
+  /** Gerçek sayım veritabanından gelir; burada her zaman 0. */
   count: number;
 };
 
@@ -173,34 +172,21 @@ export type CategoryInfo = {
   slug: string;
 };
 
-// 1. Get counts of breeds that are in the pet listings
-const countsByType = pets.reduce((acc, pet) => {
-    const { type, breed } = pet;
-    if (!acc[type]) acc[type] = {};
-    if (!acc[type][breed]) acc[type][breed] = 0;
-    acc[type][breed]++;
-    return acc;
-}, {} as Record<Pet['type'], Record<string, number>>);
-
-// 2. Function to merge static breed list with dynamic counts
-const processBreeds = (
-  allBreeds: Breed[], 
-  breedCounts: Record<string, number> | undefined
-): BreedInfo[] => {
-  const breedInfo = allBreeds.map(breed => ({
-    id: breed.id,
-    name: breed.name,
-    slug: slugify(breed.name),
-    count: breedCounts?.[breed.name] || 0,
-  }));
-  // Sort by count descending, then alphabetically using a specific locale
-  return breedInfo.sort((a, b) => {
-    if (b.count !== a.count) {
-      return b.count - a.count;
-    }
-    return a.name.localeCompare(b.name, 'tr');
-  });
-};
+// Cins listesi ve sıralaması.
+//
+// İlan sayıları burada hesaplanmıyor: sayımlar veritabanındaki
+// breed_listing_counts view'ından geliyor (bkz. queries/catalog.ts).
+// Bu dosya yalnızca kanonik cins listesini tutuyor ve statik yedek olarak
+// kullanılıyor (static-catalog.ts).
+const processBreeds = (allBreeds: Breed[]): BreedInfo[] =>
+  allBreeds
+    .map((breed) => ({
+      id: breed.id,
+      name: breed.name,
+      slug: slugify(breed.name),
+      count: 0,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
 
 // 3. Create the final, pre-processed categories array
 export const categories: CategoryInfo[] = [
@@ -210,7 +196,7 @@ export const categories: CategoryInfo[] = [
     slug: 'kopek-ilanlari',
     Icon: Dog,
     color: 'text-orange-500',
-    breeds: processBreeds(allDogBreedsData, countsByType.Dog),
+    breeds: processBreeds(allDogBreedsData),
   },
   {
     type: 'Cat',
@@ -218,7 +204,7 @@ export const categories: CategoryInfo[] = [
     slug: 'kedi-ilanlari',
     Icon: Cat,
     color: 'text-red-400',
-    breeds: processBreeds(allCatBreedsData, countsByType.Cat),
+    breeds: processBreeds(allCatBreedsData),
   },
   {
     type: 'Bird',
@@ -226,7 +212,7 @@ export const categories: CategoryInfo[] = [
     slug: 'kus-ilanlari',
     Icon: Bird,
     color: 'text-sky-400',
-    breeds: processBreeds(allBirdBreedsData, countsByType.Bird),
+    breeds: processBreeds(allBirdBreedsData),
   },
   {
     type: 'Aquarium',
@@ -234,7 +220,7 @@ export const categories: CategoryInfo[] = [
     slug: 'akvaryum-ilanlari',
     Icon: Fish,
     color: 'text-blue-400',
-    breeds: processBreeds(allAquariumBreedsData, countsByType.Aquarium),
+    breeds: processBreeds(allAquariumBreedsData),
   },
    {
     type: 'Other',
@@ -242,6 +228,6 @@ export const categories: CategoryInfo[] = [
     slug: 'diger-ilanlar',
     Icon: PawPrint,
     color: 'text-emerald-500',
-    breeds: processBreeds(allOtherBreedsData, countsByType.Other),
+    breeds: processBreeds(allOtherBreedsData),
   },
 ];

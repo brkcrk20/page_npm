@@ -13,7 +13,7 @@ import {
 // Yedi hizmet kategorisi aynı bileşenleri kullanıyor; sayfalar yalnızca
 // yapılandırmayı bağlayan ince sarmalayıcılar.
 
-const config = getServiceConfigBySlug('pet-oteli')!;
+const config = getServiceConfigBySlug('pet-kuafor')!;
 
 export const metadata: Metadata = {
   title: `${config.seoTitle} | PetSemti`,

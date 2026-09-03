@@ -1,22 +1,24 @@
 import 'server-only';
 
 /**
- * Veteriner rehberi sayfalarının ortak yükleme mantığı.
+ * Hizmet rehberi sayfalarının ortak yükleme mantığı.
  *
- * Genel liste, şehir ve ilçe sayfaları aynı filtreleri ve aynı yan menüyü
- * kullanıyor; sorgu kurulumunu üç dosyada tekrarlamak yerine burada topluyoruz.
+ * Yedi kategori ve her birinin genel/şehir/ilçe sayfaları aynı filtreleri ve
+ * aynı yan menüyü kullanıyor; sorgu kurulumunu her dosyada tekrarlamak yerine
+ * burada topluyoruz.
  */
 
 import {
   getServiceProviders,
   getServiceFeatures,
   getServiceCityCounts,
+  type ServiceType,
 } from '@/lib/queries/services';
 
-export type VetSearchParams = { [key: string]: string | string[] | undefined };
+export type ServiceSearchParams = { [key: string]: string | string[] | undefined };
 
 /** URL sorgu dizesinden filtreleri okur. */
-export function parseVetFilters(searchParams: VetSearchParams) {
+export function parseServiceFilters(searchParams: ServiceSearchParams) {
   const raw = searchParams.ozellik;
   const featureSlugs = Array.isArray(raw) ? raw : raw ? [raw] : [];
 
@@ -28,9 +30,9 @@ export function parseVetFilters(searchParams: VetSearchParams) {
 }
 
 /** Filtreleri koruyarak sayfalama bağlantılarının temelini üretir. */
-export function buildVetBasePath(
+export function buildServiceBasePath(
   pathname: string,
-  filters: ReturnType<typeof parseVetFilters>
+  filters: ReturnType<typeof parseServiceFilters>
 ): string {
   const params = new URLSearchParams();
   for (const slug of filters.featureSlugs) params.append('ozellik', slug);
@@ -41,28 +43,29 @@ export function buildVetBasePath(
   return query ? `${pathname}?${query}` : pathname;
 }
 
-export async function loadVetPage(
-  filters: ReturnType<typeof parseVetFilters>,
+export async function loadServicePage(
+  serviceType: ServiceType,
+  filters: ReturnType<typeof parseServiceFilters>,
   scope: { cityId?: number; districtId?: number } = {}
 ) {
   const [result, featureGroups, cities] = await Promise.all([
     getServiceProviders({
-      serviceType: 'veteriner',
+      serviceType,
       featureSlugs: filters.featureSlugs.length ? filters.featureSlugs : undefined,
       search: filters.search || undefined,
       verifiedOnly: filters.verifiedOnly || undefined,
       page: filters.page,
       ...scope,
     }),
-    getServiceFeatures('veteriner'),
-    getServiceCityCounts('veteriner'),
+    getServiceFeatures(serviceType),
+    getServiceCityCounts(serviceType),
   ]);
 
   return {
     ...result,
     featureGroups,
-    // Kliniği olmayan 81 ilin tamamını listelemek yan menüyü kullanılmaz
-    // hale getiriyor; yalnızca kayıt bulunan iller gösteriliyor.
+    // Kaydı olmayan 81 ilin tamamını listelemek yan menüyü kullanılmaz hale
+    // getiriyor; yalnızca kayıt bulunan iller gösteriliyor.
     cities: cities.filter((c) => c.count > 0),
   };
 }

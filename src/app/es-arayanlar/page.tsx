@@ -1,40 +1,47 @@
-'use client';
-
-import { HeartHandshake, PlusCircle } from 'lucide-react';
-import { PetCard } from '@/components/PetCard';
-import { pets } from '@/lib/data';
-import { Button } from '@/components/ui/button';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { useUser } from '@/lib/supabase/auth-provider';
 
-export default function MatingPage() {
-  const { user } = useUser();
-  // In a real scenario, you would fetch pets available for mating
-  const matingPets = pets.filter(p => p.listingType === 'Sale').slice(0, 4); // Example filter
+import { Button } from '@/components/ui/button';
+import { ListingGrid } from '@/components/listings/ListingGrid';
+import { getListings } from '@/lib/queries/listings';
+
+/**
+ * Eş arayan ilanları.
+ *
+ * Ayrı bir veri kaynağı yok: ilan şemasında `es_arayan` bir ilan tipi, bu
+ * sayfa da o tipe göre filtrelenmiş liste. Kendi tablosunu tutmak, kategori
+ * sayfalarında düzelttiğimiz kopyalama hatasının aynısı olurdu.
+ */
+
+export const metadata: Metadata = {
+  title: 'Eş Arayan İlanları — Çiftleştirme | PetSemti',
+  description:
+    'Kedi ve köpekler için eş arayan ilanları. Cins, yaş ve şehre göre uygun eşi bulun.',
+};
+
+export const dynamic = 'force-dynamic';
+
+export default async function MatingListingsPage() {
+  const { listings, total } = await getListings({ kind: 'es_arayan' });
 
   return (
-    <div className="container mx-auto py-12">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold font-headline">Eş Arayanlar</h1>
-        <Button asChild>
-          <Link href={user ? "/es-arayanlar/yeni" : "/login"}>
-            <PlusCircle className="mr-2 h-4 w-4" /> İlan Ekle
-          </Link>
-        </Button>
+    <div className="bg-secondary/30">
+      <div className="mx-auto w-full max-w-7xl px-5 py-6">
+        <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold md:text-3xl">Eş Arayanlar</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{total} ilan bulundu</p>
+          </div>
+          <Button asChild>
+            <Link href="/ilan-ver?tip=es_arayan">Eş Arayan İlanı Ver</Link>
+          </Button>
+        </header>
+
+        <ListingGrid
+          listings={listings}
+          emptyMessage="Şu an yayında eş arayan ilanı yok. İlk ilanı sen ver!"
+        />
       </div>
-      {matingPets.length > 0 ? (
-        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-          {matingPets.map((pet) => (
-            <PetCard key={pet.id} pet={pet} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-20 col-span-full">
-          <HeartHandshake className="mx-auto h-16 w-16 text-muted-foreground" />
-          <p className="mt-4 text-lg font-semibold">Şu anda eş arayan ilan bulunmamaktadır.</p>
-          <p className="text-muted-foreground">Lütfen daha sonra tekrar kontrol edin veya ilk ilanı siz verin!</p>
-        </div>
-      )}
     </div>
   );
 }

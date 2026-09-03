@@ -1,18 +1,27 @@
 import Link from 'next/link';
 import { BadgeCheck, MapPin, Star } from 'lucide-react';
 
+import type { ServiceConfig } from '@/lib/services-config';
+
 import { Badge } from '@/components/ui/badge';
 import { getOpenState } from '@/lib/opening-hours';
 import type { ServiceProviderCard } from '@/lib/queries/services';
 import { cn } from '@/lib/utils';
 
 /**
- * Rehber listesindeki klinik kartı.
+ * Rehber listesindeki işletme kartı.
  *
- * Kart bilinçli olarak "şu an açık mı" bilgisini öne çıkarıyor: veteriner
- * ararken çoğu ziyaretçi acil durumda ve en çok bunu merak ediyor.
+ * Kart bilinçli olarak "şu an açık mı" bilgisini öne çıkarıyor: hizmet
+ * ararken ziyaretçinin ilk sorusu bu, özellikle veteriner gibi acil
+ * kategorilerde.
  */
-export function VetCard({ provider }: { provider: ServiceProviderCard }) {
+export function ServiceCard({
+  provider,
+  config,
+}: {
+  provider: ServiceProviderCard;
+  config: ServiceConfig;
+}) {
   const openState = getOpenState(provider.service_provider_hours ?? []);
   const location = [provider.cities?.name, provider.districts?.name].filter(Boolean).join(' / ');
 
@@ -29,13 +38,13 @@ export function VetCard({ provider }: { provider: ServiceProviderCard }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="flex items-center gap-1.5 text-base font-bold">
-            <Link href={`/veteriner/${provider.slug}-${provider.id}`} className="hover:text-primary">
+            <Link href={`/${config.slug}/${provider.slug}-${provider.id}`} className="hover:text-primary">
               {provider.name}
             </Link>
             {provider.is_verified && (
               <BadgeCheck
                 className="h-4 w-4 shrink-0 text-emerald-600"
-                aria-label="Doğrulanmış klinik"
+                aria-label="Doğrulanmış işletme"
               />
             )}
           </h3>
@@ -76,7 +85,7 @@ export function VetCard({ provider }: { provider: ServiceProviderCard }) {
       )}
 
       <Link
-        href={`/veteriner/${provider.slug}-${provider.id}`}
+        href={`/${config.slug}/${provider.slug}-${provider.id}`}
         className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
       >
         Detayları Gör →

@@ -5,7 +5,7 @@ import { getServiceConfigBySlug } from '@/lib/services-config';
 
 // ÜRETİLMİŞ DOSYA — scripts/generate-service-pages.ts
 
-const config = getServiceConfigBySlug('veteriner')!;
+const config = getServiceConfigBySlug('pet-oteli')!;
 
 export const metadata: Metadata = {
   title: `${config.registerCta} | PetSemti`,

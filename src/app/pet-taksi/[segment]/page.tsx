@@ -23,7 +23,7 @@ import {
 // Ayrım belirsiz değil: işletme adresi her zaman "-<sayı>" ile biter, şehir
 // slug'ları asla rakamla bitmez — ilan/kategori ayrımıyla aynı kural.
 
-const config = getServiceConfigBySlug('veteriner')!;
+const config = getServiceConfigBySlug('pet-taksi')!;
 
 type Params = { segment: string };
 

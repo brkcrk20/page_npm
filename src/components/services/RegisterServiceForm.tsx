@@ -27,19 +27,20 @@ import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import { WEEKDAY_NAMES } from '@/lib/opening-hours';
+import type { ServiceConfig } from '@/lib/services-config';
 
 /**
- * Klinik kayıt formu.
+ * Hizmet sağlayıcı kayıt formu (yedi kategorinin hepsi için).
  *
- * Kayıt onay kuyruğuna düşüyor: veteriner rehberi güven üzerine kurulu,
- * doğrulanmamış kaydın doğrudan yayına girmesi rehberin değerini düşürürdü.
- * Durum, doğrulama rozeti ve sayaçlar veritabanı tarafında zorla
- * normalleştiriliyor (service_providers_guard), yani form ne gönderirse
- * göndersin kullanıcı kendini doğrulanmış gösteremiyor.
+ * Kayıt onay kuyruğuna düşüyor: rehberler güven üzerine kurulu, doğrulanmamış
+ * kaydın doğrudan yayına girmesi rehberin değerini düşürürdü. Durum, doğrulama
+ * rozeti ve sayaçlar veritabanı tarafında zorla normalleştiriliyor
+ * (service_providers_guard), yani form ne gönderirse göndersin kullanıcı
+ * kendini doğrulanmış gösteremiyor.
  */
 
 const schema = z.object({
-  name: z.string().trim().min(2, 'Klinik adı en az 2 karakter olmalı.').max(120),
+  name: z.string().trim().min(2, 'İşletme adı en az 2 karakter olmalı.').max(120),
   description: z.string().trim().max(2000).optional(),
   phone: z.string().trim().min(10, 'Geçerli bir telefon girin.'),
   phoneAlt: z.string().trim().optional(),
@@ -60,7 +61,7 @@ type DayHours = { isClosed: boolean; is24h: boolean; opens: string; closes: stri
 
 const DEFAULT_DAY: DayHours = { isClosed: false, is24h: false, opens: '09:00', closes: '19:00' };
 
-export function RegisterClinicForm() {
+export function RegisterServiceForm({ config }: { config: ServiceConfig }) {
   const router = useRouter();
   const { toast } = useToast();
   const { user, isUserLoading } = useSupabaseAuth();
@@ -98,14 +99,14 @@ export function RegisterClinicForm() {
         supabase
           .from('service_features')
           .select('id, slug, name, group_name, position')
-          .eq('service_type', 'veteriner')
+          .eq('service_type', config.type)
           .eq('is_active', true)
           .order('position'),
       ]);
       if (cits.data) setCities(cits.data as Option[]);
       if (feats.data) setFeatures(feats.data as Feature[]);
     })();
-  }, []);
+  }, [config.type]);
 
   useEffect(() => {
     if (!cityId) {
@@ -153,7 +154,7 @@ export function RegisterClinicForm() {
       const { data: provider, error } = await supabase
         .from('service_providers')
         .insert({
-          service_type: 'veteriner',
+          service_type: config.type,
           owner_id: user.id,
           name: values.name,
           slug: 'placeholder', // trigger addan üretiyor
@@ -199,9 +200,9 @@ export function RegisterClinicForm() {
 
       toast({
         title: 'Kaydınız alındı',
-        description: 'Kliniğiniz incelendikten sonra rehberde yayınlanacak.',
+        description: 'İşletmeniz incelendikten sonra rehberde yayınlanacak.',
       });
-      router.push('/veteriner');
+      router.push(`/${config.slug}`);
       router.refresh();
     } catch (error: any) {
       console.error(error);
@@ -227,10 +228,11 @@ export function RegisterClinicForm() {
   return (
     <Card className="mx-auto my-6 max-w-3xl">
       <CardHeader>
-        <CardTitle>Kliniğinizi Rehbere Ekleyin</CardTitle>
+        <CardTitle>{config.registerCta}</CardTitle>
         <CardDescription>
           Kayıt ücretsizdir. Bilgileriniz incelendikten sonra rehberde yayınlanır.
-          Oda kayıt numarası girmeniz doğrulanmış rozeti almanızı hızlandırır.
+          Ruhsat / oda kayıt numarası girmeniz doğrulanmış rozeti almanızı
+          hızlandırır.
         </CardDescription>
       </CardHeader>
 
@@ -242,9 +244,9 @@ export function RegisterClinicForm() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Klinik Adı</FormLabel>
+                  <FormLabel>İşletme Adı</FormLabel>
                   <FormControl>
-                    <Input placeholder="Örn: Dost Veteriner Kliniği" {...field} />
+                    <Input placeholder={`Örn: ${config.label} — işletme adınız`} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -258,7 +260,7 @@ export function RegisterClinicForm() {
                 <FormItem>
                   <FormLabel>Tanıtım</FormLabel>
                   <FormControl>
-                    <Textarea rows={4} placeholder="Kliniğiniz, ekibiniz ve uzmanlık alanlarınız hakkında bilgi verin." {...field} />
+                    <Textarea rows={4} placeholder="İşletmeniz, ekibiniz ve uzmanlık alanlarınız hakkında bilgi verin." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -473,7 +475,7 @@ export function RegisterClinicForm() {
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Kliniği Kaydet
+              Kaydı Gönder
             </Button>
           </form>
         </Form>

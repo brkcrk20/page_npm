@@ -1,19 +1,20 @@
 import Link from 'next/link';
 import { BadgeCheck, Clock, MapPin, ShieldCheck, Star } from 'lucide-react';
 
-import { OpenBadge } from '@/components/services/VetCard';
+import { OpenBadge } from '@/components/services/ServiceCard';
 import { ServiceContact } from '@/components/services/ServiceContact';
 import { Badge } from '@/components/ui/badge';
 import { getOpenState, normalizeWeek, formatTime, WEEKDAY_NAMES } from '@/lib/opening-hours';
 import type { ServiceReview } from '@/lib/queries/services';
+import type { ServiceConfig } from '@/lib/services-config';
 import { cn } from '@/lib/utils';
 
 /**
- * Veteriner kliniği detay sayfası.
+ * Hizmet sağlayıcı detay sayfası.
  *
  * Sayfa server component; yalnızca iletişim düğmeleri istemci tarafında.
- * Klinik bilgisi (adres, saatler, hizmetler) arama motoruna dolu HTML olarak
- * gidiyor — yerel aramada bulunabilmenin ön koşulu bu.
+ * İşletme bilgisi (adres, saatler, hizmetler) arama motoruna dolu HTML
+ * olarak gidiyor — yerel aramada bulunabilmenin ön koşulu bu.
  */
 
 type Provider = {
@@ -45,11 +46,13 @@ type Provider = {
   }[];
 };
 
-export function VetDetail({
+export function ServiceDetail({
+  config,
   provider,
   reviews,
   nearby,
 }: {
+  config: ServiceConfig;
   provider: Provider;
   reviews: ServiceReview[];
   nearby: { id: number; slug: string; name: string; districts: { name: string } | null }[];
@@ -80,14 +83,14 @@ export function VetDetail({
           </li>
           <li className="flex items-center gap-1.5">
             <span aria-hidden className="text-muted-foreground">›</span>
-            <Link href="/veteriner" className="text-primary hover:underline">
-              Veteriner
+            <Link href={`/${config.slug}`} className="text-primary hover:underline">
+              {config.label}
             </Link>
           </li>
           {provider.cities && (
             <li className="flex items-center gap-1.5">
               <span aria-hidden className="text-muted-foreground">›</span>
-              <Link href={`/veteriner/${provider.cities.slug}`} className="text-primary hover:underline">
+              <Link href={`/${config.slug}/${provider.cities.slug}`} className="text-primary hover:underline">
                 {provider.cities.name}
               </Link>
             </li>
@@ -105,7 +108,7 @@ export function VetDetail({
             <h1 className="flex items-center gap-2 text-xl font-bold md:text-2xl">
               {provider.name}
               {provider.is_verified && (
-                <BadgeCheck className="h-5 w-5 text-emerald-600" aria-label="Doğrulanmış klinik" />
+                <BadgeCheck className="h-5 w-5 text-emerald-600" aria-label="Doğrulanmış işletme" />
               )}
             </h1>
             {location && (
@@ -122,7 +125,7 @@ export function VetDetail({
           <div className="space-y-5">
             {provider.description && (
               <section className="overflow-hidden rounded-lg border bg-white">
-                <h2 className="border-l-4 border-primary px-4 py-3 font-bold">Klinik Hakkında</h2>
+                <h2 className="border-l-4 border-primary px-4 py-3 font-bold">Hakkında</h2>
                 <div className="border-t p-4">
                   <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                     {provider.description}
@@ -188,7 +191,7 @@ export function VetDetail({
               <div className="border-t p-4">
                 {reviews.length === 0 ? (
                   <p className="py-6 text-center text-sm text-muted-foreground">
-                    Bu klinik için henüz değerlendirme yapılmamış.
+                    Henüz değerlendirme yapılmamış.
                   </p>
                 ) : (
                   <ul className="space-y-4">
@@ -262,12 +265,12 @@ export function VetDetail({
 
             {nearby.length > 0 && provider.cities && (
               <div className="rounded-lg border bg-white p-4">
-                <h2 className="mb-3 font-bold">{provider.cities.name}&apos;daki Diğer Klinikler</h2>
+                <h2 className="mb-3 font-bold">{provider.cities.name} — Diğer {config.label}</h2>
                 <ul className="space-y-2">
                   {nearby.map((item) => (
                     <li key={item.id}>
                       <Link
-                        href={`/veteriner/${item.slug}-${item.id}`}
+                        href={`/${config.slug}/${item.slug}-${item.id}`}
                         className="block text-sm text-muted-foreground hover:text-primary"
                       >
                         {item.name}

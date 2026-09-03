@@ -1,0 +1,145 @@
+import type { MetadataRoute } from 'next';
+
+import { SITE_URL } from '@/lib/site';
+import { getCategories, getBreedsByCategoryId, getCities } from '@/lib/queries/catalog';
+import { getListings } from '@/lib/queries/listings';
+import { getServiceProviders, getServiceCityCounts } from '@/lib/queries/services';
+import { SERVICE_CONFIGS } from '@/lib/services-config';
+
+/**
+ * sitemap.xml
+ *
+ * Bu sitenin trafiği tamamen organik aramadan geleceği için site haritası
+ * kritik: kategori, cins ve şehir sayfalarının çoğuna site içinden yalnızca
+ * yan menü üzerinden bağlantı var; harita olmadan arama motorunun binlerce
+ * sayfayı keşfetmesi aylar sürer.
+ *
+ * Öncelik değerleri kasıtlı: cins ve şehir sayfaları uzun kuyruk aramaların
+ * ana hedefi olduğu için kategori sayfalarıyla neredeyse eşit ağırlıkta.
+ * Filtreli adresler (?ozellik=...) haritaya girmiyor — robots.txt'te de
+ * kapalılar, aynı içeriğin kombinasyonları tarama bütçesini tüketirdi.
+ */
+
+// Tek dosya sınırı 50.000 URL. Referans sayfaları ~600 tuttuğu için ilan
+// tarafına geniş bir pay kalıyor; bu sınır aşılırsa generateSitemaps ile
+// parçalamak gerekir.
+const MAX_LISTINGS = 40000;
+
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date();
+
+  const staticEntries: MetadataRoute.Sitemap = [
+    { url: `${SITE_URL}/`, lastModified: now, changeFrequency: 'hourly', priority: 1 },
+    { url: `${SITE_URL}/es-arayanlar`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
+    // Yedi hizmet rehberinin kök sayfaları
+    ...SERVICE_CONFIGS.map((service) => ({
+      url: `${SITE_URL}/${service.slug}`,
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    })),
+  ];
+
+  const [categories, cities] = await Promise.all([getCategories(), getCities()]);
+
+  // --- Kategoriler ---
+  const categoryEntries: MetadataRoute.Sitemap = categories.map((category) => ({
+    url: `${SITE_URL}/${category.slug}`,
+    lastModified: now,
+    changeFrequency: 'daily' as const,
+    priority: 0.9,
+  }));
+
+  // --- Cinsler ve şehir kırılımları ---
+  const breedLists = await Promise.all(
+    categories.map((category) => getBreedsByCategoryId(category.id))
+  );
+
+  const breedEntries: MetadataRoute.Sitemap = [];
+  const cityEntries: MetadataRoute.Sitemap = [];
+
+  categories.forEach((category, index) => {
+    for (const breed of breedLists[index]) {
+      breedEntries.push({
+        url: `${SITE_URL}/${category.slug}/${breed.slug}`,
+        lastModified: now,
+        changeFrequency: 'daily',
+        priority: 0.8,
+      });
+    }
+
+    for (const city of cities) {
+      cityEntries.push({
+        url: `${SITE_URL}/${category.slug}/${city.slug}`,
+        lastModified: now,
+        changeFrequency: 'daily',
+        priority: 0.7,
+      });
+    }
+  });
+
+  // --- İlanlar ---
+  // Sayfalayarak çekiyoruz: tek istekte 40.000 satır hem Supabase tarafında
+  // hem bellekte makul değil.
+  const listingEntries: MetadataRoute.Sitemap = [];
+  const perPage = 1000;
+
+  for (let page = 1; listingEntries.length < MAX_LISTINGS; page++) {
+    const { listings, pageCount } = await getListings({ page, perPage });
+    if (listings.length === 0) break;
+
+    for (const listing of listings) {
+      listingEntries.push({
+        url: `${SITE_URL}/${listing.slug}-${listing.id}`,
+        lastModified: listing.published_at ? new Date(listing.published_at) : now,
+        changeFrequency: 'weekly',
+        priority: 0.6,
+      });
+    }
+
+    if (page >= pageCount) break;
+  }
+
+  // --- Hizmet rehberleri ---
+  // Yedi kategorinin şehir sayfaları ve işletme kayıtları. Kategori başına
+  // ayrı ayrı yazmak yerine yapılandırma üzerinden dönüyoruz.
+  const serviceEntries: MetadataRoute.Sitemap = [];
+
+  for (const service of SERVICE_CONFIGS) {
+    const [cityCounts, providers] = await Promise.all([
+      getServiceCityCounts(service.type),
+      getServiceProviders({ serviceType: service.type, perPage: 1000 }),
+    ]);
+
+    // Yalnızca kayıt bulunan iller: boş şehir sayfası arama motoruna
+    // gönderilecek bir içerik değil.
+    for (const city of cityCounts.filter((c) => c.count > 0)) {
+      serviceEntries.push({
+        url: `${SITE_URL}/${service.slug}/${city.slug}`,
+        lastModified: now,
+        changeFrequency: 'weekly',
+        priority: 0.7,
+      });
+    }
+
+    for (const provider of providers.providers) {
+      serviceEntries.push({
+        url: `${SITE_URL}/${service.slug}/${provider.slug}-${provider.id}`,
+        lastModified: now,
+        changeFrequency: 'monthly',
+        priority: 0.6,
+      });
+    }
+  }
+
+  return [
+    ...staticEntries,
+    ...categoryEntries,
+    ...breedEntries,
+    ...cityEntries,
+    ...listingEntries,
+    ...serviceEntries,
+  ];
+}

@@ -15,7 +15,7 @@ import {
 // Yalnızca ikinci segment bir şehir olduğunda anlamlı; işletme detayının
 // altında ilçe kırılımı yok.
 
-const config = getServiceConfigBySlug('veteriner')!;
+const config = getServiceConfigBySlug('egitmen')!;
 
 type Params = { segment: string; district: string };
 

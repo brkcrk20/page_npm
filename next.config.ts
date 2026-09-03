@@ -54,6 +54,15 @@ const nextConfig: NextConfig = {
         destination: '/:category/:breed',
         permanent: true,
       },
+
+      // 4) Hizmet adreslerinde alt çizgi -> tire.
+      //    Arama motorları alt çizgiyi kelime ayırıcı saymıyor; "pet_kuafor"
+      //    tek bir kelime gibi okunuyor ve "pet kuaför" aramasıyla eşleşmesi
+      //    zayıflıyor. Eski adresler kalıcı olarak yeni yola taşınıyor.
+      { source: '/pet_kuafor', destination: '/pet-kuafor', permanent: true },
+      { source: '/pet_kuafor/:path*', destination: '/pet-kuafor/:path*', permanent: true },
+      { source: '/pet_taksi', destination: '/pet-taksi', permanent: true },
+      { source: '/pet_taksi/:path*', destination: '/pet-taksi/:path*', permanent: true },
     ];
   },
 };

@@ -316,3 +316,59 @@ export async function getAdjacentListings(
     next: (older.data as any) ?? null,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Satıcı profili
+// ---------------------------------------------------------------------------
+
+/**
+ * Kullanıcı adından herkese açık satıcı profili.
+ *
+ * profiles tablosuna doğrudan gidilmiyor: RLS orada yalnızca kişinin kendi
+ * satırını gösteriyor. Herkese açık alanlar public_profiles view'ında.
+ */
+export async function getSellerByUsername(username: string): Promise<SellerInfo | null> {
+  if (!isSupabaseServerConfigured()) return null;
+  const supabase = createSupabasePublicClient();
+
+  const { data, error } = await supabase
+    .from('public_profiles')
+    .select('id, full_name, username, avatar_url, is_verified, account_type, company_title')
+    .eq('username', username.toLocaleLowerCase('tr'))
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return getSellerInfo((data as any).id);
+}
+
+/** Bir satıcının yayındaki ilanları. */
+export async function getSellerListings(userId: string, page = 1, perPage = 24) {
+  if (!isSupabaseServerConfigured()) {
+    return { listings: [] as ListingCard[], total: 0, page, perPage, pageCount: 1 };
+  }
+
+  const supabase = createSupabasePublicClient();
+  const from = (page - 1) * perPage;
+
+  const { data, error, count } = await supabase
+    .from('listings')
+    .select(CARD_COLUMNS, { count: 'exact' })
+    .eq('owner_id', userId)
+    .eq('status', 'yayinda')
+    .order('published_at', { ascending: false })
+    .range(from, from + perPage - 1);
+
+  if (error) {
+    console.error('Satıcı ilanları alınamadı:', error.message);
+    return { listings: [] as ListingCard[], total: 0, page, perPage, pageCount: 1 };
+  }
+
+  const total = count ?? 0;
+  return {
+    listings: (data ?? []) as unknown as ListingCard[],
+    total,
+    page,
+    perPage,
+    pageCount: Math.max(1, Math.ceil(total / perPage)),
+  };
+}

@@ -63,9 +63,9 @@ const serviceCategories = [
   { icon: Stethoscope, label: 'Veteriner', href: '/veteriner' },
   { icon: Building, label: 'Pet Oteli', href: '/pet-oteli' },
   { icon: Award, label: 'Eğitmen', href: '/egitmen' },
-  { icon: Scissors, label: 'Pet Kuaför', href: '/pet_kuafor' },
+  { icon: Scissors, label: 'Pet Kuaför', href: '/pet-kuafor' },
   { icon: ShoppingCart, label: 'Petshop', href: '/petshop' },
-  { icon: Car, label: 'Pet Taksi', href: '/pet_taksi' },
+  { icon: Car, label: 'Pet Taksi', href: '/pet-taksi' },
   { icon: PersonStanding, label: 'Gezdirici', href: '/gezdirici' },
 ];
 

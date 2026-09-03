@@ -1,22 +1,24 @@
 import Link from 'next/link';
-import { Stethoscope } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 
-import { VetCard } from '@/components/services/VetCard';
+import { ServiceCard } from '@/components/services/ServiceCard';
 import { ServiceFilterPanel } from '@/components/services/ServiceFilterPanel';
 import { Button } from '@/components/ui/button';
 import type { ServiceFeature, ServiceProviderCard } from '@/lib/queries/services';
+import type { ServiceConfig } from '@/lib/services-config';
 
 /**
- * Veteriner rehberinin ortak gövdesi.
+ * Hizmet rehberlerinin ortak gövdesi.
  *
- * Genel liste, şehir ve ilçe sayfaları aynı bileşeni kullanıyor. Kategori
- * sayfalarında öğrendiğimiz ders: aynı ekranı üç dosyada kopyalamak, zamanla
- * birbirinden ayrışan üç farklı ekran demek.
+ * Yedi hizmet kategorisi ve her birinin genel/şehir/ilçe sayfaları aynı
+ * bileşeni kullanıyor. Kategori sayfalarında öğrendiğimiz ders: aynı ekranı
+ * ayrı dosyalarda kopyalamak, zamanla birbirinden ayrışan ekranlar demek.
  */
 
 type Crumb = { label: string; href?: string };
 
-export function VetDirectory({
+export function ServiceDirectory({
+  config,
   title,
   intro,
   crumbs,
@@ -33,6 +35,7 @@ export function VetDirectory({
   basePath,
   emptyMessage,
 }: {
+  config: ServiceConfig;
   title: string;
   intro?: string;
   crumbs: Crumb[];
@@ -77,17 +80,17 @@ export function VetDirectory({
         <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-bold md:text-3xl">
-              <Stethoscope className="h-7 w-7 text-primary" />
+              <Building2 className="h-7 w-7 text-primary" />
               {title}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {total} klinik listeleniyor
+              {total} {config.unit} listeleniyor
               {intro ? ` · ${intro}` : ''}
             </p>
           </div>
 
           <Button asChild variant="outline">
-            <Link href="/veteriner/kayit">Kliniğinizi Ekleyin</Link>
+            <Link href={`/${config.slug}/kayit`}>{config.registerCta}</Link>
           </Button>
         </header>
 
@@ -106,7 +109,7 @@ export function VetDirectory({
                 <ul className="max-h-72 space-y-0.5 overflow-y-auto pr-1">
                   <li>
                     <Link
-                      href="/veteriner"
+                      href={`/${config.slug}`}
                       className={
                         !activeCitySlug
                           ? 'flex justify-between rounded px-2 py-1 text-sm font-semibold text-primary'
@@ -119,7 +122,7 @@ export function VetDirectory({
                   {cities.map((city) => (
                     <li key={city.slug}>
                       <Link
-                        href={`/veteriner/${city.slug}`}
+                        href={`/${config.slug}/${city.slug}`}
                         className={
                           city.slug === activeCitySlug
                             ? 'flex justify-between rounded px-2 py-1 text-sm font-semibold text-primary'
@@ -141,7 +144,7 @@ export function VetDirectory({
               <div className="rounded-xl border border-dashed bg-white py-16 text-center">
                 <p className="text-muted-foreground">{emptyMessage}</p>
                 <Button asChild className="mt-6">
-                  <Link href="/veteriner/kayit">Kliniğinizi Ücretsiz Ekleyin</Link>
+                  <Link href={`/${config.slug}/kayit`}>{config.registerCta}</Link>
                 </Button>
               </div>
             ) : (
@@ -149,7 +152,7 @@ export function VetDirectory({
                 <ul className="space-y-4">
                   {providers.map((provider) => (
                     <li key={provider.id}>
-                      <VetCard provider={provider} />
+                      <ServiceCard provider={provider} config={config} />
                     </li>
                   ))}
                 </ul>
