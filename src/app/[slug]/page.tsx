@@ -4,7 +4,13 @@ import type { Metadata } from 'next';
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
 import { ListingDetail } from '@/components/listings/ListingDetail';
 import { getCategoryBySlug, getSidebarData } from '@/lib/queries/catalog';
-import { getListings, getListingById } from '@/lib/queries/listings';
+import {
+  getListings,
+  getListingById,
+  getSellerInfo,
+  getSimilarListings,
+  getAdjacentListings,
+} from '@/lib/queries/listings';
 import { resolveRootSegment } from '@/lib/routing';
 
 /**
@@ -95,7 +101,21 @@ export default async function RootSlugPage({ params }: { params: Promise<Params>
       permanentRedirect(`/${listing.slug}-${listing.id}`);
     }
 
-    return <ListingDetail listing={listing as any} />;
+    const detail = listing as any;
+    const [seller, similar, adjacent] = await Promise.all([
+      getSellerInfo(detail.owner_id),
+      getSimilarListings(detail.id, detail.breed_id ?? null, detail.category_id),
+      getAdjacentListings(detail.id, detail.category_id, detail.published_at),
+    ]);
+
+    return (
+      <ListingDetail
+        listing={detail}
+        seller={seller}
+        similar={similar}
+        adjacent={adjacent}
+      />
+    );
   }
 
   // "-<sayı>" ile bitmeyen ve kategori de olmayan eski adresler.

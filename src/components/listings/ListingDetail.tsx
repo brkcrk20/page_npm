@@ -1,10 +1,22 @@
-import Image from 'next/image';
 import Link from 'next/link';
-import { Calendar, MapPin, Shield, Syringe, Truck, CreditCard, Award } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, Eye } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { listingPhotoUrl } from '@/lib/supabase/storage';
+import { ListingGallery } from '@/components/listings/ListingGallery';
+import { ListingActions } from '@/components/listings/ListingActions';
+import { SellerCard } from '@/components/listings/SellerCard';
+import { ListingGrid } from '@/components/listings/ListingGrid';
+import type { ListingCard, SellerInfo, AdjacentListings } from '@/lib/queries/listings';
+
+/**
+ * İlan detay sayfası.
+ *
+ * Üç sütun: fotoğraf galerisi, özellik tablosu, satıcı kartı. Altında ilan
+ * açıklaması ve benzer ilanlar.
+ *
+ * Sayfa sunucuda render ediliyor; yalnızca galeri gezinme, favorileme ve
+ * iletişim düğmeleri istemci bileşeni. Böylece ilan içeriğinin tamamı arama
+ * motoruna dolu HTML olarak gidiyor.
+ */
 
 type DetailListing = {
   id: number;
@@ -30,13 +42,34 @@ type DetailListing = {
   accepts_credit_card: boolean;
   ships_intercity: boolean;
   has_warranty: boolean;
+  contact_phone: string | null;
+  show_phone: boolean;
+  allow_whatsapp: boolean;
   view_count: number;
+  whatsapp_count: number;
+  phone_count: number;
   published_at: string | null;
+  updated_at: string | null;
+  owner_id: string;
   breeds: { id: number; name: string; slug: string } | null;
   categories: { id: number; slug: string; name: string } | null;
   cities: { id: number; name: string; slug: string } | null;
   districts: { id: number; name: string; slug: string } | null;
   listing_photos: { storage_path: string; position: number }[];
+};
+
+const GENDER_LABELS: Record<string, string> = {
+  erkek: 'Erkek',
+  disi: 'Dişi',
+  belirtilmemis: 'Belirtilmemiş',
+};
+
+const KIND_LABELS: Record<string, string> = {
+  satilik: 'Satılık',
+  sahiplendirme: 'Ücretsiz Sahiplendirme',
+  kayip: 'Kayıp İlanı',
+  bulundu: 'Bulundu İlanı',
+  es_arayan: 'Eş Arıyor',
 };
 
 function formatAge(months: number | null): string {
@@ -45,6 +78,15 @@ function formatAge(months: number | null): string {
   const years = months / 12;
   const text = Number.isInteger(years) ? `${years}` : years.toFixed(1).replace('.', ',');
   return `${text} Yaşında`;
+}
+
+function formatDate(value: string | null): string | null {
+  if (!value) return null;
+  return new Date(value).toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 }
 
 function formatPrice(listing: DetailListing): string {
@@ -57,191 +99,293 @@ function formatPrice(listing: DetailListing): string {
   }).format(Number(listing.price));
 }
 
-const GENDER_LABELS: Record<string, string> = {
-  erkek: 'Erkek',
-  disi: 'Dişi',
-  belirtilmemis: 'Belirtilmemiş',
-};
+export function ListingDetail({
+  listing,
+  seller,
+  similar,
+  adjacent,
+}: {
+  listing: DetailListing;
+  seller: SellerInfo | null;
+  similar: ListingCard[];
+  adjacent: AdjacentListings;
+}) {
+  const category = listing.categories;
+  const breed = listing.breeds;
+  const categoryPath = category ? `/${category.slug}` : '/';
 
-export function ListingDetail({ listing }: { listing: DetailListing }) {
-  const photos = [...(listing.listing_photos ?? [])].sort((a, b) => a.position - b.position);
-  const cover = photos[0] ? listingPhotoUrl(photos[0].storage_path) : null;
+  const publishedAt = formatDate(listing.published_at);
+  const updatedAt = formatDate(listing.updated_at);
 
-  const location = [listing.cities?.name, listing.districts?.name].filter(Boolean).join(' / ');
-
-  // Yalnızca doğru olan rozetleri gösteriyoruz; "aşısız" gibi olumsuz bir
-  // etiket basmak satıcıyı haksız yere cezalandırır (bilgi girilmemiş de olabilir).
-  const badges = [
-    listing.is_vaccinated && { icon: Syringe, label: 'Aşıları Tam' },
-    listing.has_pedigree && { icon: Award, label: 'Pedigrili' },
-    listing.has_health_report && { icon: Shield, label: 'Sağlık Raporlu' },
-    listing.is_neutered && { icon: Shield, label: 'Kısırlaştırılmış' },
-    listing.has_microchip && { icon: Shield, label: 'Çipli' },
-    listing.accepts_credit_card && { icon: CreditCard, label: 'Kredi Kartı' },
-    listing.ships_intercity && { icon: Truck, label: 'Şehir Dışına Kargo' },
-  ].filter(Boolean) as { icon: any; label: string }[];
+  const rows: { label: string; value: React.ReactNode }[] = [
+    // Ekrandaki tabloda iki satır da "DURUM" başlığını taşıyordu; biri fiyat
+    // pazarlığı, diğeri ilan tipi. Aynı başlığın iki farklı şeyi anlatması
+    // kafa karıştırıcı olduğu için ayrıştırıldı.
+    { label: 'FİYAT', value: formatPrice(listing) },
+    {
+      label: 'PAZARLIK',
+      value: listing.is_negotiable ? 'Görüşülür' : 'Sabit Fiyat',
+    },
+    {
+      label: 'TÜRÜ',
+      value: category ? (
+        <Link href={categoryPath} className="text-primary hover:underline">
+          {category.name}
+        </Link>
+      ) : (
+        '—'
+      ),
+    },
+    {
+      label: 'CİNSİ',
+      value:
+        category && breed ? (
+          <Link href={`/${category.slug}/${breed.slug}`} className="text-primary hover:underline">
+            {breed.name}
+          </Link>
+        ) : (
+          '—'
+        ),
+    },
+    { label: 'İLAN NO', value: String(listing.id) },
+    {
+      label: 'İLAN TARİHİ',
+      value: publishedAt ? (
+        <>
+          {publishedAt}
+          {updatedAt && updatedAt !== publishedAt && (
+            <span className="block text-xs text-muted-foreground">Güncellendi: {updatedAt}</span>
+          )}
+        </>
+      ) : (
+        '—'
+      ),
+    },
+    { label: 'YAŞ', value: formatAge(listing.age_months) },
+    { label: 'CİNSİYET', value: GENDER_LABELS[listing.gender] ?? listing.gender },
+    { label: 'İLAN TİPİ', value: KIND_LABELS[listing.kind] ?? listing.kind },
+    ...(listing.color ? [{ label: 'RENK', value: listing.color }] : []),
+    ...(listing.quantity > 1 ? [{ label: 'ADET', value: String(listing.quantity) }] : []),
+    { label: 'AŞI', value: yesNo(listing.is_vaccinated) },
+    { label: 'İÇ PARAZİT', value: yesNo(listing.is_dewormed_internal) },
+    { label: 'DIŞ PARAZİT', value: yesNo(listing.is_dewormed_external) },
+    { label: 'PEDİGRİ', value: yesNo(listing.has_pedigree) },
+    { label: 'SAĞLIK RAPORU', value: yesNo(listing.has_health_report) },
+    { label: 'KREDİ KARTINA ÖDEME', value: yesNo(listing.accepts_credit_card) },
+    { label: 'ŞEHİR DIŞINA GÖNDERİM', value: yesNo(listing.ships_intercity) },
+    {
+      label: "İLAN WHATSAPP'TAN",
+      value: (
+        <>
+          <span className="font-semibold text-primary">{listing.whatsapp_count}</span> İstek aldı
+        </>
+      ),
+    },
+    {
+      label: 'İNCELENEN İLAN',
+      value: (
+        <>
+          <span className="font-semibold text-primary">{listing.phone_count}</span> Arama aldı
+        </>
+      ),
+    },
+    {
+      label: 'GÖRÜNTÜLENME',
+      value: `${listing.view_count} Görüntülendi`,
+    },
+  ];
 
   return (
-    <div className="bg-secondary/50">
-      <div className="w-full px-5 pb-10 pt-4 md:container md:mx-auto">
-        <nav aria-label="Kırıntı navigasyonu" className="mb-4 text-sm text-muted-foreground">
-          <ol className="flex flex-wrap items-center gap-1">
-            <li>
-              <Link href="/" className="hover:text-primary hover:underline">
-                Ana Sayfa
+    <div className="bg-secondary/30">
+      {/* --- Kırıntı navigasyonu --- */}
+      <nav aria-label="Kırıntı navigasyonu" className="border-b bg-white">
+        <ol className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-1.5 px-5 py-3 text-sm">
+          <li>
+            <Link href="/" className="text-primary hover:underline">
+              Anasayfa
+            </Link>
+          </li>
+          {category && (
+            <li className="flex items-center gap-1.5">
+              <span aria-hidden className="text-muted-foreground">›</span>
+              <Link href={categoryPath} className="text-primary hover:underline">
+                {category.name}
               </Link>
             </li>
-            {listing.categories && (
-              <li className="flex items-center gap-1">
-                <span aria-hidden>›</span>
-                <Link
-                  href={`/${listing.categories.slug}`}
-                  className="hover:text-primary hover:underline"
-                >
-                  {listing.categories.name}
-                </Link>
-              </li>
-            )}
-            {listing.categories && listing.breeds && (
-              <li className="flex items-center gap-1">
-                <span aria-hidden>›</span>
-                <Link
-                  href={`/${listing.categories.slug}/${listing.breeds.slug}`}
-                  className="hover:text-primary hover:underline"
-                >
-                  {listing.breeds.name}
-                </Link>
-              </li>
-            )}
-          </ol>
-        </nav>
+          )}
+          {category && breed && (
+            <li className="flex items-center gap-1.5">
+              <span aria-hidden className="text-muted-foreground">›</span>
+              <Link href={`/${category.slug}/${breed.slug}`} className="text-primary hover:underline">
+                {breed.name}
+              </Link>
+            </li>
+          )}
+          <li className="flex items-center gap-1.5">
+            <span aria-hidden className="text-muted-foreground">›</span>
+            <span className="text-muted-foreground">{listing.title}</span>
+          </li>
+        </ol>
+      </nav>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-6">
-            <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-              <div className="relative aspect-[4/3] bg-muted">
-                {cover ? (
-                  <Image
-                    src={cover}
-                    alt={listing.title}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 60vw"
-                    className="object-cover"
-                    priority
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-muted-foreground">
-                    Fotoğraf yok
-                  </div>
+      <div className="mx-auto w-full max-w-7xl px-5 py-5">
+        {/* --- Başlık ve işlemler --- */}
+        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h1 className="text-xl font-bold md:text-2xl">{listing.title}</h1>
+          <ListingActions listingId={listing.id} title={listing.title} />
+        </div>
+
+        {/* --- Üç sütun --- */}
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
+          <ListingGallery photos={listing.listing_photos ?? []} title={listing.title} />
+
+          {/* Özellik tablosu */}
+          <div>
+            {listing.cities && (
+              <p className="mb-3 flex flex-wrap items-center gap-1.5 text-sm">
+                <Link
+                  href={category ? `/${category.slug}/${listing.cities.slug}` : '/'}
+                  className="text-primary hover:underline"
+                >
+                  {listing.cities.name}
+                </Link>
+                {listing.districts && (
+                  <>
+                    <span className="text-muted-foreground">/</span>
+                    <Link
+                      href={
+                        category
+                          ? `/${category.slug}/${listing.cities.slug}/${listing.districts.slug}`
+                          : '/'
+                      }
+                      className="text-primary hover:underline"
+                    >
+                      {listing.districts.name}
+                    </Link>
+                  </>
                 )}
-              </div>
+              </p>
+            )}
 
-              {photos.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto p-3">
-                  {photos.slice(1).map((photo) => {
-                    const url = listingPhotoUrl(photo.storage_path);
-                    if (!url) return null;
-                    return (
-                      <div
-                        key={photo.position}
-                        className="relative h-20 w-24 shrink-0 overflow-hidden rounded-md"
-                      >
-                        <Image
-                          src={url}
-                          alt={`${listing.title} — ${photo.position + 1}`}
-                          fill
-                          sizes="96px"
-                          className="object-cover"
-                        />
-                      </div>
-                    );
-                  })}
+            <dl className="overflow-hidden rounded-lg border bg-white text-sm">
+              {rows.map((row, i) => (
+                <div
+                  key={row.label}
+                  className={`flex items-start gap-4 px-4 py-2.5 ${
+                    i % 2 === 1 ? 'bg-secondary/30' : ''
+                  } ${i > 0 ? 'border-t' : ''}`}
+                >
+                  <dt className="w-[46%] shrink-0 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {row.label}
+                  </dt>
+                  <dd className="min-w-0 flex-1">{row.value}</dd>
                 </div>
-              )}
-            </div>
-
-            <Card>
-              <CardContent className="space-y-4 p-5">
-                <h2 className="text-lg font-bold">İlan Açıklaması</h2>
-                <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                  {listing.description}
-                </p>
-              </CardContent>
-            </Card>
+              ))}
+            </dl>
           </div>
 
-          <aside className="space-y-4">
-            <Card>
-              <CardContent className="space-y-4 p-5">
-                <div>
-                  <h1 className="text-xl font-bold leading-snug">{listing.title}</h1>
-                  <p className="mt-2 text-2xl font-bold text-primary">
-                    {formatPrice(listing)}
-                    {listing.is_negotiable && (
-                      <span className="ml-2 text-sm font-normal text-muted-foreground">
-                        Pazarlıklı
-                      </span>
-                    )}
-                  </p>
-                  {listing.is_reserved && (
-                    <Badge variant="secondary" className="mt-2">
-                      Rezerve
-                    </Badge>
-                  )}
-                </div>
+          {/* Satıcı kartı */}
+          <div className="space-y-3">
+            <SellerCard
+              seller={seller}
+              listingId={listing.id}
+              phone={listing.contact_phone}
+              showPhone={listing.show_phone}
+              allowWhatsapp={listing.allow_whatsapp}
+            />
 
-                <dl className="space-y-2 border-t pt-4 text-sm">
-                  <Row label="İlan No" value={`#${listing.id}`} />
-                  {listing.breeds && <Row label="Cins" value={listing.breeds.name} />}
-                  <Row label="Yaş" value={formatAge(listing.age_months)} />
-                  <Row label="Cinsiyet" value={GENDER_LABELS[listing.gender] ?? listing.gender} />
-                  {listing.color && <Row label="Renk" value={listing.color} />}
-                  {listing.quantity > 1 && <Row label="Adet" value={`${listing.quantity}`} />}
-                </dl>
-
-                {location && (
-                  <p className="flex items-center gap-2 border-t pt-4 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4 shrink-0" />
-                    {location}
-                  </p>
-                )}
-
-                {listing.published_at && (
-                  <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4 shrink-0" />
-                    {new Date(listing.published_at).toLocaleDateString('tr-TR')}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {badges.length > 0 && (
-              <Card>
-                <CardContent className="p-5">
-                  <h2 className="mb-3 text-sm font-bold">Özellikler</h2>
-                  <ul className="space-y-2">
-                    {badges.map(({ icon: Icon, label }) => (
-                      <li key={label} className="flex items-center gap-2 text-sm">
-                        <Icon className="h-4 w-4 shrink-0 text-emerald-600" />
-                        {label}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+            {listing.view_count > 0 && (
+              <p className="flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-3 text-sm text-primary">
+                <Eye className="h-4 w-4 shrink-0" />
+                Bu ilan {listing.view_count} kez görüntülendi
+              </p>
             )}
-          </aside>
+
+            {(adjacent.previous || adjacent.next) && (
+              <div className="grid grid-cols-2 gap-2">
+                <AdjacentLink
+                  href={
+                    adjacent.previous
+                      ? `/${adjacent.previous.slug}-${adjacent.previous.id}`
+                      : undefined
+                  }
+                  icon={<ChevronsLeft className="h-4 w-4" />}
+                  label="Önceki İlan"
+                />
+                <AdjacentLink
+                  href={adjacent.next ? `/${adjacent.next.slug}-${adjacent.next.id}` : undefined}
+                  icon={<ChevronsRight className="h-4 w-4" />}
+                  label="Sonraki İlan"
+                  iconRight
+                />
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* --- İlan açıklaması --- */}
+        <section className="mt-6 overflow-hidden rounded-lg border bg-white">
+          <h2 className="border-l-4 border-primary px-4 py-3 font-bold">İlan Detayları</h2>
+          <div className="border-t p-4">
+            <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+              {listing.description}
+            </p>
+          </div>
+        </section>
+
+        {/* --- Benzer ilanlar --- */}
+        {similar.length > 0 && (
+          <section className="mt-6 overflow-hidden rounded-lg border bg-white">
+            <h2 className="border-l-4 border-primary px-4 py-3 font-bold">Benzer İlanlar</h2>
+            <div className="border-t p-4">
+              <ListingGrid listings={similar} />
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function yesNo(value: boolean) {
+  return value ? (
+    <span className="font-medium text-emerald-600">Var</span>
+  ) : (
+    <span className="text-muted-foreground">Yok</span>
+  );
+}
+
+function AdjacentLink({
+  href,
+  icon,
+  label,
+  iconRight,
+}: {
+  href?: string;
+  icon: React.ReactNode;
+  label: string;
+  iconRight?: boolean;
+}) {
+  const content = (
+    <>
+      {!iconRight && icon}
+      {label}
+      {iconRight && icon}
+    </>
+  );
+
+  const className =
+    'flex items-center justify-center gap-1.5 rounded-md border bg-white px-3 py-2 text-sm font-medium';
+
+  // Komşu ilan yoksa bağlantı değil, devre dışı bir kutu gösteriyoruz —
+  // hiçbir yere gitmeyen bir bağlantı vermektense.
+  if (!href) {
+    return <span className={`${className} cursor-not-allowed opacity-40`}>{content}</span>;
+  }
+
   return (
-    <div className="flex justify-between gap-4">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-medium">{value}</dd>
-    </div>
+    <Link href={href} className={`${className} transition-colors hover:bg-secondary`}>
+      {content}
+    </Link>
   );
 }

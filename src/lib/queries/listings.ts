@@ -184,3 +184,135 @@ export async function getFeaturedListings(limit = 8): Promise<ListingCard[]> {
 
   return (data ?? []).map((row: any) => row.listings).filter(Boolean) as ListingCard[];
 }
+
+// ---------------------------------------------------------------------------
+// İlan detay sayfası
+// ---------------------------------------------------------------------------
+
+export type SellerInfo = {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  is_verified: boolean;
+  account_type: string;
+  company_title: string | null;
+  member_since: string;
+  total_listings: number;
+  active_listings: number;
+};
+
+/**
+ * Detay sayfasının satıcı kartı.
+ *
+ * profiles tablosuna doğrudan gitmiyoruz: RLS orada yalnızca kişinin kendi
+ * satırını gösteriyor (telefon, TCKN, vergi no o tabloda). Herkese açık
+ * alanlar public_profiles view'ında, sayımlar seller_stats view'ında.
+ */
+export async function getSellerInfo(userId: string): Promise<SellerInfo | null> {
+  if (!isSupabaseServerConfigured()) return null;
+  const supabase = createSupabasePublicClient();
+
+  const [profile, stats] = await Promise.all([
+    supabase
+      .from('public_profiles')
+      .select('id, full_name, username, avatar_url, is_verified, account_type, company_title')
+      .eq('id', userId)
+      .maybeSingle(),
+    supabase
+      .from('seller_stats')
+      .select('member_since, total_listings, active_listings')
+      .eq('user_id', userId)
+      .maybeSingle(),
+  ]);
+
+  if (profile.error || !profile.data) {
+    if (profile.error) console.error('Satıcı bilgisi alınamadı:', profile.error.message);
+    return null;
+  }
+
+  return {
+    ...(profile.data as any),
+    member_since: (stats.data as any)?.member_since ?? new Date().toISOString(),
+    total_listings: Number((stats.data as any)?.total_listings ?? 0),
+    active_listings: Number((stats.data as any)?.active_listings ?? 0),
+  };
+}
+
+/** Aynı cinsten benzer ilanlar (mevcut ilan hariç). */
+export async function getSimilarListings(
+  listingId: number,
+  breedId: number | null,
+  categoryId: number,
+  limit = 5
+): Promise<ListingCard[]> {
+  if (!isSupabaseServerConfigured()) return [];
+  const supabase = createSupabasePublicClient();
+
+  let query = supabase
+    .from('listings')
+    .select(CARD_COLUMNS)
+    .eq('status', 'yayinda')
+    .neq('id', listingId);
+
+  // Cins bilgisi varsa aynı cinsten, yoksa aynı kategoriden gösteriyoruz —
+  // "benzer ilan" bölümünü boş bırakmaktansa daha geniş bir eşleşme iyidir.
+  if (breedId !== null) query = query.eq('breed_id', breedId);
+  else query = query.eq('category_id', categoryId);
+
+  const { data, error } = await query.order('published_at', { ascending: false }).limit(limit);
+
+  if (error) {
+    console.error('Benzer ilanlar alınamadı:', error.message);
+    return [];
+  }
+  return (data ?? []) as unknown as ListingCard[];
+}
+
+export type AdjacentListings = {
+  previous: { id: number; slug: string } | null;
+  next: { id: number; slug: string } | null;
+};
+
+/**
+ * Önceki / sonraki ilan bağlantıları.
+ *
+ * Liste yeniden eskiye sıralı olduğu için "önceki" daha YENİ, "sonraki" daha
+ * ESKİ ilan oluyor — kullanıcının listede yukarı/aşağı hareketiyle aynı yön.
+ */
+export async function getAdjacentListings(
+  listingId: number,
+  categoryId: number,
+  publishedAt: string | null
+): Promise<AdjacentListings> {
+  if (!isSupabaseServerConfigured() || !publishedAt) {
+    return { previous: null, next: null };
+  }
+  const supabase = createSupabasePublicClient();
+
+  const [newer, older] = await Promise.all([
+    supabase
+      .from('listings')
+      .select('id, slug')
+      .eq('status', 'yayinda')
+      .eq('category_id', categoryId)
+      .gt('published_at', publishedAt)
+      .order('published_at', { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('listings')
+      .select('id, slug')
+      .eq('status', 'yayinda')
+      .eq('category_id', categoryId)
+      .lt('published_at', publishedAt)
+      .order('published_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  return {
+    previous: (newer.data as any) ?? null,
+    next: (older.data as any) ?? null,
+  };
+}

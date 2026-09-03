@@ -8,11 +8,13 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
+    // İlan fotoğrafları ve profil görselleri Supabase Storage'da duruyor.
+    // Bu desen olmadan next/image Supabase adreslerini tümüyle reddediyor ve
+    // hiçbir ilan fotoğrafı görünmüyordu.
     remotePatterns: [
-      { protocol: 'https', hostname: 'firebasestorage.googleapis.com', pathname: '/**' },
+      { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/**' },
       { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
       { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
-      { protocol: 'https', hostname: 'picsum.photos', pathname: '/**' },
     ],
   },
 

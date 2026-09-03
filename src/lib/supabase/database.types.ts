@@ -195,6 +195,53 @@ export type Database = {
           },
         ]
       }
+      favorites: {
+        Row: {
+          created_at: string
+          listing_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          listing_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          listing_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       listing_credits: {
         Row: {
           created_at: string
@@ -251,6 +298,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -370,6 +424,7 @@ export type Database = {
           is_vaccinated: boolean
           kind: Database["public"]["Enums"]["listing_kind"]
           owner_id: string
+          phone_count: number
           price: number | null
           published_at: string | null
           quantity: number
@@ -385,6 +440,7 @@ export type Database = {
           title: string
           updated_at: string
           view_count: number
+          whatsapp_count: number
         }
         Insert: {
           accepts_credit_card?: boolean
@@ -418,6 +474,7 @@ export type Database = {
           is_vaccinated?: boolean
           kind?: Database["public"]["Enums"]["listing_kind"]
           owner_id: string
+          phone_count?: number
           price?: number | null
           published_at?: string | null
           quantity?: number
@@ -433,6 +490,7 @@ export type Database = {
           title: string
           updated_at?: string
           view_count?: number
+          whatsapp_count?: number
         }
         Update: {
           accepts_credit_card?: boolean
@@ -466,6 +524,7 @@ export type Database = {
           is_vaccinated?: boolean
           kind?: Database["public"]["Enums"]["listing_kind"]
           owner_id?: string
+          phone_count?: number
           price?: number | null
           published_at?: string | null
           quantity?: number
@@ -481,6 +540,7 @@ export type Database = {
           title?: string
           updated_at?: string
           view_count?: number
+          whatsapp_count?: number
         }
         Relationships: [
           {
@@ -547,6 +607,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "listings_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "listings_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
@@ -559,6 +626,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listings_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -674,6 +748,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -953,6 +1034,13 @@ export type Database = {
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
     }
@@ -1075,10 +1163,27 @@ export type Database = {
           },
         ]
       }
+      seller_stats: {
+        Row: {
+          active_listings: number | null
+          member_since: string | null
+          total_listings: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       email_for_username: { Args: { p_username: string }; Returns: string }
+      increment_listing_phone: {
+        Args: { p_listing_id: number }
+        Returns: undefined
+      }
       increment_listing_view: {
+        Args: { p_listing_id: number }
+        Returns: undefined
+      }
+      increment_listing_whatsapp: {
         Args: { p_listing_id: number }
         Returns: undefined
       }
