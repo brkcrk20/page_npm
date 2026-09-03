@@ -41,6 +41,7 @@ export default function AdminSettingsPage() {
   const [listing, setListing] = useState<any>(null);
   const [monetization, setMonetization] = useState<any>(null);
   const [bank, setBank] = useState<Record<string, string>>({});
+  const [contact, setContact] = useState<Record<string, string>>({});
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
@@ -59,6 +60,7 @@ export default function AdminSettingsPage() {
       setListing(byKey.get('listing') ?? {});
       setMonetization(byKey.get('monetization') ?? {});
       setBank((byKey.get('payment_manual') as Record<string, string>) ?? {});
+      setContact((byKey.get('contact') as Record<string, string>) ?? {});
       setProducts((productRows.data as Product[]) ?? []);
       setIsLoading(false);
     })();
@@ -200,6 +202,43 @@ export default function AdminSettingsPage() {
             disabled={savingKey === 'monetization'}
           >
             {savingKey === 'monetization' ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
+            Kaydet
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* İletişim bilgileri en üstte: alt bilgide ve iletişim sayfasında
+          boş kaldıkları sürece hiçbir kanal gösterilmiyor. Daha önce burada
+          koda gömülü yer tutucular (0555 555 55 55) yayındaydı. */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">İletişim ve Künye</CardTitle>
+          <CardDescription>
+            Alt bilgide, iletişim ve hakkımızda sayfalarında gösterilir. Boş bıraktığınız
+            alan hiç gösterilmez.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TextField label="Telefon" value={contact.phone ?? ''} onChange={(v) => setContact({ ...contact, phone: v })} />
+            <TextField label="E-posta" value={contact.email ?? ''} onChange={(v) => setContact({ ...contact, email: v })} />
+            <TextField label="WhatsApp (ülke kodlu)" value={contact.whatsapp ?? ''} onChange={(v) => setContact({ ...contact, whatsapp: v })} />
+            <TextField label="Ticari Unvan" value={contact.legal_name ?? ''} onChange={(v) => setContact({ ...contact, legal_name: v })} />
+            <div className="sm:col-span-2">
+              <TextField label="Adres" value={contact.address ?? ''} onChange={(v) => setContact({ ...contact, address: v })} />
+            </div>
+            <TextField label="MERSİS No" value={contact.mersis ?? ''} onChange={(v) => setContact({ ...contact, mersis: v })} />
+            <TextField label="Instagram adresi" value={contact.instagram ?? ''} onChange={(v) => setContact({ ...contact, instagram: v })} />
+            <TextField label="Facebook adresi" value={contact.facebook ?? ''} onChange={(v) => setContact({ ...contact, facebook: v })} />
+            <TextField label="X adresi" value={contact.x ?? ''} onChange={(v) => setContact({ ...contact, x: v })} />
+            <TextField label="YouTube adresi" value={contact.youtube ?? ''} onChange={(v) => setContact({ ...contact, youtube: v })} />
+          </div>
+          <Button onClick={() => save('contact', contact)} disabled={savingKey === 'contact'}>
+            {savingKey === 'contact' ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Save className="mr-2 h-4 w-4" />

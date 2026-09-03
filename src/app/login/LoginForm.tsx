@@ -167,7 +167,7 @@ export function LoginForm() {
             <FormItem>
               <div className="flex items-center justify-between">
                 <FormLabel>Şifre</FormLabel>
-                <Link href="#" className="text-sm font-medium text-primary hover:underline">
+                <Link href="/sifremi-unuttum" className="text-sm font-medium text-primary hover:underline">
                   Şifremi Unuttum
                 </Link>
               </div>

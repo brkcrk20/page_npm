@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { BottomNav } from '@/components/layout/BottomNav'; // YENİ EKLENDİ
 import { Toaster } from '@/components/ui/toaster';
+import { getSiteContact } from '@/lib/queries/site-settings';
 import { SupabaseAuthProvider } from '@/lib/supabase/auth-provider';
 
 export const metadata: Metadata = {
@@ -15,11 +16,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Alt bilgideki iletişim bilgisi veritabanından; koda gömülü yer
+  // tutucular kaldırıldı.
+  const contact = await getSiteContact();
+
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
@@ -34,7 +39,7 @@ export default function RootLayout({
             <Header />
             {/* pb-20 ekledik: Mobil menü içeriği kapatmasın diye alt boşluk */}
             <main className="flex-1 pb-20 md:pb-0">{children}</main>
-            <Footer />
+            <Footer contact={contact} />
             {/* Bottom Nav Sadece Mobilde Görünecek (Kendi içinde md:hidden var) */}
             <BottomNav />
           </div>

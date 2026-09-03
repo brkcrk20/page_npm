@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+
+import type { SiteContact } from '@/lib/queries/site-settings';
 import {
   PawPrint,
   Twitter,
@@ -17,17 +19,9 @@ import {
 import { Button } from '@/components/ui/button';
 
 // A simple SVG placeholder for logos like iyzico, visa, etc.
-const PaymentBadge = ({ text, width = 80, height = 30 }: { text: string, width?: number, height?: number }) => (
-  <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} fill="none" xmlns="http://www.w3.org/2000/svg" className="text-muted-foreground">
-    <rect width={width} height={height} rx="4" fill="currentColor" fillOpacity="0.1" />
-    <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="currentColor" fontSize="10" fontWeight="bold">
-      {text}
-    </text>
-  </svg>
-);
 
 
-export function Footer() {
+export function Footer({ contact = {} }: { contact?: SiteContact }) {
   const [isVisible, setIsVisible] = useState(false);
 
   const scrollToTop = () => {
@@ -74,11 +68,11 @@ export function Footer() {
           <div>
             <h3 className={footerTitleStyle}>Köpek İlanları</h3>
             <ul className="space-y-2">
-              <li><Link href="#" className={footerLinkStyle}>Pomeranian Boo</Link></li>
-              <li><Link href="#" className={footerLinkStyle}>Maltipoo</Link></li>
-              <li><Link href="#" className={footerLinkStyle}>Maltese Terrier</Link></li>
-              <li><Link href="#" className={footerLinkStyle}>Golden Retriever</Link></li>
-              <li><Link href="#" className={footerLinkStyle}>Toy Poodle</Link></li>
+              <li><Link href="/kopek-ilanlari/pomeranian-boo" className={footerLinkStyle}>Pomeranian Boo</Link></li>
+              <li><Link href="/kopek-ilanlari/maltipoo" className={footerLinkStyle}>Maltipoo</Link></li>
+              <li><Link href="/kopek-ilanlari/maltese-terrier" className={footerLinkStyle}>Maltese Terrier</Link></li>
+              <li><Link href="/kopek-ilanlari/golden-retriever" className={footerLinkStyle}>Golden Retriever</Link></li>
+              <li><Link href="/kopek-ilanlari/toy-poodle" className={footerLinkStyle}>Toy Poodle</Link></li>
             </ul>
           </div>
 
@@ -86,11 +80,11 @@ export function Footer() {
           <div>
             <h3 className={footerTitleStyle}>Kedi İlanları</h3>
             <ul className="space-y-2">
-              <li><Link href="#" className={footerLinkStyle}>British Shorthair</Link></li>
-              <li><Link href="#" className={footerLinkStyle}>Scottish Fold</Link></li>
-              <li><Link href="#" className={footerLinkStyle}>İran Kedisi</Link></li>
-              <li><Link href="#" className={footerLinkStyle}>Siyam Kedisi</Link></li>
-              <li><Link href="#" className={footerLinkStyle}>Bengal Kedisi</Link></li>
+              <li><Link href="/kedi-ilanlari/british-shorthair" className={footerLinkStyle}>British Shorthair</Link></li>
+              <li><Link href="/kedi-ilanlari/scottish-fold" className={footerLinkStyle}>Scottish Fold</Link></li>
+              <li><Link href="/kedi-ilanlari/iran-kedisi" className={footerLinkStyle}>İran Kedisi</Link></li>
+              <li><Link href="/kedi-ilanlari/siyam-kedisi" className={footerLinkStyle}>Siyam Kedisi</Link></li>
+              <li><Link href="/kedi-ilanlari/bengal-kedisi" className={footerLinkStyle}>Bengal Kedisi</Link></li>
             </ul>
           </div>
 
@@ -98,8 +92,8 @@ export function Footer() {
           <div>
             <h3 className={footerTitleStyle}>Kurumsal</h3>
             <ul className="space-y-2">
-              <li><Link href="#" className={footerLinkStyle}>Gizlilik Sözleşmesi</Link></li>
-              <li><Link href="#" className={footerLinkStyle}>Kullanım Şartları</Link></li>
+              <li><Link href="/gizlilik-politikasi" className={footerLinkStyle}>Gizlilik Politikası</Link></li>
+              <li><Link href="/kullanim-sartlari" className={footerLinkStyle}>Kullanım Şartları</Link></li>
               {/* CC BY / CC BY-SA lisanslı cins görselleri atıf zorunlu tutuyor;
                   bu bağlantı yasal yükümlülüğün parçası, kaldırılmamalı. */}
               <li><Link href="/gorsel-kaynaklari" className={footerLinkStyle}>Görsel Kaynakları</Link></li>
@@ -110,26 +104,56 @@ export function Footer() {
           <div>
             <h3 className={footerTitleStyle}>Genel Bilgiler</h3>
             <ul className="space-y-2">
-              <li><Link href="#" className={footerLinkStyle}>Hakkımızda</Link></li>
-              <li><Link href="#" className={footerLinkStyle}>İletişim</Link></li>
+              <li><Link href="/hakkimizda" className={footerLinkStyle}>Hakkımızda</Link></li>
+              <li><Link href="/iletisim" className={footerLinkStyle}>İletişim</Link></li>
             </ul>
           </div>
         </div>
 
         {/* Middle Section: Contact Info & Social */}
         <div className="border-t mt-10 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex flex-col md:flex-row items-center gap-6 text-sm text-gray-700">
-                <h3 className="font-bold text-base hidden md:block">BİZE ULAŞIN</h3>
-                <Link href="tel:05555555555" className="flex items-center gap-2 hover:text-primary"><Phone className="w-4 h-4"/> 0555 555 55 55</Link>
-                <Link href="mailto:info@petsemti.com" className="flex items-center gap-2 hover:text-primary"><Mail className="w-4 h-4"/> info@petsemti.com</Link>
-                <Link href="https://wa.me/905555555555" target="_blank" className="flex items-center gap-2 hover:text-primary"><MessageCircle className="w-4 h-4"/> Whatsapp: 0555 555 55 55</Link>
+            {/* Yalnızca ayarlarda TANIMLI olan iletişim bilgisi gösteriliyor.
+                Buradaki değerler daha önce koda gömülü yer tutuculardı
+                (0555 555 55 55, wa.me/905555555555) ve her ziyaretçiye
+                gösteriliyordu — arayan kişiyi başkasının numarasına
+                düşürebilecek bir hata. */}
+            <div className="flex flex-col items-center gap-6 text-sm text-gray-700 md:flex-row">
+                {(contact.phone || contact.email || contact.whatsapp) && (
+                  <h3 className="hidden text-base font-bold md:block">BİZE ULAŞIN</h3>
+                )}
+                {contact.phone && (
+                  <Link href={`tel:${contact.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 hover:text-primary">
+                    <Phone className="h-4 w-4" /> {contact.phone}
+                  </Link>
+                )}
+                {contact.email && (
+                  <Link href={`mailto:${contact.email}`} className="flex items-center gap-2 hover:text-primary">
+                    <Mail className="h-4 w-4" /> {contact.email}
+                  </Link>
+                )}
+                {contact.whatsapp && (
+                  <Link
+                    href={`https://wa.me/${contact.whatsapp.replace(/\D/g, '')}`}
+                    target="_blank"
+                    className="flex items-center gap-2 hover:text-primary"
+                  >
+                    <MessageCircle className="h-4 w-4" /> WhatsApp
+                  </Link>
+                )}
             </div>
             <div className="flex space-x-2">
-                <Link href="#" className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center hover:opacity-80"><Facebook className="w-5 h-5"/></Link>
-                <Link href="#" className="w-8 h-8 rounded-full bg-sky-500 text-white flex items-center justify-center hover:opacity-80"><Twitter className="w-5 h-5"/></Link>
-                <Link href="#" className="w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center hover:opacity-80"><Instagram className="w-5 h-5"/></Link>
-                <Link href="#" className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center hover:opacity-80"><Youtube className="w-5 h-5"/></Link>
-                <Link href="#" className="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center hover:opacity-80"><Linkedin className="w-5 h-5"/></Link>
+                {contact.facebook && (
+                  <Link href={contact.facebook} target="_blank" aria-label="Facebook" className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white hover:opacity-80"><Facebook className="h-5 w-5" /></Link>
+                )}
+                {contact.x && (
+                  <Link href={contact.x} target="_blank" aria-label="X" className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500 text-white hover:opacity-80"><Twitter className="h-5 w-5" /></Link>
+                )}
+                {contact.instagram && (
+                  <Link href={contact.instagram} target="_blank" aria-label="Instagram" className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-500 text-white hover:opacity-80"><Instagram className="h-5 w-5" /></Link>
+                )}
+                {contact.youtube && (
+                  <Link href={contact.youtube} target="_blank" aria-label="YouTube" className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white hover:opacity-80"><Youtube className="h-5 w-5" /></Link>
+                )}
             </div>
         </div>
 
@@ -138,15 +162,17 @@ export function Footer() {
           <p className="text-xs text-gray-500 order-2 md:order-1">
             &copy; {new Date().getFullYear()} petsemti. Tüm hakları saklıdır.
           </p>
-          <div className="flex items-center gap-3 order-1 md:order-2">
-            <PaymentBadge text="ISO" width={40} />
-            <PaymentBadge text="TÜRKPATENT" />
-            <PaymentBadge text="iyzico" />
-            <PaymentBadge text="Mastercard" />
-            <PaymentBadge text="VISA" />
-            <PaymentBadge text="AMEX" />
-            <PaymentBadge text="troy" />
-          </div>
+          {/* ISO, TÜRKPATENT, iyzico, VISA, Mastercard, AMEX ve troy rozetleri
+              KALDIRILDI. Sitede kart ödemesi yok (ücretlendirme kapalı, ödeme
+              sağlayıcısı seçilmedi) ve belgelendirme iddiaları doğrulanamıyor.
+              Sahip olunmayan bir belgeyi veya kabul edilmeyen bir ödeme
+              yöntemini göstermek tüketiciyi yanıltır. Gerçek belgeler ve ödeme
+              sağlayıcısı geldiğinde buraya eklenmeli. */}
+          <nav className="order-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 md:order-2">
+            <Link href="/kullanim-sartlari" className="hover:text-primary">Kullanım Şartları</Link>
+            <Link href="/gizlilik-politikasi" className="hover:text-primary">Gizlilik Politikası</Link>
+            <Link href="/iletisim" className="hover:text-primary">İletişim</Link>
+          </nav>
         </div>
       </div>
       
