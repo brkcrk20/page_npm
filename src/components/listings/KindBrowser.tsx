@@ -20,6 +20,8 @@ import type { SidebarData } from '@/lib/queries/catalog';
 export function KindBrowser({
   title,
   lead,
+  /** Bölümün kendi ilan verme sayfası. */
+  createHref = '/ilan-ver',
   listings,
   total,
   sidebar,
@@ -28,6 +30,7 @@ export function KindBrowser({
 }: {
   title: string;
   lead: string;
+  createHref?: string;
   listings: ListingCard[];
   total: number;
   sidebar: SidebarData;
@@ -71,7 +74,7 @@ export function KindBrowser({
             <p key={p.slice(0, 40)}>{p}</p>
           ))}
           <Button asChild size="sm" className="mt-2">
-            <Link href="/ilan-ver">Ücretsiz İlan Ver</Link>
+            <Link href={createHref}>Ücretsiz İlan Ver</Link>
           </Button>
         </section>
       </div>

@@ -30,6 +30,7 @@ export default async function Page() {
 
   return (
     <KindBrowser
+      createHref="/ilan-ver/sahiplendirme"
       title="Ücretsiz Sahiplendirme İlanları"
       lead="Yuva arayan dostlar. Bu sayfadaki ilanlarda ücret talep edilmez."
       listings={listings}

@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { Film, MapPin, Play, Search, Trophy } from 'lucide-react';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
-import { PigeonBreedSidebar } from '@/components/listings/PigeonBreedSidebar';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
 import { Button } from '@/components/ui/button';
 import type { ListingCard } from '@/lib/queries/listings';
@@ -53,6 +52,17 @@ export function PigeonLanding({
     'Süs': 'Tüy yapısı ve duruşuyla, görünüş için yetiştirilen ırklar.',
     'Yerli': 'Yerli hatlar ve renk/desen adıyla anılan güvercinler.',
   };
+
+  /** Kenar menüsünün tür sekmesi için gruplanmış ırklar. */
+  const breedGroupsForSidebar: [string, { slug: string; name: string; count: number }[]][] =
+    ['Taklacı', 'Oyun', 'Posta ve Yarış', 'Süs', 'Yerli']
+      .map((g) => [
+        g,
+        pigeonBreeds
+          .filter((b) => b.group === g)
+          .map((b) => ({ slug: b.slug, name: b.name, count: b.count })),
+      ] as [string, { slug: string; name: string; count: number }[]])
+      .filter(([, items]) => items.length > 0);
 
   const groupSummary = ['Taklacı', 'Oyun', 'Posta ve Yarış', 'Süs', 'Yerli']
     .map((group) => {
@@ -110,7 +120,7 @@ export function PigeonLanding({
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link href="/ilan-ver">Güvercin İlanı Ver</Link>
+              <Link href="/ilan-ver/guvercin">Güvercin İlanı Ver</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white">
               <Link href="#tum-ilanlar">
@@ -204,16 +214,15 @@ export function PigeonLanding({
               ırklarını burada görmesinin bir anlamı yok. Şehir bağlantıları
               da güvercin kategorisinin altına gidiyor. */}
           <aside className="hidden md:block">
-            <div className="sticky top-4 space-y-4">
-              <PigeonBreedSidebar
-                breeds={pigeonBreeds}
-                categorySlug={category.slug}
-                categoryName={category.name}
-              />
+            {/* Tek panel, iki sekme — site genelindeki menüyle aynı yapı. */}
+            <div className="sticky top-4">
               <CategorySidebar
                 categories={[]}
                 cities={sidebar.cities}
                 cityLinkCategorySlug={category.slug}
+                typeGroups={breedGroupsForSidebar}
+                typeTabLabel="Irklar"
+                typeLinkBase={category.slug}
               />
             </div>
           </aside>

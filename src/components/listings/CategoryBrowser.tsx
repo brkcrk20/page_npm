@@ -2,7 +2,6 @@ import Link from 'next/link';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
-import { PigeonBreedSidebar } from '@/components/listings/PigeonBreedSidebar';
 import type { ListingCard } from '@/lib/queries/listings';
 import type { Category, SidebarData } from '@/lib/queries/catalog';
 
@@ -41,6 +40,44 @@ export function CategoryBrowser({
   activeCitySlug?: string;
   emptyMessage?: string;
 }) {
+  /**
+   * Güvercin ve pet malzemeleri kendi dikeyleri: menüde kategori ağacı
+   * yerine kendi tür listeleri gösteriliyor, gruplu ve aynı iki sekmeli
+   * panelde.
+   */
+  const ownSection = (() => {
+    if (category.code !== 'Pigeon' && category.code !== 'Supply') return null;
+
+    const breeds = sidebar.categories.find((c) => c.id === category.id)?.breeds ?? [];
+    const order =
+      category.code === 'Pigeon'
+        ? ['Taklacı', 'Oyun', 'Posta ve Yarış', 'Süs', 'Yerli']
+        : [
+            'Köpek Eşyaları',
+            'Kedi Eşyaları',
+            'Kuş ve Güvercin',
+            'Akvaryum ve Balık',
+            'Kemirgen ve Tavşan',
+            'Sürüngen ve Teraryum',
+            'Genel',
+          ];
+
+    const byGroup = new Map<string, { slug: string; name: string; count: number }[]>();
+    for (const b of breeds) {
+      const key = b.group ?? 'Diğer';
+      const list = byGroup.get(key) ?? [];
+      list.push({ slug: b.slug, name: b.name, count: b.count });
+      byGroup.set(key, list);
+    }
+
+    const groups: [string, { slug: string; name: string; count: number }[]][] = [
+      ...order.filter((g) => byGroup.has(g)).map((g) => [g, byGroup.get(g)!] as [string, { slug: string; name: string; count: number }[]]),
+      ...[...byGroup.entries()].filter(([g]) => !order.includes(g)),
+    ];
+
+    return { groups, label: category.code === 'Pigeon' ? 'Irklar' : 'Malzemeler' };
+  })();
+
   return (
     <div className="bg-secondary/50">
       <div className="w-full px-5 pb-10 pt-4 md:container md:mx-auto">
@@ -80,21 +117,20 @@ export function CategoryBrowser({
                 gösteriliyor ve kategori seçimi diye bir şey yok — ziyaretçi
                 zaten güvercinde. Şehir menüsü altında ayrıca duruyor. */}
             <div className="sticky top-4 space-y-4">
-              {category.code === 'Pigeon' ? (
-                <>
-                  <PigeonBreedSidebar
-                    breeds={sidebar.categories.find((c) => c.id === category.id)?.breeds ?? []}
-                    categorySlug={category.slug}
-                    categoryName={category.name}
-                    activeBreedSlug={activeBreedSlug}
-                  />
-                  <CategorySidebar
-                    categories={[]}
-                    cities={sidebar.cities}
-                    activeCitySlug={activeCitySlug}
-                    cityLinkCategorySlug={category.slug}
-                  />
-                </>
+              {ownSection ? (
+                /* Kendi dikeyi olan kategoriler (güvercin, pet malzemeleri):
+                   kategori ağacı yerine kendi tür listesi, aynı iki sekmeli
+                   panelde. */
+                <CategorySidebar
+                  categories={[]}
+                  cities={sidebar.cities}
+                  activeCitySlug={activeCitySlug}
+                  cityLinkCategorySlug={category.slug}
+                  typeGroups={ownSection.groups}
+                  typeTabLabel={ownSection.label}
+                  typeLinkBase={category.slug}
+                  activeTypeSlug={activeBreedSlug}
+                />
               ) : (
                 <CategorySidebar
                   categories={sidebar.categories}

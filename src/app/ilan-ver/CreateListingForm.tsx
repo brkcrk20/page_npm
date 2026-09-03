@@ -91,7 +91,37 @@ type Option = { id: number; name: string; slug: string };
  */
 type ExistingPhoto = { id: number; storage_path: string; position: number };
 
-export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
+/**
+ * Bölüme özel ön ayar.
+ *
+ * "İlan Ver" düğmesi her yerde aynı boş formu açıyordu: al-sat sayfasından
+ * basan kullanıcı kedi ve köpek kategorileriyle karşılaşıyor, güvercin
+ * sayfasından basan da öyle. Bulunduğu bölüm zaten cevabın yarısı; formun
+ * onu tekrar sorması gereksiz bir adım ve yanlış kategoriye ilan açılmasının
+ * başlıca sebebi.
+ *
+ * Ön ayar kategoriyi (ve gerekirse ilan türünü) kilitliyor; kilitli alan
+ * gösterilmiyor, değeri sabit.
+ */
+export type ListingPreset = {
+  /** Kilitlenecek kategori adresi, ör. 'pet-malzemeleri'. */
+  categorySlug?: string;
+  /** Kilitlenecek ilan türü. */
+  kind?: 'satilik' | 'sahiplendirme';
+  /** Kategori seçicide gösterilmeyecek kategoriler (kendi dikeyi olanlar). */
+  hideCategorySlugs?: string[];
+  /** Sayfa başlığı ve açıklaması. */
+  title?: string;
+  description?: string;
+  /** Vazgeçince dönülecek adres. */
+  backHref?: string;
+  backLabel?: string;
+};
+
+export function CreateListingForm({
+  listingId,
+  preset,
+}: { listingId?: number; preset?: ListingPreset } = {}) {
   const router = useRouter();
   const { toast } = useToast();
   const { user, profile, isUserLoading, isProfileLoading } = useSupabaseAuth();
@@ -216,6 +246,30 @@ export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
       .then(({ data }) => setDistricts((data as Option[]) ?? []));
     form.setValue('districtId', '');
   }, [cityId]);
+
+  /** Ön ayarın kilitlediği kategori. */
+  const lockedCategory = useMemo(
+    () => (preset?.categorySlug ? categories.find((c) => c.slug === preset.categorySlug) : undefined),
+    [categories, preset?.categorySlug]
+  );
+
+  /** Seçicide gösterilecek kategoriler; kendi dikeyi olanlar gizlenebiliyor. */
+  const selectableCategories = useMemo(
+    () =>
+      preset?.hideCategorySlugs?.length
+        ? categories.filter((c) => !preset.hideCategorySlugs!.includes(c.slug))
+        : categories,
+    [categories, preset?.hideCategorySlugs]
+  );
+
+  // Kilitli kategori yüklendiğinde forma yazılıyor; kullanıcı seçmiyor.
+  useEffect(() => {
+    if (lockedCategory) form.setValue('categoryId', String(lockedCategory.id));
+  }, [lockedCategory, form]);
+
+  useEffect(() => {
+    if (preset?.kind) form.setValue('kind', preset.kind);
+  }, [preset?.kind, form]);
 
   const filteredBreeds = useMemo(
     () => breeds.filter((b) => !categoryId || b.category_id === Number(categoryId)),
@@ -591,16 +645,27 @@ export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
   return (
     <Card className="mx-auto my-6 max-w-3xl">
       <CardHeader>
-        <CardTitle>{isEdit ? 'İlanı Düzenle' : 'Yeni İlan Ver'}</CardTitle>
+        <CardTitle>{isEdit ? 'İlanı Düzenle' : (preset?.title ?? 'Yeni İlan Ver')}</CardTitle>
         <CardDescription>
-          Sahiplendirme ilanları ücretsizdir. Bilgileri eksiksiz doldurmanız ilanınızın daha
-          hızlı ilgi görmesini sağlar.
+          {preset?.description ??
+            'İlan vermek ücretsizdir. Bilgileri eksiksiz doldurmanız ilanınızın daha hızlı ilgi görmesini sağlar.'}
         </CardDescription>
+        {preset?.backHref && (
+          <Link
+            href={preset.backHref}
+            className="inline-flex w-fit items-center gap-1 text-sm font-medium text-primary hover:underline"
+          >
+            ← {preset.backLabel ?? 'Geri dön'}
+          </Link>
+        )}
       </CardHeader>
 
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
+            {/* İlan türü ön ayarla kilitliyse sorulmuyor: sahiplendirme
+                sayfasından gelen kullanıcı zaten sahiplendirme yapıyor. */}
+            {!preset?.kind && (
             <FormField
               control={form.control}
               name="kind"
@@ -622,9 +687,19 @@ export function CreateListingForm({ listingId }: { listingId?: number } = {}) {
                 </FormItem>
               )}
             />
+            )}
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <SelectField control={form.control} name="categoryId" label="Kategori" options={categories} placeholder="Kategori seçin" searchPlaceholder="Kategori ara..." />
+              {lockedCategory ? (
+                <div className="space-y-1.5">
+                  <p className="text-sm font-medium">Kategori</p>
+                  <div className="flex h-10 items-center rounded-md border bg-secondary/40 px-3 text-sm">
+                    {lockedCategory.name}
+                  </div>
+                </div>
+              ) : (
+                <SelectField control={form.control} name="categoryId" label="Kategori" options={selectableCategories} placeholder="Kategori seçin" searchPlaceholder="Kategori ara..." />
+              )}
               <SelectField
                 control={form.control}
                 name="breedId"

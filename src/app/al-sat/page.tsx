@@ -4,7 +4,6 @@ import { PackageSearch } from 'lucide-react';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
-import { SupplyTypeSidebar } from '@/components/listings/SupplyTypeSidebar';
 import { Button } from '@/components/ui/button';
 import {
   getBreedsByCategoryId,
@@ -113,12 +112,15 @@ export default async function Page() {
           <aside className="hidden md:block">
             {/* Malzeme türleri ve şehir. Hayvan kategorisi listesi
                 verilmiyor: burada tür seçmek anlamsız. */}
-            <div className="sticky top-4 space-y-4">
-              <SupplyTypeSidebar groups={orderedGroups} />
+            {/* Tek panel, iki sekme — site genelindeki menüyle aynı yapı. */}
+            <div className="sticky top-4">
               <CategorySidebar
                 categories={[]}
                 cities={sidebar.cities}
                 cityLinkCategorySlug="pet-malzemeleri"
+                typeGroups={orderedGroups}
+                typeTabLabel="Malzemeler"
+                typeLinkBase="pet-malzemeleri"
               />
             </div>
           </aside>
@@ -132,7 +134,7 @@ export default async function Page() {
                   Kullanmadığınız pet malzemelerini ücretsiz satışa çıkarabilirsiniz.
                 </p>
                 <Button asChild className="mt-4">
-                  <Link href="/ilan-ver">Ücretsiz İlan Ver</Link>
+                  <Link href="/ilan-ver/al-sat">Ücretsiz İlan Ver</Link>
                 </Button>
               </div>
             ) : (

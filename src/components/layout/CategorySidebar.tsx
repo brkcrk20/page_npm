@@ -51,6 +51,18 @@ export function CategorySidebar({
   cityLinkCategorySlug = 'kopek-ilanlari',
   /** Bulunulan kategori; menüde yalnızca onun cinsleri açık başlar. */
   activeCategoryId,
+  /**
+   * Kategori listesi yerine gösterilecek özel tür listesi.
+   *
+   * Güvercin ve pet malzemeleri kendi dikeyleri: orada "kategori" seçmek
+   * anlamsız, ama "ırk" ve "malzeme türü" seçmek gerekiyor. Önceden bu iki
+   * sayfada ayrı bir panel ve altında ikinci bir şehir paneli duruyordu;
+   * site genelinde menü tek panel ve iki sekme olduğu için tutarsızdı.
+   */
+  typeGroups,
+  typeTabLabel = 'Kategoriler',
+  typeLinkBase,
+  activeTypeSlug,
 }: {
   categories: SidebarCategory[];
   cities: SidebarCity[];
@@ -58,6 +70,10 @@ export function CategorySidebar({
   activeCitySlug?: string;
   cityLinkCategorySlug?: string;
   activeCategoryId?: number;
+  typeGroups?: [string, { slug: string; name: string; count: number }[]][];
+  typeTabLabel?: string;
+  typeLinkBase?: string;
+  activeTypeSlug?: string;
 }) {
   /**
    * Kategori listesi boş verilebiliyor: güvercin sayfası menüyü yalnızca
@@ -66,7 +82,8 @@ export function CategorySidebar({
    * gösterilmiyor ve doğrudan şehirler açılıyor — boş bir "Kategoriler"
    * sekmesiyle karşılamak kırık görünürdü.
    */
-  const hasCategories = categories.length > 0;
+  const hasTypeGroups = Boolean(typeGroups?.length);
+  const hasCategories = categories.length > 0 || hasTypeGroups;
 
   const [tab, setTab] = useState<'kategoriler' | 'sehirler'>(
     hasCategories ? 'kategoriler' : 'sehirler'
@@ -132,7 +149,7 @@ export function CategorySidebar({
       {hasCategories ? (
         <div className="grid grid-cols-2 border-b">
           <TabButton active={tab === 'kategoriler'} onClick={() => setTab('kategoriler')}>
-            Kategoriler
+            {typeTabLabel}
           </TabButton>
           <TabButton active={tab === 'sehirler'} onClick={() => setTab('sehirler')}>
             Şehirler
@@ -151,14 +168,70 @@ export function CategorySidebar({
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={tab === 'kategoriler' ? 'Cins ara...' : 'Şehir ara...'}
+            placeholder={
+              tab === 'kategoriler'
+                ? hasTypeGroups
+                  ? `${typeTabLabel} içinde ara...`
+                  : 'Cins ara...'
+                : 'Şehir ara...'
+            }
             className="h-9 pl-8"
-            aria-label={tab === 'kategoriler' ? 'Cins ara' : 'Şehir ara'}
+            aria-label={tab === 'kategoriler' ? `${typeTabLabel} ara` : 'Şehir ara'}
           />
         </div>
       </div>
 
-      {tab === 'kategoriler' ? (
+      {tab === 'kategoriler' && hasTypeGroups ? (
+        /* Özel tür listesi: güvercin ırkları veya malzeme türleri.
+           Kategori ağacıyla aynı görsel dili kullanıyor. */
+        <div className="max-h-[70vh] overflow-y-auto">
+          {(() => {
+            const q = query.trim().toLocaleLowerCase('tr-TR');
+            const shown = (typeGroups ?? [])
+              .map(([g, items]) => [g, q ? items.filter((i) => i.name.toLocaleLowerCase('tr-TR').includes(q)) : items] as const)
+              .filter(([, items]) => items.length > 0);
+
+            if (shown.length === 0) {
+              return (
+                <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                  Sonuç bulunamadı.
+                </p>
+              );
+            }
+
+            return shown.map(([group, items]) => (
+              <section key={group}>
+                <div className="border-y bg-secondary/40 px-4 py-2.5 text-sm font-bold">
+                  {group}
+                </div>
+                <ul>
+                  {items.map((item) => (
+                    <li key={item.slug}>
+                      <Link
+                        href={`/${typeLinkBase}/${item.slug}`}
+                        aria-current={item.slug === activeTypeSlug ? 'page' : undefined}
+                        className={cn(
+                          'flex items-center gap-2 border-b px-4 py-2 text-sm transition-colors last:border-b-0',
+                          item.slug === activeTypeSlug
+                            ? 'bg-primary/5 font-semibold text-primary'
+                            : 'hover:bg-secondary/50'
+                        )}
+                      >
+                        <span className="min-w-0 flex-1 truncate">{item.name}</span>
+                        {item.count > 0 && (
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            {item.count}
+                          </span>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ));
+          })()}
+        </div>
+      ) : tab === 'kategoriler' ? (
         <div className="max-h-[70vh] overflow-y-auto">
           {filteredCategories.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-muted-foreground">
