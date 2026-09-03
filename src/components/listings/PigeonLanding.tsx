@@ -37,14 +37,32 @@ export function PigeonLanding({
   // Menüde ırklar grup grup; burada, giriş bölümünün hemen altında yalnızca
   // grupların kendisi duruyor. Elli dokuz ırkı sayfanın üstüne düz bir
   // etiket bulutu olarak dökmek, en çok aranan dalları görünmez kılıyordu.
+  /**
+   * Irk dizini.
+   *
+   * Önce her gruptan rastgele dört ırk gösteriliyordu; "16 ırk" yazıp
+   * dördünü listelemek yarım kalmış bir kutu görüntüsü veriyordu ve
+   * gösterilenlerin neden o dördü olduğu belli değildi. Artık her grubun
+   * TÜM ırkları listeleniyor — zaten toplam 59, bir dizin sayfası için
+   * fazla değil ve ziyaretçinin aradığını bulmasının en kısa yolu bu.
+   */
+  const GROUP_NOTES: Record<string, string> = {
+    'Taklacı': 'Havada takla atan uçucu ırklar; Türkiye\'de bölge adıyla anılır.',
+    'Oyun': 'Uçuş tavrı ve sürüdeki oyunuyla beslenen ırklar.',
+    'Posta ve Yarış': 'Uzun mesafe uçuşu için seçilmiş hatlar.',
+    'Süs': 'Tüy yapısı ve duruşuyla, görünüş için yetiştirilen ırklar.',
+    'Yerli': 'Yerli hatlar ve renk/desen adıyla anılan güvercinler.',
+  };
+
   const groupSummary = ['Taklacı', 'Oyun', 'Posta ve Yarış', 'Süs', 'Yerli']
     .map((group) => {
       const items = pigeonBreeds.filter((b) => b.group === group);
       return {
         group,
+        note: GROUP_NOTES[group],
         breedCount: items.length,
         listingCount: items.reduce((sum, b) => sum + b.count, 0),
-        sample: items.slice(0, 4),
+        breeds: items,
       };
     })
     .filter((g) => g.breedCount > 0);
@@ -105,45 +123,65 @@ export function PigeonLanding({
       </section>
 
       <div className="mx-auto w-full max-w-7xl px-5 py-8">
-        {/* --- Irk grupları ---
-             Güvercinciler ırkları kullanım amacına göre ayırıyor; sayfanın
-             girişinde de aynı ayrım var ki ziyaretçi hangi dala bakacağını
-             seçebilsin. */}
+        {/* --- Irk dizini ---
+             Ziyaretçinin ilk sorusu "hangi dala bakacağım": taklacı mı,
+             posta mı, süs mü. Bu yüzden gruplar başlık, gruplar içindeki
+             ırklar da eksiksiz listeleniyor. Daha önce her gruptan yalnızca
+             dört ırk gösteriliyordu ve "16 ırk" yazıp dördünü listelemek
+             yarım kalmış bir kutu görüntüsü veriyordu. */}
         {groupSummary.length > 0 && (
-          <section className="mb-8">
-            <h2 className="mb-3 text-lg font-bold">Irk Grupları</h2>
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="mb-10">
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xl font-bold">Güvercin Irkları</h2>
+              <p className="text-sm text-muted-foreground">
+                {pigeonBreeds.length} ırk, {groupSummary.length} grupta
+              </p>
+            </div>
+
+            <div className="space-y-3">
               {groupSummary.map((g) => (
-                <li key={g.group}>
-                  <div className="h-full rounded-xl border bg-white p-4">
-                    <div className="flex items-baseline justify-between gap-2">
+                <section
+                  key={g.group}
+                  className="overflow-hidden rounded-xl border bg-white"
+                >
+                  <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b bg-secondary/40 px-4 py-3">
+                    <div className="min-w-0">
                       <h3 className="font-bold">{g.group}</h3>
-                      <span className="text-xs text-muted-foreground">
-                        {g.breedCount} ırk
-                        {g.listingCount > 0 && ` · ${g.listingCount} ilan`}
-                      </span>
+                      {g.note && (
+                        <p className="text-xs text-muted-foreground">{g.note}</p>
+                      )}
                     </div>
-                    <ul className="mt-2 flex flex-wrap gap-1.5">
-                      {g.sample.map((breed) => (
-                        <li key={breed.id}>
-                          <Link
-                            href={`/${category.slug}/${breed.slug}`}
-                            className="inline-flex items-center gap-1.5 rounded-full border bg-secondary/40 px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
-                          >
+                    <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                      {g.breedCount} ırk
+                      {g.listingCount > 0 && ` · ${g.listingCount} ilan`}
+                    </span>
+                  </header>
+
+                  {/* Irk adları sütunlara akıyor: 16 ırkı tek satırda
+                      sıralamak uzun bir etiket bulutuna dönüşüyor, sütun
+                      düzeninde göz alfabetik listeyi tarayabiliyor. */}
+                  <ul className="columns-2 gap-x-6 p-4 sm:columns-3 lg:columns-4">
+                    {g.breeds.map((breed) => (
+                      <li key={breed.id} className="mb-1 break-inside-avoid">
+                        <Link
+                          href={`/${category.slug}/${breed.slug}`}
+                          className="group flex items-baseline justify-between gap-2 rounded px-1.5 py-1 text-sm transition-colors hover:bg-secondary"
+                        >
+                          <span className="min-w-0 truncate group-hover:text-primary">
                             {breed.name}
-                            {breed.count > 0 && (
-                              <span className="font-semibold text-muted-foreground">
-                                {breed.count}
-                              </span>
-                            )}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </li>
+                          </span>
+                          {breed.count > 0 && (
+                            <span className="shrink-0 text-xs font-semibold text-muted-foreground">
+                              {breed.count}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               ))}
-            </ul>
+            </div>
           </section>
         )}
 
