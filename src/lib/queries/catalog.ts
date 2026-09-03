@@ -227,6 +227,25 @@ export type SidebarData = {
  * Veritabanı erişilemezse statik katalogla sayımsız (0) olarak dönülüyor —
  * menünün tamamen kaybolmasındansa sayaçların sıfır görünmesi yeğdir.
  */
+/**
+ * Sol menü sıralaması: ilanı olanlar önce, sonra alfabetik.
+ *
+ * İlanı olan cinsler ilan sayısına göre azalan sırada en üstte; ilanı
+ * olmayanların tamamı altta Türkçe alfabetik sırada. Amaç, ziyaretçinin
+ * gerçekten içerik bulacağı cinsleri önce görmesi ama listenin geri kalanının
+ * yine de taranabilir kalması — saf alfabetik sıra popüler cinsleri listenin
+ * ortasına gömüyor, saf sayı sırası ise 0 ilanlı 90 cinsi rastgele diziyordu.
+ *
+ * localeCompare 'tr' ile: Türkçe'de ç/ğ/ı/ö/ş/ü harflerinin alfabedeki yeri
+ * varsayılan sıralamadan farklı.
+ */
+function byCountThenName<T extends { name: string; count: number }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    if (a.count !== b.count && (a.count > 0 || b.count > 0)) return b.count - a.count;
+    return a.name.localeCompare(b.name, 'tr');
+  });
+}
+
 export async function getSidebarData(): Promise<SidebarData> {
   const [categories, cities] = await Promise.all([getCategories(), getCities()]);
 
@@ -234,11 +253,13 @@ export async function getSidebarData(): Promise<SidebarData> {
     categories: categories.map((category) => ({
       ...category,
       count: 0,
-      breeds: staticBreeds
-        .filter((b) => b.category_id === category.id)
-        .map((b) => ({ id: b.id, slug: b.slug, name: b.name, count: 0 })),
+      breeds: byCountThenName(
+        staticBreeds
+          .filter((b) => b.category_id === category.id)
+          .map((b) => ({ id: b.id, slug: b.slug, name: b.name, count: 0 }))
+      ),
     })),
-    cities: cities.map((c) => ({ ...c, count: 0 })),
+    cities: byCountThenName(cities.map((c) => ({ ...c, count: 0 }))),
   });
 
   if (!isSupabaseServerConfigured()) {
@@ -275,16 +296,20 @@ export async function getSidebarData(): Promise<SidebarData> {
       categories: categories.map((category) => ({
         ...category,
         count: categoryCountById.get(category.id) ?? 0,
-        breeds: (breedCounts.data as any[])
-          .filter((b) => b.category_id === category.id)
-          .map((b) => ({
-            id: b.breed_id,
-            slug: b.breed_slug,
-            name: b.breed_name,
-            count: Number(b.listing_count),
-          })),
+        breeds: byCountThenName(
+          (breedCounts.data as any[])
+            .filter((b) => b.category_id === category.id)
+            .map((b) => ({
+              id: b.breed_id,
+              slug: b.breed_slug,
+              name: b.breed_name,
+              count: Number(b.listing_count),
+            }))
+        ),
       })),
-      cities: cities.map((c) => ({ ...c, count: cityCountById.get(c.id) ?? 0 })),
+      cities: byCountThenName(
+        cities.map((c) => ({ ...c, count: cityCountById.get(c.id) ?? 0 }))
+      ),
     };
   } catch (error: any) {
     console.error('[katalog] getSidebarData hata verdi:', error?.message);

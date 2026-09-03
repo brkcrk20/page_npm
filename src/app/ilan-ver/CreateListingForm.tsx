@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
@@ -333,12 +334,13 @@ export function CreateListingForm() {
             />
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <SelectField control={form.control} name="categoryId" label="Kategori" options={categories} placeholder="Kategori seçin" />
+              <SelectField control={form.control} name="categoryId" label="Kategori" options={categories} placeholder="Kategori seçin" searchPlaceholder="Kategori ara..." />
               <SelectField
                 control={form.control}
                 name="breedId"
                 label="Cins"
                 options={filteredBreeds}
+                searchPlaceholder="Cins ara..."
                 placeholder={categoryId ? 'Cins seçin' : 'Önce kategori seçin'}
                 disabled={!categoryId}
               />
@@ -429,12 +431,13 @@ export function CreateListingForm() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <SelectField control={form.control} name="cityId" label="İl" options={cities} placeholder="İl seçin" />
+              <SelectField control={form.control} name="cityId" label="İl" options={cities} placeholder="İl seçin" searchPlaceholder="İl ara..." />
               <SelectField
                 control={form.control}
                 name="districtId"
                 label="İlçe"
                 options={districts}
+                searchPlaceholder="İlçe ara..."
                 placeholder={cityId ? 'İlçe seçin' : 'Önce il seçin'}
                 disabled={!cityId}
               />
@@ -525,6 +528,7 @@ function SelectField({
   label,
   options,
   placeholder,
+  searchPlaceholder = 'Ara...',
   disabled,
 }: {
   control: any;
@@ -532,6 +536,7 @@ function SelectField({
   label: string;
   options: Option[];
   placeholder: string;
+  searchPlaceholder?: string;
   disabled?: boolean;
 }) {
   return (
@@ -541,18 +546,23 @@ function SelectField({
       render={({ field }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
-          <Select onValueChange={field.onChange} value={field.value as string} disabled={disabled}>
-            <FormControl>
-              <SelectTrigger><SelectValue placeholder={placeholder} /></SelectTrigger>
-            </FormControl>
-            <SelectContent className="max-h-72">
-              {options.map((option) => (
-                <SelectItem key={option.id} value={String(option.id)}>
-                  {option.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FormControl>
+            {/* Aramali liste: 102 cins, 81 il ve 973 ilce arasindan kaydirarak
+                secim yapmak kullanilabilir degildi. */}
+            <SearchableSelect
+              value={(field.value as string) ?? ''}
+              onChange={field.onChange}
+              placeholder={placeholder}
+              searchPlaceholder={searchPlaceholder}
+              disabled={disabled}
+              ariaLabel={label}
+              className="w-full"
+              options={options.map((option) => ({
+                value: String(option.id),
+                label: option.name,
+              }))}
+            />
+          </FormControl>
           <FormMessage />
         </FormItem>
       )}

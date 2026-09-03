@@ -6,13 +6,7 @@ import { Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
 import {
   staticCategories,
@@ -172,6 +166,7 @@ function SearchFiltersInner() {
         }}
         placeholder="Tüm Türler"
         allLabel="Tüm Türler"
+        searchPlaceholder="Tür ara..."
         options={categories}
       />
 
@@ -180,6 +175,7 @@ function SearchFiltersInner() {
         onChange={setBreedSlug}
         placeholder="Tüm Cinsler"
         allLabel="Tüm Cinsler"
+        searchPlaceholder="Cins ara..."
         options={filteredBreeds}
       />
 
@@ -188,6 +184,7 @@ function SearchFiltersInner() {
         onChange={setCitySlug}
         placeholder="İl Seçiniz"
         allLabel="Tüm Şehirler"
+        searchPlaceholder="İl ara..."
         options={cities}
       />
 
@@ -196,6 +193,7 @@ function SearchFiltersInner() {
         onChange={setDistrictSlug}
         placeholder="İlçe Seçiniz"
         allLabel="Tüm İlçeler"
+        searchPlaceholder="İlçe ara..."
         options={districts}
         disabled={districts.length === 0}
       />
@@ -212,6 +210,7 @@ function FilterSelect({
   onChange,
   placeholder,
   allLabel,
+  searchPlaceholder,
   options,
   disabled,
 }: {
@@ -219,22 +218,23 @@ function FilterSelect({
   onChange: (value: string) => void;
   placeholder: string;
   allLabel: string;
+  searchPlaceholder: string;
   options: Option[];
   disabled?: boolean;
 }) {
   return (
-    <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className="h-11 md:w-44">
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent className="max-h-72">
-        <SelectItem value={ALL}>{allLabel}</SelectItem>
-        {options.map((option) => (
-          <SelectItem key={option.id} value={option.slug}>
-            {option.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <SearchableSelect
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      searchPlaceholder={searchPlaceholder}
+      disabled={disabled}
+      className="md:w-44"
+      ariaLabel={placeholder}
+      options={[
+        { value: ALL, label: allLabel },
+        ...options.map((option) => ({ value: option.slug, label: option.name })),
+      ]}
+    />
   );
 }
