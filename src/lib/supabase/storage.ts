@@ -52,3 +52,21 @@ export function listingVideoUrl(video: {
   const clean = video.storage_path.replace(/^\/+/, '');
   return `${base}/storage/v1/object/public/${LISTING_VIDEO_BUCKET}/${clean}`;
 }
+
+export const AVATAR_BUCKET = 'profil-fotograflari';
+
+/**
+ * Profil fotoğrafının herkese açık URL'i.
+ *
+ * avatar_url kolonunda tam URL de saklanabiliyor (eski kayıtlar, dış
+ * sağlayıcılar); o durumda olduğu gibi kullanılıyor.
+ */
+export function avatarUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base) return null;
+
+  return `${base}/storage/v1/object/public/${AVATAR_BUCKET}/${path.replace(/^\/+/, '')}`;
+}

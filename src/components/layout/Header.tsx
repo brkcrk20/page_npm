@@ -99,7 +99,16 @@ export function Header() {
     return <SearchFilters />;
   };
 
-  const showCategoriesAndFilters = pathname !== '/login' && pathname !== '/kayit' && pathname !== '/profil';
+  /**
+   * Kategori şeridi ve arama filtreleri yalnızca ilan gezinen sayfalarda
+   * anlamlı. Hesap panelinde ve form sayfalarında mobilde ilk ekranın
+   * tamamını kaplayıp asıl içeriği ekranın dışına itiyorlardı — kullanıcı
+   * "İlanlarım"a girdiğinde önce dört tane açılır liste görüyordu.
+   */
+  const CHROME_FREE = ['/login', '/kayit', '/profil', '/mesajlarim', '/ilan-ver', '/doping', '/admin'];
+  const showCategoriesAndFilters = !CHROME_FREE.some(
+    (p) => pathname === p || pathname.startsWith(p + '/')
+  );
 
   const renderAuthContent = () => {
     if (isLoading) {

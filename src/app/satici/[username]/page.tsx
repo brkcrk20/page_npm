@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
+
+import { avatarUrl } from '@/lib/supabase/storage';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { BadgeCheck, Calendar } from 'lucide-react';
@@ -49,8 +51,8 @@ export default async function SellerPage({ params }: { params: Promise<Params> }
       <div className="mx-auto w-full max-w-7xl px-5 py-6">
         <header className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border bg-white p-5">
           <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-muted">
-            {seller.avatar_url ? (
-              <Image src={seller.avatar_url} alt={displayName} fill sizes="64px" className="object-cover" />
+            {avatarUrl(seller.avatar_url) ? (
+              <Image src={avatarUrl(seller.avatar_url)!} alt={displayName} fill sizes="64px" className="object-cover" />
             ) : (
               <div className="flex h-full items-center justify-center text-xl font-semibold text-muted-foreground">
                 {displayName.slice(0, 1).toLocaleUpperCase('tr')}

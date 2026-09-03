@@ -164,3 +164,60 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
+
+/** Profil fotoğrafının kenar uzunluğu. Her yerde daire içinde ve en fazla
+ *  128px gösteriliyor; 512 ekranların 2x/3x yoğunluğuna fazlasıyla yetiyor. */
+export const AVATAR_SIZE = 512;
+
+/**
+ * Profil fotoğrafını kare olarak kırpıp WebP'ye çevirir.
+ *
+ * prepareImage kullanılamıyordu: o, oranı koruyup uzun kenarı 1600'e
+ * indiriyor. Profil fotoğrafı her yerde daire içinde gösteriliyor ve dikey bir
+ * fotoğrafta yüz çerçevenin dışında kalıyordu. Burada merkezden kare kırpma
+ * yapılıyor — telefonla çekilmiş portrelerde yüz genelde merkeze yakın.
+ */
+export async function prepareAvatar(file: File, userId: string): Promise<PreparedImage> {
+  const image = await readImage(file);
+
+  // Merkezden en büyük kareyi al.
+  const side = Math.min(image.width, image.height);
+  const sourceX = (image.width - side) / 2;
+  const sourceY = (image.height - side) / 2;
+
+  // Küçük bir fotoğrafı büyütmenin anlamı yok; olduğu boyutta bırak.
+  const target = Math.min(AVATAR_SIZE, side);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = target;
+  canvas.height = target;
+
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Tarayıcı görsel işlemeyi desteklemiyor.');
+
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(image, sourceX, sourceY, side, side, 0, 0, target, target);
+
+  const useWebp = supportsWebp();
+  const mimeType = useWebp ? 'image/webp' : 'image/jpeg';
+  const extension = useWebp ? 'webp' : 'jpg';
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, mimeType, WEBP_QUALITY)
+  );
+  if (!blob) throw new Error('Görsel dönüştürülemedi.');
+
+  // Dosya adı zamanla değişiyor: aynı adı korumak, tarayıcı ve CDN
+  // önbelleğinde eski fotoğrafın takılı kalması demekti.
+  const filename = `profil-fotografi-${Date.now()}.${extension}`;
+  const prepared = new File([blob], filename, { type: mimeType });
+
+  return {
+    file: prepared,
+    width: target,
+    height: target,
+    previewUrl: URL.createObjectURL(prepared),
+    originalBytes: file.size,
+  };
+}

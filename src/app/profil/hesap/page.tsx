@@ -23,6 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
+import { AvatarUploader } from './AvatarUploader';
 
 /**
  * Hesap bilgilerim.
@@ -149,6 +150,10 @@ export default function AccountPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="border-b pb-5 sm:col-span-2">
+            <AvatarUploader />
+          </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="email">E-posta</Label>
             <Input id="email" value={user?.email ?? ''} disabled />

@@ -1,6 +1,8 @@
 'use client';
 
 import Image from 'next/image';
+
+import { avatarUrl } from '@/lib/supabase/storage';
 import Link from 'next/link';
 import { useState } from 'react';
 import { BadgeCheck, MessageCircle, Phone, Mail } from 'lucide-react';
@@ -68,8 +70,8 @@ export function SellerCard({
       <div className="rounded-lg border bg-white p-4">
         <div className="flex items-center gap-3">
           <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-muted">
-            {seller?.avatar_url ? (
-              <Image src={seller.avatar_url} alt={displayName} fill sizes="44px" className="object-cover" />
+            {avatarUrl(seller?.avatar_url) ? (
+              <Image src={avatarUrl(seller?.avatar_url)!} alt={displayName} fill sizes="44px" className="object-cover" />
             ) : (
               <div className="flex h-full items-center justify-center text-sm font-semibold text-muted-foreground">
                 {displayName.slice(0, 1).toLocaleUpperCase('tr')}
