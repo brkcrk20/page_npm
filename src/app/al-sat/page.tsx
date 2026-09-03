@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import { KindBrowser } from '@/components/listings/KindBrowser';
-import { getSidebarData } from '@/lib/queries/catalog';
+import { getSidebarData, pigeonCategoryId, withoutPigeons } from '@/lib/queries/catalog';
 import { getListings } from '@/lib/queries/listings';
 
 export const metadata: Metadata = {
@@ -16,10 +16,16 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 export default async function Page() {
-  const [sidebar, { listings, total }] = await Promise.all([
-    getSidebarData(),
-    getListings({ kind: 'satilik', perPage: 24 }),
-  ]);
+  const sidebar = await getSidebarData();
+
+  // Güvercin bu listede yok: kendi sayfası, kendi ırk menüsü ve kendi
+  // terminolojisi var. Kedi ve köpeklerin arasında görünmesi güvercin
+  // arayana da diğerlerine de yaramıyor.
+  const pigeonId = pigeonCategoryId(sidebar.categories);
+
+  const { listings, total } = await getListings({
+    excludeCategoryIds: pigeonId ? [pigeonId] : undefined,
+    kind: 'satilik', perPage: 24 });
 
   return (
     <KindBrowser
@@ -27,7 +33,7 @@ export default async function Page() {
       lead="Fiyat belirtilmiş tüm ilanlar. Irk, şehir ve fiyat aralığına göre daraltabilirsiniz."
       listings={listings}
       total={total}
-      sidebar={sidebar}
+      sidebar={{ ...sidebar, categories: withoutPigeons(sidebar.categories) }}
       emptyMessage="Şu an yayında satılık ilan yok."
       seo={{
         heading: 'Satın Alırken Nelere Dikkat Etmeli?',

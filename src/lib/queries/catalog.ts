@@ -225,6 +225,23 @@ export async function resolveCategorySegment(
 // Sol menü verisi
 // ---------------------------------------------------------------------------
 
+/**
+ * Güvercin ayrı bir dikey olarak kurgulandı: kendi giriş sayfası, kendi ırk
+ * menüsü (59 ırk, beş grup) ve kendi terminolojisi var. Genel listelerde
+ * ("tüm ilanlar", "sahiplendirme", "satılık") kedi ve köpeklerin arasında
+ * görünmesi iki tarafa da yaramıyor.
+ *
+ * Kategori kimliği sabit değil, koda göre bulunuyor: kimlik veritabanına
+ * bağlı ve gömmek kırılgan olurdu.
+ */
+export function withoutPigeons<T extends { code: string }>(categories: T[]): T[] {
+  return categories.filter((c) => c.code !== 'Pigeon');
+}
+
+export function pigeonCategoryId(categories: { id: number; code: string }[]): number | null {
+  return categories.find((c) => c.code === 'Pigeon')?.id ?? null;
+}
+
 export type SidebarData = {
   categories: {
     id: number;

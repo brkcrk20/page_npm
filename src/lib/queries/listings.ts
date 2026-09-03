@@ -52,6 +52,15 @@ export type ListingCard = Pick<
 
 export type ListingFilters = {
   categoryId?: number;
+  /**
+   * Bu kategorileri listeden çıkar.
+   *
+   * Güvercin ayrı bir dikey: kendi ırk sınıflandırması, kendi terminolojisi
+   * ve kendi sayfası var. Sahiplendirme ve satılık listelerinde köpek ve
+   * kedilerin arasında görünmesi ne alıcıya ne satıcıya yarıyor — güvercin
+   * arayan zaten güvercin sayfasına gidiyor.
+   */
+  excludeCategoryIds?: number[];
   breedId?: number;
   cityId?: number;
   districtId?: number;
@@ -115,6 +124,9 @@ async function fetchListings(filters: ListingFilters = {}) {
     .eq('status', 'yayinda');
 
   if (filters.categoryId !== undefined) query = query.eq('category_id', filters.categoryId);
+  if (filters.excludeCategoryIds?.length) {
+    query = query.not('category_id', 'in', `(${filters.excludeCategoryIds.join(',')})`);
+  }
   if (filters.breedId !== undefined) query = query.eq('breed_id', filters.breedId);
   if (filters.cityId !== undefined) query = query.eq('city_id', filters.cityId);
   if (filters.districtId !== undefined) query = query.eq('district_id', filters.districtId);

@@ -59,7 +59,18 @@ export function CategorySidebar({
   cityLinkCategorySlug?: string;
   activeCategoryId?: number;
 }) {
-  const [tab, setTab] = useState<'kategoriler' | 'sehirler'>('kategoriler');
+  /**
+   * Kategori listesi boş verilebiliyor: güvercin sayfası menüyü yalnızca
+   * şehir filtresi için kullanıyor, kategori seçimi orada anlamsız
+   * (ziyaretçi zaten güvercinde). O durumda sekme çubuğu hiç
+   * gösterilmiyor ve doğrudan şehirler açılıyor — boş bir "Kategoriler"
+   * sekmesiyle karşılamak kırık görünürdü.
+   */
+  const hasCategories = categories.length > 0;
+
+  const [tab, setTab] = useState<'kategoriler' | 'sehirler'>(
+    hasCategories ? 'kategoriler' : 'sehirler'
+  );
   const [query, setQuery] = useState('');
 
   /**
@@ -118,14 +129,21 @@ export function CategorySidebar({
 
   return (
     <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
-      <div className="grid grid-cols-2 border-b">
-        <TabButton active={tab === 'kategoriler'} onClick={() => setTab('kategoriler')}>
-          Kategoriler
-        </TabButton>
-        <TabButton active={tab === 'sehirler'} onClick={() => setTab('sehirler')}>
-          Şehirler
-        </TabButton>
-      </div>
+      {hasCategories ? (
+        <div className="grid grid-cols-2 border-b">
+          <TabButton active={tab === 'kategoriler'} onClick={() => setTab('kategoriler')}>
+            Kategoriler
+          </TabButton>
+          <TabButton active={tab === 'sehirler'} onClick={() => setTab('sehirler')}>
+            Şehirler
+          </TabButton>
+        </div>
+      ) : (
+        <div className="border-b bg-secondary/50 px-4 py-3">
+          <h2 className="font-bold">Şehirler</h2>
+          <p className="text-xs text-muted-foreground">İline göre daralt</p>
+        </div>
+      )}
 
       <div className="p-3">
         <div className="relative">

@@ -3,6 +3,7 @@ import { Film, MapPin, Play, Search, Trophy } from 'lucide-react';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { PigeonBreedSidebar } from '@/components/listings/PigeonBreedSidebar';
+import { CategorySidebar } from '@/components/layout/CategorySidebar';
 import { Button } from '@/components/ui/button';
 import type { ListingCard } from '@/lib/queries/listings';
 import type { Category, SidebarData } from '@/lib/queries/catalog';
@@ -159,12 +160,22 @@ export function PigeonLanding({
 
         {/* --- Tüm ilanlar --- */}
         <div id="tum-ilanlar" className="grid grid-cols-1 gap-8 md:grid-cols-[280px_1fr]">
+          {/* Güvercin sayfası kendine yeter: ırk menüsü ve şehir menüsü
+              burada. Şehir menüsüne KATEGORİ LİSTESİ VERİLMİYOR
+              (categories={[]}) — ziyaretçi zaten güvercinde, köpek ve kedi
+              ırklarını burada görmesinin bir anlamı yok. Şehir bağlantıları
+              da güvercin kategorisinin altına gidiyor. */}
           <aside className="hidden md:block">
-            <div className="sticky top-4">
+            <div className="sticky top-4 space-y-4">
               <PigeonBreedSidebar
                 breeds={pigeonBreeds}
                 categorySlug={category.slug}
                 categoryName={category.name}
+              />
+              <CategorySidebar
+                categories={[]}
+                cities={sidebar.cities}
+                cityLinkCategorySlug={category.slug}
               />
             </div>
           </aside>
