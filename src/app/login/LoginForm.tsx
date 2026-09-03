@@ -120,7 +120,20 @@ export function LoginForm() {
       let title = 'Giriş yapılamadı';
       let description = error.message;
 
-      if (m.includes('invalid login credentials')) {
+      // Ağ hatası: Supabase'e hiç ulaşılamadı. Kullanıcı adı/şifre
+      // kontrolüne gerek yok, sorun onda değil. Bu daha önce ham İngilizce
+      // "Failed to fetch" olarak görünüyordu.
+      if (
+        m.includes('failed to fetch') ||
+        m.includes('networkerror') ||
+        m.includes('network request failed') ||
+        m.includes('fetch failed') ||
+        m.includes('load failed')
+      ) {
+        title = 'Sunucuya ulaşılamıyor';
+        description =
+          'İnternet bağlantınızı kontrol edin. Bağlantınız sorunsuzsa geçici bir sunucu sorunu olabilir; birkaç dakika sonra tekrar deneyin.';
+      } else if (m.includes('invalid login credentials')) {
         description = 'Kullanıcı adı veya şifre hatalı. Bilgilerinizi kontrol edin.';
       } else if (m.includes('email not confirmed')) {
         title = 'E-posta doğrulanmamış';

@@ -102,6 +102,21 @@ type AccountType = 'bireysel' | 'kurumsal';
 function translateSignUpError(message: string): { title: string; description: string } {
   const m = message.toLowerCase();
 
+  // Ağ hatası: sunucuya hiç ulaşılamadı. Daha önce ham "Failed to fetch"
+  // metni gösteriliyordu ve kullanıcı sorunun kendisinde olduğunu sanıyordu.
+  if (
+    m.includes('failed to fetch') ||
+    m.includes('networkerror') ||
+    m.includes('network request failed') ||
+    m.includes('fetch failed') ||
+    m.includes('load failed')
+  ) {
+    return {
+      title: 'Sunucuya ulaşılamıyor',
+      description:
+        'İnternet bağlantınızı kontrol edin. Bağlantınız sorunsuzsa geçici bir sunucu sorunu olabilir; birkaç dakika sonra tekrar deneyin.',
+    };
+  }
   if (m.includes('signups are disabled') || m.includes('signup is disabled')) {
     return {
       title: 'Kayıt geçici olarak kapalı',
@@ -203,7 +218,16 @@ export function RegisterForm() {
       const { data: available, error: checkError } = await supabase.rpc('username_available', {
         p_username: username,
       });
-      if (checkError) throw new Error('Kullanıcı adı kontrol edilemedi: ' + checkError.message);
+      if (checkError) {
+        // Ham hata metnini olduğu gibi göstermek yerine çeviriden geçiriyoruz;
+        // ağ kopukluğunda "Kullanıcı adı kontrol edilemedi: Failed to fetch"
+        // gibi bir mesaj kullanıcıya hiçbir şey anlatmıyordu.
+        const t = translateSignUpError(checkError.message);
+        setFormError(t);
+        toast({ variant: 'destructive', ...t });
+        setIsLoading(false);
+        return;
+      }
       if (available === false) {
         form.setError('username', { message: 'Bu kullanıcı adı zaten alınmış.' });
         setIsLoading(false);
