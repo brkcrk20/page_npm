@@ -1,5 +1,7 @@
 'use client';
 
+import { UnreadBadge } from './UnreadBadge';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Heart, Plus, MessageSquare, User } from 'lucide-react';
@@ -69,14 +71,18 @@ export function BottomNav() {
               // DÜZELTME BURADA: px-5'i kaldırdık, w-full ve h-full verdik.
               className="inline-flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 transition-colors group"
             >
-              <item.icon
-                className={cn(
-                  "w-6 h-6 mb-1 transition-colors",
-                  isActive ? "text-primary fill-current" : "text-gray-500 group-hover:text-primary"
-                )}
-                // Sadece belirli ikonların içini doldur, diğerleri çizgi kalsın
-                fill={isActive && (item.label === 'Favoriler' || item.label === 'Ana Sayfa') ? "currentColor" : "none"}
-              />
+              <span className="relative mb-1">
+                <item.icon
+                  className={cn(
+                    "w-6 h-6 transition-colors",
+                    isActive ? "text-primary fill-current" : "text-gray-500 group-hover:text-primary"
+                  )}
+                  // Sadece belirli ikonların içini doldur, diğerleri çizgi kalsın
+                  fill={isActive && (item.label === 'Favoriler' || item.label === 'Ana Sayfa') ? "currentColor" : "none"}
+                />
+                {/* Okunmamış mesaj rozeti yalnızca mesaj sekmesinde */}
+                {item.href === '/mesajlarim' && <UnreadBadge />}
+              </span>
               <span className={cn(
                 // DÜZELTME: whitespace-nowrap ekledik (asla alt satıra geçmez)
                 "text-[10px] font-medium transition-colors whitespace-nowrap",

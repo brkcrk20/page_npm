@@ -40,6 +40,17 @@ type Stats = {
   published: number;
   pending: number;
   users: number;
+  pendingOrders: number;
+};
+
+type PendingOrder = {
+  id: number;
+  public_ref: string;
+  amount_minor: number;
+  created_at: string;
+  provider: string;
+  billing_snapshot: Record<string, any> | null;
+  order_items: { quantity: number; products: { name: string } | null }[];
 };
 
 export default function AdminPage() {
@@ -49,6 +60,7 @@ export default function AdminPage() {
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [pending, setPending] = useState<PendingListing[]>([]);
+  const [orders, setOrders] = useState<PendingOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const isAdmin = profile?.role === 'admin';
@@ -61,7 +73,7 @@ export default function AdminPage() {
     if (!isAdmin) return;
     const supabase = getSupabaseBrowserClient();
 
-    const [all, published, pendingCount, users, pendingRows] = await Promise.all([
+    const [all, published, pendingCount, users, pendingRows, orderRows] = await Promise.all([
       supabase.from('listings').select('*', { count: 'exact', head: true }),
       supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'yayinda'),
       supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'onay_bekliyor'),
@@ -72,6 +84,15 @@ export default function AdminPage() {
         .eq('status', 'onay_bekliyor')
         .order('created_at')
         .limit(50),
+      supabase
+        .from('orders')
+        .select(
+          `id, public_ref, amount_minor, created_at, provider, billing_snapshot,
+           order_items ( quantity, products ( name ) )`
+        )
+        .eq('status', 'odeme_bekleniyor')
+        .order('created_at')
+        .limit(50),
     ]);
 
     setStats({
@@ -79,7 +100,9 @@ export default function AdminPage() {
       published: published.count ?? 0,
       pending: pendingCount.count ?? 0,
       users: users.count ?? 0,
+      pendingOrders: (orderRows.data ?? []).length,
     });
+    setOrders((orderRows.data as unknown as PendingOrder[]) ?? []);
     setPending((pendingRows.data as unknown as PendingListing[]) ?? []);
     setIsLoading(false);
   }, [isAdmin]);
@@ -88,6 +111,22 @@ export default function AdminPage() {
     if (isAdmin) load();
     else if (!isProfileLoading) setIsLoading(false);
   }, [isAdmin, isProfileLoading, load]);
+
+  async function confirmPayment(publicRef: string) {
+    const supabase = getSupabaseBrowserClient();
+    const { error } = await supabase.rpc('confirm_order_payment', {
+      p_public_ref: publicRef,
+      p_provider_ref: undefined,
+    });
+
+    if (error) {
+      toast({ variant: 'destructive', title: 'Onaylanamadı', description: error.message });
+      return;
+    }
+    setOrders((prev) => prev.filter((o) => o.public_ref !== publicRef));
+    toast({ title: 'Ödeme onaylandı', description: 'Satın alınan haklar tanımlandı.' });
+    load();
+  }
 
   async function moderate(id: number, approve: boolean) {
     const supabase = getSupabaseBrowserClient();
@@ -141,11 +180,13 @@ export default function AdminPage() {
         <StatCard label="Yayında" value={stats?.published ?? 0} />
         <StatCard label="Onay Bekleyen" value={stats?.pending ?? 0} />
         <StatCard label="Kullanıcı" value={stats?.users ?? 0} />
+        <StatCard label="Bekleyen Ödeme" value={stats?.pendingOrders ?? 0} />
       </div>
 
       <Tabs defaultValue="moderation">
         <TabsList>
           <TabsTrigger value="moderation">Moderasyon</TabsTrigger>
+          <TabsTrigger value="orders">Ödemeler</TabsTrigger>
         </TabsList>
 
         <TabsContent value="moderation" className="mt-4">
@@ -190,6 +231,57 @@ export default function AdminPage() {
                       <Button size="sm" variant="destructive" onClick={() => moderate(listing.id, false)}>
                         <X className="mr-1 h-4 w-4" />
                         Reddet
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="orders" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Ödeme Bekleyen Siparişler</CardTitle>
+              <CardDescription>
+                Havale/EFT geldiğini gördüğünüzde onaylayın. Onay anında doping,
+                abonelik veya ilan hakkı otomatik olarak tanımlanır.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {orders.length === 0 ? (
+                <p className="py-8 text-center text-muted-foreground">
+                  Ödeme bekleyen sipariş yok.
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {orders.map((order) => (
+                    <li key={order.id} className="flex flex-wrap items-center gap-4 rounded-lg border p-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium">
+                          {order.order_items
+                            .map((i) => `${i.products?.name ?? 'Ürün'} × ${i.quantity}`)
+                            .join(', ')}
+                        </p>
+                        <p className="break-all text-xs text-muted-foreground">
+                          {order.public_ref} ·{' '}
+                          {order.billing_snapshot?.company_title ??
+                            order.billing_snapshot?.full_name ??
+                            'İsimsiz'}{' '}
+                          · {new Date(order.created_at).toLocaleDateString('tr-TR')}
+                        </p>
+                      </div>
+                      <span className="font-bold text-primary">
+                        {new Intl.NumberFormat('tr-TR', {
+                          style: 'currency',
+                          currency: 'TRY',
+                          maximumFractionDigits: 0,
+                        }).format(order.amount_minor / 100)}
+                      </span>
+                      <Button size="sm" onClick={() => confirmPayment(order.public_ref)}>
+                        <Check className="mr-1 h-4 w-4" />
+                        Ödemeyi Onayla
                       </Button>
                     </li>
                   ))}

@@ -156,6 +156,101 @@ export type Database = {
         }
         Relationships: []
       }
+      conversations: {
+        Row: {
+          buyer_archived: boolean
+          buyer_id: string
+          buyer_unread: number
+          created_at: string
+          id: number
+          last_message_at: string | null
+          last_message_preview: string | null
+          listing_id: number | null
+          listing_title: string | null
+          seller_archived: boolean
+          seller_id: string
+          seller_unread: number
+        }
+        Insert: {
+          buyer_archived?: boolean
+          buyer_id: string
+          buyer_unread?: number
+          created_at?: string
+          id?: never
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          listing_id?: number | null
+          listing_title?: string | null
+          seller_archived?: boolean
+          seller_id: string
+          seller_unread?: number
+        }
+        Update: {
+          buyer_archived?: boolean
+          buyer_id?: string
+          buyer_unread?: number
+          created_at?: string
+          id?: never
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          listing_id?: number | null
+          listing_title?: string | null
+          seller_archived?: boolean
+          seller_id?: string
+          seller_unread?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "conversations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       districts: {
         Row: {
           city_id: number
@@ -706,6 +801,62 @@ export type Database = {
           {
             foreignKeyName: "listings_reviewed_by_fkey"
             columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body: string
+          conversation_id: number
+          created_at: string
+          id: number
+          read_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: number
+          created_at?: string
+          id?: never
+          read_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: number
+          created_at?: string
+          id?: never
+          read_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "seller_stats"
             referencedColumns: ["user_id"]
@@ -1607,7 +1758,19 @@ export type Database = {
       }
     }
     Functions: {
+      confirm_order_payment: {
+        Args: { p_provider_ref?: string; p_public_ref: string }
+        Returns: undefined
+      }
       counter_sync_active: { Args: never; Returns: boolean }
+      create_order: {
+        Args: {
+          p_listing_id?: number
+          p_product_code: string
+          p_quantity?: number
+        }
+        Returns: string
+      }
       email_for_username: { Args: { p_username: string }; Returns: string }
       increment_listing_phone: {
         Args: { p_listing_id: number }
@@ -1634,11 +1797,18 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
+      mark_conversation_read: {
+        Args: { p_conversation_id: number }
+        Returns: undefined
+      }
       monetization_enabled: { Args: never; Returns: boolean }
+      remaining_listing_credits: { Args: never; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      start_conversation: { Args: { p_listing_id: number }; Returns: number }
       tr_slugify: { Args: { value: string }; Returns: string }
       unaccent: { Args: { "": string }; Returns: string }
+      unread_message_count: { Args: never; Returns: number }
       username_available: { Args: { p_username: string }; Returns: boolean }
     }
     Enums: {

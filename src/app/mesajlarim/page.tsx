@@ -1,12 +1,28 @@
-import React from 'react';
+import { Suspense } from 'react';
+import type { Metadata } from 'next';
+import { Loader2 } from 'lucide-react';
+
+import { MessagesClient } from './MessagesClient';
+
+export const metadata: Metadata = {
+  title: 'Mesajlarım | PetSemti',
+  description: 'İlanlarınız üzerinden gelen mesajlar.',
+  // Kişiye özel içerik; arama sonuçlarında yeri yok.
+  robots: { index: false, follow: false },
+};
 
 export default function MessagesPage() {
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-2xl font-bold mb-4">Mesajlarım</h1>
-      <div className="p-8 text-center border rounded-lg bg-gray-50 text-gray-500">
-        Henüz mesajınız bulunmuyor.
-      </div>
-    </div>
+    // useSearchParams Suspense sınırı gerektiriyor (ilan parametresiyle
+    // konuşma açılıyor).
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <MessagesClient />
+    </Suspense>
   );
 }

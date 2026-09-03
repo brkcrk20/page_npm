@@ -34,6 +34,7 @@ import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
+import { UnreadBadge } from './UnreadBadge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -145,7 +146,7 @@ export function Header() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
              <DropdownMenuGroup>
-                <DropdownMenuItem asChild><Link href="/mesajlarim"><MessageSquare className="mr-2 h-4 w-4" /><span>Mesajlarım</span></Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/mesajlarim"><MessageSquare className="mr-2 h-4 w-4" /><span>Mesajlarım</span><span className="relative ml-2"><UnreadBadge /></span></Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link href="/profil/favoriler"><Heart className="mr-2 h-4 w-4" /><span>Favori İlanlarım</span></Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link href="/profil/ilanlarim"><FileText className="mr-2 h-4 w-4" /><span>İlanlarım</span></Link></DropdownMenuItem>
              </DropdownMenuGroup>
