@@ -89,13 +89,28 @@ export function LoginForm() {
     });
 
     if (error) {
-      let description = 'Giriş yapılırken bir hata oluştu.';
-      if (error.message.includes('Invalid login credentials')) {
-        description = 'Kullanıcı adı veya şifre hatalı. Lütfen bilgilerinizi kontrol edin.';
-      } else if (error.message.includes('Email not confirmed')) {
-        description = 'E-posta adresiniz henüz doğrulanmamış. Gelen kutunuzu kontrol edin.';
+      // Supabase'in hata metinleri İngilizce ve teknik; kullanıcıya ne
+      // yapması gerektiğini söyleyen karşılıklara çeviriyoruz. Bilinmeyen
+      // hatalarda ham mesajı gizlemiyoruz — destek istendiğinde kullanıcının
+      // söyleyebileceği tek ipucu o.
+      const m = error.message.toLowerCase();
+      let title = 'Giriş yapılamadı';
+      let description = error.message;
+
+      if (m.includes('invalid login credentials')) {
+        description = 'Kullanıcı adı veya şifre hatalı. Bilgilerinizi kontrol edin.';
+      } else if (m.includes('email not confirmed')) {
+        title = 'E-posta doğrulanmamış';
+        description = 'Kayıt olurken gelen doğrulama bağlantısına tıklamanız gerekiyor.';
+      } else if (m.includes('email logins are disabled') || m.includes('provider is not enabled')) {
+        title = 'Giriş geçici olarak kapalı';
+        description = 'E-posta ile giriş şu an devre dışı. Kısa süre içinde tekrar deneyin.';
+      } else if (m.includes('rate limit') || m.includes('too many')) {
+        title = 'Çok fazla deneme';
+        description = 'Güvenlik için bir süre beklemeniz gerekiyor.';
       }
-      toast({ variant: 'destructive', title: 'Giriş Başarısız', description });
+
+      toast({ variant: 'destructive', title, description });
       setIsLoading(false);
       return;
     }
