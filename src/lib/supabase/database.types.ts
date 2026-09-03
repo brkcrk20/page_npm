@@ -929,7 +929,7 @@ export type Database = {
           public_ref: string
           status: Database["public"]["Enums"]["order_status"]
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           amount_minor: number
@@ -944,7 +944,7 @@ export type Database = {
           public_ref?: string
           status?: Database["public"]["Enums"]["order_status"]
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           amount_minor?: number
@@ -959,7 +959,7 @@ export type Database = {
           public_ref?: string
           status?: Database["public"]["Enums"]["order_status"]
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1771,6 +1771,7 @@ export type Database = {
         }
         Returns: string
       }
+      delete_my_account: { Args: never; Returns: undefined }
       email_for_username: { Args: { p_username: string }; Returns: string }
       increment_listing_phone: {
         Args: { p_listing_id: number }
@@ -1797,6 +1798,7 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
+      is_service_role: { Args: never; Returns: boolean }
       mark_conversation_read: {
         Args: { p_conversation_id: number }
         Returns: undefined

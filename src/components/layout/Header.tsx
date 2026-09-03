@@ -139,29 +139,22 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {/* Menü artık yalnızca var olan sayfalara gidiyor. Eskiden burada
+                /paketler, /magazalarim, /magaza-olustur, /siparislerim,
+                /yorumlar ve /kredi-hareketleri vardı; hiçbiri mevcut değildi
+                ve tıklayan herkes 404 sayfasına düşüyordu. */}
             <DropdownMenuGroup>
-              <DropdownMenuItem asChild><Link href="/profil"><User className="mr-2 h-4 w-4" /><span>Profilim</span></Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/profil#update"><User className="mr-2 h-4 w-4" /><span>Profil Güncelle</span></Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/paketler"><Package className="mr-2 h-4 w-4" /><span>Paket Satın Al</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/profil"><User className="mr-2 h-4 w-4" /><span>Hesabım</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/profil/ilanlarim"><FileText className="mr-2 h-4 w-4" /><span>İlanlarım</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/mesajlarim"><MessageSquare className="mr-2 h-4 w-4" /><span>Mesajlarım</span><span className="relative ml-2"><UnreadBadge /></span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/profil/favoriler"><Heart className="mr-2 h-4 w-4" /><span>Favori İlanlarım</span></Link></DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-             <DropdownMenuGroup>
-                <DropdownMenuItem asChild><Link href="/mesajlarim"><MessageSquare className="mr-2 h-4 w-4" /><span>Mesajlarım</span><span className="relative ml-2"><UnreadBadge /></span></Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/profil/favoriler"><Heart className="mr-2 h-4 w-4" /><span>Favori İlanlarım</span></Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/profil/ilanlarim"><FileText className="mr-2 h-4 w-4" /><span>İlanlarım</span></Link></DropdownMenuItem>
-             </DropdownMenuGroup>
-             <DropdownMenuSeparator />
-             <DropdownMenuGroup>
-                <DropdownMenuItem asChild><Link href="/magazalarim"><Store className="mr-2 h-4 w-4" /><span>Mağazalarım</span></Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/magaza-olustur"><Store className="mr-2 h-4 w-4" /><span>Mağaza Oluştur</span></Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/siparislerim"><ShoppingBag className="mr-2 h-4 w-4" /><span>Siparişlerim</span></Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/yorumlar"><MessageCircle className="mr-2 h-4 w-4" /><span>Yorumlar</span></Link></DropdownMenuItem>
-             </DropdownMenuGroup>
-             <DropdownMenuSeparator />
-             <DropdownMenuGroup>
-                <DropdownMenuItem><CreditCard className="mr-2 h-4 w-4" /><span>Krediniz: {0}</span></DropdownMenuItem>
-                 <DropdownMenuItem asChild><Link href="/kredi-hareketleri"><CreditCard className="mr-2 h-4 w-4" /><span>Borç Hareketleri</span></Link></DropdownMenuItem>
-             </DropdownMenuGroup>
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild><Link href="/doping"><Package className="mr-2 h-4 w-4" /><span>İlanımı Öne Çıkar</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/profil/siparislerim"><ShoppingBag className="mr-2 h-4 w-4" /><span>Siparişlerim</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/profil/fatura"><CreditCard className="mr-2 h-4 w-4" /><span>Fatura Bilgileri</span></Link></DropdownMenuItem>
+            </DropdownMenuGroup>
             {isAdmin && (
               <>
                 <DropdownMenuSeparator />

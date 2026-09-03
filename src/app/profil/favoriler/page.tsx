@@ -110,7 +110,7 @@ export default function FavoritesPage() {
   const unavailable = favorites.length - visible.length;
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-5 py-6">
+    <div className="w-full">
       <h1 className="mb-1 flex items-center gap-2 text-2xl font-bold">
         <Star className="h-6 w-6 fill-primary text-primary" />
         Favorilerim

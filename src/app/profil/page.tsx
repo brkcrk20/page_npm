@@ -3,243 +3,288 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { Loader2, LogOut, Plus, Trash2 } from 'lucide-react';
+import {
+  ArrowRight,
+  CreditCard,
+  Eye,
+  Heart,
+  List,
+  Loader2,
+  MessageSquare,
+  Plus,
+  Rocket,
+} from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import { listingPhotoUrl } from '@/lib/supabase/storage';
+import { cn } from '@/lib/utils';
 
-type MyListing = {
+/**
+ * Panelin açılış ekranı.
+ *
+ * Kullanıcı panele girdiğinde ilk sorduğu şey "ilanım ne durumda" oluyor.
+ * Eskiden buraya girildiğinde profil düzenleme formu karşılıyordu — halbuki
+ * ad soyad yılda bir kez değişiyor, ilan istatistikleri her gün bakılıyor.
+ * Form ayrı bir sayfaya (hesap bilgilerim) taşındı.
+ */
+
+type Overview = {
+  total: number;
+  published: number;
+  pending: number;
+  views: number;
+  favorites: number;
+  unread: number;
+  credits: number;
+};
+
+type RecentListing = {
   id: number;
   slug: string;
   title: string;
   status: string;
-  price: number | null;
-  kind: string;
-  created_at: string;
   view_count: number;
   listing_photos: { storage_path: string; position: number }[];
 };
 
-const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
-  taslak: { label: 'Taslak', variant: 'secondary' },
-  onay_bekliyor: { label: 'Onay Bekliyor', variant: 'secondary' },
-  yayinda: { label: 'Yayında', variant: 'default' },
-  reddedildi: { label: 'Reddedildi', variant: 'destructive' },
-  pasif: { label: 'Yayında Değil', variant: 'secondary' },
-  suresi_doldu: { label: 'Süresi Doldu', variant: 'secondary' },
-  satildi: { label: 'Satıldı', variant: 'secondary' },
+const STATUS_LABEL: Record<string, string> = {
+  taslak: 'Taslak',
+  onay_bekliyor: 'Onay Bekliyor',
+  yayinda: 'Yayında',
+  reddedildi: 'Reddedildi',
+  pasif: 'Yayında Değil',
+  suresi_doldu: 'Süresi Doldu',
+  satildi: 'Satıldı',
 };
 
-export default function ProfilePage() {
-  const router = useRouter();
+export default function ProfileOverviewPage() {
   const { toast } = useToast();
-  const { user, profile, isUserLoading, signOut, refreshProfile } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
 
-  const [listings, setListings] = useState<MyListing[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-
-  useEffect(() => {
-    if (!isUserLoading && !user) router.replace('/login');
-  }, [isUserLoading, user, router]);
-
-  useEffect(() => {
-    setFullName(profile?.full_name ?? '');
-    setPhone(profile?.phone ?? '');
-  }, [profile?.full_name, profile?.phone]);
+  const [data, setData] = useState<Overview | null>(null);
+  const [recent, setRecent] = useState<RecentListing[]>([]);
 
   useEffect(() => {
     if (!user) return;
     const supabase = getSupabaseBrowserClient();
 
-    // Kendi ilanlarını her durumda görebilir (RLS owner_id üzerinden izin verir),
-    // yayında olmayanlar dahil.
-    supabase
-      .from('listings')
-      .select('id, slug, title, status, price, kind, created_at, view_count, listing_photos(storage_path, position)')
-      .eq('owner_id', user.id)
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) {
-          toast({ variant: 'destructive', title: 'İlanlar yüklenemedi', description: error.message });
-        }
-        setListings((data as MyListing[]) ?? []);
-        setIsLoading(false);
+    (async () => {
+      const [listingRows, favCount, unread, credits] = await Promise.all([
+        supabase
+          .from('listings')
+          .select('id, slug, title, status, view_count, favorite_count, listing_photos(storage_path, position)')
+          .eq('owner_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase.from('favorites').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.rpc('unread_message_count'),
+        supabase.from('listing_credits').select('delta').eq('user_id', user.id),
+      ]);
+
+      if (listingRows.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Özet yüklenemedi',
+          description: listingRows.error.message,
+        });
+      }
+
+      const rows = (listingRows.data as (RecentListing & { favorite_count: number })[]) ?? [];
+
+      setData({
+        total: rows.length,
+        published: rows.filter((r) => r.status === 'yayinda').length,
+        pending: rows.filter((r) => r.status === 'onay_bekliyor').length,
+        views: rows.reduce((sum, r) => sum + (r.view_count ?? 0), 0),
+        favorites: favCount.count ?? 0,
+        unread: Number(unread.data ?? 0),
+        // Satın alınan haklar pozitif, kullanılanlar negatif kayıt olarak
+        // tutuluyor; kalan hak toplamları.
+        credits: ((credits.data as { delta: number }[]) ?? []).reduce((s, c) => s + c.delta, 0),
       });
+      setRecent(rows.slice(0, 4));
+    })();
   }, [user, toast]);
 
-  async function saveProfile() {
-    if (!user) return;
-    setIsSaving(true);
-    const supabase = getSupabaseBrowserClient();
+  const firstName = (profile?.full_name ?? profile?.username ?? '').split(' ')[0];
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ full_name: fullName.trim() || null, phone: phone.trim() || null })
-      .eq('id', user.id);
-
-    if (error) {
-      toast({ variant: 'destructive', title: 'Kaydedilemedi', description: error.message });
-    } else {
-      await refreshProfile();
-      toast({ title: 'Profil güncellendi' });
-    }
-    setIsSaving(false);
-  }
-
-  async function deleteListing(id: number) {
-    const supabase = getSupabaseBrowserClient();
-    const { error } = await supabase.from('listings').delete().eq('id', id);
-
-    if (error) {
-      toast({ variant: 'destructive', title: 'İlan silinemedi', description: error.message });
-      return;
-    }
-    setListings((prev) => prev.filter((l) => l.id !== id));
-    toast({ title: 'İlan silindi' });
-  }
-
-  if (isUserLoading || !user) {
+  if (!data) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex justify-center py-16">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="w-full px-5 py-6 md:container md:mx-auto">
-      <div className="grid gap-6 md:grid-cols-[320px_1fr]">
-        <aside className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profil Bilgilerim</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="email">E-posta</Label>
-                <Input id="email" value={user.email ?? ''} disabled />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="fullName">Ad Soyad</Label>
-                <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="phone">Telefon</Label>
-                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-              </div>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">
+            {firstName ? `Merhaba ${firstName}` : 'Hesabım'}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            İlanlarınızın durumunu buradan takip edebilirsiniz.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/ilan-ver">
+            <Plus className="mr-1.5 h-4 w-4" />
+            Ücretsiz İlan Ver
+          </Link>
+        </Button>
+      </div>
 
-              {profile?.username && (
-                <p className="text-sm text-muted-foreground">
-                  Kullanıcı adı: <span className="font-medium">@{profile.username}</span>
-                </p>
-              )}
-              {profile?.account_type === 'kurumsal' && (
-                <Badge variant="secondary">Kurumsal Üye</Badge>
-              )}
-              {profile?.is_verified && <Badge>Güvenli Üye</Badge>}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat icon={List} label="Toplam İlan" value={data.total} href="/profil/ilanlarim" />
+        <Stat icon={Eye} label="Görüntülenme" value={data.views} />
+        <Stat icon={Heart} label="Favorilerim" value={data.favorites} href="/profil/favoriler" />
+        <Stat
+          icon={MessageSquare}
+          label="Okunmamış Mesaj"
+          value={data.unread}
+          href="/mesajlarim"
+          highlight={data.unread > 0}
+        />
+      </div>
 
-              <Button onClick={saveProfile} disabled={isSaving} className="w-full">
-                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Kaydet
-              </Button>
+      {/* Bekleyen iş varsa panelin en görünür yerinde duruyor; kullanıcı
+          "ilanım neden yayında değil" diye aramasın. */}
+      {data.pending > 0 && (
+        <Link
+          href="/profil/ilanlarim"
+          className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm hover:bg-amber-100"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-200 font-bold text-amber-900">
+            {data.pending}
+          </span>
+          <span className="flex-1 text-amber-900">
+            <strong>{data.pending} ilanınız onay bekliyor.</strong> Kontrolden geçtikten sonra
+            otomatik olarak yayına alınacak.
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0 text-amber-700" />
+        </Link>
+      )}
 
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={async () => {
-                  await signOut();
-                  router.push('/');
-                  router.refresh();
-                }}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Çıkış Yap
-              </Button>
-            </CardContent>
-          </Card>
-        </aside>
+      {data.credits > 0 && (
+        <div className="flex items-center gap-3 rounded-xl border bg-white p-4 text-sm">
+          <CreditCard className="h-5 w-5 shrink-0 text-primary" />
+          <span className="flex-1">
+            <strong>{data.credits} ilan hakkınız</strong> kullanılmayı bekliyor.
+          </span>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/ilan-ver">Kullan</Link>
+          </Button>
+        </div>
+      )}
 
-        <main className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">İlanlarım</h1>
-            <Button asChild>
-              <Link href="/ilan-ver">
-                <Plus className="mr-2 h-4 w-4" />
-                Yeni İlan
-              </Link>
+      <section>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-bold">Son İlanlarım</h2>
+          {data.total > 0 && (
+            <Link
+              href="/profil/ilanlarim"
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+            >
+              Tümünü Gör
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          )}
+        </div>
+
+        {recent.length === 0 ? (
+          <div className="rounded-xl border border-dashed bg-white py-14 text-center">
+            <p className="text-muted-foreground">Henüz ilanınız yok.</p>
+            <Button asChild className="mt-4">
+              <Link href="/ilan-ver">İlk İlanını Ver</Link>
             </Button>
           </div>
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {recent.map((listing) => {
+              const cover = [...(listing.listing_photos ?? [])].sort(
+                (a, b) => a.position - b.position
+              )[0];
+              const imageUrl = cover ? listingPhotoUrl(cover.storage_path) : null;
 
-          {isLoading ? (
-            <div className="flex justify-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : listings.length === 0 ? (
-            <div className="rounded-xl border border-dashed bg-white py-16 text-center">
-              <p className="text-muted-foreground">Henüz ilanınız yok.</p>
-              <Button asChild className="mt-4">
-                <Link href="/ilan-ver">İlk İlanını Ver</Link>
-              </Button>
-            </div>
-          ) : (
-            <ul className="space-y-3">
-              {listings.map((listing) => {
-                const cover = [...(listing.listing_photos ?? [])].sort((a, b) => a.position - b.position)[0];
-                const imageUrl = cover ? listingPhotoUrl(cover.storage_path) : null;
-                const status = STATUS_LABELS[listing.status] ?? { label: listing.status, variant: 'secondary' as const };
-
-                return (
-                  <li key={listing.id} className="flex gap-4 rounded-xl border bg-white p-3">
-                    <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-md bg-muted">
+              return (
+                <li key={listing.id}>
+                  <Link
+                    href={`/${listing.slug}-${listing.id}`}
+                    className="flex gap-3 rounded-xl border bg-white p-3 transition-shadow hover:shadow-md"
+                  >
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
                       {imageUrl ? (
-                        <Image src={imageUrl} alt={listing.title} fill sizes="96px" className="object-cover" />
+                        <Image src={imageUrl} alt={listing.title} fill sizes="64px" className="object-cover" />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">
+                        <span className="flex h-full items-center justify-center text-[10px] text-muted-foreground">
                           Foto yok
-                        </div>
+                        </span>
                       )}
                     </div>
-
                     <div className="min-w-0 flex-1">
-                      <Link
-                        href={`/${listing.slug}-${listing.id}`}
-                        className="line-clamp-1 font-semibold hover:text-primary"
-                      >
+                      <p className="line-clamp-2 text-sm font-semibold leading-snug">
                         {listing.title}
-                      </Link>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <Badge variant={status.variant}>{status.label}</Badge>
-                        <span>İlan no: {listing.id}</span>
-                        <span>{listing.view_count} görüntülenme</span>
-                      </div>
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {STATUS_LABEL[listing.status] ?? listing.status} · {listing.view_count} görüntülenme
+                      </p>
                     </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
 
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteListing(listing.id)}
-                      aria-label="İlanı sil"
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </main>
-      </div>
+      {data.published > 0 && (
+        <Link
+          href="/doping"
+          className="flex items-center gap-3 rounded-xl border bg-gradient-to-r from-primary/10 to-transparent p-4 hover:from-primary/15"
+        >
+          <Rocket className="h-6 w-6 shrink-0 text-primary" />
+          <span className="flex-1 text-sm">
+            <strong className="block">İlanını öne çıkar</strong>
+            <span className="text-muted-foreground">
+              Vitrinde ve üst sıralarda görünen ilanlar belirgin şekilde daha çok tıklanıyor.
+            </span>
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0 text-primary" />
+        </Link>
+      )}
     </div>
   );
+}
+
+function Stat({
+  icon: Icon,
+  label,
+  value,
+  href,
+  highlight,
+}: {
+  icon: any;
+  label: string;
+  value: number;
+  href?: string;
+  highlight?: boolean;
+}) {
+  const body = (
+    <div
+      className={cn(
+        'h-full rounded-xl border bg-white p-4 transition-colors',
+        href && 'hover:border-primary/40',
+        highlight && 'border-primary/40 bg-primary/5'
+      )}
+    >
+      <Icon className={cn('h-5 w-5', highlight ? 'text-primary' : 'text-muted-foreground')} />
+      <p className="mt-2 text-2xl font-bold leading-none">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+    </div>
+  );
+
+  return href ? <Link href={href}>{body}</Link> : body;
 }
