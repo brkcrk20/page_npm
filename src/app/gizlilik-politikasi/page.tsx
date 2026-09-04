@@ -85,6 +85,13 @@ export default async function Page() {
           İlan vermediğiniz sürece numaranız hiçbir yerde yayınlanmaz.
         </p>
         <p>
+          <strong>Numaranız ilan sayfasının kaynak kodunda bulunmaz.</strong> Ziyaretçi
+          &quot;Telefonu Göster&quot; veya &quot;WhatsApp&quot; düğmesine bastığında
+          sunucudan ayrıca istenir. Böylece sayfaları tarayan otomatik programlar tek
+          seferde numara toplayamaz. Birincil iletişim yolu site içi mesajlaşmadır;
+          numaranızı vermeden yazışabilirsiniz.
+        </p>
+        <p>
           <strong>Hiçbir koşulda yayınlanmayan bilgiler:</strong> e-posta adresiniz, TC
           kimlik numaranız, vergi numaranız ve işletme adresiniz (işletme kaydı açıp
           rehberde yayınlamayı kendiniz seçmediyseniz).

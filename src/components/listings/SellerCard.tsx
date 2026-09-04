@@ -16,25 +16,34 @@ import type { SellerInfo } from '@/lib/queries/listings';
 /**
  * Satıcı kartı: kimlik, iletişim düğmeleri ve üyelik istatistikleri.
  *
- * Telefon numarası baştan gösterilmiyor; kullanıcı düğmeye bastığında
- * açılıyor. Böylece hem numara toplayan botlara karşı bir engel oluyor hem de
- * "kaç kişi aradı" sayacı gerçek niyeti ölçüyor.
+ * TELEFON SAYFAYLA GELMİYOR
+ * "Telefonu Göster" düğmesi eskiden de vardı ama numara zaten sayfanın
+ * içindeydi: WhatsApp bağlantısının adresinde ve bu bileşene geçirilen
+ * özelliklerin HTML'e gömülen kopyasında. Yani düğme yalnızca gözden
+ * saklıyordu; sayfayı indiren bir betik tıklamadan numarayı alıyordu.
+ * Numara artık düğmeye basılınca sunucudan isteniyor.
+ *
+ * MESAJ ÖNCE
+ * Birincil eylem mesajlaşma: numarasını vermeden iletişim kurabilmek hem
+ * alıcı hem satıcı için daha güvenli ve yazışma sitede kalıyor.
  */
 export function SellerCard({
   seller,
   listingId,
-  phone,
+  hasPhone,
   showPhone,
   allowWhatsapp,
 }: {
   seller: SellerInfo | null;
   listingId: number;
-  phone: string | null;
+  /** Numaranın kendisi DEĞİL, yalnızca var olup olmadığı. */
+  hasPhone: boolean;
   showPhone: boolean;
   allowWhatsapp: boolean;
 }) {
   const { toast } = useToast();
-  const [revealed, setRevealed] = useState(false);
+  const [phone, setPhone] = useState<string | null>(null);
+  const [aliniyor, setAliniyor] = useState(false);
 
   const displayName =
     seller?.company_title || seller?.full_name || seller?.username || 'PetSemti Üyesi';
@@ -51,23 +60,54 @@ export function SellerCard({
     void supabase?.rpc(rpc, { p_listing_id: listingId }).then(() => {});
   }
 
-  function revealPhone() {
-    if (!phone) {
-      toast({ title: 'Telefon paylaşılmamış', description: 'Satıcı mesaj yoluyla iletişim tercih ediyor.' });
-      return;
+  /** Numarayı sunucudan getirir; zaten getirilmişse döndürür. */
+  async function numarayiGetir(): Promise<string | null> {
+    if (phone) return phone;
+
+    const supabase = getSupabaseBrowserClientOrNull();
+    if (!supabase) return null;
+
+    setAliniyor(true);
+    const { data, error } = await supabase.rpc('get_listing_contact', {
+      p_listing_id: listingId,
+    });
+    setAliniyor(false);
+
+    if (error || !data) {
+      toast({
+        title: 'Telefon alınamadı',
+        description: error?.message ?? 'Satıcı mesaj yoluyla iletişim tercih ediyor.',
+        variant: error ? 'destructive' : 'default',
+      });
+      return null;
     }
-    if (!revealed) {
-      setRevealed(true);
-      track('increment_listing_phone');
+
+    setPhone(data as string);
+    track('increment_listing_phone');
+    return data as string;
+  }
+
+  async function revealPhone() {
+    // İlk basış numarayı açar, ikincisi arar. Numarayı görür görmez
+    // aramak isteyen kullanıcıyı ikinci bir adıma zorlamak yerine, ilk
+    // basışta zaten numara görünüyor.
+    if (!phone) {
+      await numarayiGetir();
       return;
     }
     window.location.href = `tel:${phone.replace(/\s/g, '')}`;
   }
 
-  const waNumber = whatsappNumber(phone);
-  const whatsappHref = waNumber
-    ? `https://wa.me/${waNumber}`
-    : null;
+  async function whatsappAc() {
+    const numara = await numarayiGetir();
+    const wa = whatsappNumber(numara);
+    if (!wa) {
+      toast({ title: 'WhatsApp numarası yok' });
+      return;
+    }
+    track('increment_listing_whatsapp');
+    window.open(`https://wa.me/${wa}`, '_blank', 'noopener,noreferrer');
+  }
 
   return (
     <aside className="space-y-3">
@@ -146,36 +186,36 @@ export function SellerCard({
         )}
 
         <div className="mt-4 space-y-2">
-          {showPhone && (
-            <button
-              type="button"
-              onClick={revealPhone}
-              className="flex w-full items-center gap-3 rounded-md border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary"
-            >
-              <Phone className="h-4 w-4 shrink-0 text-primary" />
-              {revealed && phone ? formatTrPhone(phone) : 'Telefonu Göster'}
-            </button>
-          )}
-
-          {allowWhatsapp && whatsappHref && (
-            <a
-              href={whatsappHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => track('increment_listing_whatsapp')}
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-[#25d366] px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            >
-              <MessageCircle className="h-4 w-4" />
-              WhatsApp
-            </a>
-          )}
-
-          <Button variant="outline" className="w-full justify-center gap-2" asChild>
+          <Button className="w-full justify-center gap-2" asChild>
             <Link href={`/mesajlarim?ilan=${listingId}`}>
               <Mail className="h-4 w-4" />
               Mesaj Gönder
             </Link>
           </Button>
+
+          {showPhone && hasPhone && (
+            <button
+              type="button"
+              onClick={revealPhone}
+              disabled={aliniyor}
+              className="flex w-full items-center justify-center gap-2 rounded-md border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary disabled:opacity-60"
+            >
+              <Phone className="h-4 w-4 shrink-0 text-primary" />
+              {aliniyor ? 'Alınıyor…' : phone ? formatTrPhone(phone) : 'Telefonu Göster'}
+            </button>
+          )}
+
+          {allowWhatsapp && hasPhone && (
+            <button
+              type="button"
+              onClick={whatsappAc}
+              disabled={aliniyor}
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-[#25d366] px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </button>
+          )}
         </div>
       </div>
 

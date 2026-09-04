@@ -2143,6 +2143,7 @@ export type Database = {
       email_for_username: { Args: { p_username: string }; Returns: string }
       expire_listings: { Args: never; Returns: number }
       generate_username: { Args: { p_seed: string }; Returns: string }
+      get_listing_contact: { Args: { p_listing_id: number }; Returns: string }
       guard_bypass: { Args: never; Returns: boolean }
       increment_listing_phone: {
         Args: { p_listing_id: number }
