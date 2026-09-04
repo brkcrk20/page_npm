@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { BadgeCheck, MapPin, Star } from 'lucide-react';
 
@@ -6,6 +7,7 @@ import type { ServiceConfig } from '@/lib/services-config';
 import { Badge } from '@/components/ui/badge';
 import { getOpenState } from '@/lib/opening-hours';
 import type { ServiceProviderCard } from '@/lib/queries/services';
+import { businessImageUrl } from '@/lib/supabase/storage';
 import { cn } from '@/lib/utils';
 
 /**
@@ -33,10 +35,19 @@ export function ServiceCard({
     .sort((a, b) => a.position - b.position)
     .slice(0, 4);
 
+  const logo = businessImageUrl(provider.logo_url);
+
   return (
-    <article className="rounded-xl border bg-white p-4 transition-shadow hover:shadow-md">
+    <article className="rounded-xl border bg-card p-4 transition-shadow hover:shadow-md">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
+        {/* Logo. İşletmeler birbirinden yalnızca isimle ayrılıyordu;
+            kullanıcı hizmet ararken önce mekânı tanımak istiyor. */}
+        {logo && (
+          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border bg-muted">
+            <Image src={logo} alt={`${provider.name} logosu`} fill sizes="56px" className="object-cover" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
           <h3 className="flex items-center gap-1.5 text-base font-bold">
             <Link href={`/${config.slug}/${provider.slug}-${provider.id}`} className="hover:text-primary">
               {provider.name}

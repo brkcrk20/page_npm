@@ -1799,6 +1799,47 @@ export type Database = {
           },
         ]
       }
+      service_provider_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          height: number | null
+          id: number
+          position: number
+          provider_id: number
+          storage_path: string
+          width: number | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          height?: number | null
+          id?: never
+          position?: number
+          provider_id: number
+          storage_path: string
+          width?: number | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          height?: number | null
+          id?: never
+          position?: number
+          provider_id?: number
+          storage_path?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_provider_photos_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_providers: {
         Row: {
           address: string | null
@@ -1811,6 +1852,7 @@ export type Database = {
           is_verified: boolean
           latitude: number | null
           license_number: string | null
+          logo_url: string | null
           longitude: number | null
           name: string
           owner_id: string | null
@@ -1845,6 +1887,7 @@ export type Database = {
           is_verified?: boolean
           latitude?: number | null
           license_number?: string | null
+          logo_url?: string | null
           longitude?: number | null
           name: string
           owner_id?: string | null
@@ -1879,6 +1922,7 @@ export type Database = {
           is_verified?: boolean
           latitude?: number | null
           license_number?: string | null
+          logo_url?: string | null
           longitude?: number | null
           name?: string
           owner_id?: string | null

@@ -20,6 +20,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { BusinessImageUploader } from '@/components/services/BusinessImageUploader';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import { formatTrPhone } from '@/lib/phone';
 import { SERVICE_CONFIGS, getServiceConfigBySlug } from '@/lib/services-config';
@@ -54,6 +55,8 @@ type Provider = {
   created_at: string;
   cities: { name: string } | null;
   districts: { name: string } | null;
+  logo_url: string | null;
+  service_provider_photos: { id: number; storage_path: string; position: number }[];
 };
 
 const STATUS: Record<string, { label: string; className: string; note: string }> = {
@@ -92,7 +95,7 @@ export default function MyBusinessPage() {
     const { data, error } = await getSupabaseBrowserClient()
       .from('service_providers')
       .select(
-        'id, service_type, name, slug, status, phone, address, description, is_verified, view_count, phone_count, rating_average, rating_count, rejection_reason, created_at, cities(name), districts(name)'
+        'id, service_type, name, slug, status, phone, address, description, is_verified, view_count, phone_count, rating_average, rating_count, rejection_reason, created_at, logo_url, cities(name), districts(name), service_provider_photos(id, storage_path, position)'
       )
       .eq('owner_id', user.id)
       .order('created_at', { ascending: false });
@@ -260,6 +263,49 @@ export default function MyBusinessPage() {
                     </p>
                   )}
                 </div>
+
+                {/* Logo ve fotoğraflar.
+                    Rehberdeki kartlar birbirinin aynıydı çünkü işletmenin
+                    kendini gösterecek hiçbir alanı yoktu. */}
+                {user && (
+                  <div className="mt-4 space-y-4 rounded-xl border bg-secondary/30 p-4">
+                    <div>
+                      <p className="mb-2 text-sm font-medium">İşletme Logosu</p>
+                      <BusinessImageUploader
+                        providerId={row.id}
+                        userId={user.id}
+                        mod="logo"
+                        logoPath={row.logo_url}
+                        onLogoChange={(yol) =>
+                          setRows((prev) =>
+                            prev.map((r) => (r.id === row.id ? { ...r, logo_url: yol } : r))
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <p className="mb-2 text-sm font-medium">İşletme Fotoğrafları</p>
+                      <BusinessImageUploader
+                        providerId={row.id}
+                        userId={user.id}
+                        mod="galeri"
+                        photos={[...(row.service_provider_photos ?? [])].sort(
+                          (a, b) => a.position - b.position
+                        )}
+                        onPhotosChange={(fotolar) =>
+                          setRows((prev) =>
+                            prev.map((r) =>
+                              r.id === row.id
+                                ? { ...r, service_provider_photos: fotolar as typeof r.service_provider_photos }
+                                : r
+                            )
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-3 flex flex-wrap gap-2">
                   {row.status === 'yayinda' && config && (

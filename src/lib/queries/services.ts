@@ -34,6 +34,7 @@ export type OpeningHour = {
 };
 
 export type ServiceProviderCard = {
+  logo_url?: string | null;
   id: number;
   slug: string;
   name: string;
@@ -54,7 +55,7 @@ export type ServiceProviderCard = {
 
 const CARD_COLUMNS = `
   id, slug, name, description, phone, whatsapp, website, address,
-  is_verified, rating_average, rating_count, view_count,
+  is_verified, rating_average, rating_count, view_count, logo_url,
   cities!inner ( id, name, slug ),
   districts ( id, name, slug ),
   service_provider_features ( service_features ( id, slug, name, group_name, position ) ),
@@ -200,7 +201,8 @@ export async function getServiceProviderById(id: number, serviceType: ServiceTyp
        cities ( id, name, slug ),
        districts ( id, name, slug ),
        service_provider_features ( service_features ( id, slug, name, group_name, position ) ),
-       service_provider_hours ( weekday, opens_at, closes_at, is_closed, is_24h )`
+       service_provider_hours ( weekday, opens_at, closes_at, is_closed, is_24h ),
+       service_provider_photos ( id, storage_path, width, height, caption, position )`
     )
     .eq('id', id)
     .eq('service_type', serviceType)

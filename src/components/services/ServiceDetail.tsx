@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { BadgeCheck, Clock, MapPin, ShieldCheck, Star } from 'lucide-react';
 
@@ -10,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { getOpenState, normalizeWeek, formatTime, WEEKDAY_NAMES } from '@/lib/opening-hours';
 import type { ServiceReview } from '@/lib/queries/services';
 import type { ServiceConfig } from '@/lib/services-config';
+import { businessImageUrl } from '@/lib/supabase/storage';
 import { cn } from '@/lib/utils';
 
 /**
@@ -23,6 +25,15 @@ import { cn } from '@/lib/utils';
 type Provider = {
   id: number;
   owner_id: string | null;
+  logo_url: string | null;
+  service_provider_photos: {
+    id: number;
+    storage_path: string;
+    width: number | null;
+    height: number | null;
+    caption: string | null;
+    position: number;
+  }[];
   slug: string;
   name: string;
   description: string | null;
@@ -62,6 +73,9 @@ export async function ServiceDetail({
   nearby: { id: number; slug: string; name: string; districts: { name: string } | null }[];
 }) {
   const storefront = await getProviderStorefront(provider.owner_id);
+  const fotolar = [...(provider.service_provider_photos ?? [])].sort(
+    (a, b) => a.position - b.position
+  );
   const hours = provider.service_provider_hours ?? [];
   const openState = getOpenState(hours);
   const week = normalizeWeek(hours);
@@ -183,6 +197,30 @@ export async function ServiceDetail({
                 </tbody>
               </table>
             </section>
+
+            {/* İşletme fotoğrafları.
+                Kullanıcı klinik ya da otel seçerken en çok mekâna bakıyor;
+                bu alan sitede hiç yoktu. */}
+            {fotolar.length > 0 && (
+              <section className="overflow-hidden rounded-lg border bg-white">
+                <h2 className="border-l-4 border-primary px-4 py-3 font-bold">İşletmeden Fotoğraflar</h2>
+                <div className="grid grid-cols-2 gap-2 border-t p-4 sm:grid-cols-3">
+                  {fotolar.map((f) => (
+                    <figure key={f.id} className="relative aspect-[4/3] overflow-hidden rounded-lg bg-muted">
+                      {businessImageUrl(f.storage_path) && (
+                        <Image
+                          src={businessImageUrl(f.storage_path)!}
+                          alt={f.caption ?? `${provider.name} fotoğrafı`}
+                          fill
+                          sizes="(max-width: 640px) 50vw, 33vw"
+                          className="object-cover"
+                        />
+                      )}
+                    </figure>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {storefront && (
               <section className="overflow-hidden rounded-lg border bg-white">

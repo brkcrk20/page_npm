@@ -71,3 +71,16 @@ export const AVATAR_BUCKET = 'profil-fotograflari';
 export function avatarUrl(path: string | null | undefined): string | null {
   return publicUrl(AVATAR_BUCKET, path);
 }
+
+export const BUSINESS_IMAGE_BUCKET = 'isletme-gorselleri';
+
+/**
+ * İşletme logosu / fotoğrafı adresi.
+ *
+ * Rehberdeki her kart aynı görünüyordu: bir isim, bir adres, bir puan.
+ * Kullanıcı klinik ya da otel seçerken en çok mekânın kendisine bakıyor;
+ * o alan sitede hiç yoktu.
+ */
+export function businessImageUrl(path: string | null | undefined): string | null {
+  return publicUrl(BUSINESS_IMAGE_BUCKET, path);
+}
