@@ -45,7 +45,11 @@ export function ListingActions({
       // Gizli sekmede sessionStorage erişimi hata verebilir; sayaç kritik
       // değil, sessizce devam ediyoruz.
     }
-    supabase.rpc('increment_listing_view', { p_listing_id: listingId });
+    // .then() ŞART: Supabase istemcisinin sorgu oluşturucusu tembel bir
+    // "thenable". await edilmez ya da .then() çağrılmazsa istek HİÇ
+    // gönderilmiyor ve hata da vermiyor. Sayaçların hep sıfır kalmasının
+    // sebebi buydu.
+    void supabase.rpc('increment_listing_view', { p_listing_id: listingId }).then(() => {});
   }, [listingId]);
 
   // Kullanıcının bu ilanı favorilemiş olup olmadığı.

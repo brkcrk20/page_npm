@@ -48,7 +48,11 @@ export function ServiceContact({
     } catch {
       // Gizli sekmede sessionStorage erişimi hata verebilir; sayaç kritik değil.
     }
-    supabase.rpc('increment_service_view', { p_provider_id: providerId });
+    // .then() ŞART: Supabase istemcisinin sorgu oluşturucusu tembel bir
+    // "thenable". await edilmez ya da .then() çağrılmazsa istek HİÇ
+    // gönderilmiyor ve hata da vermiyor. Sayaçların hep sıfır kalmasının
+    // sebebi buydu.
+    void supabase.rpc('increment_service_view', { p_provider_id: providerId }).then(() => {});
   }, [providerId]);
 
   function track(rpc: 'increment_service_phone' | 'increment_service_whatsapp') {

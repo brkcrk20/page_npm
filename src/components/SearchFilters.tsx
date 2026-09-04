@@ -246,8 +246,11 @@ function SearchFiltersInner() {
     if (term.trim()) params.set('q', term.trim());
     if (citySlug !== ALL) params.set('city', citySlug);
     if (districtSlug !== ALL) params.set('district', districtSlug);
+    // Arama kendi sayfasına gidiyor. Daha önce ana sayfaya `?q=` ile
+    // gönderiliyordu ve ana sayfa bu parametreyi hiç okumuyordu: kullanıcı
+    // arama yapıyor, tüm ilanları görüyordu.
     const query = params.toString();
-    router.push(query ? `/?${query}` : '/');
+    router.push(query ? `/arama?${query}` : '/');
   }
 
   return (

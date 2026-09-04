@@ -46,7 +46,9 @@ export function SellerCard({
 
   function track(rpc: 'increment_listing_phone' | 'increment_listing_whatsapp') {
     const supabase = getSupabaseBrowserClientOrNull();
-    supabase?.rpc(rpc, { p_listing_id: listingId });
+    // .then() ŞART — bkz. ListingActions'taki açıklama: tembel thenable
+    // await edilmezse istek gönderilmiyor.
+    void supabase?.rpc(rpc, { p_listing_id: listingId }).then(() => {});
   }
 
   function revealPhone() {
