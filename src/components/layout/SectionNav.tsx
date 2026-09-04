@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Award,
+  BookOpen,
   Banknote,
   Bird,
   Building,
@@ -63,10 +64,24 @@ const HIZMETLER: Baglanti[] = [
   { href: '/gezdirici', label: 'Gezdirici', icon: PersonStanding },
 ];
 
+/**
+ * Rehber tek bir bağlantı; alt kırılımı kendi sayfasında konu şeridi olarak
+ * duruyor. Menüde konu konu açmak, dört sekmenin altına yirmi kısayol
+ * koymak olurdu.
+ */
+const REHBER: Baglanti[] = [
+  { href: '/rehber', label: 'Tüm Rehber', icon: BookOpen },
+  { href: '/rehber?konu=kedi', label: 'Kedi', icon: Heart },
+  { href: '/rehber?konu=kopek', label: 'Köpek', icon: Heart },
+  { href: '/rehber?konu=kayip-bulundu', label: 'Kayıp & Bulundu', icon: SearchX },
+  { href: '/rehber?konu=hizmetler', label: 'Hizmet Seçimi', icon: Stethoscope },
+];
+
 const OBEKLER = [
   { key: 'ilanlar', label: 'İlanlar', baglantilar: ILANLAR },
   { key: 'guvercinler', label: 'Güvercinler', baglantilar: GUVERCINLER },
   { key: 'hizmetler', label: 'Hizmetler', baglantilar: HIZMETLER },
+  { key: 'rehber', label: 'Rehber', baglantilar: REHBER },
 ] as const;
 
 type ObekAnahtari = (typeof OBEKLER)[number]['key'];
@@ -79,6 +94,7 @@ function icinde(pathname: string, liste: Baglanti[]): boolean {
 function baslangicObegi(pathname: string): ObekAnahtari {
   if (icinde(pathname, GUVERCINLER)) return 'guvercinler';
   if (icinde(pathname, HIZMETLER)) return 'hizmetler';
+  if (pathname === '/rehber' || pathname.startsWith('/rehber/')) return 'rehber';
   return 'ilanlar';
 }
 

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 import { SITE_URL } from '@/lib/site';
+import { createSupabasePublicClient } from '@/lib/supabase/server';
 import { getCategories, getBreedsByCategoryId, getCities } from '@/lib/queries/catalog';
 import { getListings } from '@/lib/queries/listings';
 import { getServiceProviders, getServiceCityCounts } from '@/lib/queries/services';
@@ -34,6 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/`, lastModified: now, changeFrequency: 'hourly', priority: 1 },
     { url: `${SITE_URL}/es-arayanlar`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${SITE_URL}/kayip`, lastModified: now, changeFrequency: 'hourly', priority: 0.8 },
+    { url: `${SITE_URL}/rehber`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     // İlan türüne göre listeler. "Ücretsiz sahiplendirme" yüksek niyetli bir
     // arama ve tür ayrımı yapmayan kategori sayfasına değil buraya düşmeli.
     { url: `${SITE_URL}/sahiplendirme`, lastModified: now, changeFrequency: 'hourly', priority: 0.9 },
@@ -149,8 +151,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  // Rehber yazıları: aramadan gelen trafiğin hedefi bunlar.
+  const { data: rehberYazilari } = await createSupabasePublicClient()
+    .from('guides')
+    .select('slug, updated_at')
+    .eq('status', 'yayinda')
+    .limit(1000);
+
+  const guideEntries: MetadataRoute.Sitemap = (
+    (rehberYazilari ?? []) as { slug: string; updated_at: string }[]
+  ).map((y) => ({
+    url: `${SITE_URL}/rehber/${y.slug}`,
+    lastModified: new Date(y.updated_at),
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
   return [
     ...staticEntries,
+    ...guideEntries,
     ...categoryEntries,
     ...breedEntries,
     ...cityEntries,

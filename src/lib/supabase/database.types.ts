@@ -409,6 +409,191 @@ export type Database = {
           },
         ]
       }
+      guide_topics: {
+        Row: {
+          created_at: string
+          id: number
+          name: string
+          parent_id: number | null
+          position: number
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          name: string
+          parent_id?: number | null
+          position?: number
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          name?: string
+          parent_id?: number | null
+          position?: number
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guide_topics_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "guide_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guides: {
+        Row: {
+          author_id: string | null
+          body: string
+          cover_path: string | null
+          created_at: string
+          excerpt: string | null
+          id: number
+          published_at: string | null
+          related_breed_id: number | null
+          related_category_id: number | null
+          related_city_id: number | null
+          related_links: Json
+          related_service: Database["public"]["Enums"]["service_type"] | null
+          search_vector: unknown
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          status: Database["public"]["Enums"]["guide_status"]
+          title: string
+          topic_id: number | null
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          cover_path?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: never
+          published_at?: string | null
+          related_breed_id?: number | null
+          related_category_id?: number | null
+          related_city_id?: number | null
+          related_links?: Json
+          related_service?: Database["public"]["Enums"]["service_type"] | null
+          search_vector?: unknown
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          status?: Database["public"]["Enums"]["guide_status"]
+          title: string
+          topic_id?: number | null
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          cover_path?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: never
+          published_at?: string | null
+          related_breed_id?: number | null
+          related_category_id?: number | null
+          related_city_id?: number | null
+          related_links?: Json
+          related_service?: Database["public"]["Enums"]["service_type"] | null
+          search_vector?: unknown
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          status?: Database["public"]["Enums"]["guide_status"]
+          title?: string
+          topic_id?: number | null
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guides_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guides_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guides_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "guides_related_breed_id_fkey"
+            columns: ["related_breed_id"]
+            isOneToOne: false
+            referencedRelation: "breed_listing_counts"
+            referencedColumns: ["breed_id"]
+          },
+          {
+            foreignKeyName: "guides_related_breed_id_fkey"
+            columns: ["related_breed_id"]
+            isOneToOne: false
+            referencedRelation: "breeds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guides_related_category_id_fkey"
+            columns: ["related_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guides_related_category_id_fkey"
+            columns: ["related_category_id"]
+            isOneToOne: false
+            referencedRelation: "category_listing_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "guides_related_city_id_fkey"
+            columns: ["related_city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guides_related_city_id_fkey"
+            columns: ["related_city_id"]
+            isOneToOne: false
+            referencedRelation: "city_listing_counts"
+            referencedColumns: ["city_id"]
+          },
+          {
+            foreignKeyName: "guides_related_city_id_fkey"
+            columns: ["related_city_id"]
+            isOneToOne: false
+            referencedRelation: "service_city_counts"
+            referencedColumns: ["city_id"]
+          },
+          {
+            foreignKeyName: "guides_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "guide_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       identity_requests: {
         Row: {
           birth_year: number | null
@@ -2414,6 +2599,7 @@ export type Database = {
     Enums: {
       account_type: "bireysel" | "kurumsal"
       contact_status: "yeni" | "okundu" | "yanitlandi" | "kapatildi"
+      guide_status: "taslak" | "yayinda" | "arsiv"
       identity_kind: "tc" | "vergi"
       listing_kind:
         | "satilik"
@@ -2602,6 +2788,7 @@ export const Constants = {
     Enums: {
       account_type: ["bireysel", "kurumsal"],
       contact_status: ["yeni", "okundu", "yanitlandi", "kapatildi"],
+      guide_status: ["taslak", "yayinda", "arsiv"],
       identity_kind: ["tc", "vergi"],
       listing_kind: [
         "satilik",
