@@ -168,7 +168,9 @@ export function CreateListingForm({
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      kind: 'satilik',
+      // Ön ayarın türü ilk render'da geçerli olsun; efektle sonradan
+      // yazmak tür seçicisinin bir an görünüp kaybolmasına yol açıyordu.
+      kind: preset?.kind ?? 'satilik',
       categoryId: '',
       breedId: '',
       title: '',
@@ -201,9 +203,19 @@ export function CreateListingForm({
    * anlamlı değil — bir kafesin yaşı yok. Onların yerine ürünün durumu
    * (sıfır / az kullanılmış / kullanılmış) soruluyor.
    */
+  /**
+   * Ön ayar varsa kategori daha katalog yüklenmeden bellidir.
+   *
+   * Bunu yalnızca yüklenen kategori listesinden türetmek, "Malzeme İlanı
+   * Ver"e basan kullanıcıya önce hayvan ilanı formunu, katalog gelince de
+   * malzeme formunu göstermek demekti — ekran gözle görülür şekilde
+   * zıplıyordu. Ön ayarın kendisi zaten yeterli bilgi.
+   */
   const isSupply = useMemo(
-    () => categories.find((c) => String(c.id) === categoryId)?.slug === 'pet-malzemeleri',
-    [categories, categoryId]
+    () =>
+      preset?.categorySlug === 'pet-malzemeleri' ||
+      categories.find((c) => String(c.id) === categoryId)?.slug === 'pet-malzemeleri',
+    [preset?.categorySlug, categories, categoryId]
   );
   const cityId = form.watch('cityId');
 
@@ -266,6 +278,8 @@ export function CreateListingForm({
     () => (preset?.categorySlug ? categories.find((c) => c.slug === preset.categorySlug) : undefined),
     [categories, preset?.categorySlug]
   );
+  /** Kategori kilitli mi — katalog daha gelmemiş olsa bile bilinir. */
+  const hasLockedCategory = Boolean(preset?.categorySlug);
 
   /** Seçicide gösterilecek kategoriler; kendi dikeyi olanlar gizlenebiliyor. */
   const selectableCategories = useMemo(
@@ -737,7 +751,7 @@ export function CreateListingForm({
             )}
 
             <div className="grid gap-4 sm:grid-cols-2">
-              {isSupply && lockedCategory ? (
+              {isSupply && hasLockedCategory ? (
                 <div className="space-y-1.5">
                   <p className="text-sm font-medium">Tür</p>
                   <SearchableSelect
@@ -753,11 +767,11 @@ export function CreateListingForm({
                     options={malzemeGruplari.map((g) => ({ value: g.id, label: g.name }))}
                   />
                 </div>
-              ) : lockedCategory ? (
+              ) : hasLockedCategory ? (
                 <div className="space-y-1.5">
                   <p className="text-sm font-medium">Kategori</p>
                   <div className="flex h-10 items-center rounded-md border bg-secondary/40 px-3 text-sm">
-                    {lockedCategory.name}
+                    {lockedCategory?.name ?? '\u00a0'}
                   </div>
                 </div>
               ) : (
