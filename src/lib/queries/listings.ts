@@ -330,6 +330,9 @@ export type SellerInfo = {
   member_since: string;
   total_listings: number;
   active_listings: number;
+  /** Profilde gösterilen serbest metin. */
+  bio: string | null;
+  city_id: number | null;
 };
 
 /**
@@ -346,7 +349,7 @@ export async function getSellerInfo(userId: string): Promise<SellerInfo | null> 
   const [profile, stats] = await Promise.all([
     supabase
       .from('public_profiles')
-      .select('id, full_name, username, avatar_url, is_verified, account_type, company_title')
+      .select('id, full_name, username, avatar_url, is_verified, account_type, company_title, bio, city_id')
       .eq('id', userId)
       .maybeSingle(),
     supabase
@@ -466,7 +469,7 @@ export async function getSellerByUsername(username: string): Promise<SellerInfo 
 
   const { data, error } = await supabase
     .from('public_profiles')
-    .select('id, full_name, username, avatar_url, is_verified, account_type, company_title')
+    .select('id, full_name, username, avatar_url, is_verified, account_type, company_title, bio, city_id')
     .eq('username', username.toLocaleLowerCase('tr'))
     .maybeSingle();
 
