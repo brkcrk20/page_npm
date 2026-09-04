@@ -6,6 +6,7 @@ import { ChevronDown, Search } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { BreedAvatar } from '@/components/BreedAvatar';
+import { kategoriRengi } from '@/lib/kategori-renkleri';
 import { cn } from '@/lib/utils';
 
 /**
@@ -242,13 +243,17 @@ export function CategorySidebar({
               const open = isOpen(category.id, index);
               return (
               <section key={category.id}>
-                <div className="flex items-stretch border-y bg-secondary/40">
+                {/* Her kategorinin kendi tonu: bölümler birbirinden renkle
+                    ayrılıyor, menü tek düze gri bir liste olmaktan çıkıyor. */}
+                <div className={cn('flex items-stretch border-y', kategoriRengi(category.code).yumusak)}>
                   <Link
                     href={`/${category.slug}`}
-                    className="flex flex-1 items-center justify-between px-4 py-2.5 text-sm font-bold hover:text-primary"
+                    className="flex flex-1 items-center justify-between px-4 py-2.5 text-sm font-bold"
                   >
-                    <span>{category.name}</span>
-                    <span className="text-primary">{category.count}</span>
+                    <span className={kategoriRengi(category.code).koyu}>{category.name}</span>
+                    <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold text-white', kategoriRengi(category.code).dolu)}>
+                      {category.count}
+                    </span>
                   </Link>
                   {/* Başlığın kendisi kategori sayfasına gidiyor; açma
                       kapama ayrı bir düğme olmalı ki ikisi çakışmasın. */}
@@ -257,7 +262,7 @@ export function CategorySidebar({
                     onClick={() => toggleCategory(category.id, open)}
                     aria-expanded={open}
                     aria-label={`${category.name} cinslerini ${open ? 'gizle' : 'göster'}`}
-                    className="px-3 text-muted-foreground hover:text-primary"
+                    className={cn('px-3 opacity-70 hover:opacity-100', kategoriRengi(category.code).koyu)}
                   >
                     <ChevronDown
                       className={cn('h-4 w-4 transition-transform', open && 'rotate-180')}
@@ -268,35 +273,84 @@ export function CategorySidebar({
                 {/* Kapalı kategori HİÇ basılmıyor. hidden ile gizlemek
                     yeterli değildi: 161 satır yine DOM'a giriyor, HTML'i
                     şişiriyor ve React'e boşuna iş çıkarıyordu. */}
-                {open && (
-                <ul>
-                  {category.breeds.map((breed) => (
-                    <li key={breed.id}>
-                      <Link
-                        href={`/${category.slug}/${breed.slug}`}
-                        className={cn(
-                          'flex items-center gap-3 border-b px-4 py-2 text-sm transition-colors hover:bg-secondary/50',
-                          breed.slug === activeBreedSlug
-                            ? 'bg-primary/5 font-semibold text-primary'
-                            : 'text-foreground'
-                        )}
-                      >
-                        <BreedAvatar
-                          breedName={breed.name}
-                          breedSlug={breed.slug}
-                          categorySlug={category.slug}
-                          categoryCode={category.code}
-                          categoryName={category.name}
-                        />
-                        <span className="min-w-0 flex-1 truncate">{breed.name}</span>
-                        <span className="shrink-0 text-xs text-muted-foreground">
-                          {breed.count}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-                )}
+                {open && (() => {
+                  /**
+                   * İki kademeli sunum.
+                   *
+                   * Eskiden 161 cinsin tamamı, her biri yuvarlak fotoğraflı
+                   * tek tip satır olarak alt alta diziliyordu. Bu hem
+                   * sektörün en yaygın (ve en ayırt edilemez) menü kalıbıydı
+                   * hem de işe yaramıyordu: ilanı olan üç cins, ilanı olmayan
+                   * yüz elli cinsin arasında kayboluyordu.
+                   *
+                   * Artık ilanı olanlar üstte görsel kutucuk olarak, geri
+                   * kalanı altta kompakt etiket listesi olarak duruyor.
+                   * Kullanıcının aradığı bilgi (nerede ilan var) öne çıkıyor
+                   * ve menü yarı yüksekliğe iniyor.
+                   */
+                  const renk = kategoriRengi(category.code);
+                  const dolu = category.breeds.filter((b) => b.count > 0).slice(0, 8);
+                  const bos = category.breeds.filter((b) => !dolu.includes(b));
+
+                  return (
+                    <div className="space-y-3 p-3">
+                      {dolu.length > 0 && (
+                        <ul className="grid grid-cols-2 gap-2">
+                          {dolu.map((breed) => (
+                            <li key={breed.id}>
+                              <Link
+                                href={`/${category.slug}/${breed.slug}`}
+                                className={cn(
+                                  'flex flex-col items-center gap-1.5 rounded-xl border p-2 text-center transition-colors',
+                                  breed.slug === activeBreedSlug
+                                    ? cn(renk.kenar, renk.yumusak)
+                                    : 'hover:border-primary/40'
+                                )}
+                              >
+                                <BreedAvatar
+                                  breedName={breed.name}
+                                  breedSlug={breed.slug}
+                                  categorySlug={category.slug}
+                                  categoryCode={category.code}
+                                  categoryName={category.name}
+                                />
+                                <span className="line-clamp-2 text-[11px] font-medium leading-tight">
+                                  {breed.name}
+                                </span>
+                                <span className={cn('rounded-full px-1.5 text-[10px] font-semibold text-white', renk.dolu)}>
+                                  {breed.count}
+                                </span>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {bos.length > 0 && (
+                        <ul className="flex flex-wrap gap-1.5">
+                          {bos.map((breed) => (
+                            <li key={breed.id}>
+                              <Link
+                                href={`/${category.slug}/${breed.slug}`}
+                                className={cn(
+                                  'inline-block rounded-full border px-2.5 py-1 text-xs transition-colors',
+                                  breed.slug === activeBreedSlug
+                                    ? cn(renk.kenar, renk.yumusak, renk.koyu, 'font-semibold')
+                                    : 'text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                                )}
+                              >
+                                {breed.name}
+                                {breed.count > 0 && (
+                                  <span className="ml-1 opacity-60">{breed.count}</span>
+                                )}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })()}
               </section>
               );
             })

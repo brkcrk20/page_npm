@@ -89,8 +89,8 @@ function Obek({
           className={cn(
             'flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors',
             aktif
-              ? 'bg-orange-50 text-primary ring-1 ring-primary/20'
-              : 'text-gray-600 hover:bg-gray-50 hover:text-primary'
+              ? 'bg-primary/10 text-primary ring-1 ring-primary/25'
+              : 'text-foreground/70 hover:bg-secondary hover:text-primary'
           )}
         >
           <Icon className="h-4 w-4" />
@@ -137,8 +137,8 @@ export function SectionNav() {
         className={cn(
           'flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors',
           guvercinAktif
-            ? 'border-primary bg-primary text-primary-foreground'
-            : 'border-primary/30 bg-orange-50/60 text-primary hover:bg-orange-50'
+            ? 'border-indigo-600 bg-indigo-600 text-white'
+            : 'border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
         )}
       >
         <Bird className="h-4 w-4" />

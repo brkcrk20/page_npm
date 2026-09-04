@@ -1,5 +1,8 @@
 import Link from 'next/link';
 import { ArrowRight, Plus } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
+import { kategoriRengi } from '@/lib/kategori-renkleri';
 import type { Metadata } from 'next';
 
 import { Button } from '@/components/ui/button';
@@ -127,8 +130,17 @@ export default async function HomePage() {
               .filter((section) => section.listings.length > 0)
               .map(({ category, listings, total }) => (
                 <section key={category.id}>
+                  {/* Kategori kendi rengini taşıyor: sayfa tek düze siyah-beyaz
+                      bir liste olmaktan çıkıyor ve kullanıcı hangi bölüme
+                      baktığını renkten anlıyor. */}
                   <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-2xl font-bold">{category.name}</h2>
+                    <h2 className="flex items-center gap-2.5 text-2xl font-bold">
+                      <span
+                        aria-hidden
+                        className={cn('h-6 w-1.5 rounded-full', kategoriRengi(category.code).dolu)}
+                      />
+                      {category.name}
+                    </h2>
                     <Button variant="link" asChild className="text-primary">
                       <Link href={`/${category.slug}`}>
                         Tümünü Gör ({total}) <ArrowRight className="ml-1 h-4 w-4" />

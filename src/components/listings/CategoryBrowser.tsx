@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 
+import { cn } from '@/lib/utils';
+import { kategoriRengi } from '@/lib/kategori-renkleri';
+
 import { Button } from '@/components/ui/button';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
@@ -152,7 +155,13 @@ export function CategoryBrowser({
             Alt menüdeki genel "+" bu yüzden kaldırıldı. */}
         <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold md:text-3xl">{title}</h1>
+            <h1 className="flex items-center gap-2.5 text-2xl font-bold md:text-3xl">
+              <span
+                aria-hidden
+                className={cn('h-7 w-2 shrink-0 rounded-full md:h-8', kategoriRengi(category.code).dolu)}
+              />
+              {title}
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {total} ilan bulundu
               {description ? ` · ${description}` : ''}

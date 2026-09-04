@@ -10,24 +10,32 @@
  * amblem-mono.svg, logo-yatay.svg) — dışarıya verilecek yerler için.
  */
 
-const YUVA_D = 'M32 5 4.8 26.4v27.1A4.5 4.5 0 0 0 9.3 58h45.4a4.5 4.5 0 0 0 4.5-4.5V26.4L32 5Z';
-const KALP_D =
-  'M32 17.8c-1.8-2.4-5.9-2-5.9 1.4 0 2.6 3.4 4.9 5.9 6.8 2.5-1.9 5.9-4.2 5.9-6.8 0-3.4-4.1-3.8-5.9-1.4Z';
-const KOPEK = [
-  'M21 31.4c-3.2-1.1-6 .6-6.6 4-.5 3.2 1 6.2 3.4 6.9 1.4.4 2.5-.4 2.7-1.8Z',
-  'M19.4 41.8c-2 1.6-3.2 4.2-3.2 7.3v5.5c0 .9.7 1.6 1.6 1.6h11.4c.9 0 1.6-.7 1.6-1.6v-5.5c0-3.1-1.2-5.7-3.2-7.3Z',
-  'M28.4 33.9c1.9.2 3.2 1 3.8 2.1.3.5-.1 1.1-.7 1.1-1.3 0-2.4-.2-3.3-.7Z',
-];
-const KEDI = [
-  'M47.6 56.2c2.9-.5 4.6-2.3 4.6-4.7 0-1.8-.9-3.1-2.4-3.7-.8-.3-1.6.2-1.7.9-.1.7.2 1.3.9 1.6.5.2.8.6.8 1.1 0 .9-.7 1.5-2.2 1.8Z',
-  'M41.3 44c-1.7 1.4-2.7 3.6-2.7 6.2v4.4c0 .9.7 1.6 1.6 1.6h8.9c.9 0 1.6-.7 1.6-1.6v-4.4c0-2.6-1-4.8-2.7-6.2Z',
-  'M44.5 33.4c-.9 0-1.8.2-2.6.6l-1.5-3.9c-.3-.7.5-1.3 1.1-.9l3.5 2.2 3.5-2.2c.6-.4 1.4.2 1.1.9l-1.5 3.9c2.4 1.1 3.9 3.4 3.4 5.9-.4 2.3-2.4 4-4.8 4.1-3 .1-5.5-2.3-5.5-5.2 0-2.3 1.5-4.3 3.6-5Z',
+/**
+ * Amblem: konum iğnesi + pati.
+ *
+ * Önceki amblem bir evin içinde kedi, köpek ve kalp taşıyordu — beş ayrı
+ * biçim. 32 pikselde bunların hiçbiri seçilmiyordu, sekmedeki 16 pikselde
+ * gri bir leke oluyordu. Marka işaretinin ölçüsü küçük boyutta okunabilmesi.
+ *
+ * Yeni işaret tek siluet: "semt" fikrini taşıyan konum iğnesi, içinde
+ * oyulmuş bir pati. İki biçim, iki renk. 16 pikselde bile iğne ve pati
+ * ayrı ayrı seçiliyor.
+ */
+const IGNE_D =
+  'M32 3C20.4 3 11 12.4 11 24c0 14.6 17.6 33.3 20.1 35.9a1.3 1.3 0 0 0 1.8 0C35.4 57.3 53 38.6 53 24 53 12.4 43.6 3 32 3Z';
+
+/** Pati: üç parmak, bir taban. Oyularak (iğne renginin üstüne) çiziliyor. */
+const PATI_TABAN_D =
+  'M32 31.8c-4.4 0-8 2.7-8 6.1 0 2.6 2.4 4.1 5 4.1 1.1 0 2.1-.3 3-.3s1.9.3 3 .3c2.6 0 5-1.5 5-4.1 0-3.4-3.6-6.1-8-6.1Z';
+const PARMAKLAR: [number, number, number, number][] = [
+  [23.2, 25.4, 3.1, 4.0],
+  [32.0, 22.6, 3.3, 4.2],
+  [40.8, 25.4, 3.1, 4.0],
 ];
 
 /** Marka renkleri. Lacivert marka kimliğinden, turuncu sitenin ana rengi. */
 // Marka renkleri site paletiyle aynı: ana renk petrol, vurgu amber.
 // Turuncu amblem yeni palette yabancı duruyordu.
-const KOYU = '#123B42';
 const PETROL = '#0E6D7C';
 const AMBER = '#F9A410';
 
@@ -42,10 +50,16 @@ export function LogoMark({
   className?: string;
 }) {
   const mono = variant === 'mono';
-  const yuva = mono ? 'currentColor' : PETROL;
-  const kalp = mono ? 'currentColor' : AMBER;
-  const kopek = mono ? 'currentColor' : KOYU;
-  const kedi = mono ? 'currentColor' : PETROL;
+
+  /**
+   * Pati, iğnenin içinden MASKE ile oyuluyor.
+   *
+   * Renkli sürümde beyaz pati çizmek yeterliydi ama tek renk sürüm koyu bir
+   * zemine konduğunda pati zeminin rengini alması gerekiyor — sabit bir renk
+   * yazmak orada işe yaramıyordu. Maske ile pati gerçek bir delik oluyor ve
+   * amblem her zeminde doğru görünüyor.
+   */
+  const maskeId = `pati-maske-${size}-${mono ? 'm' : 'r'}`;
 
   return (
     <svg
@@ -56,20 +70,19 @@ export function LogoMark({
       role="img"
       aria-label="PetSemti"
     >
-      <path d={YUVA_D} fill="none" stroke={yuva} strokeWidth={4.6} strokeLinejoin="round" />
-      <path d={KALP_D} fill={kalp} />
-      <g fill={kopek}>
-        {KOPEK.map((d) => (
-          <path key={d} d={d} />
+      <mask id={maskeId}>
+        <rect width="64" height="64" fill="white" />
+        <path d={PATI_TABAN_D} fill="black" />
+        {PARMAKLAR.map(([cx, cy, rx, ry]) => (
+          <ellipse key={cx} cx={cx} cy={cy} rx={rx} ry={ry} fill="black" />
         ))}
-        <circle cx="23.4" cy="35.6" r="5.6" />
-      </g>
-      <g fill={kedi} opacity={mono ? 0.85 : 1}>
-        {KEDI.map((d) => (
-          <path key={d} d={d} />
-        ))}
-        <circle cx="44.5" cy="38.6" r="5.2" />
-      </g>
+      </mask>
+
+      <path d={IGNE_D} fill={mono ? 'currentColor' : PETROL} mask={`url(#${maskeId})`} />
+
+      {/* Tek amber parmak: markanın sıcak vurgusu. Tek renk sürümde yok,
+          orada amblem tek renk kalmalı. */}
+      {!mono && <ellipse cx={40.8} cy={25.4} rx={3.1} ry={4.0} fill={AMBER} />}
     </svg>
   );
 }
