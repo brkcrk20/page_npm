@@ -8,14 +8,48 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    // İlan fotoğrafları ve profil görselleri Supabase Storage'da duruyor.
-    // Bu desen olmadan next/image Supabase adreslerini tümüyle reddediyor ve
-    // hiçbir ilan fotoğrafı görünmüyordu.
+    // Kullanıcı görselleri artık kendi alan adımızdan servis ediliyor
+    // (aşağıdaki /gorsel yeniden yazma kuralı), bu yüzden Supabase deseni
+    // gerekmiyor. Eski kayıtlarda tam Supabase adresi saklanmış olabilir
+    // diye desen bırakıldı.
     remotePatterns: [
       { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/**' },
       { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
       { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
     ],
+  },
+
+  /**
+   * Kullanıcı görsellerini kendi alan adımızdan servis et.
+   *
+   * Görsel adresleri doğrudan depolama sağlayıcısını gösteriyordu:
+   *   https://<proje>.supabase.co/storage/v1/object/public/...
+   *
+   * Bunun üç sakıncası var:
+   *  1. Altyapı sağlayıcısını ve proje kimliğini her ziyaretçiye duyuruyor.
+   *  2. Görseller kendi alan adımızda değil; görsel aramasından gelen
+   *     trafik ve otorite bize değil sağlayıcının alan adına yazılıyor.
+   *  3. Sağlayıcı değişirse yayınlanmış bütün görsel adresleri kırılıyor.
+   *
+   * Yeniden yazma (rewrite) yönlendirme DEĞİL: tarayıcı adresi
+   * petsemti.com olarak görüyor, içerik arka planda getiriliyor. Ek sunucu
+   * maliyeti yok, uç sunucuda çözülüyor.
+   *
+   * NOT: Yoldaki kullanıcı kimliği bu kuralla gizlenmiyor. O kimlik zaten
+   * satıcı profilinde herkese açık ve bir kimlik bilgisi değil; gizlemek
+   * için depolama düzenini değiştirmek gerekirdi ve depolama izinleri
+   * (RLS) yolun ilk parçasının kullanıcı kimliği olmasına dayanıyor.
+   */
+  async rewrites() {
+    const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabase) return [];
+
+    return [
+      {
+        source: '/gorsel/:bucket/:path*',
+        destination: `${supabase}/storage/v1/object/public/:bucket/:path*`,
+      },
+    ];
   },
 
   // ESKİ URL YAPISINDAN YENİ YAPIYA YÖNLENDİRMELER

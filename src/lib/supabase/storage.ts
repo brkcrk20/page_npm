@@ -14,19 +14,26 @@ export const LISTING_PHOTO_BUCKET = 'ilan-fotograflari';
  * Kova public olduğu için imzalı URL'e gerek yok; bu sayede adres deterministik
  * ve Next.js görsel önbelleğiyle uyumlu kalıyor.
  */
-export function listingPhotoUrl(storagePath: string): string | null {
-  if (!storagePath) return null;
+/**
+ * Kova ve yoldan herkese açık adres üretir.
+ *
+ * Adres KENDİ ALAN ADIMIZDAN veriliyor (/gorsel/...). Daha önce doğrudan
+ * depolama sağlayıcısını gösteriyordu; bu hem altyapıyı her ziyaretçiye
+ * duyuruyor, hem görsel aramasından gelen otoriteyi başka bir alan adına
+ * yazıyor, hem de sağlayıcı değişirse yayınlanmış bütün adresleri
+ * kırıyordu. Yönlendirme next.config.ts içindeki rewrite kuralında.
+ */
+function publicUrl(bucket: string, path: string | null | undefined): string | null {
+  if (!path) return null;
 
   // Eski kayıtlarda tam URL saklanmış olabilir; olduğu gibi kullan.
-  if (storagePath.startsWith('http://') || storagePath.startsWith('https://')) {
-    return storagePath;
-  }
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
 
-  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!base) return null;
+  return `/gorsel/${bucket}/${path.replace(/^\/+/, '')}`;
+}
 
-  const clean = storagePath.replace(/^\/+/, '');
-  return `${base}/storage/v1/object/public/${LISTING_PHOTO_BUCKET}/${clean}`;
+export function listingPhotoUrl(storagePath: string): string | null {
+  return publicUrl(LISTING_PHOTO_BUCKET, storagePath);
 }
 
 export const LISTING_VIDEO_BUCKET = 'ilan-videolari';
@@ -50,7 +57,7 @@ export function listingVideoUrl(video: {
   if (!base) return null;
 
   const clean = video.storage_path.replace(/^\/+/, '');
-  return `${base}/storage/v1/object/public/${LISTING_VIDEO_BUCKET}/${clean}`;
+  return publicUrl(LISTING_VIDEO_BUCKET, clean);
 }
 
 export const AVATAR_BUCKET = 'profil-fotograflari';
@@ -62,11 +69,5 @@ export const AVATAR_BUCKET = 'profil-fotograflari';
  * sağlayıcılar); o durumda olduğu gibi kullanılıyor.
  */
 export function avatarUrl(path: string | null | undefined): string | null {
-  if (!path) return null;
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
-
-  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!base) return null;
-
-  return `${base}/storage/v1/object/public/${AVATAR_BUCKET}/${path.replace(/^\/+/, '')}`;
+  return publicUrl(AVATAR_BUCKET, path);
 }
