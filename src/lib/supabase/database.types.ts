@@ -40,8 +40,10 @@ export type Database = {
           group_name: string | null
           id: number
           is_active: boolean
+          is_restricted: boolean
           name: string
           position: number
+          restriction_note: string | null
           seo_description: string | null
           seo_title: string | null
           slug: string
@@ -56,8 +58,10 @@ export type Database = {
           group_name?: string | null
           id?: never
           is_active?: boolean
+          is_restricted?: boolean
           name: string
           position?: number
+          restriction_note?: string | null
           seo_description?: string | null
           seo_title?: string | null
           slug: string
@@ -72,8 +76,10 @@ export type Database = {
           group_name?: string | null
           id?: never
           is_active?: boolean
+          is_restricted?: boolean
           name?: string
           position?: number
+          restriction_note?: string | null
           seo_description?: string | null
           seo_title?: string | null
           slug?: string
@@ -493,6 +499,95 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_reports: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          id: number
+          listing_id: number
+          note: string | null
+          reason: Database["public"]["Enums"]["report_reason"]
+          reporter_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["report_status"]
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          id?: never
+          listing_id: number
+          note?: string | null
+          reason: Database["public"]["Enums"]["report_reason"]
+          reporter_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          id?: never
+          listing_id?: number
+          note?: string | null
+          reason?: Database["public"]["Enums"]["report_reason"]
+          reporter_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_reports_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "listing_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1802,6 +1897,8 @@ export type Database = {
       }
       delete_my_account: { Args: never; Returns: undefined }
       email_for_username: { Args: { p_username: string }; Returns: string }
+      generate_username: { Args: { p_seed: string }; Returns: string }
+      guard_bypass: { Args: never; Returns: boolean }
       increment_listing_phone: {
         Args: { p_listing_id: number }
         Returns: undefined
@@ -1835,6 +1932,10 @@ export type Database = {
       monetization_enabled: { Args: never; Returns: boolean }
       normalize_tr_phone: { Args: { p_raw: string }; Returns: string }
       remaining_listing_credits: { Args: never; Returns: number }
+      report_listing: {
+        Args: { p_listing_id: number; p_note?: string; p_reason: string }
+        Returns: undefined
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       start_conversation: { Args: { p_listing_id: number }; Returns: number }
@@ -1876,6 +1977,15 @@ export type Database = {
         | "renkli_cerceve"
         | "ilan_yenileme"
         | "video"
+      report_reason:
+        | "yaniltici"
+        | "dolandiricilik"
+        | "yasakli_tur"
+        | "kotu_muamele"
+        | "yanlis_kategori"
+        | "tekrar_ilan"
+        | "diger"
+      report_status: "acik" | "inceleniyor" | "kapatildi" | "reddedildi"
       service_status:
         | "taslak"
         | "onay_bekliyor"
@@ -2056,6 +2166,16 @@ export const Constants = {
         "ilan_yenileme",
         "video",
       ],
+      report_reason: [
+        "yaniltici",
+        "dolandiricilik",
+        "yasakli_tur",
+        "kotu_muamele",
+        "yanlis_kategori",
+        "tekrar_ilan",
+        "diger",
+      ],
+      report_status: ["acik", "inceleniyor", "kapatildi", "reddedildi"],
       service_status: [
         "taslak",
         "onay_bekliyor",

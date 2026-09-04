@@ -95,6 +95,7 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
             <h3 className={footerTitleStyle}>Kurumsal</h3>
             <ul className="space-y-2">
               <li><Link href="/gizlilik-politikasi" className={footerLinkStyle}>Gizlilik Politikası</Link></li>
+              <li><Link href="/ilan-kurallari" className={footerLinkStyle}>İlan Verme Kuralları</Link></li>
               <li><Link href="/kullanim-sartlari" className={footerLinkStyle}>Kullanım Şartları</Link></li>
               {/* CC BY / CC BY-SA lisanslı cins görselleri atıf zorunlu tutuyor;
                   bu bağlantı yasal yükümlülüğün parçası, kaldırılmamalı. */}

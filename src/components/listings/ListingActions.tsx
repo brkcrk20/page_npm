@@ -5,6 +5,7 @@ import { Facebook, Flag, Star, Send } from 'lucide-react';
 
 import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
+import { ReportDialog } from '@/components/listings/ReportDialog';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import { cn } from '@/lib/utils';
 
@@ -115,19 +116,7 @@ export function ListingActions({
         {isFavorite ? 'Favorilerimde' : 'Favorilere Ekle'}
       </button>
 
-      <button
-        type="button"
-        onClick={() =>
-          toast({
-            title: 'Şikayetiniz alındı',
-            description: 'İlan ekibimiz tarafından incelenecek.',
-          })
-        }
-        className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
-      >
-        <Flag className="h-4 w-4" />
-        Şikayet Et
-      </button>
+      <ReportDialog listingId={listingId} />
 
       <div className="flex items-center gap-1.5">
         <ShareButton
