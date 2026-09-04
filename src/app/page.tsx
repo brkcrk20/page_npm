@@ -7,6 +7,14 @@ import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
 import { getSidebarData } from '@/lib/queries/catalog';
 import { getListings, getFeaturedListings } from '@/lib/queries/listings';
+import { HomeHero } from '@/components/home/HomeHero';
+import {
+  CityLinks,
+  HomeSeoCopy,
+  PopularBreeds,
+  SafetyStrip,
+  ServiceDirectories,
+} from '@/components/home/HomeSections';
 
 /**
  * Ana sayfa.
@@ -49,23 +57,39 @@ export default async function HomePage() {
   ]);
 
   const totalListings = categorySections.reduce((sum, s) => sum + s.total, 0);
+  const breedCount = sidebar.categories.reduce((sum, c) => sum + c.breeds.length, 0);
+
+  // Ücretsiz sahiplendirme ayrı gösteriliyor: emsal sitelerin tamamında
+  // ücretli/ücretsiz ayrımı birinci sınıf bir ayrım ve ziyaretçilerin büyük
+  // kısmı doğrudan bunu arıyor.
+  const { listings: adoptions } = await getListings({
+    kind: 'sahiplendirme',
+    excludeCategoryIds: sidebar.categories
+      .filter((c) => c.code === 'Supply')
+      .map((c) => c.id),
+    perPage: 8,
+  });
 
   return (
     <div className="bg-secondary/50">
-      <div className="w-full px-5 pb-10 pt-4 md:container md:mx-auto">
+      <HomeHero
+        totalListings={totalListings}
+        cityCount={sidebar.cities.length}
+        breedCount={breedCount}
+      />
+
+      <div className="w-full px-5 pb-10 pt-6 md:container md:mx-auto">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-[280px_1fr]">
-          {/* --- Yan menü: kategoriler ve cinsleri --- */}
           <aside className="hidden md:block">
             <div className="sticky top-4">
               <CategorySidebar categories={sidebar.categories} cities={sidebar.cities} />
             </div>
           </aside>
 
-          {/* --- İçerik --- */}
-          <main className="space-y-10">
+          <main className="min-w-0 space-y-10">
             {totalListings === 0 && (
               <section className="rounded-xl border border-dashed bg-white p-10 text-center">
-                <h1 className="text-2xl font-bold">Henüz yayında ilan yok</h1>
+                <h2 className="text-2xl font-bold">Henüz yayında ilan yok</h2>
                 <p className="mx-auto mt-2 max-w-md text-muted-foreground">
                   PetSemti yeni yayında. İlk ilanı vererek başlayabilirsin —
                   sahiplendirme ilanları her zaman ücretsiz.
@@ -78,10 +102,27 @@ export default async function HomePage() {
 
             {featured.length > 0 && (
               <section>
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-2xl font-bold">Vitrin İlanları</h2>
-                </div>
+                <h2 className="mb-4 text-2xl font-bold">Vitrin İlanları</h2>
                 <ListingGrid listings={featured} />
+              </section>
+            )}
+
+            {adoptions.length > 0 && (
+              <section>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-bold">Yuva Arayanlar</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Ücretsiz sahiplendirme ilanları
+                    </p>
+                  </div>
+                  <Button variant="link" asChild className="shrink-0 text-primary">
+                    <Link href="/sahiplendirme">
+                      Tümünü Gör <ArrowRight className="ml-1 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+                <ListingGrid listings={adoptions} />
               </section>
             )}
 
@@ -100,6 +141,12 @@ export default async function HomePage() {
                   <ListingGrid listings={listings} />
                 </section>
               ))}
+
+            <PopularBreeds sidebar={sidebar} />
+            <ServiceDirectories />
+            <CityLinks sidebar={sidebar} />
+            <SafetyStrip />
+            <HomeSeoCopy />
           </main>
         </div>
       </div>
