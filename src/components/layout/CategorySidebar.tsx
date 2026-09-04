@@ -273,84 +273,42 @@ export function CategorySidebar({
                 {/* Kapalı kategori HİÇ basılmıyor. hidden ile gizlemek
                     yeterli değildi: 161 satır yine DOM'a giriyor, HTML'i
                     şişiriyor ve React'e boşuna iş çıkarıyordu. */}
-                {open && (() => {
-                  /**
-                   * İki kademeli sunum.
-                   *
-                   * Eskiden 161 cinsin tamamı, her biri yuvarlak fotoğraflı
-                   * tek tip satır olarak alt alta diziliyordu. Bu hem
-                   * sektörün en yaygın (ve en ayırt edilemez) menü kalıbıydı
-                   * hem de işe yaramıyordu: ilanı olan üç cins, ilanı olmayan
-                   * yüz elli cinsin arasında kayboluyordu.
-                   *
-                   * Artık ilanı olanlar üstte görsel kutucuk olarak, geri
-                   * kalanı altta kompakt etiket listesi olarak duruyor.
-                   * Kullanıcının aradığı bilgi (nerede ilan var) öne çıkıyor
-                   * ve menü yarı yüksekliğe iniyor.
-                   */
-                  const renk = kategoriRengi(category.code);
-                  const dolu = category.breeds.filter((b) => b.count > 0).slice(0, 8);
-                  const bos = category.breeds.filter((b) => !dolu.includes(b));
-
-                  return (
-                    <div className="space-y-3 p-3">
-                      {dolu.length > 0 && (
-                        <ul className="grid grid-cols-2 gap-2">
-                          {dolu.map((breed) => (
-                            <li key={breed.id}>
-                              <Link
-                                href={`/${category.slug}/${breed.slug}`}
-                                className={cn(
-                                  'flex flex-col items-center gap-1.5 rounded-xl border p-2 text-center transition-colors',
-                                  breed.slug === activeBreedSlug
-                                    ? cn(renk.kenar, renk.yumusak)
-                                    : 'hover:border-primary/40'
-                                )}
-                              >
-                                <BreedAvatar
-                                  breedName={breed.name}
-                                  breedSlug={breed.slug}
-                                  categorySlug={category.slug}
-                                  categoryCode={category.code}
-                                  categoryName={category.name}
-                                />
-                                <span className="line-clamp-2 text-[11px] font-medium leading-tight">
-                                  {breed.name}
-                                </span>
-                                <span className={cn('rounded-full px-1.5 text-[10px] font-semibold text-white', renk.dolu)}>
-                                  {breed.count}
-                                </span>
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-
-                      {bos.length > 0 && (
-                        <ul className="flex flex-wrap gap-1.5">
-                          {bos.map((breed) => (
-                            <li key={breed.id}>
-                              <Link
-                                href={`/${category.slug}/${breed.slug}`}
-                                className={cn(
-                                  'inline-block rounded-full border px-2.5 py-1 text-xs transition-colors',
-                                  breed.slug === activeBreedSlug
-                                    ? cn(renk.kenar, renk.yumusak, renk.koyu, 'font-semibold')
-                                    : 'text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                                )}
-                              >
-                                {breed.name}
-                                {breed.count > 0 && (
-                                  <span className="ml-1 opacity-60">{breed.count}</span>
-                                )}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  );
-                })()}
+                {open && (
+                <ul>
+                  {category.breeds.map((breed) => (
+                    <li key={breed.id}>
+                      <Link
+                        href={`/${category.slug}/${breed.slug}`}
+                        className={cn(
+                          'flex items-center gap-3 border-b px-4 py-2 text-sm transition-colors hover:bg-secondary/60',
+                          breed.slug === activeBreedSlug
+                            ? cn(kategoriRengi(category.code).yumusak, 'font-semibold')
+                            : 'text-foreground'
+                        )}
+                      >
+                        <BreedAvatar
+                          breedName={breed.name}
+                          breedSlug={breed.slug}
+                          categorySlug={category.slug}
+                          categoryCode={category.code}
+                          categoryName={category.name}
+                        />
+                        <span className="min-w-0 flex-1 truncate">{breed.name}</span>
+                        <span
+                          className={cn(
+                            'shrink-0 text-xs',
+                            breed.count > 0
+                              ? cn('rounded-full px-1.5 font-semibold text-white', kategoriRengi(category.code).dolu)
+                              : 'text-muted-foreground'
+                          )}
+                        >
+                          {breed.count}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                )}
               </section>
               );
             })

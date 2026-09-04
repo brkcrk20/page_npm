@@ -8,7 +8,7 @@ import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
-import { getSidebarData } from '@/lib/queries/catalog';
+import { animalCategories, getSidebarData } from '@/lib/queries/catalog';
 import { createSupabasePublicClient } from '@/lib/supabase/server';
 import { getListings, getFeaturedListings } from '@/lib/queries/listings';
 
@@ -44,7 +44,10 @@ export default async function HomePage() {
   const [featured, categorySections] = await Promise.all([
     getFeaturedListings(8),
     Promise.all(
-      sidebar.categories.map(async (category) => {
+      // Güvercin ve pet malzemeleri kendi dikeyleri: ana sayfada kedi
+      // köpeğin arasında bir bölüm olarak görünmeleri, onları ayrı tutma
+      // kararının tam tersi olurdu.
+      animalCategories(sidebar.categories).map(async (category) => {
         const { listings, total } = await getListings({
           categoryId: category.id,
           perPage: 8,
@@ -101,7 +104,10 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-[280px_1fr]">
           <aside className="hidden md:block">
             <div className="sticky top-4">
-              <CategorySidebar categories={sidebar.categories} cities={sidebar.cities} />
+              <CategorySidebar
+              categories={animalCategories(sidebar.categories)}
+              cities={sidebar.cities}
+            />
             </div>
           </aside>
 

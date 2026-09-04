@@ -6,38 +6,39 @@
  * Renk sistemi.
  *
  * Ana renk turuncuydu (#EC5822) ve emsal bir sitenin ana rengiyle
- * (#EA4E1B) neredeyse aynıydı — iki site yan yana konduğunda ilk göze
- * çarpan buydu. Petrol mavisine geçildi: hem o benzerlikten tamamen
- * uzaklaşıyor hem de sitenin ağırlık merkezine (veteriner ve hizmet
- * rehberleri) daha uygun bir güven tonu veriyor.
+ * (#EA4E1B) neredeyse aynıydı. Palet pembe tonlara taşındı.
  *
- * Sıcaklığı vurgu rengi taşıyor: amber. Evcil hayvan sitesinin
- * tamamen soğuk durmaması için rozetlerde ve ikincil çağrılarda kullanılıyor.
+ * PASTEL NEREDE, KOYU NEREDE
+ * Pastel pembe (#E05281 ve açığı) beyaz yazıyla 3.69:1 kontrast veriyor —
+ * WCAG AA sınırının (4.5) altında, yani düğme ve bağlantıda okunmuyor.
+ * Bu yüzden pastel tonlar YÜZEYLERDE (zemin, kart, kenarlık, rozet
+ * arka planı), koyu gül tonu (#C92C53) ise YAZI VE DÜĞMELERDE kullanılıyor.
+ * Böylece site pastel görünüyor ama hiçbir yazı okunmaz hâle gelmiyor.
  *
- * Kontrast ölçüldü: beyaz yazı / petrol zemin 5.99:1 (WCAG AA),
- * siyah yazı / amber zemin 10.31:1.
+ * Ölçülen kontrastlar: beyaz yazı / gül zemin 5.30:1, koyu yazı / pastel
+ * zemin 13.41:1.
  */
 @layer base {
   :root {
-    --background: 40 20% 97%;
-    --foreground: 240 10% 3.9%;
+    --background: 345 45% 97%;
+    --foreground: 340 25% 14%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 340 25% 14%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 188 80% 27%;
+    --primary: 345 64% 48%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 16% 95%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 40 14% 94%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 38 95% 52%;
-    --accent-foreground: 26 45% 12%;
+    --secondary: 345 40% 95%;
+    --secondary-foreground: 345 30% 18%;
+    --muted: 345 30% 94%;
+    --muted-foreground: 340 12% 45%;
+    --accent: 345 60% 94%;
+    --accent-foreground: 345 45% 25%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 36 12% 88%;
-    --input: 36 12% 88%;
-    --ring: 188 80% 27%;
+    --border: 340 25% 88%;
+    --input: 340 25% 88%;
+    --ring: 345 64% 48%;
     --radius: 0.9rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -76,19 +77,19 @@
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 188 80% 27%;
+    --primary: 345 64% 48%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    --accent: 38 95% 52%;
-    --accent-foreground: 26 45% 12%;
+    --accent: 345 60% 94%;
+    --accent-foreground: 345 45% 25%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 188 80% 27%;
+    --ring: 345 64% 48%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;

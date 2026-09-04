@@ -93,7 +93,17 @@ function SearchFiltersInner() {
   const [districts, setDistricts] = useState<Option[]>([]);
 
   const [term, setTerm] = useState(searchParams.get('q') ?? '');
-  const [categorySlug, setCategorySlug] = useState(ALL);
+  /**
+   * Kategori sayfasındaysak tür kendiliğinden seçili başlıyor.
+   *
+   * Köpek ilanları sayfasındaki kullanıcıya "önce tür seçin" demek, zaten
+   * verdiği kararı tekrar sormak olurdu. Adresin ilk parçası kategori
+   * adresiyse onu alıyoruz; değilse boş kalıyor.
+   */
+  const [categorySlug, setCategorySlug] = useState(() => {
+    const ilk = pathname.split('/').filter(Boolean)[0];
+    return ilk && ilk.endsWith('-ilanlari') ? ilk : ALL;
+  });
   const [breedSlug, setBreedSlug] = useState(ALL);
   const [citySlug, setCitySlug] = useState(ALL);
   const [districtSlug, setDistrictSlug] = useState(ALL);
@@ -216,10 +226,20 @@ function SearchFiltersInner() {
     const ownIds = [pigeonCategory?.id, supplyCategory?.id].filter(Boolean) as number[];
     const animalsOnly = breeds.filter((b) => !ownIds.includes(b.category_id));
 
-    if (categorySlug === ALL) return animalsOnly;
+    /**
+     * Tür seçilmeden cins listesi gösterilmiyor.
+     *
+     * Seçilmediğinde 161 cins tek listede sıralanıyordu: kullanıcı köpek
+     * ararken kedi ırklarını, kuş ararken köpek ırklarını görüyordu. Cins,
+     * ancak türe bağlıyken anlamlı bir seçim.
+     */
+    if (categorySlug === ALL) return [];
     const category = categories.find((c) => c.slug === categorySlug);
     return category ? animalsOnly.filter((b) => b.category_id === category.id) : animalsOnly;
   }, [breeds, categories, categorySlug, inPigeonSection, inSupplySection, pigeonCategory, supplyCategory, supplyGroup]);
+
+  /** Cins seçilebilir mi: kendi dikeyindeyiz ya da tür seçilmiş. */
+  const cinsSecilebilir = inPigeonSection || inSupplySection || categorySlug !== ALL;
 
   function handleSearch() {
     // Kategori seçiliyse yapısal URL'e git: /kopek-ilanlari/toy-poodle gibi.
@@ -342,10 +362,27 @@ function SearchFiltersInner() {
       <FilterSelect
         value={breedSlug}
         onChange={setBreedSlug}
-        placeholder={inPigeonSection ? 'Tüm Güvercin Irkları' : inSupplySection ? 'Tüm Eşyalar' : 'Tüm Cinsler'}
-        allLabel={inPigeonSection ? 'Tüm Güvercin Irkları' : inSupplySection ? 'Tüm Eşyalar' : 'Tüm Cinsler'}
+        placeholder={
+          inPigeonSection
+            ? 'Tüm Güvercin Irkları'
+            : inSupplySection
+              ? 'Tüm Eşyalar'
+              : cinsSecilebilir
+                ? 'Tüm Cinsler'
+                : 'Önce tür seçin'
+        }
+        allLabel={
+          inPigeonSection
+            ? 'Tüm Güvercin Irkları'
+            : inSupplySection
+              ? 'Tüm Eşyalar'
+              : cinsSecilebilir
+                ? 'Tüm Cinsler'
+                : 'Önce tür seçin'
+        }
         searchPlaceholder={inPigeonSection ? 'Irk ara...' : inSupplySection ? 'Eşya ara...' : 'Cins ara...'}
         options={filteredBreeds}
+        disabled={!cinsSecilebilir}
       />
 
       <FilterSelect

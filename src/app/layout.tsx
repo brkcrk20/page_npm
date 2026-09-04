@@ -55,13 +55,17 @@ export const metadata: Metadata = {
     'pet oteli',
     'pet malzemeleri',
   ],
+  /**
+   * Sekme ikonu.
+   *
+   * app/favicon.ico proje iskeletiyle gelen üretici ikonuydu ve Next.js onu
+   * /favicon.ico olarak servis ettiği için tarayıcı sekmesinde markanın
+   * değil onun ikonu görünüyordu. Dosya silindi; ikon artık amblemin
+   * kendisi (app/icon.svg) ve Apple cihazlar için ondan üretilen PNG.
+   */
   icons: {
-    icon: [
-      // SVG önce: her boyutta net ve tek dosya. .ico eski tarayıcılar için.
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: '32x32' },
-    ],
-    apple: '/marka/amblem.svg',
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    apple: '/apple-icon.png',
   },
   alternates: { canonical: '/' },
   openGraph: {

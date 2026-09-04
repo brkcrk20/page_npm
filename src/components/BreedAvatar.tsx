@@ -43,7 +43,7 @@ export function BreedAvatar({
 
   return (
     <span
-      className="relative shrink-0 overflow-hidden rounded-full bg-muted"
+      className="relative shrink-0 overflow-hidden rounded-lg bg-muted"
       style={{ width: size, height: size }}
     >
       <Image
