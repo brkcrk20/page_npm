@@ -222,6 +222,15 @@ export function CreateListingForm({
       categories.find((c) => String(c.id) === categoryId)?.slug === 'pet-malzemeleri',
     [preset?.categorySlug, categories, categoryId]
   );
+  /**
+   * Bireysel hesap + hayvan kategorisi → yalnızca ücretsiz sahiplendirme.
+   *
+   * Pet malzemeleri kapsam dışı: ikinci el kafes satmak hayvan satışı
+   * değil.
+   */
+  const sadeceSahiplendirme =
+    !isSupply && profile?.account_type !== 'kurumsal';
+
   const cityId = form.watch('cityId');
 
   // Giriş yapmamış kullanıcı artık yönlendirilmiyor; aşağıda ne yapması
@@ -313,6 +322,12 @@ export function CreateListingForm({
   useEffect(() => {
     if (preset?.kind) form.setValue('kind', preset.kind);
   }, [preset?.kind, form]);
+
+  // Seçenek gösterilmiyorsa değerin de doğru olması gerekiyor; yoksa
+  // varsayılan 'satilik' kalıyor ve kayıt veritabanında reddediliyor.
+  useEffect(() => {
+    if (sadeceSahiplendirme && !preset?.kind) form.setValue('kind', 'sahiplendirme');
+  }, [sadeceSahiplendirme, preset?.kind, form]);
 
   const kategoriBreeds = useMemo(
     () => breeds.filter((b) => !categoryId || b.category_id === Number(categoryId)),
@@ -791,7 +806,25 @@ export function CreateListingForm({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
             {/* İlan türü ön ayarla kilitliyse sorulmuyor: sahiplendirme
                 sayfasından gelen kullanıcı zaten sahiplendirme yapıyor. */}
-            {!preset?.kind && (
+            {/* Bireysel hesap hayvanı satamaz, sahiplendirir.
+                Kural veritabanında (listings_individual_adoption_only) ama
+                uzun formu doldurtup en sonda reddetmek kötü bir deneyim:
+                seçenek baştan gösterilmiyor ve sebebi yazıyor. */}
+            {!preset?.kind && sadeceSahiplendirme && (
+              <div className="rounded-lg border border-primary/25 bg-primary/5 p-3 text-sm">
+                <p className="font-medium">Bu ilan ücretsiz sahiplendirme olarak yayınlanacak.</p>
+                <p className="mt-1 text-muted-foreground">
+                  Hayvan satış ilanı yalnızca kurumsal hesaplarla verilebilir. Üretici
+                  veya işletmeyseniz{' '}
+                  <Link href="/profil/hesap" className="text-primary hover:underline">
+                    kurumsal hesaba geçebilirsiniz
+                  </Link>
+                  .
+                </p>
+              </div>
+            )}
+
+            {!preset?.kind && !sadeceSahiplendirme && (
             <FormField
               control={form.control}
               name="kind"
