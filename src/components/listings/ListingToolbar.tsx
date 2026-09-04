@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { ArrowUpDown, X } from 'lucide-react';
+import { ArrowUpDown, Store, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,19 @@ const SIRALAMA = [
   { value: 'pahali', label: 'Fiyat: yüksekten düşüğe' },
 ];
 
+/**
+ * Kimden: alıcının en çok sorduğu ayrım.
+ *
+ * Sahiplendirme arayan kurumsal ilanları elemek, toplu alım yapan tam
+ * tersini yapmak istiyor. Değer ilan satırında tutuluyor (göç 0043),
+ * bu yüzden süzme tek kolon karşılaştırması.
+ */
+const KIMDEN = [
+  { value: 'hepsi', label: 'Herkesten' },
+  { value: 'sahibinden', label: 'Sahibinden' },
+  { value: 'magazadan', label: 'Mağazadan' },
+];
+
 export function ListingToolbar({ showPrice = true }: { showPrice?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -42,6 +55,7 @@ export function ListingToolbar({ showPrice = true }: { showPrice?: boolean }) {
   const [min, setMin] = useState(params.get('min') ?? '');
   const [max, setMax] = useState(params.get('max') ?? '');
   const sort = params.get('sirala') ?? 'yeni';
+  const kimden = params.get('kimden') ?? 'hepsi';
 
   function push(next: URLSearchParams) {
     const q = next.toString();
@@ -52,6 +66,13 @@ export function ListingToolbar({ showPrice = true }: { showPrice?: boolean }) {
     const next = new URLSearchParams(params.toString());
     if (value === 'yeni') next.delete('sirala');
     else next.set('sirala', value);
+    push(next);
+  }
+
+  function setKimden(value: string) {
+    const next = new URLSearchParams(params.toString());
+    if (value === 'hepsi') next.delete('kimden');
+    else next.set('kimden', value);
     push(next);
   }
 
@@ -85,6 +106,22 @@ export function ListingToolbar({ showPrice = true }: { showPrice?: boolean }) {
             {SIRALAMA.map((s) => (
               <SelectItem key={s.value} value={s.value}>
                 {s.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Store className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <Select value={kimden} onValueChange={setKimden}>
+          <SelectTrigger className="h-9 w-[140px]" aria-label="Kimden">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {KIMDEN.map((k) => (
+              <SelectItem key={k.value} value={k.value}>
+                {k.label}
               </SelectItem>
             ))}
           </SelectContent>

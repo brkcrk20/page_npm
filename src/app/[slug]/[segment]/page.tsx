@@ -101,7 +101,7 @@ export default async function CategorySegmentPage({
   searchParams,
 }: {
   params: Promise<Params>;
-  searchParams: Promise<{ sirala?: string; min?: string; max?: string }>;
+  searchParams: Promise<{ sirala?: string; min?: string; max?: string; kimden?: string }>;
 }) {
   const resolvedParams = await params;
   const listeParams = parseListingParams(await searchParams);

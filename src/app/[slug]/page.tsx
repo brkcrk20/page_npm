@@ -136,7 +136,7 @@ export default async function RootSlugPage({
   searchParams,
 }: {
   params: Promise<Params>;
-  searchParams: Promise<{ sirala?: string; min?: string; max?: string }>;
+  searchParams: Promise<{ sirala?: string; min?: string; max?: string; kimden?: string }>;
 }) {
   const { slug } = await params;
   const listeParams = parseListingParams(await searchParams);

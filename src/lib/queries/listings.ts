@@ -85,6 +85,12 @@ export type ListingFilters = {
    * varsayılan olarak DIŞARIDA — ancak açıkça istendiğinde geliyor.
    */
   kinds?: Database['public']['Enums']['listing_kind'][];
+  /**
+   * Kimden: sahibinden (bireysel) veya mağazadan (kurumsal).
+   *
+   * profiles'a join atmak yerine ilan üzerinde tutuluyor; bkz. göç 0043.
+   */
+  seller?: Database['public']['Enums']['account_type'];
   gender?: Database['public']['Enums']['pet_gender'];
   search?: string;
   minPrice?: number;
@@ -119,17 +125,26 @@ export function parseListingParams(params: {
   sirala?: string;
   min?: string;
   max?: string;
-}): Pick<ListingFilters, 'sort' | 'minPrice' | 'maxPrice'> {
+  kimden?: string;
+}): Pick<ListingFilters, 'sort' | 'minPrice' | 'maxPrice' | 'seller'> {
   const sayi = (v?: string) => {
     const n = Number(v);
     return v && Number.isFinite(n) && n >= 0 ? n : undefined;
   };
   const gecerli = ['yeni', 'eski', 'ucuz', 'pahali'] as const;
 
+  const kimden =
+    params.kimden === 'sahibinden'
+      ? ('bireysel' as const)
+      : params.kimden === 'magazadan'
+        ? ('kurumsal' as const)
+        : undefined;
+
   return {
     sort: gecerli.includes(params.sirala as any) ? (params.sirala as ListingFilters['sort']) : undefined,
     minPrice: sayi(params.min),
     maxPrice: sayi(params.max),
+    seller: kimden,
   };
 }
 
@@ -213,6 +228,7 @@ async function fetchListings(filters: ListingFilters = {}) {
     query = query.not('kind', 'in', '(kayip,bulundu)');
   }
   if (filters.gender) query = query.eq('gender', filters.gender);
+  if (filters.seller) query = query.eq('owner_account_type', filters.seller);
 
   if (filters.minPrice !== undefined) query = query.gte('price', filters.minPrice);
   if (filters.maxPrice !== undefined) query = query.lte('price', filters.maxPrice);

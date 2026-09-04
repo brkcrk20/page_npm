@@ -792,6 +792,7 @@ export type Database = {
           is_reserved: boolean
           is_vaccinated: boolean
           kind: Database["public"]["Enums"]["listing_kind"]
+          owner_account_type: Database["public"]["Enums"]["account_type"]
           owner_id: string
           phone_count: number
           price: number | null
@@ -843,6 +844,7 @@ export type Database = {
           is_reserved?: boolean
           is_vaccinated?: boolean
           kind?: Database["public"]["Enums"]["listing_kind"]
+          owner_account_type?: Database["public"]["Enums"]["account_type"]
           owner_id: string
           phone_count?: number
           price?: number | null
@@ -894,6 +896,7 @@ export type Database = {
           is_reserved?: boolean
           is_vaccinated?: boolean
           kind?: Database["public"]["Enums"]["listing_kind"]
+          owner_account_type?: Database["public"]["Enums"]["account_type"]
           owner_id?: string
           phone_count?: number
           price?: number | null
@@ -2083,6 +2086,7 @@ export type Database = {
       }
       delete_my_account: { Args: never; Returns: undefined }
       email_for_username: { Args: { p_username: string }; Returns: string }
+      expire_listings: { Args: never; Returns: number }
       generate_username: { Args: { p_seed: string }; Returns: string }
       guard_bypass: { Args: never; Returns: boolean }
       increment_listing_phone: {

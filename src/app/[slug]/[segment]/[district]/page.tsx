@@ -60,14 +60,30 @@ export async function generateMetadata({
   };
 }
 
-export default async function DistrictPage({ params }: { params: Promise<Params> }) {
+export default async function DistrictPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<Params>;
+  searchParams: Promise<{ sirala?: string; min?: string; max?: string; kimden?: string }>;
+}) {
   const loaded = await load(await params);
   if (!loaded) notFound();
 
   const { category, city, district } = loaded;
 
+  // parseListingParams içeri alınmıştı ama hiç çağrılmıyordu: ilçe
+  // sayfasındaki sıralama ve fiyat kutuları adres çubuğunu değiştiriyor,
+  // sonuç hiç değişmiyordu. Çalışmayan bir denetim, olmayandan kötü.
+  const listeParams = parseListingParams(await searchParams);
+
   const [{ listings, total }, sidebar] = await Promise.all([
-    getListings({ categoryId: category.id, cityId: city.id, districtId: district.id }),
+    getListings({
+      ...listeParams,
+      categoryId: category.id,
+      cityId: city.id,
+      districtId: district.id,
+    }),
     getSidebarData(),
   ]);
 
