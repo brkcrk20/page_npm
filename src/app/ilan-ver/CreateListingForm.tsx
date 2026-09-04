@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, Phone, Upload, X } from 'lucide-react';
+import { Loader2, Phone,
+  ShieldCheck, Upload, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -679,6 +680,37 @@ export function CreateListingForm({
         <Button asChild className="mt-6">
           <Link href="/profil/hesap">Telefon Numarası Ekle</Link>
         </Button>
+      </div>
+    );
+  }
+
+  /**
+   * Doğrulanmamış hesap ilan veremiyor.
+   *
+   * Kural veritabanında (listings_require_verification); burası yalnızca
+   * kullanıcıyı formun sonunda hataya çarptırmamak için. Düzenleme kipinde
+   * kontrol edilmiyor: ilan zaten doğrulanmış bir hesapla açılmış.
+   */
+  if (!isEdit && profile?.identity_status !== 'dogrulandi') {
+    const inceleniyor = profile?.identity_status === 'inceleniyor';
+    return (
+      <div className="mx-auto max-w-lg px-5 py-16 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <ShieldCheck className="h-6 w-6 text-primary" />
+        </div>
+        <h1 className="mt-4 text-2xl font-bold">
+          {inceleniyor ? 'Doğrulamanız inceleniyor' : 'Önce profilinizi doğrulayın'}
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          {inceleniyor
+            ? 'Başvurunuzu aldık. İnceleme sonuçlandığında ilan verebileceksiniz.'
+            : 'İlan verebilmek için bir kez kimlik doğrulaması yapmanız gerekiyor. Bireysel hesaplarda TC kimlik numarası, kurumsal hesaplarda vergi kimlik numarası yeterli. Bilgileriniz ilanınızda görünmez.'}
+        </p>
+        {!inceleniyor && (
+          <Button asChild className="mt-6">
+            <Link href="/profil/dogrulama">Profilimi Doğrula</Link>
+          </Button>
+        )}
       </div>
     );
   }

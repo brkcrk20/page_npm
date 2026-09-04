@@ -47,6 +47,7 @@ import { cn } from '@/lib/utils';
 const ITEMS = [
   { href: '/profil', label: 'Özet', icon: LayoutGrid, exact: true },
   { href: '/profil/ilanlarim', label: 'İlanlarım', icon: List },
+  { href: '/profil/dogrulama', label: 'Profil Doğrulama', icon: ShieldCheck },
   { href: '/mesajlarim', label: 'Mesajlarım', icon: MessageSquare, badge: true },
   { href: '/profil/favoriler', label: 'Favorilerim', icon: Heart },
   { href: '/doping', label: 'Öne Çıkar', icon: Rocket },

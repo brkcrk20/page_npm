@@ -353,6 +353,112 @@ export type Database = {
           },
         ]
       }
+      identity_requests: {
+        Row: {
+          birth_year: number | null
+          company_title: string | null
+          created_at: string
+          first_name: string | null
+          id: number
+          kind: Database["public"]["Enums"]["identity_kind"]
+          last_name: string | null
+          national_id: string | null
+          nvi_checked_at: string | null
+          nvi_result: boolean | null
+          reject_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["verification_status"]
+          tax_number: string | null
+          tax_office: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_year?: number | null
+          company_title?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: never
+          kind: Database["public"]["Enums"]["identity_kind"]
+          last_name?: string | null
+          national_id?: string | null
+          nvi_checked_at?: string | null
+          nvi_result?: boolean | null
+          reject_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          tax_number?: string | null
+          tax_office?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_year?: number | null
+          company_title?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: never
+          kind?: Database["public"]["Enums"]["identity_kind"]
+          last_name?: string | null
+          national_id?: string | null
+          nvi_checked_at?: string | null
+          nvi_result?: boolean | null
+          reject_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          tax_number?: string | null
+          tax_office?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identity_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "identity_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "identity_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "identity_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "identity_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "identity_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       listing_credits: {
         Row: {
           created_at: string
@@ -1130,6 +1236,61 @@ export type Database = {
           },
         ]
       }
+      phone_verifications: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: number
+          phone: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: never
+          phone: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: never
+          phone?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phone_verifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phone_verifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phone_verifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       products: {
         Row: {
           code: string
@@ -1195,12 +1356,18 @@ export type Database = {
           district_id: number | null
           full_name: string | null
           id: string
+          identity_birth_year: number | null
+          identity_kind: Database["public"]["Enums"]["identity_kind"] | null
+          identity_rejected_reason: string | null
+          identity_status: Database["public"]["Enums"]["verification_status"]
+          identity_verified_at: string | null
           is_banned: boolean
           is_verified: boolean
           last_seen_at: string | null
           listing_count: number
           national_id: string | null
           phone: string | null
+          phone_verified_at: string | null
           role: Database["public"]["Enums"]["user_role"]
           tax_number: string | null
           tax_office: string | null
@@ -1221,12 +1388,18 @@ export type Database = {
           district_id?: number | null
           full_name?: string | null
           id: string
+          identity_birth_year?: number | null
+          identity_kind?: Database["public"]["Enums"]["identity_kind"] | null
+          identity_rejected_reason?: string | null
+          identity_status?: Database["public"]["Enums"]["verification_status"]
+          identity_verified_at?: string | null
           is_banned?: boolean
           is_verified?: boolean
           last_seen_at?: string | null
           listing_count?: number
           national_id?: string | null
           phone?: string | null
+          phone_verified_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           tax_number?: string | null
           tax_office?: string | null
@@ -1247,12 +1420,18 @@ export type Database = {
           district_id?: number | null
           full_name?: string | null
           id?: string
+          identity_birth_year?: number | null
+          identity_kind?: Database["public"]["Enums"]["identity_kind"] | null
+          identity_rejected_reason?: string | null
+          identity_status?: Database["public"]["Enums"]["verification_status"]
+          identity_verified_at?: string | null
           is_banned?: boolean
           is_verified?: boolean
           last_seen_at?: string | null
           listing_count?: number
           national_id?: string | null
           phone?: string | null
+          phone_verified_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           tax_number?: string | null
           tax_office?: string | null
@@ -1881,6 +2060,10 @@ export type Database = {
           username: string
         }[]
       }
+      admin_review_identity: {
+        Args: { p_approve: boolean; p_reason?: string; p_request_id: number }
+        Returns: undefined
+      }
       admin_set_user_role: {
         Args: { p_role: string; p_user_id: string }
         Returns: undefined
@@ -1958,6 +2141,7 @@ export type Database = {
     }
     Enums: {
       account_type: "bireysel" | "kurumsal"
+      identity_kind: "tc" | "vergi"
       listing_kind:
         | "satilik"
         | "sahiplendirme"
@@ -2013,6 +2197,7 @@ export type Database = {
         | "egitmen"
         | "petshop"
       user_role: "user" | "moderator" | "admin"
+      verification_status: "yok" | "inceleniyor" | "dogrulandi" | "reddedildi"
       video_provider: "supabase" | "cloudflare" | "bunny"
       video_status: "yukleniyor" | "isleniyor" | "hazir" | "basarisiz"
     }
@@ -2143,6 +2328,7 @@ export const Constants = {
   public: {
     Enums: {
       account_type: ["bireysel", "kurumsal"],
+      identity_kind: ["tc", "vergi"],
       listing_kind: [
         "satilik",
         "sahiplendirme",
@@ -2205,6 +2391,7 @@ export const Constants = {
         "petshop",
       ],
       user_role: ["user", "moderator", "admin"],
+      verification_status: ["yok", "inceleniyor", "dogrulandi", "reddedildi"],
       video_provider: ["supabase", "cloudflare", "bunny"],
       video_status: ["yukleniyor", "isleniyor", "hazir", "basarisiz"],
     },
