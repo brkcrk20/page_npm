@@ -51,11 +51,11 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const loaded = await load(await params);
-  if (!loaded) return { title: 'Sayfa Bulunamadı | PetSemti' };
+  if (!loaded) return { title: 'Sayfa Bulunamadı' };
 
   const { category, city, district } = loaded;
   return {
-    title: `${district.name} ${city.name} ${category.name} | PetSemti`,
+    title: `${district.name} ${city.name} ${category.name}`,
     description: `${city.name} ${district.name} bölgesindeki güncel ${category.name.toLowerCase()}.`,
   };
 }

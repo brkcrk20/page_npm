@@ -17,9 +17,11 @@ import { getListings, getFeaturedListings } from '@/lib/queries/listings';
  */
 
 export const metadata: Metadata = {
-  title: 'Evcil Hayvan İlanları — Semtinizdeki Sahiplendirme ve Satılık İlanlar',
+  // Ana sayfanın kendi başlığı yok: kök adres marka başlığını kullanıyor
+  // (bkz. app/layout.tsx). Buraya ayrı bir başlık yazmak, aynı sayfayı iki
+  // farklı isimle tanıtmak olurdu.
   description:
-    'Kedi, köpek, kuş, akvaryum ve güvercin ilanları; ırka, ile ve ilçeye göre ayrılmış listeler. Sahibiyle doğrudan görüşün, ilanınızı ücretsiz yayınlayın.',
+    'Kedi, köpek, kuş, akvaryum ve güvercin ilanları; kayıp-bulundu; veteriner, pet oteli ve kuaför rehberi. Irka, ile ve ilçeye göre inceleyin, sahibiyle doğrudan görüşün.',
 };
 
 /**
@@ -74,7 +76,14 @@ export default async function HomePage() {
         <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold md:text-3xl">Evcil Hayvan İlanları</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            {/* Tek satırlık marka cümlesi. Kaldırdığımız büyük giriş bölümünü
+                geri getirmiyor; sayfanın ilanlarla başlaması korunuyor ama
+                ziyaretçi "burası ne" sorusunun cevabını görüyor. Aynı cümle
+                alt bilgide ve site açıklamasında da geçiyor. */}
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              İlanlar, yerel pet hizmetleri ve güvercin dünyası tek platformda.
+            </p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
               {stats.listings_active} ilan yayında · {stats.members} üye
             </p>
           </div>

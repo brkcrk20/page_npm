@@ -84,14 +84,14 @@ export async function generateMetadata({
   if (resolved.kind === 'breed') {
     const name = resolved.breed.name;
     return {
-      title: `${name} İlanları — Satılık ve Sahiplendirme | PetSemti`,
+      title: `${name} İlanları — Satılık ve Sahiplendirme`,
       description: `${name} cinsi için güncel satılık ve ücretsiz sahiplendirme ilanları. Türkiye'nin her ilinden ${name} ilanlarına PetSemti'den ulaşın.`,
     };
   }
 
   const cityName = resolved.city.name;
   return {
-    title: `${cityName} ${category.name} — Satılık ve Sahiplendirme | PetSemti`,
+    title: `${cityName} ${category.name} — Satılık ve Sahiplendirme`,
     description: `${cityName} ilindeki güncel ${category.name.toLowerCase()}. Semtinizdeki ilanlara PetSemti'den ulaşın.`,
   };
 }

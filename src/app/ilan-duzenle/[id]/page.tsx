@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { CreateListingForm } from '@/app/ilan-ver/CreateListingForm';
 
 export const metadata: Metadata = {
-  title: 'İlanı Düzenle | PetSemti',
+  title: 'İlanı Düzenle',
   // Kişiye özel; arama sonuçlarında yeri yok.
   robots: { index: false, follow: false },
 };

@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
  */
 
 export const metadata: Metadata = {
-  title: 'Kayıp ve Bulunan Hayvan İlanları | PetSemti',
+  title: 'Kayıp ve Bulunan Hayvan İlanları',
   description:
     'Kaybolan kedi, köpek ve kuşlar için kayıp ilanı verin; bulduğunuz hayvanı sahibine ulaştırın. Şehre göre kayıp ve bulundu ilanları.',
   alternates: { canonical: '/kayip' },

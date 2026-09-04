@@ -101,10 +101,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { bolum } = await params;
   const preset = PRESETS[bolum];
-  if (!preset) return { title: 'İlan Ver | PetSemti' };
+  if (!preset) return { title: 'İlan Ver' };
 
   return {
-    title: `${preset.metaTitle} | PetSemti`,
+    title: `${preset.metaTitle}`,
     description: preset.metaDescription,
     // Form sayfaları listeleme sayfalarıyla arama sonuçlarında rekabet etmemeli.
     robots: { index: false, follow: true },

@@ -72,7 +72,7 @@ export async function generateMetadata({
       // Kategoriye özel SEO metni varsa o kullanılıyor; güvercin gibi kendi
       // terminolojisi olan kategorilerde genel şablon yetersiz kalıyor.
       return {
-        title: `${category.seo_title ?? `${category.name} — Satılık ve Ücretsiz Sahiplendirme`} | PetSemti`,
+        title: `${category.seo_title ?? `${category.name} — Satılık ve Sahiplendirme İlanları`}`,
         description:
           category.seo_description ??
           `Türkiye genelindeki güncel ${category.name.toLowerCase()}. Semtinizdeki ilanları görün, güvenle sahiplenin.`,
@@ -109,7 +109,7 @@ export async function generateMetadata({
       const aciklama = listing.description.slice(0, 160);
 
       return {
-        title: `${listing.title} | PetSemti`,
+        title: `${listing.title}`,
         description: aciklama,
         openGraph: {
           type: 'article',
@@ -128,7 +128,7 @@ export async function generateMetadata({
     }
   }
 
-  return { title: 'Sayfa Bulunamadı | PetSemti' };
+  return { title: 'Sayfa Bulunamadı' };
 }
 
 export default async function RootSlugPage({

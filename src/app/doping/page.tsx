@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { DopingClient } from './DopingClient';
 
 export const metadata: Metadata = {
-  title: 'İlanını Öne Çıkar | PetSemti',
+  title: 'İlanını Öne Çıkar',
   description: 'Vitrin, üst sırada ve acil rozeti ile ilanınızı öne çıkarın.',
   robots: { index: false, follow: true },
 };

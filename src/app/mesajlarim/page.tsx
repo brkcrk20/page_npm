@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { MessagesClient } from './MessagesClient';
 
 export const metadata: Metadata = {
-  title: 'Mesajlarım | PetSemti',
+  title: 'Mesajlarım',
   description: 'İlanlarınız üzerinden gelen mesajlar.',
   // Kişiye özel içerik; arama sonuçlarında yeri yok.
   robots: { index: false, follow: false },

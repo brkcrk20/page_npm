@@ -8,7 +8,7 @@ import { getServiceConfigBySlug } from '@/lib/services-config';
 const config = getServiceConfigBySlug('petshop')!;
 
 export const metadata: Metadata = {
-  title: `${config.registerCta} | PetSemti`,
+  title: `${config.registerCta}`,
   description: `${config.label} rehberine ücretsiz kayıt olun.`,
   // Kayıt formu arama sonuçlarında rehber sayfalarıyla rekabet etmemeli.
   robots: { index: false, follow: true },

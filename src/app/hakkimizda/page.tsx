@@ -7,9 +7,9 @@ import { getSiteContact } from '@/lib/queries/site-settings';
 import { SERVICE_CONFIGS } from '@/lib/services-config';
 
 export const metadata: Metadata = {
-  title: 'Hakkımızda | PetSemti',
+  title: 'Hakkımızda',
   description:
-    'PetSemti; sahiplendirme, güvercin, veteriner, pet oteli ve diğer evcil hayvan hizmetlerini tek çatı altında toplayan Türkiye geneli ilan ve rehber platformudur.',
+    'PetSemti; evcil hayvan sahiplerini ilanlar, yerel pet hizmetleri ve güvercin dünyasıyla buluşturan Türkiye geneli pet yaşam platformudur.',
 };
 
 /**
@@ -28,10 +28,12 @@ export default async function Page() {
       <section className="border-b bg-gradient-to-br from-primary/90 to-primary text-white">
         <div className="mx-auto w-full max-w-4xl px-5 py-12">
           <h1 className="text-3xl font-bold md:text-4xl">Hakkımızda</h1>
+          {/* Marka cümlesi site geneliyle aynı; bkz. app/layout.tsx. */}
           <p className="mt-3 max-w-2xl text-white/90">
-            PetSemti, evcil hayvan sahiplendirme ve satış ilanlarını, güvercinciliği ve
-            hayvan sahiplerinin ihtiyaç duyduğu hizmet rehberlerini tek bir yerde toplayan
-            Türkiye geneli bir platformdur.
+            PetSemti, evcil hayvan sahiplerini ilanlar, yerel pet hizmetleri ve güvercin
+            dünyasıyla buluşturan Türkiye geneli bir pet yaşam platformudur.
+            Sahiplendirmeden kayıp ilanına, veterinerden pet oteline kadar ihtiyaç
+            duyduğunuz her şey tek yerde.
           </p>
         </div>
       </section>

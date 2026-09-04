@@ -27,19 +27,33 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.petsemti.com';
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'PetSemti — Evcil Hayvan İlanları ve Hizmet Rehberi',
+    default: 'PetSemti — Evcil Hayvan İlanları, Pet Hizmetleri ve Güvercin Dünyası',
     template: '%s | PetSemti',
   },
+  /**
+   * Marka cümlesi.
+   *
+   * Site kendini bir dönem yalnızca "sahiplendirme platformu" diye
+   * tanıtıyordu; oysa ilanlar, yedi hizmet rehberi, kayıp-bulundu ve kendi
+   * dikeyi olan güvercin bölümü aynı yapının parçası. Dar tanım hem ürünü
+   * eksik anlatıyor hem de arama sonuçlarında yalnızca tek bir niyeti
+   * yakalıyordu.
+   *
+   * Aynı cümle alt bilgide, ana sayfada ve Hakkımızda'da da geçiyor;
+   * ayrı ayrı yazılırsa marka yine parçalı görünür.
+   */
   description:
-    'Semtinizdeki kedi, köpek, kuş, akvaryum ve güvercin ilanları. Sahiplendirme ve satılık ilanları ırka, ile ve ilçeye göre inceleyin; veteriner, pet oteli, kuaför ve eğitmen rehberinden size en yakınını bulun. İlan vermek ücretsiz.',
+    'PetSemti; evcil hayvan sahiplerini ilanlar, yerel pet hizmetleri ve güvercin dünyasıyla buluşturan pet yaşam platformudur. Kedi, köpek, kuş ve akvaryum ilanları; kayıp-bulundu; veteriner, pet oteli, kuaför ve eğitmen rehberi — 81 ilde, ilan vermek ücretsiz.',
   applicationName: 'PetSemti',
   keywords: [
     'evcil hayvan ilanları',
     'kedi sahiplendirme',
     'köpek ilanları',
     'güvercin ilanları',
+    'kayıp hayvan ilanı',
     'veteriner',
     'pet oteli',
+    'pet malzemeleri',
   ],
   icons: {
     icon: [
@@ -55,15 +69,15 @@ export const metadata: Metadata = {
     locale: 'tr_TR',
     siteName: 'PetSemti',
     url: SITE_URL,
-    title: 'PetSemti — Evcil Hayvan İlanları ve Hizmet Rehberi',
+    title: 'PetSemti — Evcil Hayvan İlanları, Pet Hizmetleri ve Güvercin Dünyası',
     description:
-      'Semtinizdeki sahiplendirme ve satılık hayvan ilanları, 81 ilde veteriner ve pet hizmetleri rehberi. İlan vermek ücretsiz.',
+      'İlanlar, yerel pet hizmetleri ve güvercin dünyası tek platformda. 81 ilde, ilan vermek ücretsiz.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PetSemti — Evcil Hayvan İlanları ve Hizmet Rehberi',
+    title: 'PetSemti — Evcil Hayvan İlanları, Pet Hizmetleri ve Güvercin Dünyası',
     description:
-      'Semtinizdeki sahiplendirme ve satılık hayvan ilanları, 81 ilde veteriner ve pet hizmetleri rehberi.',
+      'İlanlar, yerel pet hizmetleri ve güvercin dünyası tek platformda. 81 ilde, ilan vermek ücretsiz.',
   },
 };
 

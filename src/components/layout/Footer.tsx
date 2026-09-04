@@ -59,10 +59,11 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
             <Link href="/" className="mb-4 inline-flex" aria-label="PetSemti ana sayfa">
               <Logo size={40} showTagline />
             </Link>
+            {/* Marka cümlesi site geneliyle aynı; bkz. app/layout.tsx. */}
             <p className="text-sm text-gray-600">
-              Semtinizdeki evcil hayvan ilanlarını ve pet hizmetlerini tek yerde
-              topluyoruz. Sahiplendirmeden güvercinciliğe, veterinerden pet oteline
-              81 ilde. İlan vermek ücretsiz.
+              PetSemti, evcil hayvan sahiplerini ilanlar, yerel pet hizmetleri ve
+              güvercin dünyasıyla buluşturan pet yaşam platformudur. Sahiplendirmeden
+              kayıp ilanına, veterinerden pet oteline 81 ilde. İlan vermek ücretsiz.
             </p>
           </div>
 

@@ -16,7 +16,7 @@ import {
 const config = getServiceConfigBySlug('veteriner')!;
 
 export const metadata: Metadata = {
-  title: `${config.seoTitle} | PetSemti`,
+  title: `${config.seoTitle}`,
   description: config.seoDescription,
 };
 

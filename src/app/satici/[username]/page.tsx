@@ -29,11 +29,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { username } = await params;
   const seller = await getSellerByUsername(username);
-  if (!seller) return { title: 'Satıcı Bulunamadı | PetSemti' };
+  if (!seller) return { title: 'Satıcı Bulunamadı' };
 
   const name = seller.company_title || seller.full_name || `@${seller.username}`;
   return {
-    title: `${name} — Tüm İlanları | PetSemti`,
+    title: `${name} — Tüm İlanları`,
     description: `${name} kullanıcısının PetSemti'deki güncel ilanları.`,
   };
 }

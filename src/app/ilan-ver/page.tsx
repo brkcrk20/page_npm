@@ -5,7 +5,7 @@ import { ArrowRight, Bird, Building2, HeartHandshake, PackageSearch } from 'luci
 import { SERVICE_CONFIGS } from '@/lib/services-config';
 
 export const metadata: Metadata = {
-  title: 'İlan Ver | PetSemti',
+  title: 'İlan Ver',
   description:
     'Sahiplendirme, güvercin, ikinci el pet malzemesi ilanı verin ya da işletmenizi hizmet rehberine ekleyin.',
   robots: { index: false, follow: true },

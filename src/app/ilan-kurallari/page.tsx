@@ -5,7 +5,7 @@ import { Clause, LegalPage } from '@/components/LegalPage';
 import { createSupabasePublicClient, isSupabaseServerConfigured } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
-  title: 'İlan Verme Kuralları | PetSemti',
+  title: 'İlan Verme Kuralları',
   description:
     'PetSemti ilan verme kuralları: yasaklı ırklar, yaş ve aşı şartı, yasaklı içerikler, fotoğraf kuralları ve ilanın kaldırılma sebepleri.',
   alternates: { canonical: '/ilan-kurallari' },

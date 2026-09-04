@@ -15,7 +15,7 @@ import { resolve } from 'node:path';
  */
 
 export const metadata: Metadata = {
-  title: 'Görsel Kaynakları ve Lisanslar | PetSemti',
+  title: 'Görsel Kaynakları ve Lisanslar',
   description:
     'PetSemti üzerinde kullanılan cins görsellerinin kaynakları, telif sahipleri ve lisans bilgileri.',
   // Atıf sayfası kullanıcı için değil yasal yükümlülük için; arama sonuçlarında

@@ -5,7 +5,7 @@ import { Clause, LegalPage } from '@/components/LegalPage';
 import { getSiteContact } from '@/lib/queries/site-settings';
 
 export const metadata: Metadata = {
-  title: 'Gizlilik Politikası | PetSemti',
+  title: 'Gizlilik Politikası',
   description:
     'PetSemti gizlilik politikası: hangi kişisel veriler işleniyor, neden, ne kadar saklanıyor ve KVKK kapsamındaki haklarınız.',
 };

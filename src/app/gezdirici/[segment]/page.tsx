@@ -48,20 +48,20 @@ export async function generateMetadata({
         .filter(Boolean)
         .join(', ');
       return {
-        title: `${data.name}${location ? ` — ${location}` : ''} | ${config.label} | PetSemti`,
+        title: `${data.name}${location ? ` — ${location}` : ''} | ${config.label}`,
         description:
           data.description?.slice(0, 160) ??
           `${data.name}: adres, telefon, çalışma saatleri ve sunulan hizmetler.`,
       };
     }
-    return { title: 'Sayfa Bulunamadı | PetSemti' };
+    return { title: 'Sayfa Bulunamadı' };
   }
 
   const city = await getCityBySlug(segment);
-  if (!city) return { title: 'Sayfa Bulunamadı | PetSemti' };
+  if (!city) return { title: 'Sayfa Bulunamadı' };
 
   return {
-    title: `${city.name} ${config.label} | PetSemti`,
+    title: `${city.name} ${config.label}`,
     description: `${city.name} ilindeki ${config.label.toLocaleLowerCase('tr')}. Çalışma saatleri ve sunulan hizmetlere göre filtreleyin.`,
   };
 }
