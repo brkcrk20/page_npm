@@ -97,6 +97,8 @@ function SearchFiltersInner() {
   const [breedSlug, setBreedSlug] = useState(ALL);
   const [citySlug, setCitySlug] = useState(ALL);
   const [districtSlug, setDistrictSlug] = useState(ALL);
+  /** Malzeme bölümünde seçilen hayvan türü (grup adı). */
+  const [supplyGroup, setSupplyGroup] = useState(ALL);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClientOrNull();
@@ -105,7 +107,7 @@ function SearchFiltersInner() {
     (async () => {
       const [cats, brs, cits] = await Promise.all([
         supabase.from('categories').select('id, name, slug').eq('is_active', true).order('position'),
-        supabase.from('breeds').select('id, name, slug, category_id').eq('is_active', true).order('position'),
+        supabase.from('breeds').select('id, name, slug, category_id, group_name').eq('is_active', true).order('position'),
         supabase.from('cities').select('id, name, slug').order('name'),
       ]);
       // Boş sonuç gelirse yedeği koruyoruz; boş listeyle değiştirmek
@@ -161,14 +163,44 @@ function SearchFiltersInner() {
     [categories]
   );
 
+  /**
+   * Malzeme bölümünde iki kademeli filtre.
+   *
+   * Önce hayvan türü (Kedi, Köpek, Kuş...), sonra o türe ait eşya. Tek düz
+   * listede kedi sahibi köpek kulübesiyle oto koltuk örtüsünün arasında
+   * geziniyordu; kimse malzemeyi böyle aramıyor.
+   *
+   * Gruplar breeds.group_name'den geliyor, ayrı bir tablo yok: eşya türü
+   * zaten alt tür kaydı, grubu da onun bir alanı.
+   */
+  const supplyGroups = useMemo(() => {
+    if (!supplyCategory) return [] as { id: number; name: string; slug: string }[];
+    const seen = new Map<string, number>();
+    for (const b of breeds) {
+      if (b.category_id !== supplyCategory.id) continue;
+      const g = (b as { group_name?: string | null }).group_name;
+      if (g && !seen.has(g)) seen.set(g, seen.size + 1);
+    }
+    // Sıra veritabanındaki position sırasıyla geliyor; "Tüm Hayvanlar" sona.
+    const list = [...seen.keys()].map((g, i) => ({ id: i + 1, name: g, slug: g }));
+    return list.sort((a, b) =>
+      a.name === 'Tüm Hayvanlar' ? 1 : b.name === 'Tüm Hayvanlar' ? -1 : 0
+    );
+  }, [breeds, supplyCategory]);
+
   const filteredBreeds = useMemo(() => {
     // Güvercin bölümünde cins listesi güvercin ırklarına kilitli.
     if (inPigeonSection) {
       return pigeonCategory ? breeds.filter((b) => b.category_id === pigeonCategory.id) : breeds;
     }
-    // Malzeme bölümünde eşya türlerine kilitli.
+    // Malzeme bölümünde eşya türlerine kilitli; tür seçildiyse o gruba.
     if (inSupplySection) {
-      return supplyCategory ? breeds.filter((b) => b.category_id === supplyCategory.id) : [];
+      if (!supplyCategory) return [];
+      const all = breeds.filter((b) => b.category_id === supplyCategory.id);
+      if (supplyGroup === ALL) return all;
+      return all.filter(
+        (b) => (b as { group_name?: string | null }).group_name === supplyGroup
+      );
     }
 
     // Diğer yerlerde kendi dikeyi olan kategorilerin alt türleri görünmez.
@@ -178,7 +210,7 @@ function SearchFiltersInner() {
     if (categorySlug === ALL) return animalsOnly;
     const category = categories.find((c) => c.slug === categorySlug);
     return category ? animalsOnly.filter((b) => b.category_id === category.id) : animalsOnly;
-  }, [breeds, categories, categorySlug, inPigeonSection, inSupplySection, pigeonCategory, supplyCategory]);
+  }, [breeds, categories, categorySlug, inPigeonSection, inSupplySection, pigeonCategory, supplyCategory, supplyGroup]);
 
   function handleSearch() {
     // Kategori seçiliyse yapısal URL'e git: /kopek-ilanlari/toy-poodle gibi.
@@ -222,7 +254,7 @@ function SearchFiltersInner() {
     <div
       className={
         'grid w-full grid-cols-1 gap-2 ' +
-        (inPigeonSection || inSupplySection
+        (inPigeonSection
           ? 'md:grid-cols-[1fr_auto_auto_auto_auto]'
           : 'md:grid-cols-[1fr_auto_auto_auto_auto_auto]')
       }
@@ -241,6 +273,22 @@ function SearchFiltersInner() {
       {/* Güvercin bölümünde tür seçici yok: ziyaretçi zaten güvercinde ve
           oradan köpek/kedi türüne geçmek filtre değil, başka bir bölüme
           atlamak olurdu — o iş üstteki kategori şeridinin. */}
+      {/* Malzeme bölümünde tür = hayvan (kedi, köpek...); eşya listesi buna
+          göre daralıyor. */}
+      {inSupplySection && (
+        <FilterSelect
+          value={supplyGroup}
+          onChange={(v) => {
+            setSupplyGroup(v);
+            setBreedSlug(ALL);
+          }}
+          placeholder="Tüm Türler"
+          allLabel="Tüm Türler"
+          searchPlaceholder="Tür ara..."
+          options={supplyGroups}
+        />
+      )}
+
       {!inPigeonSection && !inSupplySection && (
         <FilterSelect
           value={categorySlug}
@@ -258,9 +306,9 @@ function SearchFiltersInner() {
       <FilterSelect
         value={breedSlug}
         onChange={setBreedSlug}
-        placeholder={inPigeonSection ? 'Tüm Güvercin Irkları' : inSupplySection ? 'Tüm Malzemeler' : 'Tüm Cinsler'}
-        allLabel={inPigeonSection ? 'Tüm Güvercin Irkları' : inSupplySection ? 'Tüm Malzemeler' : 'Tüm Cinsler'}
-        searchPlaceholder={inPigeonSection ? 'Irk ara...' : inSupplySection ? 'Malzeme ara...' : 'Cins ara...'}
+        placeholder={inPigeonSection ? 'Tüm Güvercin Irkları' : inSupplySection ? 'Tüm Eşyalar' : 'Tüm Cinsler'}
+        allLabel={inPigeonSection ? 'Tüm Güvercin Irkları' : inSupplySection ? 'Tüm Eşyalar' : 'Tüm Cinsler'}
+        searchPlaceholder={inPigeonSection ? 'Irk ara...' : inSupplySection ? 'Eşya ara...' : 'Cins ara...'}
         options={filteredBreeds}
       />
 
