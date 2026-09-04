@@ -129,11 +129,15 @@ export function ListingToolbar({
       'Tüm ilanlar');
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border bg-white p-2.5">
+    /* Mobilde kutular birbirinin içine giriyordu: sıralama, kimden, fiyat
+       ve "Aramayı Kaydet" tek bir sarmalayan satıra bırakılmıştı ve dar
+       ekranda rastgele yerlere düşüyordu. Artık mobilde açık bir dikey
+       düzen var, masaüstünde eski tek şerit korunuyor. */
+    <div className="mb-4 space-y-2 rounded-xl border bg-card p-2.5 md:flex md:flex-wrap md:items-center md:gap-2 md:space-y-0">
       <div className="flex items-center gap-2">
         <ArrowUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
         <Select value={sort} onValueChange={setSort}>
-          <SelectTrigger className="h-9 w-[190px]">
+          <SelectTrigger className="h-9 w-full md:w-[190px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -149,7 +153,7 @@ export function ListingToolbar({
       <div className="flex items-center gap-2">
         <Store className="h-4 w-4 shrink-0 text-muted-foreground" />
         <Select value={kimden} onValueChange={setKimden}>
-          <SelectTrigger className="h-9 w-[140px]" aria-label="Kimden">
+          <SelectTrigger className="h-9 w-full md:w-[140px]" aria-label="Kimden">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -162,22 +166,16 @@ export function ListingToolbar({
         </Select>
       </div>
 
-      {context !== undefined && (
-        <div className="ml-auto">
-          <SaveSearchButton baslik={aramaBasligi} context={context} />
-        </div>
-      )}
-
       {showPrice && (
-        <div className="flex flex-1 flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">Fiyat</span>
+        <div className="flex flex-1 items-center gap-2">
+          <span className="shrink-0 text-sm text-muted-foreground">Fiyat</span>
           <Input
             value={min}
             onChange={(e) => setMin(e.target.value.replace(/\D/g, ''))}
             onKeyDown={(e) => e.key === 'Enter' && applyPrice()}
             inputMode="numeric"
             placeholder="en az"
-            className="h-9 w-24"
+            className="h-9 w-full min-w-0 md:w-24"
             aria-label="En az fiyat"
           />
           <span className="text-muted-foreground">–</span>
@@ -187,10 +185,10 @@ export function ListingToolbar({
             onKeyDown={(e) => e.key === 'Enter' && applyPrice()}
             inputMode="numeric"
             placeholder="en çok"
-            className="h-9 w-24"
+            className="h-9 w-full min-w-0 md:w-24"
             aria-label="En çok fiyat"
           />
-          <Button size="sm" variant="outline" className="h-9" onClick={applyPrice}>
+          <Button size="sm" variant="outline" className="h-9 shrink-0" onClick={applyPrice}>
             Uygula
           </Button>
           {priceActive && (
@@ -199,6 +197,13 @@ export function ListingToolbar({
               Temizle
             </Button>
           )}
+        </div>
+      )}
+
+      {/* Aramayı kaydet mobilde kendi satırında, masaüstünde şeridin sağ ucunda. */}
+      {context !== undefined && (
+        <div className="border-t pt-2 md:ml-auto md:border-0 md:pt-0">
+          <SaveSearchButton baslik={aramaBasligi} context={context} />
         </div>
       )}
     </div>

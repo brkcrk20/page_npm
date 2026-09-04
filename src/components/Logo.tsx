@@ -25,8 +25,11 @@ const KEDI = [
 ];
 
 /** Marka renkleri. Lacivert marka kimliğinden, turuncu sitenin ana rengi. */
-const LACIVERT = '#1E2A44';
-const TURUNCU = '#ec5822';
+// Marka renkleri site paletiyle aynı: ana renk petrol, vurgu amber.
+// Turuncu amblem yeni palette yabancı duruyordu.
+const KOYU = '#123B42';
+const PETROL = '#0E6D7C';
+const AMBER = '#F9A410';
 
 export function LogoMark({
   size = 32,
@@ -39,10 +42,10 @@ export function LogoMark({
   className?: string;
 }) {
   const mono = variant === 'mono';
-  const yuva = mono ? 'currentColor' : LACIVERT;
-  const kalp = mono ? 'currentColor' : TURUNCU;
-  const kopek = mono ? 'currentColor' : LACIVERT;
-  const kedi = mono ? 'currentColor' : TURUNCU;
+  const yuva = mono ? 'currentColor' : PETROL;
+  const kalp = mono ? 'currentColor' : AMBER;
+  const kopek = mono ? 'currentColor' : KOYU;
+  const kedi = mono ? 'currentColor' : PETROL;
 
   return (
     <svg

@@ -18,9 +18,12 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['PT Sans', 'sans-serif'],
-        headline: ['Poppins', 'sans-serif'],
-        code: ['monospace'],
+        // Poppins/PT Sans yaygın ve karaktersiz bir ikiliydi. Outfit
+        // başlıklarda daha dar ve modern, Inter gövdede Türkçe
+        // aksanlı harflerde en okunaklı seçeneklerden biri.
+        body: ['Inter', 'system-ui', 'sans-serif'],
+        headline: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
+        code: ['ui-monospace', 'monospace'],
       },
       colors: {
         border: 'hsl(var(--border))',

@@ -170,10 +170,10 @@ export function Header() {
     if (!user) {
       return (
         <div className="hidden md:flex items-center space-x-2">
-          <Button variant="ghost" asChild className="hover:bg-white/20 hover:text-white">
+          <Button variant="ghost" asChild>
             <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
           </Button>
-          <Button variant="outline" asChild className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-white/20 hover:text-white">
+          <Button variant="outline" asChild>
             <Link href="/kayit">
               <UserPlus className="mr-2 h-4 w-4" />
               Kayıt Ol
@@ -187,7 +187,7 @@ export function Header() {
       <div className="flex items-center space-x-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 hover:bg-white/20 hover:text-white px-3">
+            <Button variant="ghost" className="flex items-center gap-2 px-3">
               <span className="font-medium">{profile?.full_name ?? user.email}</span>
               <ChevronDown className="h-4 w-4" />
             </Button>
@@ -230,13 +230,11 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="ghost" size="icon" className="hover:bg-white/20 hover:text-white">
-          <MessageSquare className="h-5 w-5" />
-          <span className="sr-only">Mesajlar</span>
-        </Button>
-        <Button variant="ghost" size="icon" className="hover:bg-white/20 hover:text-white">
-          <Bell className="h-5 w-5" />
-          <span className="sr-only">Bildirimler</span>
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/mesajlarim">
+            <MessageSquare className="h-5 w-5" />
+            <span className="sr-only">Mesajlar</span>
+          </Link>
         </Button>
       </div>
     );
@@ -244,26 +242,30 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-primary text-primary-foreground">
+      {/* Başlık çubuğu beyaz.
+          Dolu renkli bant en yaygın ilan sitesi kalıbıydı ve emsallerle aynı
+          silueti veriyordu. Beyaz zemin hem markayı (renkli amblem) öne
+          çıkarıyor hem de altındaki bölüm menüsüyle tek bir blok gibi
+          okunuyor. */}
+      <header className="sticky top-0 z-50 w-full border-b bg-white text-foreground">
         <div className="container flex h-16 items-center px-5">
-          {/* Turuncu zeminde tek renk amblem: iki renkli sürümdeki turuncu
-              kedi arka planda kayboluyordu. */}
+          {/* Beyaz zeminde renkli amblem. */}
           <Link href="/" className="mr-6 flex items-center" aria-label="PetSemti ana sayfa">
-            <Logo variant="mono" size={36} />
+            <Logo size={36} />
           </Link>
           
           <div className="flex flex-1 items-center justify-end space-x-4">
               <div className="hidden md:flex items-center space-x-4">
                 {renderAuthContent()}
               </div>
-            <Button asChild variant="secondary">
+            <Button asChild>
               <Link href={user ? ilanVerHref(pathname) : '/login'}>İlan Ver</Link>
             </Button>
           </div>
 
           <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" className="md:hidden hover:bg-white/20">
+              <Button variant="ghost" size="icon" className="md:hidden">
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle Menu</span>
               </Button>
@@ -367,7 +369,7 @@ export function Header() {
           Burada on iki bağlantı düz bir şerit hâlinde, hepsi aynı ağırlıkta
           duruyordu; artık üç öbek var (bkz. SectionNav). */}
       {showCategoriesAndFilters && (
-        <div className="bg-white shadow-sm border-b py-2">
+        <div className="border-b bg-white py-1">
           <div className="w-full md:container md:mx-auto">
             
             <SectionNav />
