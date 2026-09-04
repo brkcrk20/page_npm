@@ -158,6 +158,8 @@ export function CreateListingForm({
     maxDurationSeconds: 180,
     maxSizeMb: 120,
   });
+  /** İlan vermeden önce kimlik doğrulaması gerekiyor mu (app_settings). */
+  const [kimlikZorunlu, setKimlikZorunlu] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
 
@@ -236,14 +238,26 @@ export function CreateListingForm({
         supabase.from('breeds').select('id, name, slug, category_id, group_name').eq('is_active', true).order('position'),
         supabase.from('cities').select('id, name, slug').order('name'),
       ]);
+      /**
+       * Doğrulama zorunluluğu ayardan okunuyor.
+       *
+       * Ekrandaki kapı sabit olsaydı, veritabanındaki kural kapatıldığında
+       * bile kullanıcı forma giremezdi: ayar açık, kapı kapalı. İki taraf
+       * aynı kaynağa bakıyor.
+       */
       const settings = await supabase
         .from('app_settings')
-        .select('value')
-        .eq('key', 'video')
-        .maybeSingle();
+        .select('key, value')
+        .in('key', ['video', 'verification']);
 
-      if (settings.data?.value) {
-        const v = settings.data.value as Record<string, any>;
+      const ayarlar = new Map(
+        ((settings.data as { key: string; value: any }[]) ?? []).map((r) => [r.key, r.value])
+      );
+
+      setKimlikZorunlu(ayarlar.get('verification')?.require_identity === true);
+
+      if (ayarlar.get('video')) {
+        const v = ayarlar.get('video') as Record<string, any>;
         setVideoConfig({
           enabled: v.enabled !== false,
           maxVideos: Number(v.max_videos_per_listing ?? 5),
@@ -710,7 +724,7 @@ export function CreateListingForm({
    * kullanıcıyı formun sonunda hataya çarptırmamak için. Düzenleme kipinde
    * kontrol edilmiyor: ilan zaten doğrulanmış bir hesapla açılmış.
    */
-  if (!isEdit && profile?.identity_status !== 'dogrulandi') {
+  if (kimlikZorunlu && !isEdit && profile?.identity_status !== 'dogrulandi') {
     const inceleniyor = profile?.identity_status === 'inceleniyor';
     return (
       <div className="mx-auto max-w-lg px-5 py-16 text-center">

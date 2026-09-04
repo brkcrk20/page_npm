@@ -82,7 +82,17 @@ const corporateSchema = z.object({
   companyType: z.enum(['Sahis', 'Limited', 'Anonim'], {
     errorMap: () => ({ message: 'Şirket türü seçin.' }),
   }),
-  tcNo: z.string().trim().length(11, 'TC Kimlik Numarası 11 haneli olmalı.'),
+  /**
+   * TC kimlik numarası kayıt sırasında istenmiyor.
+   *
+   * Kurumsal kaydı açan kişinin TC'si zorunlu alandı ve kayıt ekranında
+   * duruyordu. İşletmeyi tanımlayan şey vergi numarası; yetkilinin TC'si
+   * kayıt anında hiçbir kontrolde kullanılmıyordu, yalnızca saklanıyordu.
+   * Gereksiz yere hassas veri toplamamak için alan kaldırıldı.
+   *
+   * Kimlik doğrulaması ayrı bir akış (/profil/dogrulama) ve orada
+   * TC ya da vergi numarasından biri isteniyor.
+   */
   taxNo: z.string().trim().min(10, 'Vergi numarası en az 10 haneli olmalı.'),
   taxOffice: z.string().trim().min(2, 'Vergi dairesi gerekli.'),
   companyAddress: z.string().trim().min(10, 'Açık adres gerekli.'),
@@ -182,7 +192,6 @@ export function RegisterForm() {
     // anlaşılmaz hata veriyor.
     if (type === 'kurumsal') {
       form.setValue('companyTitle' as any, '');
-      form.setValue('tcNo' as any, '');
       form.setValue('taxNo' as any, '');
       form.setValue('taxOffice' as any, '');
       form.setValue('companyAddress' as any, '');
@@ -244,7 +253,6 @@ export function RegisterForm() {
       if (values.userType === 'kurumsal') {
         metadata.company_title = values.companyTitle;
         metadata.company_type = values.companyType;
-        metadata.national_id = values.tcNo;
         metadata.tax_number = values.taxNo;
         metadata.tax_office = values.taxOffice;
         metadata.company_address = values.companyAddress;
@@ -454,10 +462,7 @@ export function RegisterForm() {
                 )}
               />
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field control={form.control} name="tcNo" label="TC Kimlik No" placeholder="11 haneli" />
-                <Field control={form.control} name="taxNo" label="Vergi No" placeholder="10 veya 11 haneli" />
-              </div>
+              <Field control={form.control} name="taxNo" label="Vergi No" placeholder="10 veya 11 haneli" />
 
               <Field control={form.control} name="taxOffice" label="Vergi Dairesi" placeholder="Örn: Kadıköy" />
 

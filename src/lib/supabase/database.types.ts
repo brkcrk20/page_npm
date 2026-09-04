@@ -2516,6 +2516,7 @@ export type Database = {
         Args: { p_role: string; p_user_id: string }
         Returns: undefined
       }
+      admin_user_detail: { Args: { p_user_id: string }; Returns: Json }
       confirm_order_payment: {
         Args: { p_provider_ref?: string; p_public_ref: string }
         Returns: undefined

@@ -7,6 +7,7 @@ import {
   Ban,
   Building2,
   CheckCircle2,
+  Eye,
   Loader2,
   Search,
   Shield,
@@ -29,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { UserDetailDialog } from './UserDetailDialog';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import { formatTrPhone } from '@/lib/phone';
 import type { Database } from '@/lib/supabase/database.types';
@@ -74,6 +76,8 @@ function AdminUsersInner() {
   const [rows, setRows] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  /** Detayı açık olan kullanıcı. */
+  const [detayId, setDetayId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AdminUser | null>(null);
 
   const load = useCallback(async () => {
@@ -146,6 +150,7 @@ function AdminUsersInner() {
   }
 
   return (
+    <>
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Kullanıcılar</h1>
 
@@ -258,6 +263,18 @@ function AdminUsersInner() {
                           </Button>
                         )}
 
+                        {/* Detay: liste alanları bir hesap hakkında karar
+                            vermeye yetmiyordu. */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={() => setDetayId(row.id)}
+                        >
+                          <Eye className="mr-1 h-3 w-3" />
+                          Detay
+                        </Button>
+
                         <Button
                           size="sm"
                           variant="outline"
@@ -359,6 +376,9 @@ function AdminUsersInner() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+
+      <UserDetailDialog userId={detayId} onClose={() => setDetayId(null)} />
+    </>
   );
 }
 
