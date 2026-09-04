@@ -32,7 +32,7 @@ export function organizationSchema(contact: {
     name: 'PetSemti',
     legalName: contact.legal_name,
     url: SITE_URL,
-    logo: `${SITE_URL}/favicon.ico`,
+    logo: `${SITE_URL}/marka/amblem.svg`,
     email: contact.email,
     telephone: contact.phone,
     sameAs: sameAs.length ? sameAs : undefined,

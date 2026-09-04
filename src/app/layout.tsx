@@ -40,7 +40,14 @@ export const metadata: Metadata = {
     'veteriner',
     'pet oteli',
   ],
-  icons: { icon: '/favicon.ico' },
+  icons: {
+    icon: [
+      // SVG önce: her boyutta net ve tek dosya. .ico eski tarayıcılar için.
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32' },
+    ],
+    apple: '/marka/amblem.svg',
+  },
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',

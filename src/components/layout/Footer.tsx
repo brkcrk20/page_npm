@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 import type { SiteContact } from '@/lib/queries/site-settings';
+import { Logo } from '@/components/Logo';
 import {
   PawPrint,
   Twitter,
@@ -55,9 +56,8 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Column 1: Brand */}
           <div className="col-span-1 lg:col-span-1">
-            <Link href="/" className="flex items-center space-x-2 mb-4">
-              <PawPrint className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold font-headline">petsemti</span>
+            <Link href="/" className="mb-4 inline-flex" aria-label="PetSemti ana sayfa">
+              <Logo size={40} showTagline />
             </Link>
             <p className="text-sm text-gray-600">
               Semtinizdeki evcil hayvan ilanlarını ve pet hizmetlerini tek yerde
