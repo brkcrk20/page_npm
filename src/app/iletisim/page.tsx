@@ -4,6 +4,7 @@ import { AlertTriangle, Building2, Mail, MapPin, MessageCircle, Phone } from 'lu
 
 import { Button } from '@/components/ui/button';
 import { getSiteContact } from '@/lib/queries/site-settings';
+import { ContactForm } from './ContactForm';
 
 export const metadata: Metadata = {
   title: 'İletişim | PetSemti',
@@ -82,9 +83,25 @@ export default async function Page() {
           </p>
         </section>
 
-        {hasChannel ? (
+        {/* Form her koşulda burada.
+            Eskiden ayarlar boşken sayfa "iletişim bilgileri henüz
+            yayınlanmadı" deyip kullanıcıyı elleri boş gönderiyordu — oysa
+            iletişim sayfasına gelen kişi tam olarak iletişim kurmak
+            istiyor. Telefon ve e-posta girildiğinde aşağıda ayrıca
+            görünüyor; form onlara bağlı değil. */}
+        <section className="mt-6 rounded-xl border bg-white p-6">
+          <h2 className="text-lg font-bold">Bize yazın</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Mesajınız doğrudan bize ulaşır; e-posta adresinize dönüş yaparız.
+          </p>
+          <div className="mt-4">
+            <ContactForm />
+          </div>
+        </section>
+
+        {hasChannel && (
           <section className="mt-6 rounded-xl border bg-white p-6">
-            <h2 className="text-lg font-bold">Bize ulaşın</h2>
+            <h2 className="text-lg font-bold">Diğer kanallar</h2>
             <div className="mt-4 space-y-3">
               {contact.email && (
                 <Channel
@@ -117,17 +134,6 @@ export default async function Page() {
                 <Channel icon={Building2} label="Unvan" value={contact.legal_name} />
               )}
             </div>
-          </section>
-        ) : (
-          /* Ayarlar boşken uydurma bir numara göstermek yerine durumu
-             olduğu gibi söylüyoruz. */
-          <section className="mt-6 rounded-xl border border-dashed bg-white p-6 text-center">
-            <Mail className="mx-auto h-8 w-8 text-muted-foreground" />
-            <h2 className="mt-2 font-bold">İletişim bilgileri henüz yayınlanmadı</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Bu arada hesabınızla ilgili işlemlerin çoğunu yukarıdaki bağlantılardan
-              yapabilirsiniz.
-            </p>
           </section>
         )}
 

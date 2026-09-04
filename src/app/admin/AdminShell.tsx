@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   Building2,
   Flag,
+  Inbox,
   ChevronLeft,
   LayoutGrid,
   List,
@@ -40,6 +41,7 @@ const ITEMS = [
   { href: '/admin/isletmeler', label: 'İşletmeler', icon: Building2 },
   { href: '/admin/sikayetler', label: 'Şikayetler', icon: Flag },
   { href: '/admin/dogrulamalar', label: 'Kimlik Doğrulama', icon: ShieldCheck },
+  { href: '/admin/mesajlar', label: 'İletişim Mesajları', icon: Inbox },
   { href: '/admin/siparisler', label: 'Siparişler', icon: Receipt },
   { href: '/admin/ayarlar', label: 'Ayarlar', icon: Settings },
 ] as const;

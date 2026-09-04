@@ -39,6 +39,7 @@ type Stats = {
   pendingProviders: number;
   pendingOrders: number;
   pendingIdentity: number;
+  pendingMessages: number;
   monetization: boolean;
   autoApprove: boolean;
 };
@@ -50,7 +51,7 @@ export default function AdminOverviewPage() {
     const supabase = getSupabaseBrowserClient();
     // Tablo adı şemadaki isimlerle sınırlı: serbest metin, tipli istemcinin
     // yakalayabileceği bir yazım hatasını çalışma zamanına bırakırdı.
-    type Countable = 'listings' | 'profiles' | 'service_providers' | 'orders' | 'identity_requests';
+    type Countable = 'listings' | 'profiles' | 'service_providers' | 'orders' | 'identity_requests' | 'contact_messages';
 
     const count = (table: Countable, apply?: (q: any) => any): Promise<number> => {
       const q = supabase.from(table).select('*', { count: 'exact', head: true });
@@ -69,10 +70,12 @@ export default function AdminOverviewPage() {
         count('orders', (q: any) => q.eq('status', 'odeme_bekleniyor')),
         // Kimlik doğrulama elle onaylanıyor; bekleyen başvuru gözden kaçmamalı.
         count('identity_requests', (q: any) => q.eq('status', 'inceleniyor')),
+        // E-posta sağlayıcısı yok; mesajlar yalnızca panelde görülüyor.
+        count('contact_messages', (q: any) => q.eq('status', 'yeni')),
       ]);
       const [
         listings, published, pendingListings, users, admins,
-        providers, pendingProviders, pendingOrders, pendingIdentity,
+        providers, pendingProviders, pendingOrders, pendingIdentity, pendingMessages,
       ] = counts as number[];
 
       const settings = await supabase
@@ -86,7 +89,7 @@ export default function AdminOverviewPage() {
 
       setStats({
         listings, published, pendingListings, users, admins,
-        providers, pendingProviders, pendingOrders, pendingIdentity,
+        providers, pendingProviders, pendingOrders, pendingIdentity, pendingMessages,
         monetization: Boolean(byKey.get('monetization')?.enabled),
         autoApprove: byKey.get('listing')?.auto_approve !== false,
       });
@@ -102,7 +105,11 @@ export default function AdminOverviewPage() {
   }
 
   const pendingTotal =
-    stats.pendingListings + stats.pendingProviders + stats.pendingOrders + stats.pendingIdentity;
+    stats.pendingListings +
+    stats.pendingProviders +
+    stats.pendingOrders +
+    stats.pendingIdentity +
+    stats.pendingMessages;
 
   return (
     <div className="space-y-6">
@@ -134,6 +141,11 @@ export default function AdminOverviewPage() {
                 <Link href="/admin/dogrulamalar">
                   {stats.pendingIdentity} kimlik doğrulaması bekliyor
                 </Link>
+              </Button>
+            )}
+            {stats.pendingMessages > 0 && (
+              <Button asChild size="sm" variant="outline" className="bg-white">
+                <Link href="/admin/mesajlar">{stats.pendingMessages} yeni mesaj</Link>
               </Button>
             )}
             {stats.pendingOrders > 0 && (

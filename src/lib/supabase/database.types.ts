@@ -165,6 +165,77 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_messages: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          email: string
+          id: number
+          listing_id: number | null
+          message: string
+          name: string
+          status: Database["public"]["Enums"]["contact_status"]
+          subject: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          email: string
+          id?: never
+          listing_id?: number | null
+          message: string
+          name: string
+          status?: Database["public"]["Enums"]["contact_status"]
+          subject: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          email?: string
+          id?: never
+          listing_id?: number | null
+          message?: string
+          name?: string
+          status?: Database["public"]["Enums"]["contact_status"]
+          subject?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_messages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           buyer_archived: boolean
@@ -2208,6 +2279,7 @@ export type Database = {
     }
     Enums: {
       account_type: "bireysel" | "kurumsal"
+      contact_status: "yeni" | "okundu" | "yanitlandi" | "kapatildi"
       identity_kind: "tc" | "vergi"
       listing_kind:
         | "satilik"
@@ -2395,6 +2467,7 @@ export const Constants = {
   public: {
     Enums: {
       account_type: ["bireysel", "kurumsal"],
+      contact_status: ["yeni", "okundu", "yanitlandi", "kapatildi"],
       identity_kind: ["tc", "vergi"],
       listing_kind: [
         "satilik",
