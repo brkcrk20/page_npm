@@ -33,6 +33,8 @@ type Conversation = {
   buyer_unread: number;
   seller_unread: number;
   listings: { slug: string; id: number } | null;
+  buyer: { full_name: string | null; username: string | null } | null;
+  seller: { full_name: string | null; username: string | null } | null;
 };
 
 type Message = {
@@ -72,7 +74,9 @@ export function MessagesClient() {
       .select(
         `id, listing_id, listing_title, buyer_id, seller_id,
          last_message_at, last_message_preview, buyer_unread, seller_unread,
-         listings ( id, slug )`
+         listings ( id, slug ),
+         buyer:public_profiles!conversations_buyer_id_fkey ( full_name, username ),
+         seller:public_profiles!conversations_seller_id_fkey ( full_name, username )`
       )
       .order('last_message_at', { ascending: false, nullsFirst: false });
 
@@ -300,19 +304,46 @@ export function MessagesClient() {
                     İlk mesajı siz yazın.
                   </p>
                 ) : (
-                  messages.map((message) => {
+                  /**
+                   * Mesajlar kimin yazdığı belli olmadan alt alta akıyordu.
+                   * İki sebep vardı: karşı tarafın balonu neredeyse beyaz
+                   * bir zemin üstünde %96 gri olduğu için sınırı
+                   * seçilmiyordu, ve hiçbir yerde gönderenin adı yoktu.
+                   *
+                   * Şimdi ardışık mesajlar öbekleniyor: öbeğin ilk
+                   * mesajının üstünde gönderenin adı yazıyor, sonrakiler
+                   * sade devam ediyor. Gelen balonun kenarlığı var.
+                   */
+                  messages.map((message, i) => {
                     const mine = message.sender_id === user.id;
+                    const oncekiFarkli =
+                      i === 0 || messages[i - 1]!.sender_id !== message.sender_id;
+                    const gonderenAdi = mine
+                      ? 'Siz'
+                      : (active?.buyer_id === message.sender_id
+                          ? active?.buyer?.full_name || active?.buyer?.username
+                          : active?.seller?.full_name || active?.seller?.username) ?? 'Kullanıcı';
+
                     return (
                       <div
                         key={message.id}
-                        className={cn('flex', mine ? 'justify-end' : 'justify-start')}
+                        className={cn(
+                          'flex flex-col',
+                          mine ? 'items-end' : 'items-start',
+                          oncekiFarkli ? 'mt-4 first:mt-0' : 'mt-1'
+                        )}
                       >
+                        {oncekiFarkli && (
+                          <span className="mb-1 px-1 text-xs font-semibold text-muted-foreground">
+                            {gonderenAdi}
+                          </span>
+                        )}
                         <div
                           className={cn(
                             'max-w-[75%] rounded-2xl px-3.5 py-2 text-sm',
                             mine
                               ? 'rounded-br-sm bg-primary text-primary-foreground'
-                              : 'rounded-bl-sm bg-secondary'
+                              : 'rounded-bl-sm border bg-secondary text-secondary-foreground'
                           )}
                         >
                           <p className="whitespace-pre-line break-words">{message.body}</p>

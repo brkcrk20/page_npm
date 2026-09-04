@@ -24,7 +24,14 @@ export type ServiceConfig = {
   unit: string;
   seoTitle: string;
   seoDescription: string;
-  /** Kayıt formundaki çağrı */
+  /**
+   * Kayıt formundaki çağrı.
+   *
+   * Hepsi İŞLETME ya da HİZMET diyor, hiçbiri "profil" demiyor. Gezdirici
+   * ve eğitmen sayfalarında "Profilinizi Ekleyin" yazıyordu; aynı akış
+   * kurumsal hesap isteyip işletme kaydı açtığı için bu, kullanıcıya iki
+   * farklı şey vaat ediyordu — kişisel profil mi, işletme kaydı mı?
+   */
   registerCta: string;
 };
 
@@ -77,7 +84,7 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
     seoTitle: 'Köpek Gezdirme Hizmeti — Güvenilir Gezdiriciler',
     seoDescription:
       'Gün içinde köpeğinizi gezdirecek deneyimli gezdiriciler. Grup veya birebir yürüyüş, konum paylaşımı ve sigortalı hizmet seçenekleri.',
-    registerCta: 'Profilinizi Ekleyin',
+    registerCta: 'Hizmetinizi Ekleyin',
   },
   {
     type: 'egitmen',
@@ -87,7 +94,7 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
     seoTitle: 'Köpek Eğitmenleri — Temel İtaat ve Davranış Eğitimi',
     seoDescription:
       'Temel itaat, tuvalet eğitimi ve davranış problemleri konusunda çalışan pet eğitmenleri. Evde ders veren ve yatılı eğitim sunanları karşılaştırın.',
-    registerCta: 'Profilinizi Ekleyin',
+    registerCta: 'Hizmetinizi Ekleyin',
   },
   {
     type: 'petshop',

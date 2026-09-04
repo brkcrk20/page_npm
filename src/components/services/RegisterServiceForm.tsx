@@ -29,6 +29,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import { WEEKDAY_NAMES } from '@/lib/opening-hours';
 import type { ServiceConfig } from '@/lib/services-config';
+import { GirisDaveti } from '@/components/GirisDaveti';
 
 /**
  * Hizmet sağlayıcı kayıt formu (yedi kategorinin hepsi için).
@@ -89,7 +90,8 @@ export function RegisterServiceForm({ config }: { config: ServiceConfig }) {
   const cityId = form.watch('cityId');
 
   useEffect(() => {
-    if (!isUserLoading && !user) router.replace('/login');
+    // Giriş yapmamış kullanıcı artık yönlendirilmiyor; ne yapması
+    // gerektiğini anlatan bir ekran görüyor (bkz. GirisDaveti).
   }, [isUserLoading, user, router]);
 
   useEffect(() => {
@@ -224,7 +226,24 @@ export function RegisterServiceForm({ config }: { config: ServiceConfig }) {
       </div>
     );
   }
-  if (!user) return null;
+  if (!user) {
+    return (
+      <GirisDaveti
+        baslik={`İşletmenizi PetSemti'de yayınlayın`}
+        aciklama="Doğrulama sonrası işletmeniz ilgili şehir ve hizmet kategorilerinde listelenir."
+        girisEtiketi="Giriş Yap"
+        kayitEtiketi="Kurumsal Hesap Oluştur"
+        donusYolu={`/${config.slug}/kayit`}
+        icon={Building2}
+        altNot={
+          <>
+            Rehber kaydı kurumsal hesap gerektirir. Kayıt ücretsizdir; başvurunuz
+            yayına alınmadan önce incelenir.
+          </>
+        }
+      />
+    );
+  }
 
   /**
    * Rehber kaydı işletmelere ait. Kural veritabanında

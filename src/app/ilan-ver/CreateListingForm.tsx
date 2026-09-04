@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,6 +11,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
+import { GirisDaveti } from '@/components/GirisDaveti';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -135,6 +136,7 @@ export function CreateListingForm({
   preset,
 }: { listingId?: number; preset?: ListingPreset } = {}) {
   const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
   const { user, profile, isUserLoading, isProfileLoading } = useSupabaseAuth();
 
@@ -220,10 +222,8 @@ export function CreateListingForm({
   );
   const cityId = form.watch('cityId');
 
-  // Giriş yapmamış kullanıcıyı giriş sayfasına gönder.
-  useEffect(() => {
-    if (!isUserLoading && !user) router.replace('/login');
-  }, [isUserLoading, user, router]);
+  // Giriş yapmamış kullanıcı artık yönlendirilmiyor; aşağıda ne yapması
+  // gerektiğini anlatan bir ekran görüyor (bkz. GirisDaveti).
 
   // Katalog verisi. Kategori ve cins listeleri artık koda gömülü değil,
   // veritabanından geliyor — admin panelinden cins eklendiğinde form
@@ -663,7 +663,21 @@ export function CreateListingForm({
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <GirisDaveti
+        baslik="İlan vermek için giriş yapın"
+        aciklama="Ücretsiz üyelik oluşturun, ardından ilanınızı birkaç adımda yayınlayın."
+        donusYolu={pathname}
+        altNot={
+          <>
+            İlan vermek ücretsizdir. Yayınlamadan önce bir kez kimlik doğrulaması
+            yapmanız gerekir.
+          </>
+        }
+      />
+    );
+  }
 
   /**
    * Telefonsuz ilan verilemiyor — kural veritabanında (listings_guard) ama

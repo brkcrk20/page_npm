@@ -17,7 +17,7 @@ import Link from 'next/link';
 import { Checkbox } from '@/components/ui/checkbox';
 import React, { useState } from 'react';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -31,6 +31,7 @@ const formSchema = z.object({
 export function LoginForm() {
   const supabase = getSupabaseBrowserClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   // Hata yalnızca toast ile gösterilirse mobilde fark edilmiyor: bildirim
@@ -152,8 +153,20 @@ export function LoginForm() {
       return;
     }
 
+    /**
+     * Girişten sonra kullanıcı geldiği yere dönüyor.
+     *
+     * "İlan Ver"e basıp giriş yapan kullanıcı ana sayfaya düşüyordu ve
+     * ilan verme akışını baştan bulması gerekiyordu.
+     *
+     * Yalnızca site içi yollar kabul ediliyor: adres çubuğuna yazılan
+     * dış bir adrese yönlendirmek açık yönlendirme açığı olurdu.
+     */
+    const donus = searchParams.get('donus');
+    const guvenli = donus && donus.startsWith('/') && !donus.startsWith('//') ? donus : '/';
+
     // refresh(): sunucu component'leri yeni oturum çerezini görsün.
-    router.push('/');
+    router.push(guvenli);
     router.refresh();
   }
 

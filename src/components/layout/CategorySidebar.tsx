@@ -104,6 +104,8 @@ export function CategorySidebar({
    * kategoriler arasında arıyor.
    */
   const [openCategoryIds, setOpenCategoryIds] = useState<number[] | null>(null);
+  /** "Tümünü Gör" ile ilanı olmayan cinsleri de açılan kategoriler. */
+  const [expandedAll, setExpandedAll] = useState<Set<number>>(() => new Set());
 
   const normalized = query.trim().toLocaleLowerCase('tr');
 
@@ -278,40 +280,93 @@ export function CategorySidebar({
                 {/* Kapalı kategori HİÇ basılmıyor. hidden ile gizlemek
                     yeterli değildi: 161 satır yine DOM'a giriyor, HTML'i
                     şişiriyor ve React'e boşuna iş çıkarıyordu. */}
-                {open && (
-                <ul>
-                  {category.breeds.map((breed) => (
-                    <li key={breed.id}>
-                      <Link
-                        href={`/${category.slug}/${breed.slug}`}
-                        className={cn(
-                          'flex items-center gap-3 border-b px-4 py-2 text-sm transition-colors hover:bg-secondary/60',
-                          breed.slug === activeBreedSlug
-                            ? 'bg-primary/8 font-semibold text-primary'
-                            : 'text-foreground'
-                        )}
-                      >
-                        <BreedAvatar
-                          breedName={breed.name}
-                          breedSlug={breed.slug}
-                          categorySlug={category.slug}
-                          categoryCode={category.code}
-                          categoryName={category.name}
-                        />
-                        <span className="min-w-0 flex-1 truncate">{breed.name}</span>
-                        <span
-                          className={cn(
-                            'shrink-0 text-xs',
-                            breed.count > 0 ? 'font-semibold text-primary' : 'text-muted-foreground'
-                          )}
+                {open && (() => {
+                  /**
+                   * Popüler cinsler önce, tamamı istendiğinde.
+                   *
+                   * 161 cinsin tamamı alt alta diziliyordu ve ilanı olan üç
+                   * cins, ilanı olmayan yüz elli sekizin arasında
+                   * kayboluyordu. Menünün asıl işi "nerede ilan var"
+                   * sorusunu cevaplamak.
+                   *
+                   * İlanı olanlar sayısıyla birlikte üstte; geri kalanı
+                   * "Tümünü Gör" ile aynı listenin devamı olarak açılıyor.
+                   * Ayrı bir sayfaya göndermek, tek bir cinse bakmak isteyen
+                   * kullanıcıyı gereksiz bir adıma sokardı.
+                   */
+                  const populer = category.breeds.filter((b) => b.count > 0);
+                  const digerleri = category.breeds.filter((b) => b.count === 0);
+                  const hepsiAcik = expandedAll.has(category.id);
+                  const gosterilen = hepsiAcik ? category.breeds : populer;
+
+                  return (
+                    <>
+                      {populer.length > 0 && !hepsiAcik && (
+                        <p className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          Popüler cinsler
+                        </p>
+                      )}
+
+                      <ul>
+                        {gosterilen.map((breed) => (
+                          <li key={breed.id}>
+                            <Link
+                              href={`/${category.slug}/${breed.slug}`}
+                              className={cn(
+                                'flex items-center gap-3 border-b px-4 py-2 text-sm transition-colors hover:bg-secondary/60',
+                                breed.slug === activeBreedSlug
+                                  ? 'bg-primary/8 font-semibold text-primary'
+                                  : 'text-foreground'
+                              )}
+                            >
+                              <BreedAvatar
+                                breedName={breed.name}
+                                breedSlug={breed.slug}
+                                categorySlug={category.slug}
+                                categoryCode={category.code}
+                                categoryName={category.name}
+                              />
+                              <span className="min-w-0 flex-1 truncate">{breed.name}</span>
+                              {breed.count > 0 && (
+                                <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-primary">
+                                  {breed.count} ilan
+                                </span>
+                              )}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {digerleri.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedAll((prev) => {
+                              const yeni = new Set(prev);
+                              if (yeni.has(category.id)) yeni.delete(category.id);
+                              else yeni.add(category.id);
+                              return yeni;
+                            })
+                          }
+                          className="flex w-full items-center justify-center gap-1 border-b px-4 py-2 text-xs font-medium text-primary hover:bg-secondary/60"
                         >
-                          {breed.count}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-                )}
+                          {hepsiAcik
+                            ? 'Daha az göster'
+                            : `Tümünü Gör (${category.breeds.length})`}
+                          <ChevronDown
+                            className={cn('h-3.5 w-3.5 transition-transform', hepsiAcik && 'rotate-180')}
+                          />
+                        </button>
+                      )}
+
+                      {populer.length === 0 && !hepsiAcik && (
+                        <p className="px-4 py-3 text-xs text-muted-foreground">
+                          Bu kategoride henüz ilan yok.
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
               </section>
               );
             })
