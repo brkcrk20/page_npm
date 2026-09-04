@@ -436,7 +436,10 @@ export function CreateListingForm({
 
     setIsSubmitting(true);
     const supabase = getSupabaseBrowserClient();
-    const uploadedPaths: string[] = [];
+    // Ölçüler de taşınıyor: tarayıcı yer ayıramadığı için sayfa yüklenirken
+    // içerik zıplıyordu (CLS). Ölçü zaten hazırlama adımında hesaplanıyor,
+    // yalnızca kaydedilmiyordu.
+    const uploadedPaths: { path: string; width: number; height: number }[] = [];
 
     try {
       // 1) İlan satırını önce yaz.
@@ -550,7 +553,7 @@ export function CreateListingForm({
           .upload(path, item.file, { contentType: item.file.type, upsert: false });
 
         if (uploadError) throw new Error(`Fotoğraf yüklenemedi: ${uploadError.message}`);
-        uploadedPaths.push(path);
+        uploadedPaths.push({ path, width: item.width, height: item.height });
       }
 
       // 4) Videolar: sıkıştır ve yükle.
@@ -617,9 +620,11 @@ export function CreateListingForm({
         const offset = kept.length > 0 ? Math.max(...kept.map((p) => p.position)) + 1 : 0;
 
         const { error: photoError } = await supabase.from('listing_photos').insert(
-          uploadedPaths.map((storage_path, index) => ({
+          uploadedPaths.map((foto, index) => ({
             listing_id: listing.id,
-            storage_path,
+            storage_path: foto.path,
+            width: foto.width,
+            height: foto.height,
             position: offset + index,
           }))
         );

@@ -1,4 +1,6 @@
 import { notFound, permanentRedirect } from 'next/navigation';
+import { SITE_URL } from '@/lib/site';
+import { listingPhotoUrl } from '@/lib/supabase/storage';
 import type { Metadata } from 'next';
 
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
@@ -81,9 +83,47 @@ export async function generateMetadata({
   if (resolution?.kind === 'listing') {
     const listing = await getListingById(resolution.ilanNo);
     if (listing) {
+      /**
+       * Paylaşım görseli.
+       *
+       * İlan sayfalarının og:image'i hiç yoktu: WhatsApp veya Facebook'ta
+       * paylaşılan bir ilan fotoğrafsız, düz bir bağlantı olarak görünüyordu.
+       * Bir ilan sitesinde paylaşımın tamamı fotoğraf üzerinden yürüyor.
+       *
+       * Ölçüler artık kayıtlı (listing_photos.width/height); ölçüsü bilinen
+       * görsel paylaşım kartında kırpılmadan çıkıyor.
+       */
+      const kapak = [...((listing.listing_photos as any[]) ?? [])].sort(
+        (a, b) => a.position - b.position
+      )[0];
+      const gorselYolu = kapak ? listingPhotoUrl(kapak.storage_path) : null;
+      const gorsel = gorselYolu
+        ? {
+            url: new URL(gorselYolu, SITE_URL).toString(),
+            width: kapak.width ?? undefined,
+            height: kapak.height ?? undefined,
+            alt: listing.title,
+          }
+        : null;
+
+      const aciklama = listing.description.slice(0, 160);
+
       return {
         title: `${listing.title} | PetSemti`,
-        description: listing.description.slice(0, 160),
+        description: aciklama,
+        openGraph: {
+          type: 'article',
+          title: listing.title,
+          description: aciklama,
+          url: new URL(`/${listing.slug}-${listing.id}`, SITE_URL).toString(),
+          ...(gorsel ? { images: [gorsel] } : {}),
+        },
+        twitter: {
+          card: gorsel ? 'summary_large_image' : 'summary',
+          title: listing.title,
+          description: aciklama,
+          ...(gorsel ? { images: [gorsel.url] } : {}),
+        },
       };
     }
   }

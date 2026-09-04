@@ -39,6 +39,18 @@ const CARD_COLUMNS = `
   listing_photos ( storage_path, position )
 `;
 
+/**
+ * Süresi geçmemiş ilan koşulu.
+ *
+ * Süresi dolanları kapatan iş her gece çalışıyor (pg_cron → expire_listings).
+ * Yalnızca ona güvenmek, işin çalışmadığı gün sitenin bayat ilan göstermesi
+ * demekti; tarih sorguda ayrıca süzülüyor. İki katman da ucuz: hem status
+ * hem expires_at indeksli.
+ */
+function suresiGecmemis(): string {
+  return `expires_at.is.null,expires_at.gt.${new Date().toISOString()}`;
+}
+
 export type ListingCard = Pick<
   ListingRow,
   'id' | 'slug' | 'title' | 'kind' | 'price' | 'currency' | 'is_negotiable' | 'age_months' | 'gender' | 'published_at' | 'event_date'
@@ -183,7 +195,8 @@ async function fetchListings(filters: ListingFilters = {}) {
   let query = supabase
     .from('listings')
     .select(CARD_COLUMNS, { count: 'exact' })
-    .eq('status', 'yayinda');
+    .eq('status', 'yayinda')
+    .or(suresiGecmemis());
 
   if (filters.categoryId !== undefined) query = query.eq('category_id', filters.categoryId);
   if (filters.excludeCategoryIds?.length) {
@@ -259,6 +272,7 @@ export async function getListingById(id: number) {
     )
     .eq('id', id)
     .eq('status', 'yayinda')
+    .or(suresiGecmemis())
     .maybeSingle();
 
   if (error) throw new Error(`İlan getirilemedi: ${error.message}`);
@@ -353,6 +367,7 @@ export async function getSimilarListings(
     .from('listings')
     .select(CARD_COLUMNS)
     .eq('status', 'yayinda')
+    .or(suresiGecmemis())
     .neq('id', listingId);
 
   // Cins bilgisi varsa aynı cinsten, yoksa aynı kategoriden gösteriyoruz —
@@ -395,6 +410,7 @@ export async function getAdjacentListings(
       .from('listings')
       .select('id, slug')
       .eq('status', 'yayinda')
+    .or(suresiGecmemis())
       .eq('category_id', categoryId)
       .gt('published_at', publishedAt)
       .order('published_at', { ascending: true })
@@ -404,6 +420,7 @@ export async function getAdjacentListings(
       .from('listings')
       .select('id, slug')
       .eq('status', 'yayinda')
+    .or(suresiGecmemis())
       .eq('category_id', categoryId)
       .lt('published_at', publishedAt)
       .order('published_at', { ascending: false })
@@ -455,6 +472,7 @@ export async function getSellerListings(userId: string, page = 1, perPage = 24) 
     .select(CARD_COLUMNS, { count: 'exact' })
     .eq('owner_id', userId)
     .eq('status', 'yayinda')
+    .or(suresiGecmemis())
     .order('published_at', { ascending: false })
     .range(from, from + perPage - 1);
 
@@ -490,6 +508,7 @@ export async function getListingsWithVideo(categoryId: number, limit = 8): Promi
     // PostgREST satırı bırakıp yalnızca gömülü diziyi boşaltıyor.
     .select(`${CARD_COLUMNS}, listing_videos!inner ( id )`)
     .eq('status', 'yayinda')
+    .or(suresiGecmemis())
     .eq('category_id', categoryId)
     .eq('listing_videos.status', 'hazir')
     .order('published_at', { ascending: false })
