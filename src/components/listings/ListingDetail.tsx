@@ -53,6 +53,7 @@ type DetailListing = {
   whatsapp_count: number;
   phone_count: number;
   published_at: string | null;
+  expires_at: string | null;
   updated_at: string | null;
   owner_id: string;
   breeds: { id: number; name: string; slug: string } | null;
@@ -137,6 +138,18 @@ export function ListingDetail({
    */
   const isSupply = category?.slug === 'pet-malzemeleri' || category?.code === 'Supply';
 
+  /**
+   * İlanın kalan süresi.
+   *
+   * Emsal sitelerin hepsinde var ("9 gün kaldı") ve iki işe yarıyor:
+   * alıcı ilanın ne kadar taze olduğunu görüyor, ilan sahibi de süresinin
+   * dolmak üzere olduğunu fark ediyor. Veritabanında expires_at zaten
+   * yazılıyordu, hiçbir yerde gösterilmiyordu.
+   */
+  const kalanGun = listing.expires_at
+    ? Math.ceil((new Date(listing.expires_at).getTime() - Date.now()) / 86_400_000)
+    : null;
+
   const CONDITION_LABELS: Record<string, string> = {
     sifir: 'Sıfır / Kullanılmamış',
     az_kullanilmis: 'Az Kullanılmış',
@@ -183,6 +196,18 @@ export function ListingDetail({
         ),
     },
     { label: 'İLAN NO', value: String(listing.id) },
+    ...(kalanGun !== null && kalanGun > 0
+      ? [
+          {
+            label: 'İLAN SÜRESİ',
+            value: (
+              <span className={kalanGun <= 7 ? 'font-semibold text-amber-700' : undefined}>
+                {kalanGun} gün kaldı
+              </span>
+            ),
+          },
+        ]
+      : []),
     {
       label: 'İLAN TARİHİ',
       value: publishedAt ? (

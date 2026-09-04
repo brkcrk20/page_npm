@@ -87,28 +87,61 @@ export function SellerCard({
             <p className="flex items-center gap-1 truncate font-semibold text-primary">
               {displayName}
               {seller?.is_verified && (
-                <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-600" aria-label="Güvenli üye" />
+                <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-600" aria-label="Onaylı üye" />
               )}
             </p>
-            {memberSince && (
-              <p className="text-xs text-muted-foreground">
-                Üyelik tarihi:{' '}
-                {memberSince.toLocaleDateString('tr-TR', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              {seller?.account_type === 'kurumsal' ? 'Kurumsal üye' : 'Bireysel üye'}
+              {memberSince && ` · ${memberSince.getFullYear()} yılından beri`}
+            </p>
           </div>
         </div>
+
+        {/*
+          Satıcı geçmişi.
+
+          Alıcının ilk sorusu "bu kişi güvenilir mi". Emsal sitelerin hepsi
+          üyelik tarihini ve ilan sayısını gösteriyor; ikisi de tek başına
+          garanti değil ama yeni açılmış bir hesapla yıllardır ilan veren
+          bir hesabı ayırt etmeye yarıyor. Veri zaten seller_stats'ta
+          duruyordu, hiçbir yerde gösterilmiyordu.
+        */}
+        {seller && (
+          <dl className="mt-3 grid grid-cols-3 gap-2 rounded-lg bg-secondary/60 p-2.5 text-center">
+            <div>
+              <dt className="text-[11px] text-muted-foreground">Üyelik</dt>
+              <dd className="text-sm font-semibold">
+                {membershipYears > 0 ? `${membershipYears} yıl` : 'Yeni'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[11px] text-muted-foreground">Toplam ilan</dt>
+              <dd className="text-sm font-semibold">{seller.total_listings}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] text-muted-foreground">Yayında</dt>
+              <dd className="text-sm font-semibold">{seller.active_listings}</dd>
+            </div>
+          </dl>
+        )}
+
+        {memberSince && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Üyelik tarihi:{' '}
+            {memberSince.toLocaleDateString('tr-TR', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
+          </p>
+        )}
 
         {seller?.username && (
           <Link
             href={`/satici/${seller.username}`}
-            className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+            className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
           >
-            Tüm İlanlar
+            Satıcının tüm ilanları ({seller.active_listings})
           </Link>
         )}
 
