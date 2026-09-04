@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -162,6 +162,7 @@ function translateSignUpError(message: string): { title: string; description: st
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
 
   const [accountType, setAccountType] = useState<AccountType | null>(null);
@@ -296,7 +297,16 @@ export function RegisterForm() {
       }
 
       toast({ title: 'Hoş geldiniz!', description: 'Hesabınız oluşturuldu.' });
-      router.push('/');
+      /**
+       * Kayıttan sonra kullanıcı geldiği yere dönüyor.
+       *
+       * İlan sayfasında "Ücretsiz Üye Ol"a basan kişi ana sayfaya
+       * düşüyordu ve baktığı ilanı yeniden bulması gerekiyordu.
+       * Yalnızca site içi yollar kabul ediliyor; dış adrese yönlendirmek
+       * açık yönlendirme açığı olurdu.
+       */
+      const donus = searchParams.get('donus');
+      router.push(donus && donus.startsWith('/') && !donus.startsWith('//') ? donus : '/');
       router.refresh();
     } catch (error: any) {
       const failure = {

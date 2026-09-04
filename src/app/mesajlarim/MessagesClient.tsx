@@ -233,6 +233,18 @@ export function MessagesClient() {
                     ? conversation.buyer_unread
                     : conversation.seller_unread;
 
+                /**
+                 * Listede karşı tarafın adı.
+                 *
+                 * Yalnızca ilan başlığı yazıyordu; aynı ilan üzerinden birden
+                 * çok kişiyle yazışan satıcı hangi satırın kime ait olduğunu
+                 * ayırt edemiyordu.
+                 */
+                const karsiTaraf =
+                  conversation.buyer_id === user.id ? conversation.seller : conversation.buyer;
+                const karsiAd =
+                  karsiTaraf?.full_name || karsiTaraf?.username || 'PetSemti Üyesi';
+
                 return (
                   <li key={conversation.id}>
                     <button
@@ -244,9 +256,7 @@ export function MessagesClient() {
                       )}
                     >
                       <span className="flex items-center justify-between gap-2">
-                        <span className="line-clamp-1 text-sm font-semibold">
-                          {conversation.listing_title ?? 'Silinmiş ilan'}
-                        </span>
+                        <span className="line-clamp-1 text-sm font-semibold">{karsiAd}</span>
                         {unread > 0 && (
                           <span className="shrink-0 rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
                             {unread}
@@ -254,6 +264,9 @@ export function MessagesClient() {
                         )}
                       </span>
                       <span className="line-clamp-1 text-xs text-muted-foreground">
+                        {conversation.listing_title ?? 'Silinmiş ilan'}
+                      </span>
+                      <span className="line-clamp-1 text-xs text-muted-foreground/80">
                         {conversation.last_message_preview ?? 'Henüz mesaj yok'}
                       </span>
                     </button>
@@ -282,16 +295,32 @@ export function MessagesClient() {
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
+                {/* Başlıkta önce kişi, altında ilan: yazışmanın kiminle
+                    olduğu ilan başlığından daha belirleyici. */}
                 <div className="min-w-0">
+                  {(() => {
+                    const kt = active.buyer_id === user.id ? active.seller : active.buyer;
+                    const ad = kt?.full_name || kt?.username || 'PetSemti Üyesi';
+                    return kt?.username ? (
+                      <Link
+                        href={`/satici/${kt.username}`}
+                        className="line-clamp-1 font-semibold hover:text-primary"
+                      >
+                        {ad}
+                      </Link>
+                    ) : (
+                      <span className="line-clamp-1 font-semibold">{ad}</span>
+                    );
+                  })()}
                   {active.listings ? (
                     <Link
                       href={`/${active.listings.slug}-${active.listings.id}`}
-                      className="line-clamp-1 font-semibold hover:text-primary"
+                      className="line-clamp-1 text-xs text-muted-foreground hover:text-primary"
                     >
                       {active.listing_title}
                     </Link>
                   ) : (
-                    <span className="line-clamp-1 font-semibold text-muted-foreground">
+                    <span className="line-clamp-1 text-xs text-muted-foreground">
                       {active.listing_title ?? 'Silinmiş ilan'}
                     </span>
                   )}
@@ -333,11 +362,23 @@ export function MessagesClient() {
                           oncekiFarkli ? 'mt-4 first:mt-0' : 'mt-1'
                         )}
                       >
-                        {oncekiFarkli && (
-                          <span className="mb-1 px-1 text-xs font-semibold text-muted-foreground">
-                            {gonderenAdi}
-                          </span>
-                        )}
+                        {oncekiFarkli &&
+                          (() => {
+                            const kt =
+                              active?.buyer_id === message.sender_id ? active?.buyer : active?.seller;
+                            const etiket = (
+                              <span className="mb-1 px-1 text-xs font-semibold text-muted-foreground">
+                                {gonderenAdi}
+                              </span>
+                            );
+                            return !mine && kt?.username ? (
+                              <Link href={`/satici/${kt.username}`} className="hover:text-primary">
+                                {etiket}
+                              </Link>
+                            ) : (
+                              etiket
+                            );
+                          })()}
                         <div
                           className={cn(
                             'max-w-[75%] rounded-2xl px-3.5 py-2 text-sm',

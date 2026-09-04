@@ -5,12 +5,22 @@ import Image from 'next/image';
 import { avatarUrl } from '@/lib/supabase/storage';
 import { formatTrPhone, whatsappNumber } from '@/lib/phone';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { BadgeCheck, MessageCircle, Phone, Mail } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
+import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
+import { usePathname } from 'next/navigation';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { SellerInfo } from '@/lib/queries/listings';
 
 /**
@@ -42,8 +52,12 @@ export function SellerCard({
   allowWhatsapp: boolean;
 }) {
   const { toast } = useToast();
+  const { user } = useSupabaseAuth();
+  const pathname = usePathname();
   const [phone, setPhone] = useState<string | null>(null);
   const [aliniyor, setAliniyor] = useState(false);
+  /** Oturumsuz kullanıcıya gösterilen üyelik daveti. */
+  const [davetAcik, setDavetAcik] = useState(false);
 
   const displayName =
     seller?.company_title || seller?.full_name || seller?.username || 'PetSemti Üyesi';
@@ -64,6 +78,13 @@ export function SellerCard({
   async function numarayiGetir(): Promise<string | null> {
     if (phone) return phone;
 
+    // Numara üyelere açık. Girişi burada isteyip kullanıcıyı sayfadan
+    // atmıyoruz: nedenini gösterip geri dönebileceği bir bağlantı veriyoruz.
+    if (!user) {
+      setDavetAcik(true);
+      return null;
+    }
+
     const supabase = getSupabaseBrowserClientOrNull();
     if (!supabase) return null;
 
@@ -74,6 +95,11 @@ export function SellerCard({
     setAliniyor(false);
 
     if (error || !data) {
+      // Sunucu oturumun düştüğünü söylüyorsa hata değil, davet göster.
+      if (error?.code === '42501') {
+        setDavetAcik(true);
+        return null;
+      }
       toast({
         title: 'Telefon alınamadı',
         description: error?.message ?? 'Satıcı mesaj yoluyla iletişim tercih ediyor.',
@@ -112,7 +138,10 @@ export function SellerCard({
   return (
     <aside className="space-y-3">
       <div className="rounded-lg border bg-white p-4">
-        <div className="flex items-center gap-3">
+        {/* Ad ve fotoğraf satıcının profiline gidiyor. Önce yalnızca
+            aşağıdaki "tüm ilanları" bağlantısı tıklanabilirdi; kullanıcılar
+            önce isme ya da fotoğrafa basıyor ve hiçbir şey olmuyordu. */}
+        <ProfilBagi username={seller?.username ?? null} className="flex items-center gap-3">
           <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-muted">
             {avatarUrl(seller?.avatar_url) ? (
               <Image src={avatarUrl(seller?.avatar_url)!} alt={displayName} fill sizes="44px" className="object-cover" />
@@ -135,7 +164,7 @@ export function SellerCard({
               {memberSince && ` · ${memberSince.getFullYear()} yılından beri`}
             </p>
           </div>
-        </div>
+        </ProfilBagi>
 
         {/*
           Satıcı geçmişi.
@@ -219,6 +248,30 @@ export function SellerCard({
         </div>
       </div>
 
+      <Dialog open={davetAcik} onOpenChange={setDavetAcik}>
+        <DialogContent className="max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle className="text-center">İletişim bilgisi üyelere açık</DialogTitle>
+            <DialogDescription className="text-center">
+              İlan sahibinin telefon numarasını görmek ve mesaj göndermek için ücretsiz
+              üye olun. Üyelik birkaç saniye sürüyor.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-2 flex flex-col gap-2">
+            <Button asChild>
+              <Link href={`/kayit?donus=${encodeURIComponent(pathname ?? '/')}`}>
+                Ücretsiz Üye Ol
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={`/login?donus=${encodeURIComponent(pathname ?? '/')}`}>
+                Zaten üyeyim, giriş yap
+              </Link>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="grid grid-cols-3 gap-2">
         <StatBox value={seller?.active_listings ?? 0} label="Aktif İlan" highlight />
         <StatBox value={seller?.total_listings ?? 0} label="Toplam İlan" />
@@ -250,5 +303,28 @@ function StatBox({
         {label}
       </p>
     </div>
+  );
+}
+
+/**
+ * Kullanıcı adı varsa profiline bağlar, yoksa düz kutu olarak çizer.
+ *
+ * Kullanıcı adı olmayan (henüz oluşmamış) hesaplarda tıklanabilir bir
+ * bağlantı göstermek 404'e götürürdü.
+ */
+function ProfilBagi({
+  username,
+  className,
+  children,
+}: {
+  username: string | null;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  if (!username) return <div className={className}>{children}</div>;
+  return (
+    <Link href={`/satici/${username}`} className={cn(className, 'group')}>
+      {children}
+    </Link>
   );
 }
