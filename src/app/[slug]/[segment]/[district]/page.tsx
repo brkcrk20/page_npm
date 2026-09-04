@@ -8,7 +8,7 @@ import {
   getCityBySlug,
   getDistrict,
 } from '@/lib/queries/catalog';
-import { getListings } from '@/lib/queries/listings';
+import { getListings, parseListingParams } from '@/lib/queries/listings';
 
 /**
  * /<kategori>/<sehir>/<ilce>

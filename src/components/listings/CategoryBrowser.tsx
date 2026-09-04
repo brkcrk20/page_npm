@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
+import { ListingToolbar } from '@/components/listings/ListingToolbar';
 import { JsonLd } from '@/components/JsonLd';
 import { breadcrumbSchema, itemListSchema } from '@/lib/structured-data';
 import type { ListingCard } from '@/lib/queries/listings';
@@ -162,7 +163,9 @@ export function CategoryBrowser({
             </div>
           </aside>
 
-          <main>
+          <main className="min-w-0">
+            {/* Sahiplendirmede fiyat yok; orada yalnızca sıralama gösteriliyor. */}
+            <ListingToolbar showPrice={category.code !== 'Other' || true} />
             <ListingGrid listings={listings} emptyMessage={emptyMessage} />
           </main>
         </div>

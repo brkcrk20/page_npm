@@ -11,8 +11,7 @@ import {
   getListingsWithVideo,
   getSellerInfo,
   getSimilarListings,
-  getAdjacentListings,
-} from '@/lib/queries/listings';
+  getAdjacentListings, parseListingParams } from '@/lib/queries/listings';
 import { resolveRootSegment } from '@/lib/routing';
 
 /**
@@ -92,8 +91,15 @@ export async function generateMetadata({
   return { title: 'Sayfa Bulunamadı | PetSemti' };
 }
 
-export default async function RootSlugPage({ params }: { params: Promise<Params> }) {
+export default async function RootSlugPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<Params>;
+  searchParams: Promise<{ sirala?: string; min?: string; max?: string }>;
+}) {
   const { slug } = await params;
+  const listeParams = parseListingParams(await searchParams);
   const resolution = resolveRootSegment(slug);
 
   if (!resolution) notFound();
@@ -104,7 +110,7 @@ export default async function RootSlugPage({ params }: { params: Promise<Params>
     if (!category) notFound();
 
     const [{ listings, total }, sidebar] = await Promise.all([
-      getListings({ categoryId: category.id }),
+      getListings({ ...listeParams, categoryId: category.id }),
       getSidebarData(),
     ]);
 

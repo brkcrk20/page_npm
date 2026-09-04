@@ -9,7 +9,7 @@ import {
   getSidebarData,
   resolveCategorySegment,
 } from '@/lib/queries/catalog';
-import { getListings } from '@/lib/queries/listings';
+import { getListings, parseListingParams } from '@/lib/queries/listings';
 
 /**
  * /<kategori>/<segment>
@@ -98,10 +98,13 @@ export async function generateMetadata({
 
 export default async function CategorySegmentPage({
   params,
+  searchParams,
 }: {
   params: Promise<Params>;
+  searchParams: Promise<{ sirala?: string; min?: string; max?: string }>;
 }) {
   const resolvedParams = await params;
+  const listeParams = parseListingParams(await searchParams);
   const loaded = await load(resolvedParams);
   if (!loaded) notFound();
 
@@ -111,6 +114,7 @@ export default async function CategorySegmentPage({
 
   if (resolved.kind === 'breed') {
     const { listings, total } = await getListings({
+      ...listeParams,
       categoryId: category.id,
       breedId: resolved.breed.id,
     });
@@ -133,6 +137,7 @@ export default async function CategorySegmentPage({
   }
 
   const { listings, total } = await getListings({
+    ...listeParams,
     categoryId: category.id,
     cityId: resolved.city.id,
   });

@@ -77,9 +77,63 @@ export type ListingFilters = {
   shipsIntercity?: boolean;
   page?: number;
   perPage?: number;
+  /**
+   * Sıralama.
+   *
+   * İncelediğim Türk emsal sitelerinin tamamı yalnızca tarihe göre
+   * sıralıyor; fiyata göre sıralama hiçbirinde yok. Alıcının en sık
+   * ihtiyacı olan sıralama bu — özellikle ikinci el malzemede.
+   */
+  sort?: 'yeni' | 'eski' | 'ucuz' | 'pahali';
 };
 
 export const DEFAULT_PER_PAGE = 24;
+
+/**
+ * Adres çubuğundaki sıralama ve fiyat parametrelerini filtreye çevirir.
+ *
+ * Tek yerde: aynı ayrıştırmayı her sayfada tekrar yazmak, birinde yapılan
+ * düzeltmenin diğerlerine geçmemesi demek.
+ */
+export function parseListingParams(params: {
+  sirala?: string;
+  min?: string;
+  max?: string;
+}): Pick<ListingFilters, 'sort' | 'minPrice' | 'maxPrice'> {
+  const sayi = (v?: string) => {
+    const n = Number(v);
+    return v && Number.isFinite(n) && n >= 0 ? n : undefined;
+  };
+  const gecerli = ['yeni', 'eski', 'ucuz', 'pahali'] as const;
+
+  return {
+    sort: gecerli.includes(params.sirala as any) ? (params.sirala as ListingFilters['sort']) : undefined,
+    minPrice: sayi(params.min),
+    maxPrice: sayi(params.max),
+  };
+}
+
+/**
+ * Sıralama seçeneğini sorgu parametresine çevirir.
+ *
+ * Fiyat sıralamasında nullsFirst kapalı: fiyatı olmayan (ücretsiz
+ * sahiplendirme) ilanlar "en ucuz" listesinin başında bir yığın
+ * oluşturmasın, sonda dursun.
+ */
+function listingOrder(
+  sort: ListingFilters['sort']
+): [string, { ascending: boolean; nullsFirst?: boolean }] {
+  switch (sort) {
+    case 'eski':
+      return ['published_at', { ascending: true }];
+    case 'ucuz':
+      return ['price', { ascending: true, nullsFirst: false }];
+    case 'pahali':
+      return ['price', { ascending: false, nullsFirst: false }];
+    default:
+      return ['published_at', { ascending: false }];
+  }
+}
 
 /**
  * Filtrelenmiş ilan listesi.
@@ -153,7 +207,7 @@ async function fetchListings(filters: ListingFilters = {}) {
   }
 
   const { data, error, count } = await query
-    .order('published_at', { ascending: false })
+    .order(...listingOrder(filters.sort))
     .range(from, from + perPage - 1);
 
   if (error) throw new Error(`İlanlar getirilemedi: ${error.message}`);
