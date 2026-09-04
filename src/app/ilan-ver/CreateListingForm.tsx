@@ -222,14 +222,20 @@ export function CreateListingForm({
       categories.find((c) => String(c.id) === categoryId)?.slug === 'pet-malzemeleri',
     [preset?.categorySlug, categories, categoryId]
   );
+  const isPigeon = useMemo(
+    () => categories.find((c) => String(c.id) === categoryId)?.slug === 'guvercin-ilanlari',
+    [categories, categoryId]
+  );
+
   /**
    * Bireysel hesap + hayvan kategorisi → yalnızca ücretsiz sahiplendirme.
    *
-   * Pet malzemeleri kapsam dışı: ikinci el kafes satmak hayvan satışı
-   * değil.
+   * İki kategori kapsam dışı: pet malzemeleri (ikinci el kafes satmak
+   * hayvan satışı değil) ve güvercin (bölümün tamamı bireysel
+   * yetiştiriciler arasındaki alışveriş üzerine kurulu).
    */
   const sadeceSahiplendirme =
-    !isSupply && profile?.account_type !== 'kurumsal';
+    !isSupply && !isPigeon && profile?.account_type !== 'kurumsal';
 
   const cityId = form.watch('cityId');
 

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  BookOpen,
   Building2,
   FileText,
   Flag,
@@ -44,6 +45,7 @@ const ITEMS = [
   { href: '/admin/dogrulamalar', label: 'Kimlik Doğrulama', icon: ShieldCheck },
   { href: '/admin/mesajlar', label: 'İletişim Mesajları', icon: Inbox },
   { href: '/admin/icerik', label: 'Sayfa İçerikleri', icon: FileText },
+  { href: '/admin/rehber', label: 'Rehber Yazıları', icon: BookOpen },
   { href: '/admin/siparisler', label: 'Siparişler', icon: Receipt },
   { href: '/admin/ayarlar', label: 'Ayarlar', icon: Settings },
 ] as const;
