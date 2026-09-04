@@ -4,11 +4,14 @@ import Image from 'next/image';
 import { avatarUrl } from '@/lib/supabase/storage';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { BadgeCheck, Calendar } from 'lucide-react';
+import { BadgeCheck, Calendar, Star, Store } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { getSellerByUsername, getSellerListings } from '@/lib/queries/listings';
+import { getProviderForOwner } from '@/lib/queries/services';
+import { getServiceConfig } from '@/lib/services-config';
+import type { ServiceType } from '@/lib/queries/services';
 
 /**
  * Satıcı profili.
@@ -42,7 +45,13 @@ export default async function SellerPage({ params }: { params: Promise<Params> }
   const seller = await getSellerByUsername(username);
   if (!seller) notFound();
 
-  const { listings, total } = await getSellerListings(seller.id);
+  const [{ listings, total }, business] = await Promise.all([
+    getSellerListings(seller.id),
+    getProviderForOwner(seller.id),
+  ]);
+  // İşletme kaydı olan üyenin (petshop, klinik…) vitrini ilanlarından ayrı
+  // duruyordu; ziyaretçi ikisinin aynı işletme olduğunu göremiyordu.
+  const businessConfig = business ? getServiceConfig(business.service_type as ServiceType) : null;
   const displayName = seller.company_title || seller.full_name || `@${seller.username}`;
   const memberSince = seller.member_since ? new Date(seller.member_since) : null;
 
@@ -91,6 +100,30 @@ export default async function SellerPage({ params }: { params: Promise<Params> }
             </div>
           </div>
         </header>
+
+        {business && businessConfig && (
+          <Link
+            href={`/${businessConfig.slug}/${business.slug}-${business.id}`}
+            className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border bg-white p-4 transition hover:border-primary"
+          >
+            <Store className="h-9 w-9 shrink-0 rounded-lg bg-primary/10 p-2 text-primary" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground">{businessConfig.label}</p>
+              <p className="flex items-center gap-1.5 font-semibold">
+                {business.name}
+                {business.is_verified && <BadgeCheck className="h-4 w-4 text-emerald-600" />}
+              </p>
+            </div>
+            {business.rating_count > 0 && (
+              <span className="flex items-center gap-1 text-sm">
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                {Number(business.rating_average).toFixed(1)}
+                <span className="text-muted-foreground">({business.rating_count})</span>
+              </span>
+            )}
+            <span className="text-sm font-medium text-primary">İşletme sayfası →</span>
+          </Link>
+        )}
 
         <h2 className="mb-4 text-lg font-bold">
           Yayındaki İlanlar <span className="font-normal text-muted-foreground">({total})</span>

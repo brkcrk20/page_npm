@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { BadgeCheck, Clock, MapPin, ShieldCheck, Star } from 'lucide-react';
 
 import { OpenBadge } from '@/components/services/ServiceCard';
+import { ListingGrid } from '@/components/listings/ListingGrid';
+import { getProviderStorefront } from '@/lib/queries/services';
 import { ServiceContact } from '@/components/services/ServiceContact';
 import { Badge } from '@/components/ui/badge';
 import { getOpenState, normalizeWeek, formatTime, WEEKDAY_NAMES } from '@/lib/opening-hours';
@@ -19,6 +21,7 @@ import { cn } from '@/lib/utils';
 
 type Provider = {
   id: number;
+  owner_id: string | null;
   slug: string;
   name: string;
   description: string | null;
@@ -46,7 +49,7 @@ type Provider = {
   }[];
 };
 
-export function ServiceDetail({
+export async function ServiceDetail({
   config,
   provider,
   reviews,
@@ -57,6 +60,7 @@ export function ServiceDetail({
   reviews: ServiceReview[];
   nearby: { id: number; slug: string; name: string; districts: { name: string } | null }[];
 }) {
+  const storefront = await getProviderStorefront(provider.owner_id);
   const hours = provider.service_provider_hours ?? [];
   const openState = getOpenState(hours);
   const week = normalizeWeek(hours);
@@ -178,6 +182,30 @@ export function ServiceDetail({
                 </tbody>
               </table>
             </section>
+
+            {storefront && (
+              <section className="overflow-hidden rounded-lg border bg-white">
+                <h2 className="flex flex-wrap items-center justify-between gap-2 border-l-4 border-primary px-4 py-3 font-bold">
+                  <span>
+                    İşletmenin İlanları{' '}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      ({storefront.total})
+                    </span>
+                  </span>
+                  {storefront.username && storefront.total > storefront.listings.length && (
+                    <Link
+                      href={`/satici/${storefront.username}`}
+                      className="text-sm font-normal text-primary hover:underline"
+                    >
+                      Tümünü gör →
+                    </Link>
+                  )}
+                </h2>
+                <div className="border-t p-4">
+                  <ListingGrid listings={storefront.listings} />
+                </div>
+              </section>
+            )}
 
             <section className="overflow-hidden rounded-lg border bg-white">
               <h2 className="border-l-4 border-primary px-4 py-3 font-bold">

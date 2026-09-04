@@ -66,6 +66,7 @@ type MyListing = {
   slug: string;
   title: string;
   status: ListingStatus;
+  kind: string;
   price: number | null;
   created_at: string;
   expires_at: string | null;
@@ -84,15 +85,22 @@ const STATUS: Record<
   reddedildi:    { label: 'Reddedildi',    className: 'bg-red-100 text-red-700' },
   pasif:         { label: 'Yayında Değil', className: 'bg-slate-100 text-slate-700' },
   suresi_doldu:  { label: 'Süresi Doldu',  className: 'bg-orange-100 text-orange-800' },
-  satildi:       { label: 'Satıldı',       className: 'bg-blue-100 text-blue-800' },
+  satildi:       { label: 'Sonuçlandı',    className: 'bg-blue-100 text-blue-800' },
 };
 
 /** Muhafız trigger'ındaki geçiş tablosunun arayüz karşılığı. */
+/**
+ * Durum geçişleri.
+ *
+ * "Satıldı" etiketi ücretsiz sahiplendirme ilanında yanlış: hayvan
+ * satılmıyor, sahiplendiriliyor. Etiket ilan türüne göre değişiyor;
+ * veritabanındaki durum aynı kalıyor.
+ */
 const TRANSITIONS: Record<string, { to: ListingStatus; label: string; icon: any }[]> = {
   yayinda:      [{ to: 'pasif',   label: 'Yayından Kaldır', icon: Pause },
-                 { to: 'satildi', label: 'Satıldı Olarak İşaretle', icon: Tag }],
+                 { to: 'satildi', label: 'SONUCLANDI', icon: Tag }],
   pasif:        [{ to: 'yayinda', label: 'Yeniden Yayınla', icon: Play },
-                 { to: 'satildi', label: 'Satıldı Olarak İşaretle', icon: Tag }],
+                 { to: 'satildi', label: 'SONUCLANDI', icon: Tag }],
   satildi:      [{ to: 'yayinda', label: 'Yeniden Yayınla', icon: Play }],
   suresi_doldu: [{ to: 'yayinda', label: 'Yeniden Yayınla', icon: Play }],
   taslak:       [{ to: 'yayinda', label: 'Yayınla', icon: Play }],
@@ -123,7 +131,7 @@ export default function MyListingsPage() {
     getSupabaseBrowserClient()
       .from('listings')
       .select(
-        'id, slug, title, status, price, created_at, expires_at, view_count, favorite_count, listing_photos(storage_path, position)'
+        'id, slug, title, status, kind, price, created_at, expires_at, view_count, favorite_count, listing_photos(storage_path, position)'
       )
       .eq('owner_id', user.id)
       .order('created_at', { ascending: false })
@@ -388,13 +396,19 @@ export default function MyListingsPage() {
 
                         {moves.map((move) => {
                           const Icon = move.icon;
+                          const etiket =
+                            move.label === 'SONUCLANDI'
+                              ? listing.kind === 'sahiplendirme'
+                                ? 'Sahiplendirildi Olarak İşaretle'
+                                : 'Satıldı Olarak İşaretle'
+                              : move.label;
                           return (
                             <DropdownMenuItem
                               key={move.to}
                               onSelect={() => changeStatus(listing, move.to)}
                             >
                               <Icon className="mr-2 h-4 w-4" />
-                              {move.label}
+                              {etiket}
                             </DropdownMenuItem>
                           );
                         })}

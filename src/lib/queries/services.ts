@@ -13,6 +13,7 @@ import {
   warnMissingConfig,
 } from '@/lib/supabase/server';
 import type { Database } from '@/lib/supabase/database.types';
+import { getSellerListings } from '@/lib/queries/listings';
 
 export type ServiceType = Database['public']['Enums']['service_type'];
 
@@ -292,4 +293,47 @@ export async function getServiceReviews(providerId: number, limit = 20) {
     return [];
   }
   return (data ?? []) as unknown as ServiceReview[];
+}
+
+/**
+ * İşletmenin vitrini.
+ *
+ * Petshop gibi hem işletme kaydı olan hem ilan veren üyeler için işletme
+ * sayfası ile ilanlar birbirinden kopuktu: kullanıcı kliniği/mağazayı
+ * buluyor ama sattığı mamayı göremiyordu. İkisini burada birleştiriyoruz.
+ */
+export async function getProviderStorefront(ownerId: string | null) {
+  if (!ownerId || !isSupabaseServerConfigured()) return null;
+  const supabase = createSupabasePublicClient();
+
+  const { data: profile } = await supabase
+    .from('public_profiles')
+    .select('username')
+    .eq('id', ownerId)
+    .maybeSingle();
+
+  const { listings, total } = await getSellerListings(ownerId, 1, 8);
+  if (total === 0) return null;
+
+  return { username: (profile as any)?.username as string | null, listings, total };
+}
+
+/** Bir üyenin yayındaki işletme kaydı — satıcı profilinden işletmeye bağlantı için. */
+export async function getProviderForOwner(ownerId: string) {
+  if (!isSupabaseServerConfigured()) return null;
+  const supabase = createSupabasePublicClient();
+
+  const { data } = await supabase
+    .from('service_providers')
+    .select('id, slug, name, service_type, is_verified, rating_average, rating_count')
+    .eq('owner_id', ownerId)
+    .eq('status', 'yayinda')
+    .order('id')
+    .limit(1)
+    .maybeSingle();
+
+  return data as {
+    id: number; slug: string; name: string; service_type: string;
+    is_verified: boolean; rating_average: number; rating_count: number;
+  } | null;
 }

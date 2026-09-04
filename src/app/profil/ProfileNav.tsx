@@ -50,6 +50,7 @@ const ITEMS = [
   { href: '/mesajlarim', label: 'Mesajlarım', icon: MessageSquare, badge: true },
   { href: '/profil/favoriler', label: 'Favorilerim', icon: Heart },
   { href: '/doping', label: 'Öne Çıkar', icon: Rocket },
+  { href: '/profil/isletmem', label: 'İşletmem', icon: Building2 },
   { href: '/profil/siparislerim', label: 'Siparişlerim', icon: CreditCard },
   { href: '/profil/hesap', label: 'Hesap Bilgilerim', icon: User },
   { href: '/profil/fatura', label: 'Fatura Bilgileri', icon: FileText },
