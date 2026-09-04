@@ -35,7 +35,7 @@ export default async function MatingListingsPage() {
             <p className="mt-1 text-sm text-muted-foreground">{total} ilan bulundu</p>
           </div>
           <Button asChild>
-            <Link href="/ilan-ver?tip=es_arayan">Eş Arayan İlanı Ver</Link>
+            <Link href="/ilan-ver/es-arayan">Eş Arayan İlanı Ver</Link>
           </Button>
         </header>
 

@@ -46,7 +46,7 @@ const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 const schema = z
   .object({
-    kind: z.enum(['satilik', 'sahiplendirme', 'kayip', 'bulundu']),
+    kind: z.enum(['satilik', 'sahiplendirme', 'kayip', 'bulundu', 'es_arayan']),
     categoryId: z.string().min(1, 'Kategori seçin.'),
     breedId: z.string().min(1, 'Cins seçin.'),
     title: z.string().trim().min(5, 'Başlık en az 5 karakter olmalı.').max(120, 'Başlık en fazla 120 karakter olabilir.'),
@@ -118,7 +118,7 @@ export type ListingPreset = {
   /** Kilitlenecek kategori adresi, ör. 'pet-malzemeleri'. */
   categorySlug?: string;
   /** Kilitlenecek ilan türü. */
-  kind?: 'satilik' | 'sahiplendirme' | 'kayip' | 'bulundu';
+  kind?: 'satilik' | 'sahiplendirme' | 'kayip' | 'bulundu' | 'es_arayan';
   /** Kategori seçicide gösterilmeyecek kategoriler (kendi dikeyi olanlar). */
   hideCategorySlugs?: string[];
   /** Sayfa başlığı ve açıklaması. */
@@ -138,7 +138,9 @@ export function CreateListingForm({
   const { user, profile, isUserLoading, isProfileLoading } = useSupabaseAuth();
 
   const [categories, setCategories] = useState<Option[]>([]);
-  const [breeds, setBreeds] = useState<(Option & { category_id: number })[]>([]);
+  const [breeds, setBreeds] = useState<(Option & { category_id: number; group_name: string | null })[]>([]);
+  // Malzemede önce hayvan türü, sonra eşya seçiliyor.
+  const [malzemeGrubu, setMalzemeGrubu] = useState<string>('');
   const [cities, setCities] = useState<Option[]>([]);
   const [districts, setDistricts] = useState<Option[]>([]);
   const [photos, setPhotos] = useState<File[]>([]);
@@ -218,7 +220,7 @@ export function CreateListingForm({
     (async () => {
       const [cats, brs, cits] = await Promise.all([
         supabase.from('categories').select('id, name, slug').eq('is_active', true).order('position'),
-        supabase.from('breeds').select('id, name, slug, category_id').eq('is_active', true).order('position'),
+        supabase.from('breeds').select('id, name, slug, category_id, group_name').eq('is_active', true).order('position'),
         supabase.from('cities').select('id, name, slug').order('name'),
       ]);
       const settings = await supabase
@@ -238,7 +240,7 @@ export function CreateListingForm({
       }
 
       if (cats.data) setCategories(cats.data as Option[]);
-      if (brs.data) setBreeds(brs.data as (Option & { category_id: number })[]);
+      if (brs.data) setBreeds(brs.data as (Option & { category_id: number; group_name: string | null })[]);
       if (cits.data) setCities(cits.data as Option[]);
     })();
   }, []);
@@ -283,10 +285,41 @@ export function CreateListingForm({
     if (preset?.kind) form.setValue('kind', preset.kind);
   }, [preset?.kind, form]);
 
-  const filteredBreeds = useMemo(
+  const kategoriBreeds = useMemo(
     () => breeds.filter((b) => !categoryId || b.category_id === Number(categoryId)),
     [breeds, categoryId]
   );
+
+  /**
+   * Malzeme bölümünde iki kademeli seçim.
+   *
+   * Malzemeler hayvana göre gruplanmış (Köpek, Kedi, Akvaryum…) ve her grupta
+   * o hayvana ait eşyalar var. Hepsini tek listede vermek, "köpek kafesi"
+   * arayan kullanıcıya kırk kalemlik karışık bir liste göstermek demekti.
+   */
+  const malzemeGruplari = useMemo(() => {
+    if (!isSupply) return [];
+    const gorulen = new Map<string, number>();
+    for (const b of kategoriBreeds) {
+      if (b.group_name && !gorulen.has(b.group_name)) gorulen.set(b.group_name, gorulen.size + 1);
+    }
+    return [...gorulen.keys()].map((ad) => ({ id: ad, name: ad }));
+  }, [isSupply, kategoriBreeds]);
+
+  const filteredBreeds = useMemo(
+    () =>
+      isSupply && malzemeGrubu
+        ? kategoriBreeds.filter((b) => b.group_name === malzemeGrubu)
+        : kategoriBreeds,
+    [isSupply, malzemeGrubu, kategoriBreeds]
+  );
+
+  // Düzenlemede mevcut eşyanın grubu seçili gelsin.
+  useEffect(() => {
+    if (!isSupply) return;
+    const secili = breeds.find((b) => String(b.id) === form.getValues('breedId'));
+    if (secili?.group_name) setMalzemeGrubu(secili.group_name);
+  }, [isSupply, breeds, form]);
 
   // Kategori değişince eski cins seçimi geçersiz kalır.
   useEffect(() => {
@@ -704,7 +737,23 @@ export function CreateListingForm({
             )}
 
             <div className="grid gap-4 sm:grid-cols-2">
-              {lockedCategory ? (
+              {isSupply && lockedCategory ? (
+                <div className="space-y-1.5">
+                  <p className="text-sm font-medium">Tür</p>
+                  <SearchableSelect
+                    value={malzemeGrubu}
+                    onChange={(v) => {
+                      setMalzemeGrubu(v);
+                      form.setValue('breedId', '');
+                    }}
+                    placeholder="Hangi hayvan için?"
+                    searchPlaceholder="Tür ara..."
+                    ariaLabel="Tür"
+                    className="w-full"
+                    options={malzemeGruplari.map((g) => ({ value: g.id, label: g.name }))}
+                  />
+                </div>
+              ) : lockedCategory ? (
                 <div className="space-y-1.5">
                   <p className="text-sm font-medium">Kategori</p>
                   <div className="flex h-10 items-center rounded-md border bg-secondary/40 px-3 text-sm">
@@ -717,17 +766,19 @@ export function CreateListingForm({
               <SelectField
                 control={form.control}
                 name="breedId"
-                label={isSupply ? 'Malzeme Türü' : 'Cins'}
+                label={isSupply ? 'Eşya' : 'Cins'}
                 options={filteredBreeds}
-                searchPlaceholder={isSupply ? 'Malzeme ara...' : 'Cins ara...'}
+                searchPlaceholder={isSupply ? 'Eşya ara...' : 'Cins ara...'}
                 placeholder={
-                  categoryId
-                    ? isSupply
-                      ? 'Malzeme türü seçin'
-                      : 'Cins seçin'
-                    : 'Önce kategori seçin'
+                  isSupply
+                    ? malzemeGrubu
+                      ? 'Eşya seçin'
+                      : 'Önce tür seçin'
+                    : categoryId
+                      ? 'Cins seçin'
+                      : 'Önce kategori seçin'
                 }
-                disabled={!categoryId}
+                disabled={isSupply ? !malzemeGrubu : !categoryId}
               />
             </div>
 

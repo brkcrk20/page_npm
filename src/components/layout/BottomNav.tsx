@@ -1,6 +1,7 @@
 'use client';
 
 import { UnreadBadge } from './UnreadBadge';
+import { ilanVerHref } from '@/lib/ilan-ver-href';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -22,7 +23,8 @@ export function BottomNav() {
       icon: Heart,
     },
     {
-      href: '/ilan-ver',
+      // Bulunduğun bölümün formu açılıyor; bkz. lib/ilan-ver-href.ts
+      href: ilanVerHref(pathname ?? '/'),
       label: 'İlan Ver',
       icon: Plus,
       isMain: true,

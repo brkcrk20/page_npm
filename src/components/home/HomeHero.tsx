@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Bird, HeartHandshake, PackageSearch, Plus, Search, Stethoscope } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 
@@ -33,9 +33,9 @@ export function HomeHero({
 
         <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
           <Button asChild size="lg" variant="secondary" className="w-full font-semibold sm:w-auto">
-            <Link href="/ilan-ver">
+            <Link href="/ilan-ver/sahiplendirme">
               <Plus className="mr-1.5 h-4 w-4" />
-              Ücretsiz İlan Ver
+              İlan Ver
             </Link>
           </Button>
           <Button
@@ -46,7 +46,7 @@ export function HomeHero({
           >
             <Link href="/sahiplendirme">
               <Search className="mr-1.5 h-4 w-4" />
-              Sahiplendirme İlanları
+              Tüm İlanlar
             </Link>
           </Button>
         </div>
@@ -77,26 +77,7 @@ export function HomeHero({
         </dl>
       </div>
 
-      <div className="border-t border-white/15 bg-black/10">
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-x-2 px-5 md:grid-cols-4">
-          <Shortcut href="/sahiplendirme" icon={HeartHandshake} title="Sahiplendirme" text="Yuva arayan dostlar" />
-          <Shortcut href="/guvercin-ilanlari" icon={Bird} title="Güvercin" text="59 ırk, uçuş videolu" />
-          <Shortcut href="/al-sat" icon={PackageSearch} title="Al & Sat" text="İkinci el malzeme" />
-          <Shortcut href="/veteriner" icon={Stethoscope} title="Hizmetler" text="Veteriner, otel, kuaför" />
-        </div>
-      </div>
     </section>
   );
 }
 
-function Shortcut({ href, icon: Icon, title, text }: { href: string; icon: any; title: string; text: string }) {
-  return (
-    <Link href={href} className="flex items-center gap-2.5 rounded-lg px-2 py-3.5 transition-colors hover:bg-white/10 md:gap-3 md:px-4 md:py-4">
-      <Icon className="h-5 w-5 shrink-0 text-white/80 md:h-6 md:w-6" />
-      <span className="min-w-0">
-        <span className="block text-sm font-semibold md:text-base">{title}</span>
-        <span className="block truncate text-[11px] text-white/70 md:text-xs">{text}</span>
-      </span>
-    </Link>
-  );
-}

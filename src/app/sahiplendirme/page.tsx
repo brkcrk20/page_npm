@@ -5,9 +5,9 @@ import { animalCategories, getSidebarData, nonAnimalCategoryIds } from '@/lib/qu
 import { getListings } from '@/lib/queries/listings';
 
 export const metadata: Metadata = {
-  title: 'Ücretsiz Sahiplendirme İlanları — Kedi, Köpek ve Diğer Dostlar',
+  title: 'Sahiplendirme İlanları — Kedi, Köpek, Kuş ve Diğer Dostlar',
   description:
-    'Ücretsiz sahiplendirme ilanları: yuva arayan kedi, köpek, kuş ve diğer evcil hayvanlar. Şehrinize göre inceleyin, sahibiyle doğrudan görüşün.',
+    'Sahiplendirme ve satılık hayvan ilanları: kedi, köpek, kuş ve diğer evcil hayvanlar. Şehrinize göre inceleyin, sahibiyle doğrudan görüşün.',
   alternates: { canonical: '/sahiplendirme' },
 };
 
@@ -24,23 +24,26 @@ export default async function Page() {
   // Güvercin kendi dikeyinde, pet malzemeleri hayvan bile değil.
   const disaridakiler = nonAnimalCategoryIds(sidebar.categories);
 
+  // Tür filtresi yok: bu sayfa hayvan ilanlarının tamamı. Sahiplendirme
+  // ilanlarını ayrı bir dünya gibi kurmak yanlıştı — bir çiftlik hem
+  // sahiplendirme hem satış yapabiliyor, ziyaretçi de ikisine birden bakıyor.
   const { listings, total } = await getListings({
     excludeCategoryIds: disaridakiler.length ? disaridakiler : undefined,
-    kind: 'sahiplendirme', perPage: 24 });
+    perPage: 24 });
 
   return (
     <KindBrowser
       createHref="/ilan-ver/sahiplendirme"
-      title="Ücretsiz Sahiplendirme İlanları"
-      lead="Yuva arayan dostlar. Bu sayfadaki ilanlarda ücret talep edilmez."
+      title="Sahiplendirme İlanları"
+      lead="Kedi, köpek, kuş ve diğer dostlar için sahiplendirme ve satılık ilanlar."
       listings={listings}
       total={total}
       sidebar={{ ...sidebar, categories: animalCategories(sidebar.categories) }}
-      emptyMessage="Şu an yayında sahiplendirme ilanı yok."
+      emptyMessage="Şu an yayında hayvan ilanı yok."
       seo={{
         heading: 'Sahiplendirme İlanları Hakkında',
         paragraphs: [
-          'Sahiplendirme ilanları, hayvanını ücret almadan yeni bir yuvaya vermek isteyen kişiler tarafından açılır. Bu sayfadaki ilanlarda fiyat alanı bulunmaz; ücret istendiğini fark ederseniz ilanı bize bildirebilirsiniz.',
+          'Bu sayfada kedi, köpek, kuş ve diğer evcil hayvan ilanlarının tamamı yer alır: ücretsiz sahiplendirme ilanları da, yetiştirici ve çiftliklerin satılık ilanları da. İlan kartındaki rozetten hangisi olduğunu görebilirsiniz.',
           'Sahiplenmeden önce hayvanın yaşını, aşı durumunu ve varsa sağlık geçmişini sorun. Bir hayvanı üstlenmek uzun süreli bir sorumluluktur: beslenme, veteriner masrafı, günlük bakım ve tatil dönemlerindeki bakım planı önceden düşünülmelidir.',
           'Görüşmeyi mümkünse hayvanın yaşadığı yerde yapın. Hayvanın ortamını görmek, ilan metninden çok daha fazlasını anlatır. Kapora veya ön ödeme talep eden hiçbir sahiplendirme ilanına itibar etmeyin.',
         ],

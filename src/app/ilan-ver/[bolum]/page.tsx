@@ -21,15 +21,31 @@ import { CreateListingForm, type ListingPreset } from '@/app/ilan-ver/CreateList
  */
 
 const PRESETS: Record<string, ListingPreset & { metaTitle: string; metaDescription: string }> = {
+  // Tür kilitli DEĞİL: bu bölüm hayvan ilanlarının tamamı. Bir çiftlik ya
+  // da yetiştirici de buradan satılık ilan veriyor; sahiplendirmeye
+  // kilitlemek onları sitenin dışında bırakıyordu.
   sahiplendirme: {
-    kind: 'sahiplendirme',
     hideCategorySlugs: ['guvercin-ilanlari', 'pet-malzemeleri'],
-    title: 'Ücretsiz Sahiplendirme İlanı Ver',
+    title: 'Hayvan İlanı Ver',
+    description:
+      'Kedi, köpek, kuş ve diğer dostlar için ilan verin. Sahiplendirme ilanları ücretsizdir, satılık ilanlarda fiyat girersiniz.',
     backHref: '/sahiplendirme',
     backLabel: 'Sahiplendirme İlanları',
-    metaTitle: 'Ücretsiz Sahiplendirme İlanı Ver',
+    metaTitle: 'Hayvan İlanı Ver',
     metaDescription:
-      'Yuva arayan dostunuz için ücretsiz sahiplendirme ilanı verin. Fotoğraf ekleyin, sahiplenmek isteyenlerle doğrudan görüşün.',
+      'Kedi, köpek, kuş ve diğer dostlarınız için sahiplendirme veya satılık ilanı verin. Fotoğraf ekleyin, doğrudan görüşün.',
+  },
+  'es-arayan': {
+    kind: 'es_arayan',
+    hideCategorySlugs: ['pet-malzemeleri'],
+    title: 'Eş Arayan İlanı Ver',
+    description:
+      'Çiftleştirme için eş arayan hayvanınızın ırkını, yaşını ve varsa şecere bilgisini yazın.',
+    backHref: '/es-arayanlar',
+    backLabel: 'Eş Arayanlar',
+    metaTitle: 'Eş Arayan İlanı Ver',
+    metaDescription:
+      'Kedi, köpek ve güvercinler için eş arayan ilanı verin. Irk, yaş ve şecere bilgisiyle uygun eşi bulun.',
   },
   guvercin: {
     categorySlug: 'guvercin-ilanlari',
@@ -99,10 +115,28 @@ export function generateStaticParams() {
   return Object.keys(PRESETS).map((bolum) => ({ bolum }));
 }
 
-export default async function Page({ params }: { params: Promise<{ bolum: string }> }) {
+/** Ön ayarın kategori kilidini gevşetmeden değiştirmek isteyen tek yer burası. */
+const KATEGORI_ILE_GELEBILEN = new Set(['sahiplendirme', 'es-arayan']);
+
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ bolum: string }>;
+  searchParams: Promise<{ kategori?: string }>;
+}) {
   const { bolum } = await params;
   const preset = PRESETS[bolum];
   if (!preset) notFound();
 
-  return <CreateListingForm preset={preset} />;
+  // Kedi ilanları sayfasından "İlan Ver"e basan kullanıcıya kategoriyi
+  // tekrar sormuyoruz. Yalnızca o bölümde zaten seçilebilen kategoriler
+  // kabul ediliyor; adres çubuğuna yazılan başka bir şey yok sayılıyor.
+  const { kategori } = await searchParams;
+  const kilitli =
+    kategori && KATEGORI_ILE_GELEBILEN.has(bolum) && !preset.hideCategorySlugs?.includes(kategori)
+      ? kategori
+      : undefined;
+
+  return <CreateListingForm preset={kilitli ? { ...preset, categorySlug: kilitli } : preset} />;
 }

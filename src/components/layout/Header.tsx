@@ -52,6 +52,7 @@ import {
 import { SearchFilters } from '../SearchFilters';
 import { Logo } from '@/components/Logo';
 import { SERVICE_CONFIGS } from '@/lib/services-config';
+import { ilanVerHref } from '@/lib/ilan-ver-href';
 import { Skeleton } from '../ui/skeleton';
 
 // /blog ve /guvenlik buradan KALDIRILDI: ikisi de mevcut değildi ve mobil
@@ -76,7 +77,7 @@ const serviceCategories = [
  *  hepsi görünür, orada yarısı ekran dışında kalıyor. */
 const LISTING_LINKS = [
   { href: '/', label: 'Tüm İlanlar' },
-  { href: '/sahiplendirme', label: 'Ücretsiz Sahiplendirme' },
+  { href: '/sahiplendirme', label: 'Sahiplendirme' },
   { href: '/al-sat', label: 'Satılık İlanlar' },
   { href: '/guvercin-ilanlari', label: 'Güvercin İlanları' },
   { href: '/es-arayanlar', label: 'Eş Arayanlar' },
@@ -273,7 +274,7 @@ export function Header() {
                 {renderAuthContent()}
               </div>
             <Button asChild variant="secondary">
-              <Link href={user ? '/ilan-ver' : '/login'}>İlan Ver</Link>
+              <Link href={user ? ilanVerHref(pathname) : '/login'}>İlan Ver</Link>
             </Button>
           </div>
 
@@ -339,7 +340,7 @@ export function Header() {
 
                 <div className="mt-4 flex flex-col gap-2 border-t pt-4">
                   <Button asChild onClick={() => setSheetOpen(false)}>
-                    <Link href={user ? '/ilan-ver' : '/login'}>Ücretsiz İlan Ver</Link>
+                    <Link href={user ? ilanVerHref(pathname) : '/login'}>İlan Ver</Link>
                   </Button>
 
                   {!isLoading && !user && (

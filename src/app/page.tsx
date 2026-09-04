@@ -9,13 +9,6 @@ import { getSidebarData } from '@/lib/queries/catalog';
 import { createSupabasePublicClient } from '@/lib/supabase/server';
 import { getListings, getFeaturedListings } from '@/lib/queries/listings';
 import { HomeHero } from '@/components/home/HomeHero';
-import {
-  CityLinks,
-  HomeSeoCopy,
-  PopularBreeds,
-  SafetyStrip,
-  ServiceDirectories,
-} from '@/components/home/HomeSections';
 
 /**
  * Ana sayfa.
@@ -73,16 +66,6 @@ export default async function HomePage() {
     online_now: 0,
   };
 
-  // Ücretsiz sahiplendirme ayrı gösteriliyor: emsal sitelerin tamamında
-  // ücretli/ücretsiz ayrımı birinci sınıf bir ayrım ve ziyaretçilerin büyük
-  // kısmı doğrudan bunu arıyor.
-  const { listings: adoptions } = await getListings({
-    kind: 'sahiplendirme',
-    excludeCategoryIds: sidebar.categories
-      .filter((c) => c.code === 'Supply')
-      .map((c) => c.id),
-    perPage: 8,
-  });
 
   return (
     <div className="bg-secondary/50">
@@ -101,11 +84,10 @@ export default async function HomePage() {
               <section className="rounded-xl border border-dashed bg-white p-10 text-center">
                 <h2 className="text-2xl font-bold">Henüz yayında ilan yok</h2>
                 <p className="mx-auto mt-2 max-w-md text-muted-foreground">
-                  PetSemti yeni yayında. İlk ilanı vererek başlayabilirsin —
-                  sahiplendirme ilanları her zaman ücretsiz.
+                  PetSemti yeni yayında. İlk ilanı vererek başlayabilirsin.
                 </p>
                 <Button asChild className="mt-6">
-                  <Link href="/ilan-ver">Hemen İlan Ver</Link>
+                  <Link href="/ilan-ver/sahiplendirme">Hemen İlan Ver</Link>
                 </Button>
               </section>
             )}
@@ -117,24 +99,6 @@ export default async function HomePage() {
               </section>
             )}
 
-            {adoptions.length > 0 && (
-              <section>
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-2xl font-bold">Yuva Arayanlar</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Ücretsiz sahiplendirme ilanları
-                    </p>
-                  </div>
-                  <Button variant="link" asChild className="shrink-0 text-primary">
-                    <Link href="/sahiplendirme">
-                      Tümünü Gör <ArrowRight className="ml-1 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-                <ListingGrid listings={adoptions} />
-              </section>
-            )}
 
             {categorySections
               .filter((section) => section.listings.length > 0)
@@ -152,11 +116,6 @@ export default async function HomePage() {
                 </section>
               ))}
 
-            <PopularBreeds sidebar={sidebar} />
-            <ServiceDirectories />
-            <CityLinks sidebar={sidebar} />
-            <SafetyStrip />
-            <HomeSeoCopy />
           </main>
         </div>
       </div>

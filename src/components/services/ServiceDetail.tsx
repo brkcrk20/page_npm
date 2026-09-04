@@ -5,6 +5,7 @@ import { OpenBadge } from '@/components/services/ServiceCard';
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { getProviderStorefront } from '@/lib/queries/services';
 import { ServiceContact } from '@/components/services/ServiceContact';
+import { ServiceReviewForm } from '@/components/services/ServiceReviewForm';
 import { Badge } from '@/components/ui/badge';
 import { getOpenState, normalizeWeek, formatTime, WEEKDAY_NAMES } from '@/lib/opening-hours';
 import type { ServiceReview } from '@/lib/queries/services';
@@ -216,10 +217,11 @@ export async function ServiceDetail({
                   </span>
                 )}
               </h2>
-              <div className="border-t p-4">
+              <div className="space-y-4 border-t p-4">
+                <ServiceReviewForm providerId={provider.id} ownerId={provider.owner_id} />
                 {reviews.length === 0 ? (
                   <p className="py-6 text-center text-sm text-muted-foreground">
-                    Henüz değerlendirme yapılmamış.
+                    Henüz değerlendirme yapılmamış. İlk değerlendirmeyi siz yazın.
                   </p>
                 ) : (
                   <ul className="space-y-4">

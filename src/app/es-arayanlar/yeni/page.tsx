@@ -7,5 +7,5 @@ import { permanentRedirect } from 'next/navigation';
  * anlamı yok, tüm ilanlar tek formdan geçiyor.
  */
 export default function NewMatingListingPage() {
-  permanentRedirect('/ilan-ver?tip=es_arayan');
+  permanentRedirect('/ilan-ver/es-arayan');
 }
