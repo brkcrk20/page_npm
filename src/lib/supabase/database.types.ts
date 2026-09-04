@@ -33,10 +33,7 @@ export type Database = {
       breeds: {
         Row: {
           category_id: number
-          content_body: string | null
-          content_intro: string | null
           created_at: string
-          faq: Json
           group_name: string | null
           id: number
           is_active: boolean
@@ -44,17 +41,12 @@ export type Database = {
           name: string
           position: number
           restriction_note: string | null
-          seo_description: string | null
-          seo_title: string | null
           slug: string
           updated_at: string
         }
         Insert: {
           category_id: number
-          content_body?: string | null
-          content_intro?: string | null
           created_at?: string
-          faq?: Json
           group_name?: string | null
           id?: never
           is_active?: boolean
@@ -62,17 +54,12 @@ export type Database = {
           name: string
           position?: number
           restriction_note?: string | null
-          seo_description?: string | null
-          seo_title?: string | null
           slug: string
           updated_at?: string
         }
         Update: {
           category_id?: number
-          content_body?: string | null
-          content_intro?: string | null
           created_at?: string
-          faq?: Json
           group_name?: string | null
           id?: never
           is_active?: boolean
@@ -80,8 +67,6 @@ export type Database = {
           name?: string
           position?: number
           restriction_note?: string | null
-          seo_description?: string | null
-          seo_title?: string | null
           slug?: string
           updated_at?: string
         }
@@ -1263,6 +1248,111 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "seller_stats"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      page_content: {
+        Row: {
+          body: string | null
+          breed_id: number | null
+          category_id: number | null
+          city_id: number | null
+          created_at: string
+          district_id: number | null
+          faq: Json
+          id: number
+          intro: string | null
+          seo_description: string | null
+          seo_title: string | null
+          service_type: Database["public"]["Enums"]["service_type"] | null
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          breed_id?: number | null
+          category_id?: number | null
+          city_id?: number | null
+          created_at?: string
+          district_id?: number | null
+          faq?: Json
+          id?: never
+          intro?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          service_type?: Database["public"]["Enums"]["service_type"] | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          breed_id?: number | null
+          category_id?: number | null
+          city_id?: number | null
+          created_at?: string
+          district_id?: number | null
+          faq?: Json
+          id?: never
+          intro?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          service_type?: Database["public"]["Enums"]["service_type"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_content_breed_id_fkey"
+            columns: ["breed_id"]
+            isOneToOne: false
+            referencedRelation: "breed_listing_counts"
+            referencedColumns: ["breed_id"]
+          },
+          {
+            foreignKeyName: "page_content_breed_id_fkey"
+            columns: ["breed_id"]
+            isOneToOne: false
+            referencedRelation: "breeds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_content_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_content_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_listing_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "page_content_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_content_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "city_listing_counts"
+            referencedColumns: ["city_id"]
+          },
+          {
+            foreignKeyName: "page_content_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "service_city_counts"
+            referencedColumns: ["city_id"]
+          },
+          {
+            foreignKeyName: "page_content_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
           },
         ]
       }

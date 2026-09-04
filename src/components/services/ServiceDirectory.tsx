@@ -6,6 +6,9 @@ import { ServiceFilterPanel } from '@/components/services/ServiceFilterPanel';
 import { Button } from '@/components/ui/button';
 import type { ServiceFeature, ServiceProviderCard } from '@/lib/queries/services';
 import type { ServiceConfig } from '@/lib/services-config';
+import { PageBody, PageIntro } from '@/components/PageContentBlocks';
+import { getPageContent } from '@/lib/queries/page-content';
+import { getCityBySlug } from '@/lib/queries/catalog';
 
 /**
  * Hizmet rehberlerinin ortak gövdesi.
@@ -17,7 +20,7 @@ import type { ServiceConfig } from '@/lib/services-config';
 
 type Crumb = { label: string; href?: string };
 
-export function ServiceDirectory({
+export async function ServiceDirectory({
   config,
   title,
   intro,
@@ -52,6 +55,20 @@ export function ServiceDirectory({
   basePath: string;
   emptyMessage: string;
 }) {
+  /**
+   * Rehberin özgün metni.
+   *
+   * Yedi sayfa da bu bileşenin ince sarmalayıcısı (üretilmiş dosyalar);
+   * metni burada çekmek, yedi dosyayı ve üreticiyi değiştirmekten hem daha
+   * az yer hem de ileride bir sayfada unutulma ihtimalini ortadan kaldırıyor.
+   * Şehir seçiliyse o şehrin metni, değilse rehberin genel metni.
+   */
+  const sehir = activeCitySlug ? await getCityBySlug(activeCitySlug) : null;
+  const icerik = await getPageContent({
+    serviceType: config.type,
+    cityId: sehir?.id ?? null,
+  });
+
   return (
     <div className="bg-secondary/30">
       <div className="mx-auto w-full max-w-7xl px-5 pb-10 pt-4">
@@ -93,6 +110,8 @@ export function ServiceDirectory({
             <Link href={`/${config.slug}/kayit`}>{config.registerCta}</Link>
           </Button>
         </header>
+
+        <PageIntro icerik={icerik} />
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-[280px_1fr]">
           <aside className="space-y-4">
@@ -163,6 +182,7 @@ export function ServiceDirectory({
                 )}
               </>
             )}
+            <PageBody icerik={icerik} />
           </main>
         </div>
       </div>

@@ -10,6 +10,7 @@ import {
   resolveCategorySegment,
 } from '@/lib/queries/catalog';
 import { getListings, parseListingParams } from '@/lib/queries/listings';
+import { getPageContent } from '@/lib/queries/page-content';
 
 /**
  * /<kategori>/<segment>
@@ -113,11 +114,14 @@ export default async function CategorySegmentPage({
   const sidebar = await getSidebarData();
 
   if (resolved.kind === 'breed') {
-    const { listings, total } = await getListings({
-      ...listeParams,
-      categoryId: category.id,
-      breedId: resolved.breed.id,
-    });
+    const [{ listings, total }, icerik] = await Promise.all([
+      getListings({
+        ...listeParams,
+        categoryId: category.id,
+        breedId: resolved.breed.id,
+      }),
+      getPageContent({ categoryId: category.id, breedId: resolved.breed.id }),
+    ]);
 
     return (
       <CategoryBrowser
@@ -132,15 +136,19 @@ export default async function CategorySegmentPage({
         category={category}
         activeBreedSlug={resolved.breed.slug}
         emptyMessage={`Şu an yayında ${resolved.breed.name} ilanı yok.`}
+        icerik={icerik}
       />
     );
   }
 
-  const { listings, total } = await getListings({
-    ...listeParams,
-    categoryId: category.id,
-    cityId: resolved.city.id,
-  });
+  const [{ listings, total }, sehirIcerigi] = await Promise.all([
+    getListings({
+      ...listeParams,
+      categoryId: category.id,
+      cityId: resolved.city.id,
+    }),
+    getPageContent({ categoryId: category.id, cityId: resolved.city.id }),
+  ]);
 
   return (
     <CategoryBrowser
@@ -155,6 +163,7 @@ export default async function CategorySegmentPage({
       category={category}
       activeCitySlug={resolved.city.slug}
       emptyMessage={`${resolved.city.name} ilinde yayında ${category.name.toLowerCase()} yok.`}
+      icerik={sehirIcerigi}
     />
   );
 }

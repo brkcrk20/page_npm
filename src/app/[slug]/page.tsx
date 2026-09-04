@@ -1,5 +1,6 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import { SITE_URL } from '@/lib/site';
+import { getPageContent } from '@/lib/queries/page-content';
 import { listingPhotoUrl } from '@/lib/supabase/storage';
 import type { Metadata } from 'next';
 
@@ -69,6 +70,15 @@ export async function generateMetadata({
   if (resolution?.kind === 'category') {
     const category = await getCategoryBySlug(slug);
     if (category) {
+      // Yönetimden yazılan başlık/açıklama, kategorinin kendi alanlarından
+      // önce gelir: metni değiştirmek için yayın gerekmesin.
+      const icerik = await getPageContent({ categoryId: category.id });
+      if (icerik?.seo_title || icerik?.seo_description) {
+        return {
+          title: icerik.seo_title ?? `${category.name} İlanları`,
+          description: icerik.seo_description ?? undefined,
+        };
+      }
       // Kategoriye özel SEO metni varsa o kullanılıyor; güvercin gibi kendi
       // terminolojisi olan kategorilerde genel şablon yetersiz kalıyor.
       return {
@@ -149,9 +159,10 @@ export default async function RootSlugPage({
     const category = await getCategoryBySlug(slug);
     if (!category) notFound();
 
-    const [{ listings, total }, sidebar] = await Promise.all([
+    const [{ listings, total }, sidebar, icerik] = await Promise.all([
       getListings({ ...listeParams, categoryId: category.id }),
       getSidebarData(),
+      getPageContent({ categoryId: category.id }),
     ]);
 
     // Güvercin kategorisinin kendine özgü giriş sayfası var: alıcı fotoğrafa
@@ -179,6 +190,7 @@ export default async function RootSlugPage({
         sidebar={sidebar}
         category={category}
         emptyMessage={`Şu an yayında ${category.name.toLowerCase()} yok. İlk ilanı sen ver!`}
+        icerik={icerik}
       />
     );
   }

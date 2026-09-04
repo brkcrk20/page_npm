@@ -9,6 +9,7 @@ import {
   getDistrict,
 } from '@/lib/queries/catalog';
 import { getListings, parseListingParams } from '@/lib/queries/listings';
+import { getPageContent } from '@/lib/queries/page-content';
 
 /**
  * /<kategori>/<sehir>/<ilce>
@@ -77,7 +78,7 @@ export default async function DistrictPage({
   // sonuç hiç değişmiyordu. Çalışmayan bir denetim, olmayandan kötü.
   const listeParams = parseListingParams(await searchParams);
 
-  const [{ listings, total }, sidebar] = await Promise.all([
+  const [{ listings, total }, sidebar, icerik] = await Promise.all([
     getListings({
       ...listeParams,
       categoryId: category.id,
@@ -85,6 +86,7 @@ export default async function DistrictPage({
       districtId: district.id,
     }),
     getSidebarData(),
+    getPageContent({ categoryId: category.id, cityId: city.id, districtId: district.id }),
   ]);
 
   return (
@@ -101,6 +103,7 @@ export default async function DistrictPage({
       category={category}
       activeCitySlug={city.slug}
       emptyMessage={`${district.name} bölgesinde yayında ${category.name.toLowerCase()} yok.`}
+      icerik={icerik}
     />
   );
 }

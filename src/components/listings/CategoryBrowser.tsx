@@ -7,6 +7,8 @@ import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
 import { ListingToolbar } from '@/components/listings/ListingToolbar';
 import { JsonLd } from '@/components/JsonLd';
+import { PageBody, PageIntro } from '@/components/PageContentBlocks';
+import type { SayfaIcerigi } from '@/lib/queries/page-content';
 import { breadcrumbSchema, itemListSchema } from '@/lib/structured-data';
 import type { ListingCard } from '@/lib/queries/listings';
 import type { Category, SidebarData } from '@/lib/queries/catalog';
@@ -34,6 +36,7 @@ export function CategoryBrowser({
   activeBreedSlug,
   activeCitySlug,
   emptyMessage,
+  icerik,
 }: {
   title: string;
   description?: string;
@@ -45,6 +48,8 @@ export function CategoryBrowser({
   activeBreedSlug?: string;
   activeCitySlug?: string;
   emptyMessage?: string;
+  /** Bu sayfaya özgü metin; yoksa hiçbir şey gösterilmiyor. */
+  icerik?: SayfaIcerigi | null;
 }) {
   /**
    * İlan verme hedefi kategoriden geliyor.
@@ -196,6 +201,7 @@ export function CategoryBrowser({
 
           <main className="min-w-0">
             {/* Sahiplendirmede fiyat yok; orada yalnızca sıralama gösteriliyor. */}
+            <PageIntro icerik={icerik ?? null} />
             <ListingToolbar
               showPrice
               aramaAdi={title}
@@ -206,6 +212,7 @@ export function CategoryBrowser({
               }}
             />
             <ListingGrid listings={listings} emptyMessage={emptyMessage} />
+            <PageBody icerik={icerik ?? null} />
           </main>
         </div>
       </div>
