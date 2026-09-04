@@ -170,10 +170,14 @@ export function Header() {
     if (!user) {
       return (
         <div className="hidden md:flex items-center space-x-2">
-          <Button variant="ghost" asChild>
+          <Button variant="ghost" asChild className="hover:bg-white/15 hover:text-white">
             <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
           </Button>
-          <Button variant="outline" asChild>
+          <Button
+            variant="outline"
+            asChild
+            className="border-white/50 bg-transparent text-white hover:bg-white/15 hover:text-white"
+          >
             <Link href="/kayit">
               <UserPlus className="mr-2 h-4 w-4" />
               Kayıt Ol
@@ -187,7 +191,7 @@ export function Header() {
       <div className="flex items-center space-x-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 px-3">
+            <Button variant="ghost" className="flex items-center gap-2 px-3 hover:bg-white/15 hover:text-white">
               <span className="font-medium">{profile?.full_name ?? user.email}</span>
               <ChevronDown className="h-4 w-4" />
             </Button>
@@ -230,7 +234,7 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="ghost" size="icon" asChild>
+        <Button variant="ghost" size="icon" asChild className="hover:bg-white/15 hover:text-white">
           <Link href="/mesajlarim">
             <MessageSquare className="h-5 w-5" />
             <span className="sr-only">Mesajlar</span>
@@ -242,30 +246,31 @@ export function Header() {
 
   return (
     <>
-      {/* Başlık çubuğu beyaz.
-          Dolu renkli bant en yaygın ilan sitesi kalıbıydı ve emsallerle aynı
-          silueti veriyordu. Beyaz zemin hem markayı (renkli amblem) öne
-          çıkarıyor hem de altındaki bölüm menüsüyle tek bir blok gibi
-          okunuyor. */}
-      <header className="sticky top-0 z-50 w-full border-b bg-white text-foreground">
+      {/* Başlık çubuğu tek güçlü marka renginde.
+          Beyaz denendi ve sayfa tümüyle renksiz kaldı: gövde zaten beyaz
+          olduğu için üst alan içerikten ayrışmıyordu. Renk yalnızca burada
+          ve birincil düğmelerde — gövde beyaz kaldığı sürece güçlü bir üst
+          bant sayfayı dağıtmıyor, çerçeveliyor. */}
+      <header className="sticky top-0 z-50 w-full bg-primary text-primary-foreground">
         <div className="container flex h-16 items-center px-5">
-          {/* Beyaz zeminde renkli amblem. */}
+          {/* Renkli bantta tek renk amblem: iki renkli sürüm burada
+              okunmuyordu. */}
           <Link href="/" className="mr-6 flex items-center" aria-label="PetSemti ana sayfa">
-            <Logo size={36} />
+            <Logo variant="mono" size={36} />
           </Link>
           
           <div className="flex flex-1 items-center justify-end space-x-4">
               <div className="hidden md:flex items-center space-x-4">
                 {renderAuthContent()}
               </div>
-            <Button asChild>
+            <Button asChild variant="secondary" className="bg-white text-primary hover:bg-white/90">
               <Link href={user ? ilanVerHref(pathname) : '/login'}>İlan Ver</Link>
             </Button>
           </div>
 
           <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              <Button variant="ghost" size="icon" className="md:hidden hover:bg-white/15 hover:text-white">
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle Menu</span>
               </Button>

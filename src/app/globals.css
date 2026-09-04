@@ -5,39 +5,43 @@
 /**
  * Renk sistemi.
  *
- * Ana renk turuncuydu (#EC5822) ve emsal bir sitenin ana rengiyle
- * (#EA4E1B) neredeyse aynıydı. Palet pembe tonlara taşındı.
+ * TEK GÜÇLÜ RENK, BEYAZ ZEMİN
  *
- * PASTEL NEREDE, KOYU NEREDE
- * Pastel pembe (#E05281 ve açığı) beyaz yazıyla 3.69:1 kontrast veriyor —
- * WCAG AA sınırının (4.5) altında, yani düğme ve bağlantıda okunmuyor.
- * Bu yüzden pastel tonlar YÜZEYLERDE (zemin, kart, kenarlık, rozet
- * arka planı), koyu gül tonu (#C92C53) ise YAZI VE DÜĞMELERDE kullanılıyor.
- * Böylece site pastel görünüyor ama hiçbir yazı okunmaz hâle gelmiyor.
+ * Önce turuncuydu ve emsal bir sitenin rengiyle neredeyse aynıydı; sonra
+ * her yüzeyi pembeye boyadım ve sayfa dağıldı: pembe zeminin üstünde yedi
+ * ayrı kategori rengi (amber, menekşe, gök, camgöbeği…) aynı anda
+ * duruyordu. Renk çokluğu tasarımı zenginleştirmiyor, dağıtıyor.
  *
- * Ölçülen kontrastlar: beyaz yazı / gül zemin 5.30:1, koyu yazı / pastel
- * zemin 13.41:1.
+ * Kural şimdi net:
+ *   ZEMİN saf beyaz — içerik (fotoğraf, ilan, metin) renk taşısın.
+ *   ÜST ALANLAR tek güçlü marka rengi — başlık çubuğu, birincil düğmeler.
+ *   NÖTR GRİLER kenarlık ve ikincil yüzeylerde; pembe tonlu gri yok.
+ *   KATEGORİ RENKLERİ yalnızca küçük vurgu (ince şerit, sayı rozeti),
+ *   asla dolu zemin olarak değil.
+ *
+ * Marka rengi gül (#C92C53): pembe ailesinde ama pastel değil, beyaz
+ * yazıyla 5.30:1 kontrast veriyor (WCAG AA).
  */
 @layer base {
   :root {
-    --background: 345 45% 97%;
-    --foreground: 340 25% 14%;
+    --background: 0 0% 100%;
+    --foreground: 240 8% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 340 25% 14%;
+    --card-foreground: 240 8% 12%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
     --primary: 345 64% 48%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 345 40% 95%;
-    --secondary-foreground: 345 30% 18%;
-    --muted: 345 30% 94%;
-    --muted-foreground: 340 12% 45%;
-    --accent: 345 60% 94%;
-    --accent-foreground: 345 45% 25%;
+    --secondary: 0 0% 96.5%;
+    --secondary-foreground: 240 6% 12%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 345 70% 96%;
+    --accent-foreground: 345 60% 32%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 340 25% 88%;
-    --input: 340 25% 88%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
     --ring: 345 64% 48%;
     --radius: 0.9rem;
     --chart-1: 12 76% 61%;
@@ -83,8 +87,8 @@
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    --accent: 345 60% 94%;
-    --accent-foreground: 345 45% 25%;
+    --accent: 345 70% 96%;
+    --accent-foreground: 345 60% 32%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;

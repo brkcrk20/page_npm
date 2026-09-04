@@ -137,8 +137,8 @@ export function SectionNav() {
         className={cn(
           'flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors',
           guvercinAktif
-            ? 'border-indigo-600 bg-indigo-600 text-white'
-            : 'border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+            ? 'border-primary bg-primary text-primary-foreground'
+            : 'border-primary/25 bg-primary/5 text-primary hover:bg-primary/10'
         )}
       >
         <Bird className="h-4 w-4" />

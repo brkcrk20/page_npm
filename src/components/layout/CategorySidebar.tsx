@@ -243,15 +243,20 @@ export function CategorySidebar({
               const open = isOpen(category.id, index);
               return (
               <section key={category.id}>
-                {/* Her kategorinin kendi tonu: bölümler birbirinden renkle
-                    ayrılıyor, menü tek düze gri bir liste olmaktan çıkıyor. */}
-                <div className={cn('flex items-stretch border-y', kategoriRengi(category.code).yumusak)}>
+                {/* Kategori rengi yalnızca ince bir şerit.
+                    Önce başlığın tamamı o renge boyanıyordu; yedi kategori
+                    yan yana gelince menü alacalı bir listeye dönüşüyordu. */}
+                <div className="flex items-stretch border-y bg-secondary/60">
+                  <span
+                    aria-hidden
+                    className={cn('w-1 shrink-0', kategoriRengi(category.code).dolu)}
+                  />
                   <Link
                     href={`/${category.slug}`}
-                    className="flex flex-1 items-center justify-between px-4 py-2.5 text-sm font-bold"
+                    className="flex flex-1 items-center justify-between px-3 py-2.5 text-sm font-bold hover:text-primary"
                   >
-                    <span className={kategoriRengi(category.code).koyu}>{category.name}</span>
-                    <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold text-white', kategoriRengi(category.code).dolu)}>
+                    <span>{category.name}</span>
+                    <span className="text-xs font-semibold text-muted-foreground">
                       {category.count}
                     </span>
                   </Link>
@@ -262,7 +267,7 @@ export function CategorySidebar({
                     onClick={() => toggleCategory(category.id, open)}
                     aria-expanded={open}
                     aria-label={`${category.name} cinslerini ${open ? 'gizle' : 'göster'}`}
-                    className={cn('px-3 opacity-70 hover:opacity-100', kategoriRengi(category.code).koyu)}
+                    className="px-3 text-muted-foreground hover:text-primary"
                   >
                     <ChevronDown
                       className={cn('h-4 w-4 transition-transform', open && 'rotate-180')}
@@ -282,7 +287,7 @@ export function CategorySidebar({
                         className={cn(
                           'flex items-center gap-3 border-b px-4 py-2 text-sm transition-colors hover:bg-secondary/60',
                           breed.slug === activeBreedSlug
-                            ? cn(kategoriRengi(category.code).yumusak, 'font-semibold')
+                            ? 'bg-primary/8 font-semibold text-primary'
                             : 'text-foreground'
                         )}
                       >
@@ -297,9 +302,7 @@ export function CategorySidebar({
                         <span
                           className={cn(
                             'shrink-0 text-xs',
-                            breed.count > 0
-                              ? cn('rounded-full px-1.5 font-semibold text-white', kategoriRengi(category.code).dolu)
-                              : 'text-muted-foreground'
+                            breed.count > 0 ? 'font-semibold text-primary' : 'text-muted-foreground'
                           )}
                         >
                           {breed.count}

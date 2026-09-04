@@ -36,12 +36,15 @@ const PARMAKLAR: [number, number, number, number][] = [
 /** Marka renkleri. Lacivert marka kimliğinden, turuncu sitenin ana rengi. */
 // Marka renkleri site paletiyle aynı: ana renk petrol, vurgu amber.
 // Turuncu amblem yeni palette yabancı duruyordu.
-// Amblem pastel mavi: pembe paletin yanında tamamlayıcı duruyor ve
-// beyaz zeminde de pembe zeminde de seçiliyor. Pati deliği içeriden
-// aydınlatan açık ton, iğnenin kendisi biraz daha koyu — küçük boyutta
-// tek renk lekeye dönüşmesin diye.
-const MAVI = '#2E7EB8';
-const MAVI_ACIK = '#7FC4E8';
+/**
+ * Amblem tek renk.
+ *
+ * İki renkli sürüm (iğne mavi, bir parmak açık mavi) sitenin gül rengiyle
+ * çakışıyordu: başlıkta beyaz, alt bilgide mavi bir amblem vardı ve ikisi
+ * aynı markaya ait görünmüyordu. Tek renk hem her zeminde çalışıyor hem de
+ * amblemi 16 pikselde bile tek bir okunur leke olarak tutuyor.
+ */
+const MARKA = '#C92C53';
 
 export function LogoMark({
   size = 32,
@@ -82,11 +85,8 @@ export function LogoMark({
         ))}
       </mask>
 
-      <path d={IGNE_D} fill={mono ? 'currentColor' : MAVI} mask={`url(#${maskeId})`} />
+      <path d={IGNE_D} fill={mono ? 'currentColor' : MARKA} mask={`url(#${maskeId})`} />
 
-      {/* Tek amber parmak: markanın sıcak vurgusu. Tek renk sürümde yok,
-          orada amblem tek renk kalmalı. */}
-      {!mono && <ellipse cx={40.8} cy={25.4} rx={3.1} ry={4.0} fill={MAVI_ACIK} />}
     </svg>
   );
 }
