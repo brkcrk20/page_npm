@@ -50,6 +50,7 @@ import {
   NavigationMenuLink,
 } from "@/components/ui/navigation-menu"
 import { SearchFilters } from '../SearchFilters';
+import { SectionNav } from './SectionNav';
 import { Logo } from '@/components/Logo';
 import { SERVICE_CONFIGS } from '@/lib/services-config';
 import { ilanVerHref } from '@/lib/ilan-ver-href';
@@ -58,42 +59,24 @@ import { Skeleton } from '../ui/skeleton';
 // /blog ve /guvenlik buradan KALDIRILDI: ikisi de mevcut değildi ve mobil
 // menüden tıklayan herkes 404'e düşüyordu.
 
-const serviceCategories = [
-  { icon: Heart, label: 'Sahiplendirme', href: '/sahiplendirme' },
-  { icon: Bird, label: 'Güvercinler', href: '/guvercin-ilanlari' },
-  { icon: Banknote, label: 'Al & Sat', href: '/al-sat' },
-  { icon: HeartHandshake, label: 'Eş Arayanlar', href: '/es-arayanlar' },
-  { icon: SearchX, label: 'Kayıp & Bulundu', href: '/kayip' },
-  { icon: Stethoscope, label: 'Veteriner', href: '/veteriner' },
-  { icon: Building, label: 'Pet Oteli', href: '/pet-oteli' },
-  { icon: Award, label: 'Eğitmen', href: '/egitmen' },
-  { icon: Scissors, label: 'Pet Kuaför', href: '/pet-kuafor' },
-  { icon: ShoppingCart, label: 'Petshop', href: '/petshop' },
-  { icon: Car, label: 'Pet Taksi', href: '/pet-taksi' },
-  { icon: PersonStanding, label: 'Gezdirici', href: '/gezdirici' },
-];
 
 /** Menüdeki ilan bağlantıları. Şeritteki ile aynı hedefler; burada
  *  hepsi görünür, orada yarısı ekran dışında kalıyor. */
+/**
+ * Çekmecedeki ilan bağlantıları.
+ *
+ * Güvercin buradan çıkarıldı: kendi öbeği var ve iki yerde birden durması
+ * "ayrı bir dikey" fikrini bozuyordu. "Satılık İlanlar" da yanlış ad
+ * olmuştu — /al-sat artık hayvan değil ikinci el malzeme satıyor.
+ */
 const LISTING_LINKS = [
   { href: '/', label: 'Tüm İlanlar' },
   { href: '/sahiplendirme', label: 'Sahiplendirme' },
-  { href: '/al-sat', label: 'Satılık İlanlar' },
-  { href: '/guvercin-ilanlari', label: 'Güvercin İlanları' },
+  { href: '/al-sat', label: 'Al & Sat — Pet Malzemeleri' },
   { href: '/es-arayanlar', label: 'Eş Arayanlar' },
   { href: '/kayip', label: 'Kayıp ve Bulunanlar' },
 ];
 
-/** Şeritteki hizmet rehberleri; ilan bağlantıları menüde ayrı bölümde. */
-const SERVICE_HREFS = new Set([
-  '/veteriner',
-  '/pet-oteli',
-  '/egitmen',
-  '/pet-kuafor',
-  '/petshop',
-  '/pet-taksi',
-  '/gezdirici',
-]);
 
 function MobileGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -307,8 +290,7 @@ export function Header() {
                 </MobileGroup>
 
                 <MobileGroup title="Hizmetler">
-                  {serviceCategories
-                    .filter((c) => SERVICE_HREFS.has(c.href))
+                  {SERVICE_CONFIGS.map((svc) => ({ href: `/${svc.slug}`, label: svc.label }))
                     .map((item) => (
                       <MobileLink
                         key={item.href}
@@ -317,6 +299,14 @@ export function Header() {
                         onNavigate={() => setSheetOpen(false)}
                       />
                     ))}
+                </MobileGroup>
+
+                {/* Güvercin kendi dikeyinde: ilanlarla da hizmetlerle de
+                    aynı öbekte değil. */}
+                <MobileGroup title="Güvercin Dünyası">
+                  <MobileLink href="/guvercin-ilanlari" label="Güvercin İlanları" onNavigate={() => setSheetOpen(false)} />
+                  <MobileLink href="/ilan-ver/guvercin" label="Güvercin İlanı Ver" onNavigate={() => setSheetOpen(false)} />
+                  <MobileLink href="/pet-malzemeleri" label="Güvercin Malzemeleri" onNavigate={() => setSheetOpen(false)} />
                 </MobileGroup>
 
                 {user ? (
@@ -373,53 +363,14 @@ export function Header() {
         </div>
       </header>
 
-      {/* KATEGORİ VE FİLTRE ALANI - MASAÜSTÜ İÇİN TEK SATIR AYARI */}
+      {/* BÖLÜM MENÜSÜ VE İLAN ARAMA
+          Burada on iki bağlantı düz bir şerit hâlinde, hepsi aynı ağırlıkta
+          duruyordu; artık üç öbek var (bkz. SectionNav). */}
       {showCategoriesAndFilters && (
         <div className="bg-white shadow-sm border-b py-2">
           <div className="w-full md:container md:mx-auto">
             
-            <div className="w-full">
-              {/* ÖNEMLİ DEĞİŞİKLİK BURADA:
-                  md:flex-nowrap -> Asla alt satıra geçme
-                  md:justify-between -> Ekrana eşit yay
-                  md:gap-1 -> Araları sıkı tut
-              */}
-              <div className="flex w-full overflow-x-auto py-2 px-4 gap-3 md:flex md:justify-between md:flex-nowrap md:gap-1 md:overflow-visible no-scrollbar">
-                {serviceCategories.map((service) => {
-                  const isActive = pathname === service.href;
-
-                  return (
-                    <Link
-                      href={service.href}
-                      key={service.label}
-                      className={cn(
-                        'flex flex-col items-center justify-center transition-all duration-200 rounded-xl',
-                        'min-w-[72px] py-2 gap-1.5',
-                        // Masaüstünde paddingleri biraz azalttık (px-2) ki 11 tane sığsın
-                        'md:min-w-0 md:w-auto md:px-2 md:py-2 md:gap-2',
-                        isActive
-                          ? 'bg-orange-50 text-primary ring-1 ring-primary/20 shadow-sm'
-                          : 'text-gray-500 hover:bg-gray-50 hover:text-primary'
-                      )}
-                    >
-                      <div className={cn(
-                        "p-2 rounded-full transition-colors",
-                        isActive ? "bg-white text-primary shadow-sm" : "bg-gray-100/50 text-gray-500 group-hover:bg-white"
-                      )}>
-                        <service.icon className="w-5 h-5 md:w-5 md:h-5" />
-                      </div>
-                      
-                      <span className={cn(
-                        "text-[10px] md:text-[11px] font-medium text-center leading-tight px-1",
-                        "whitespace-nowrap md:whitespace-nowrap" 
-                      )}>
-                        {service.label}
-                      </span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
+            <SectionNav />
             
             {/* Hizmet rehberlerinde gösterilmiyor: orada aranan ilan değil
                 işletme ve sayfanın kendi süzgeçleri var. */}
