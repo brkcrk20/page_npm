@@ -34,6 +34,7 @@ export default async function Page() {
   return (
     <KindBrowser
       createHref="/ilan-ver/sahiplendirme"
+      createLabel="Hayvan İlanı Ver"
       title="Sahiplendirme İlanları"
       lead="Kedi, köpek, kuş ve diğer dostlar için sahiplendirme ve satılık ilanlar."
       listings={listings}

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Plus } from 'lucide-react';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
@@ -22,6 +23,7 @@ export function KindBrowser({
   lead,
   /** Bölümün kendi ilan verme sayfası. */
   createHref = '/ilan-ver',
+  createLabel = 'İlan Ver',
   listings,
   total,
   sidebar,
@@ -31,6 +33,7 @@ export function KindBrowser({
   title: string;
   lead: string;
   createHref?: string;
+  createLabel?: string;
   listings: ListingCard[];
   total: number;
   sidebar: SidebarData;
@@ -48,10 +51,19 @@ export function KindBrowser({
           <span className="text-foreground">{title}</span>
         </nav>
 
-        <header className="mb-5">
-          <h1 className="text-2xl font-bold md:text-3xl">{title}</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{lead}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{total} ilan bulundu</p>
+        {/* Bu sayfanın kendi ilan verme düğmesi; başka bölüme götürmüyor. */}
+        <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold md:text-3xl">{title}</h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{lead}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{total} ilan bulundu</p>
+          </div>
+          <Button asChild>
+            <Link href={createHref}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              {createLabel}
+            </Link>
+          </Button>
         </header>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-[260px_1fr]">
@@ -74,7 +86,7 @@ export function KindBrowser({
             <p key={p.slice(0, 40)}>{p}</p>
           ))}
           <Button asChild size="sm" className="mt-2">
-            <Link href={createHref}>Ücretsiz İlan Ver</Link>
+            <Link href={createHref}>{createLabel}</Link>
           </Button>
         </section>
       </div>

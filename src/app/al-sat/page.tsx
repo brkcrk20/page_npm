@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { PackageSearch } from 'lucide-react';
+import { PackageSearch, Plus } from 'lucide-react';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
@@ -86,13 +86,22 @@ export default async function Page() {
           <span className="text-foreground">Al &amp; Sat</span>
         </nav>
 
-        <header className="mb-5">
-          <h1 className="text-2xl font-bold md:text-3xl">İkinci El Pet Malzemeleri</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Kullanmadığınız kafesi, akvaryumu, taşıma çantasını satın; ihtiyacınız olanı
-            uygun fiyata bulun. Burada hayvan ilanı yayınlanmaz.
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">{total} ilan bulundu</p>
+        {/* Bu sayfanın ilan verme düğmesi yalnızca malzeme formunu açıyor. */}
+        <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold md:text-3xl">İkinci El Pet Malzemeleri</h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Kullanmadığınız kafesi, akvaryumu, taşıma çantasını satın; ihtiyacınız olanı
+              uygun fiyata bulun. Burada hayvan ilanı yayınlanmaz.
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{total} ilan bulundu</p>
+          </div>
+          <Button asChild>
+            <Link href="/ilan-ver/al-sat">
+              <Plus className="mr-1.5 h-4 w-4" />
+              Malzeme İlanı Ver
+            </Link>
+          </Button>
         </header>
 
         {/* Mobilde kenar menüsü gizli; hayvan türü kısayolları burada. */}
@@ -134,7 +143,7 @@ export default async function Page() {
                   Kullanmadığınız pet malzemelerini ücretsiz satışa çıkarabilirsiniz.
                 </p>
                 <Button asChild className="mt-4">
-                  <Link href="/ilan-ver/al-sat">Ücretsiz İlan Ver</Link>
+                  <Link href="/ilan-ver/al-sat">Malzeme İlanı Ver</Link>
                 </Button>
               </div>
             ) : (

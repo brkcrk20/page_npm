@@ -1,13 +1,19 @@
 'use client';
 
 import { UnreadBadge } from './UnreadBadge';
-import { ilanVerHref } from '@/lib/ilan-ver-href';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Heart, Plus, MessageSquare, User } from 'lucide-react';
+import { Home, Heart, MessageSquare, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Mobil alt menü.
+ *
+ * Ortadaki "+" ilan verme düğmesi kaldırıldı: nereden basılırsa basılsın
+ * aynı yere gidiyordu ve bölümler birbirine karışıyordu. Artık her sayfanın
+ * kendi başlığında o sayfaya özel bir ilan verme düğmesi var.
+ */
 export function BottomNav() {
   const pathname = usePathname();
 
@@ -23,13 +29,6 @@ export function BottomNav() {
       icon: Heart,
     },
     {
-      // Bulunduğun bölümün formu açılıyor; bkz. lib/ilan-ver-href.ts
-      href: ilanVerHref(pathname ?? '/'),
-      label: 'İlan Ver',
-      icon: Plus,
-      isMain: true,
-    },
-    {
       href: '/mesajlarim',
       label: 'Mesajlar',
       icon: MessageSquare,
@@ -43,27 +42,10 @@ export function BottomNav() {
 
   return (
     <div className="fixed bottom-0 left-0 z-50 w-full h-16 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] md:hidden">
-      <div className="grid h-full grid-cols-5 mx-auto">
+      <div className="grid h-full grid-cols-4 mx-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           
-          // ORTA BUTON (İLAN VER) - ÖZEL TASARIM
-          if (item.isMain) {
-            return (
-              <div key={item.href} className="relative flex items-center justify-center group h-full">
-                <Link
-                  href={item.href}
-                  className="absolute -top-5 flex items-center justify-center w-14 h-14 bg-primary rounded-full shadow-lg shadow-primary/30 transition-transform active:scale-95"
-                >
-                  <item.icon className="w-7 h-7 text-white" />
-                </Link>
-                {/* Yazıyı biraz aşağı ittik ki butona yapışmasın */}
-                <span className="absolute bottom-1 text-[10px] font-medium text-gray-500">
-                  {item.label}
-                </span>
-              </div>
-            );
-          }
 
           // DİĞER BUTONLAR - STANDART TASARIM
           return (

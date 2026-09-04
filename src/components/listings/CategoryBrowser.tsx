@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import { Plus } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
@@ -43,6 +46,23 @@ export function CategoryBrowser({
   activeCitySlug?: string;
   emptyMessage?: string;
 }) {
+  /**
+   * İlan verme hedefi kategoriden geliyor.
+   *
+   * Pet malzemeleri ve güvercin kendi bölümlerine gidiyor; geri kalan hayvan
+   * kategorilerinde kategori adres satırında taşınıyor, böylece form
+   * kategoriyi tekrar sormuyor. Bölümler birbirine karışmıyor.
+   */
+  const [createHref, createLabel] =
+    category.code === 'Supply'
+      ? ['/ilan-ver/al-sat', 'Malzeme İlanı Ver']
+      : category.code === 'Pigeon'
+        ? ['/ilan-ver/guvercin', 'Güvercin İlanı Ver']
+        : [
+            `/ilan-ver/sahiplendirme?kategori=${category.slug}`,
+            `${category.name.replace(/\s*İlanları$/, '')} İlanı Ver`,
+          ];
+
   /**
    * Güvercin ve pet malzemeleri kendi dikeyleri: menüde kategori ağacı
    * yerine kendi tür listeleri gösteriliyor, gruplu ve aynı iki sekmeli
@@ -122,12 +142,23 @@ export function CategoryBrowser({
           </ol>
         </nav>
 
-        <header className="mb-6">
-          <h1 className="text-2xl font-bold md:text-3xl">{title}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {total} ilan bulundu
-            {description ? ` · ${description}` : ''}
-          </p>
+        {/* Her sayfanın ilan verme düğmesi kendine ait: buradan verilen ilan
+            her zaman bu kategoriye açılıyor, form kategoriyi tekrar sormuyor.
+            Alt menüdeki genel "+" bu yüzden kaldırıldı. */}
+        <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold md:text-3xl">{title}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {total} ilan bulundu
+              {description ? ` · ${description}` : ''}
+            </p>
+          </div>
+          <Button asChild>
+            <Link href={createHref}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              {createLabel}
+            </Link>
+          </Button>
         </header>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-[260px_1fr]">

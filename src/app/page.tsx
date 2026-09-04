@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Plus } from 'lucide-react';
 import type { Metadata } from 'next';
 
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,6 @@ import { CategorySidebar } from '@/components/layout/CategorySidebar';
 import { getSidebarData } from '@/lib/queries/catalog';
 import { createSupabasePublicClient } from '@/lib/supabase/server';
 import { getListings, getFeaturedListings } from '@/lib/queries/listings';
-import { HomeHero } from '@/components/home/HomeHero';
 
 /**
  * Ana sayfa.
@@ -69,9 +68,24 @@ export default async function HomePage() {
 
   return (
     <div className="bg-secondary/50">
-      <HomeHero stats={stats} />
-
       <div className="w-full px-5 pb-10 pt-6 md:container md:mx-auto">
+        {/* Her sayfanın kendi ilan verme düğmesi var; alt menüdeki genel
+            "+" kaldırıldı. Buradan verilen ilan hayvan ilanı. */}
+        <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold md:text-3xl">Evcil Hayvan İlanları</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {stats.listings_active} ilan yayında · {stats.members} üye
+            </p>
+          </div>
+          <Button asChild>
+            <Link href="/ilan-ver/sahiplendirme">
+              <Plus className="mr-1.5 h-4 w-4" />
+              Hayvan İlanı Ver
+            </Link>
+          </Button>
+        </header>
+
         <div className="grid grid-cols-1 gap-8 md:grid-cols-[280px_1fr]">
           <aside className="hidden md:block">
             <div className="sticky top-4">
