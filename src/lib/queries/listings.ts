@@ -183,7 +183,7 @@ export async function getListingById(id: number) {
     .select(
       `*,
        breeds ( id, name, slug ),
-       categories ( id, slug, name ),
+       categories ( id, slug, name, code ),
        cities ( id, name, slug ),
        districts ( id, name, slug ),
        listing_photos ( storage_path, position ),

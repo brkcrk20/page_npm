@@ -2,6 +2,8 @@ import Link from 'next/link';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
+import { JsonLd } from '@/components/JsonLd';
+import { breadcrumbSchema, itemListSchema } from '@/lib/structured-data';
 import type { ListingCard } from '@/lib/queries/listings';
 import type { Category, SidebarData } from '@/lib/queries/catalog';
 
@@ -80,6 +82,22 @@ export function CategoryBrowser({
 
   return (
     <div className="bg-secondary/50">
+      {/* Kırıntı yolu ve liste şeması: arama sonucunda sayfanın site
+          içindeki yeri ve kaç ilan olduğu görünüyor. */}
+      <JsonLd
+        data={[
+          breadcrumbSchema([
+            { name: 'Ana Sayfa', url: '/' },
+            ...crumbs.map((c) => ({ name: c.label, url: c.href })),
+          ]),
+          itemListSchema(
+            listings.slice(0, 20).map((l) => ({
+              name: l.title,
+              url: `/${l.slug}-${l.id}`,
+            }))
+          ),
+        ]}
+      />
       <div className="w-full px-5 pb-10 pt-4 md:container md:mx-auto">
         <nav aria-label="Kırıntı navigasyonu" className="mb-4 text-sm text-muted-foreground">
           <ol className="flex flex-wrap items-center gap-1">

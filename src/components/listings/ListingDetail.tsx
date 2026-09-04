@@ -7,6 +7,9 @@ import { ListingActions } from '@/components/listings/ListingActions';
 import { SellerCard } from '@/components/listings/SellerCard';
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import type { ListingCard, SellerInfo, AdjacentListings } from '@/lib/queries/listings';
+import { JsonLd } from '@/components/JsonLd';
+import { breadcrumbSchema, listingSchema } from '@/lib/structured-data';
+import { listingPhotoUrl } from '@/lib/supabase/storage';
 
 /**
  * İlan detay sayfası.
@@ -53,7 +56,9 @@ type DetailListing = {
   updated_at: string | null;
   owner_id: string;
   breeds: { id: number; name: string; slug: string } | null;
-  categories: { id: number; slug: string; name: string } | null;
+  categories: { id: number; slug: string; name: string; code?: string } | null;
+  /** Türe özgü alanlar; malzemede ürün durumu. */
+  details?: Record<string, unknown> | null;
   cities: { id: number; name: string; slug: string } | null;
   districts: { id: number; name: string; slug: string } | null;
   listing_photos: { storage_path: string; position: number }[];
@@ -122,6 +127,25 @@ export function ListingDetail({
   adjacent: AdjacentListings;
 }) {
   const category = listing.categories;
+
+  /**
+   * Pet malzemesi ilanı mı?
+   *
+   * Bir kafesin yaşı, cinsiyeti, aşısı ve pedigrisi yok. Bu satırlar
+   * malzeme ilanında "—" ve "Hayır" dolu bir tablo üretiyordu; kullanıcıya
+   * hiçbir şey anlatmayan, ilanı ciddiyetsiz gösteren bir liste.
+   */
+  const isSupply = category?.slug === 'pet-malzemeleri' || category?.code === 'Supply';
+
+  const CONDITION_LABELS: Record<string, string> = {
+    sifir: 'Sıfır / Kullanılmamış',
+    az_kullanilmis: 'Az Kullanılmış',
+    kullanilmis: 'Kullanılmış',
+  };
+  const condition =
+    typeof listing.details?.condition === 'string'
+      ? CONDITION_LABELS[listing.details.condition as string] ?? null
+      : null;
   const breed = listing.breeds;
   const categoryPath = category ? `/${category.slug}` : '/';
 
@@ -148,7 +172,7 @@ export function ListingDetail({
       ),
     },
     {
-      label: 'CİNSİ',
+      label: isSupply ? 'EŞYA TÜRÜ' : 'CİNSİ',
       value:
         category && breed ? (
           <Link href={`/${category.slug}/${breed.slug}`} className="text-primary hover:underline">
@@ -172,18 +196,29 @@ export function ListingDetail({
         '—'
       ),
     },
-    { label: 'YAŞ', value: formatAge(listing.age_months) },
-    { label: 'CİNSİYET', value: GENDER_LABELS[listing.gender] ?? listing.gender },
-    { label: 'İLAN TİPİ', value: KIND_LABELS[listing.kind] ?? listing.kind },
-    ...(listing.color ? [{ label: 'RENK', value: listing.color }] : []),
-    ...(listing.quantity > 1 ? [{ label: 'ADET', value: String(listing.quantity) }] : []),
-    { label: 'AŞI', value: yesNo(listing.is_vaccinated) },
-    { label: 'İÇ PARAZİT', value: yesNo(listing.is_dewormed_internal) },
-    { label: 'DIŞ PARAZİT', value: yesNo(listing.is_dewormed_external) },
-    { label: 'PEDİGRİ', value: yesNo(listing.has_pedigree) },
-    { label: 'SAĞLIK RAPORU', value: yesNo(listing.has_health_report) },
-    { label: 'KREDİ KARTINA ÖDEME', value: yesNo(listing.accepts_credit_card) },
-    { label: 'ŞEHİR DIŞINA GÖNDERİM', value: yesNo(listing.ships_intercity) },
+    // Canlı hayvana özgü satırlar malzeme ilanında gösterilmiyor.
+    ...(isSupply
+      ? [
+          ...(condition ? [{ label: 'DURUMU', value: condition }] : []),
+          { label: 'İLAN TİPİ', value: KIND_LABELS[listing.kind] ?? listing.kind },
+          ...(listing.quantity > 1 ? [{ label: 'ADET', value: String(listing.quantity) }] : []),
+          { label: 'KREDİ KARTINA ÖDEME', value: yesNo(listing.accepts_credit_card) },
+          { label: 'KARGO İLE GÖNDERİM', value: yesNo(listing.ships_intercity) },
+        ]
+      : [
+          { label: 'YAŞ', value: formatAge(listing.age_months) },
+          { label: 'CİNSİYET', value: GENDER_LABELS[listing.gender] ?? listing.gender },
+          { label: 'İLAN TİPİ', value: KIND_LABELS[listing.kind] ?? listing.kind },
+          ...(listing.color ? [{ label: 'RENK', value: listing.color }] : []),
+          ...(listing.quantity > 1 ? [{ label: 'ADET', value: String(listing.quantity) }] : []),
+          { label: 'AŞI', value: yesNo(listing.is_vaccinated) },
+          { label: 'İÇ PARAZİT', value: yesNo(listing.is_dewormed_internal) },
+          { label: 'DIŞ PARAZİT', value: yesNo(listing.is_dewormed_external) },
+          { label: 'PEDİGRİ', value: yesNo(listing.has_pedigree) },
+          { label: 'SAĞLIK RAPORU', value: yesNo(listing.has_health_report) },
+          { label: 'KREDİ KARTINA ÖDEME', value: yesNo(listing.accepts_credit_card) },
+          { label: 'ŞEHİR DIŞINA GÖNDERİM', value: yesNo(listing.ships_intercity) },
+        ]),
     {
       label: "İLAN WHATSAPP'TAN",
       value: (
@@ -206,8 +241,50 @@ export function ListingDetail({
     },
   ];
 
+  /**
+   * Arama motoruna ilanı ürün olarak tanıtan yapısal veri.
+   *
+   * Bu olmadan Google sonucu düz bir bağlantı olarak gösteriyor; olduğunda
+   * fiyat, görsel, konum ve kırıntı yolu sonucun içinde çıkıyor. Pet
+   * ilanı gibi rekabetin yüksek olduğu bir alanda tıklama oranını doğrudan
+   * etkiliyor.
+   */
+  const schemaImages = (listing.listing_photos ?? [])
+    .slice()
+    .sort((a, b) => a.position - b.position)
+    .map((p) => listingPhotoUrl(p.storage_path))
+    .filter((u): u is string => Boolean(u));
+
+  const schemaCrumbs = [
+    { name: 'Ana Sayfa', url: '/' },
+    ...(category ? [{ name: category.name, url: categoryPath }] : []),
+    { name: listing.title },
+  ];
+
   return (
     <div className="bg-secondary/30">
+      <JsonLd
+        data={[
+          listingSchema({
+            id: listing.id,
+            slug: listing.slug,
+            title: listing.title,
+            description: listing.description,
+            price: listing.price,
+            currency: listing.currency,
+            kind: listing.kind,
+            images: schemaImages,
+            breedName: listing.breeds?.name,
+            categoryName: category?.name,
+            cityName: listing.cities?.name,
+            districtName: listing.districts?.name,
+            publishedAt: listing.published_at,
+            sellerName: seller?.full_name ?? seller?.username ?? null,
+          }),
+          breadcrumbSchema(schemaCrumbs),
+        ]}
+      />
+
       {/* --- Kırıntı navigasyonu --- */}
       <nav aria-label="Kırıntı navigasyonu" className="border-b bg-white">
         <ol className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-1.5 px-5 py-3 text-sm">

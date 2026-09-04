@@ -6,6 +6,8 @@ import { Footer } from '@/components/layout/Footer';
 import { BottomNav } from '@/components/layout/BottomNav'; // YENİ EKLENDİ
 import { Toaster } from '@/components/ui/toaster';
 import { getSiteContact } from '@/lib/queries/site-settings';
+import { JsonLd } from '@/components/JsonLd';
+import { organizationSchema, websiteSchema } from '@/lib/structured-data';
 import { SupabaseAuthProvider } from '@/lib/supabase/auth-provider';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.petsemti.com';
@@ -81,6 +83,11 @@ export default async function RootLayout({
             {/* pb-20 ekledik: Mobil menü içeriği kapatmasın diye alt boşluk */}
             <main className="flex-1 pb-20 md:pb-0">{children}</main>
             <Footer contact={contact} />
+
+            {/* Kuruluş ve site şeması her sayfada: Google bunları site
+                genelinde bir kez okuyor ama hangi sayfayla karşılaşacağı
+                belli olmuyor. */}
+            <JsonLd data={[organizationSchema(contact), websiteSchema()]} />
             {/* Bottom Nav Sadece Mobilde Görünecek (Kendi içinde md:hidden var) */}
             <BottomNav />
           </div>
