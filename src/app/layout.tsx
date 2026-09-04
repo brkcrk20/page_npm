@@ -7,6 +7,7 @@ import { BottomNav } from '@/components/layout/BottomNav'; // YENİ EKLENDİ
 import { Toaster } from '@/components/ui/toaster';
 import { getSiteContact } from '@/lib/queries/site-settings';
 import { JsonLd } from '@/components/JsonLd';
+import { PresenceTracker } from '@/components/PresenceTracker';
 import { organizationSchema, websiteSchema } from '@/lib/structured-data';
 import { SupabaseAuthProvider } from '@/lib/supabase/auth-provider';
 

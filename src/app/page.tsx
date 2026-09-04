@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
 import { getSidebarData } from '@/lib/queries/catalog';
+import { createSupabasePublicClient } from '@/lib/supabase/server';
 import { getListings, getFeaturedListings } from '@/lib/queries/listings';
 import { HomeHero } from '@/components/home/HomeHero';
 import {
@@ -57,7 +58,20 @@ export default async function HomePage() {
   ]);
 
   const totalListings = categorySections.reduce((sum, s) => sum + s.total, 0);
-  const breedCount = sidebar.categories.reduce((sum, c) => sum + c.breeds.length, 0);
+
+  /**
+   * Ana sayfa sayaçları tek bir RPC'den.
+   *
+   * Kullanıcı sayısını istemciden saymak mümkün değil: profiles üzerindeki
+   * RLS yalnızca kişinin kendi satırını gösteriyor. RPC yalnızca toplamları
+   * döndürüyor, satırlar dışarı çıkmıyor.
+   */
+  const { data: statsRow } = await createSupabasePublicClient().rpc('site_stats');
+  const stats = (Array.isArray(statsRow) ? statsRow[0] : statsRow) ?? {
+    listings_active: totalListings,
+    members: 0,
+    online_now: 0,
+  };
 
   // Ücretsiz sahiplendirme ayrı gösteriliyor: emsal sitelerin tamamında
   // ücretli/ücretsiz ayrımı birinci sınıf bir ayrım ve ziyaretçilerin büyük
@@ -72,11 +86,7 @@ export default async function HomePage() {
 
   return (
     <div className="bg-secondary/50">
-      <HomeHero
-        totalListings={totalListings}
-        cityCount={sidebar.cities.length}
-        breedCount={breedCount}
-      />
+      <HomeHero stats={stats} />
 
       <div className="w-full px-5 pb-10 pt-6 md:container md:mx-auto">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-[280px_1fr]">

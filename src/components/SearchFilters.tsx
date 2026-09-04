@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -99,6 +99,15 @@ function SearchFiltersInner() {
   const [districtSlug, setDistrictSlug] = useState(ALL);
   /** Malzeme bölümünde seçilen hayvan türü (grup adı). */
   const [supplyGroup, setSupplyGroup] = useState(ALL);
+
+  /**
+   * Mobilde süzgeçler katlı başlıyor.
+   *
+   * Dört açılır liste ve "Bul" düğmesi alt alta dizilince telefon
+   * ekranının yarısını kaplıyor ve ana içeriği 450 piksel aşağı itiyordu.
+   * Masaüstünde hepsi tek satıra sığdığı için orada katlama yok.
+   */
+  const [filtrelerAcik, setFiltrelerAcik] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClientOrNull();
@@ -262,16 +271,40 @@ function SearchFiltersInner() {
           : 'md:grid-cols-[1fr_auto_auto_auto_auto_auto]')
       }
     >
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={term}
-          onChange={(e) => setTerm(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          placeholder="Ne arıyorsun? (ilan no, başlık...)"
-          className="h-11 pl-9"
-        />
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder="Ne arıyorsun?"
+            className="h-11 pl-9"
+          />
+        </div>
+        {/* Yalnızca mobilde: süzgeçleri aç/kapat ve ara. Masaüstünde
+            süzgeçler zaten açık ve "Bul" satırın sonunda. */}
+        <button
+          type="button"
+          onClick={() => setFiltrelerAcik((v) => !v)}
+          aria-expanded={filtrelerAcik}
+          aria-label="Filtreleri göster"
+          className="flex h-11 shrink-0 items-center gap-1.5 rounded-md border bg-white px-3 text-sm font-medium md:hidden"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Filtre
+        </button>
+        <Button className="h-11 shrink-0 px-5 md:hidden" onClick={handleSearch}>
+          Bul
+        </Button>
       </div>
+
+      {/* Süzgeç grubu: mobilde katlı, masaüstünde her zaman açık. */}
+      <div
+        className={
+          'contents ' + (filtrelerAcik ? '' : 'max-md:hidden')
+        }
+      >
 
       {/* Güvercin bölümünde tür seçici yok: ziyaretçi zaten güvercinde ve
           oradan köpek/kedi türüne geçmek filtre değil, başka bir bölüme
@@ -334,7 +367,9 @@ function SearchFiltersInner() {
         disabled={districts.length === 0}
       />
 
-      <Button className="h-11 px-8" onClick={handleSearch}>
+      </div>
+
+      <Button className="hidden h-11 px-8 md:inline-flex" onClick={handleSearch}>
         Bul
       </Button>
     </div>

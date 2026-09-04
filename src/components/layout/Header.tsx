@@ -49,7 +49,7 @@ import {
   NavigationMenuLink,
 } from "@/components/ui/navigation-menu"
 import { SearchFilters } from '../SearchFilters';
-import { LogoMark } from '@/components/Logo';
+import { Logo } from '@/components/Logo';
 import { SERVICE_CONFIGS } from '@/lib/services-config';
 import { Skeleton } from '../ui/skeleton';
 
@@ -259,14 +259,10 @@ export function Header() {
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-primary text-primary-foreground">
         <div className="container flex h-16 items-center px-5">
-          {/* Düzen aynı: beyaz kutu ve "PetSemti" yazısı korunuyor.
-              Değişen tek şey kutunun içindeki ikon — lucide kalbi yerine
-              marka amblemi. */}
-          <Link href="/" className="mr-6 flex items-center space-x-2">
-            <div className="bg-white p-1 rounded-md">
-              <LogoMark size={24} />
-            </div>
-            <span className="font-bold text-xl">PetSemti</span>
+          {/* Turuncu zeminde tek renk amblem: iki renkli sürümdeki turuncu
+              kedi arka planda kayboluyordu. */}
+          <Link href="/" className="mr-6 flex items-center" aria-label="PetSemti ana sayfa">
+            <Logo variant="mono" size={36} />
           </Link>
           
           <div className="flex flex-1 items-center justify-end space-x-4">

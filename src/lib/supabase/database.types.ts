@@ -1938,7 +1938,16 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      site_stats: {
+        Args: never
+        Returns: {
+          listings_active: number
+          members: number
+          online_now: number
+        }[]
+      }
       start_conversation: { Args: { p_listing_id: number }; Returns: number }
+      touch_last_seen: { Args: never; Returns: undefined }
       tr_slugify: { Args: { value: string }; Returns: string }
       unaccent: { Args: { "": string }; Returns: string }
       unread_message_count: { Args: never; Returns: number }
