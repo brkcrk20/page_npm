@@ -46,7 +46,7 @@ const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 const schema = z
   .object({
-    kind: z.enum(['satilik', 'sahiplendirme']),
+    kind: z.enum(['satilik', 'sahiplendirme', 'kayip', 'bulundu']),
     categoryId: z.string().min(1, 'Kategori seçin.'),
     breedId: z.string().min(1, 'Cins seçin.'),
     title: z.string().trim().min(5, 'Başlık en az 5 karakter olmalı.').max(120, 'Başlık en fazla 120 karakter olabilir.'),
@@ -56,6 +56,7 @@ const schema = z
       .min(20, 'Açıklama en az 20 karakter olmalı.')
       .max(5000, 'Açıklama en fazla 5000 karakter olabilir.'),
     price: z.string().optional(),
+    eventDate: z.string().optional(),
     isNegotiable: z.boolean().default(false),
     ageMonths: z.string().optional(),
     gender: z.enum(['erkek', 'disi', 'belirtilmemis']).default('belirtilmemis'),
@@ -75,6 +76,16 @@ const schema = z
   // Veritabanındaki listings_price_matches_kind kısıtının aynısı. Aynı kuralı
   // burada da tutuyoruz ki kullanıcı sunucudan dönen ham kısıt hatası yerine
   // alanın altında anlaşılır bir mesaj görsün.
+  // Kayıp ilanında tarih aramanın en belirleyici bilgisi: dün kaybolan
+  // hayvanı aramakla üç ay önce kaybolanı aramak aynı şey değil.
+  .refine((v) => !['kayip', 'bulundu'].includes(v.kind) || !!v.eventDate, {
+    message: 'Tarihi girin.',
+    path: ['eventDate'],
+  })
+  .refine((v) => !v.eventDate || v.eventDate <= new Date().toISOString().slice(0, 10), {
+    message: 'Gelecek bir tarih seçilemez.',
+    path: ['eventDate'],
+  })
   .refine((v) => v.kind !== 'satilik' || (v.price && Number(v.price) > 0), {
     message: 'Satılık ilanlarda fiyat zorunludur.',
     path: ['price'],
@@ -107,7 +118,7 @@ export type ListingPreset = {
   /** Kilitlenecek kategori adresi, ör. 'pet-malzemeleri'. */
   categorySlug?: string;
   /** Kilitlenecek ilan türü. */
-  kind?: 'satilik' | 'sahiplendirme';
+  kind?: 'satilik' | 'sahiplendirme' | 'kayip' | 'bulundu';
   /** Kategori seçicide gösterilmeyecek kategoriler (kendi dikeyi olanlar). */
   hideCategorySlugs?: string[];
   /** Sayfa başlığı ve açıklaması. */
@@ -161,6 +172,7 @@ export function CreateListingForm({
       title: '',
       description: '',
       price: '',
+      eventDate: '',
       isNegotiable: false,
       ageMonths: '',
       gender: 'belirtilmemis',
@@ -324,7 +336,7 @@ export function CreateListingForm({
       const { data, error } = await supabase
         .from('listings')
         .select(
-          'id, owner_id, kind, category_id, breed_id, title, description, price, is_negotiable, age_months, gender, city_id, district_id, is_vaccinated, is_dewormed_internal, is_dewormed_external, has_pedigree, has_health_report, accepts_credit_card, ships_intercity, listing_photos(id, storage_path, position)'
+          'id, owner_id, kind, category_id, breed_id, title, description, price, event_date, is_negotiable, age_months, gender, city_id, district_id, is_vaccinated, is_dewormed_internal, is_dewormed_external, has_pedigree, has_health_report, accepts_credit_card, ships_intercity, listing_photos(id, storage_path, position)'
         )
         .eq('id', listingId)
         .maybeSingle();
@@ -341,12 +353,13 @@ export function CreateListingForm({
       }
 
       form.reset({
-        kind: data.kind as 'satilik' | 'sahiplendirme',
+        kind: data.kind as 'satilik' | 'sahiplendirme' | 'kayip' | 'bulundu',
         categoryId: String(data.category_id),
         breedId: data.breed_id ? String(data.breed_id) : '',
         title: data.title,
         description: data.description,
         price: data.price != null ? String(data.price) : '',
+        eventDate: (data as any).event_date ?? '',
         isNegotiable: data.is_negotiable,
         ageMonths: data.age_months != null ? String(data.age_months) : '',
         gender: data.gender as 'erkek' | 'disi' | 'belirtilmemis',
@@ -392,6 +405,7 @@ export function CreateListingForm({
           title: values.title.trim(),
           description: values.description.trim(),
           price: values.kind === 'satilik' ? Number(values.price) : null,
+          event_date: values.eventDate || null,
           is_negotiable: values.isNegotiable,
           age_months: isSupply || !values.ageMonths ? null : Number(values.ageMonths),
           gender: isSupply ? 'belirtilmemis' : values.gender,
@@ -744,6 +758,29 @@ export function CreateListingForm({
                 </FormItem>
               )}
             />
+
+            {(kind === 'kayip' || kind === 'bulundu') && (
+              <FormField
+                control={form.control}
+                name="eventDate"
+                render={({ field }) => (
+                  <FormItem className="sm:max-w-xs">
+                    <FormLabel>
+                      {kind === 'kayip' ? 'Kaybolduğu Tarih' : 'Bulunduğu Tarih'}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        max={new Date().toISOString().slice(0, 10)}
+                        {...field}
+                        value={field.value ?? ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {kind === 'satilik' && (
               <div className="grid gap-4 sm:grid-cols-2">

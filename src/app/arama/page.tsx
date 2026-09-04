@@ -38,7 +38,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Par
   const sidebar = await getSidebarData();
   const cityRow = city ? await getCityBySlug(city) : null;
 
+  // Arama her şeyi kapsıyor: listelerde gizlediğimiz kayıp/bulundu ilanları
+  // burada görünmeli — kaybını arayan kişi önce arama kutusunu kullanır.
   const { listings, total } = await getListings({
+    kinds: ['satilik', 'sahiplendirme', 'kayip', 'bulundu', 'es_arayan'],
     search: term || undefined,
     cityId: cityRow?.id,
     perPage: 24,

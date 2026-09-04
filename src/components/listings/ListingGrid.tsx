@@ -15,7 +15,21 @@ function formatAge(months: number | null): string | null {
   return `${text} Yaşında`;
 }
 
+/** Kart üzerindeki tür rozeti. Kayıp ilanı listede ilk bakışta ayırt edilmeli. */
+const KIND_BADGE: Record<string, { label: string; className: string }> = {
+  sahiplendirme: { label: 'Sahiplendirme', className: 'bg-emerald-600 hover:bg-emerald-600' },
+  kayip: { label: 'KAYIP', className: 'bg-red-600 hover:bg-red-600' },
+  bulundu: { label: 'BULUNDU', className: 'bg-blue-600 hover:bg-blue-600' },
+};
+
 function formatPrice(listing: ListingCard): string {
+  // Kayıp/bulundu ilanında fiyat diye bir kavram yok; o satırda tarih daha
+  // işe yarar bilgi.
+  if (listing.kind === 'kayip' || listing.kind === 'bulundu') {
+    if (!listing.event_date) return listing.kind === 'kayip' ? 'Kayıp' : 'Bulundu';
+    const tarih = new Date(listing.event_date).toLocaleDateString('tr-TR');
+    return listing.kind === 'kayip' ? `${tarih} tarihinde kayboldu` : `${tarih} tarihinde bulundu`;
+  }
   if (listing.kind === 'sahiplendirme') return 'Ücretsiz Sahiplendirme';
   if (listing.price === null || Number(listing.price) === 0) return 'Fiyat Belirtilmemiş';
 
@@ -53,9 +67,9 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
             Fotoğraf yok
           </div>
         )}
-        {listing.kind === 'sahiplendirme' && (
-          <Badge className="absolute left-2 top-2 bg-emerald-600 hover:bg-emerald-600">
-            Sahiplendirme
+        {KIND_BADGE[listing.kind] && (
+          <Badge className={`absolute left-2 top-2 ${KIND_BADGE[listing.kind]!.className}`}>
+            {KIND_BADGE[listing.kind]!.label}
           </Badge>
         )}
       </div>

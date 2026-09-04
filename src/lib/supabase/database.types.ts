@@ -670,6 +670,7 @@ export type Database = {
           description: string
           details: Json
           district_id: number | null
+          event_date: string | null
           expires_at: string | null
           favorite_count: number
           gender: Database["public"]["Enums"]["pet_gender"]
@@ -720,6 +721,7 @@ export type Database = {
           description: string
           details?: Json
           district_id?: number | null
+          event_date?: string | null
           expires_at?: string | null
           favorite_count?: number
           gender?: Database["public"]["Enums"]["pet_gender"]
@@ -770,6 +772,7 @@ export type Database = {
           description?: string
           details?: Json
           district_id?: number | null
+          event_date?: string | null
           expires_at?: string | null
           favorite_count?: number
           gender?: Database["public"]["Enums"]["pet_gender"]

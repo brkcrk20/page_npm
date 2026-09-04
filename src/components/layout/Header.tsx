@@ -10,6 +10,7 @@ import {
   Building,
   Award,
   Scissors,
+  SearchX,
   Car,
   PersonStanding,
   ShoppingCart,
@@ -61,6 +62,7 @@ const serviceCategories = [
   { icon: Bird, label: 'Güvercinler', href: '/guvercin-ilanlari' },
   { icon: Banknote, label: 'Al & Sat', href: '/al-sat' },
   { icon: HeartHandshake, label: 'Eş Arayanlar', href: '/es-arayanlar' },
+  { icon: SearchX, label: 'Kayıp & Bulundu', href: '/kayip' },
   { icon: Stethoscope, label: 'Veteriner', href: '/veteriner' },
   { icon: Building, label: 'Pet Oteli', href: '/pet-oteli' },
   { icon: Award, label: 'Eğitmen', href: '/egitmen' },
@@ -78,6 +80,7 @@ const LISTING_LINKS = [
   { href: '/al-sat', label: 'Satılık İlanlar' },
   { href: '/guvercin-ilanlari', label: 'Güvercin İlanları' },
   { href: '/es-arayanlar', label: 'Eş Arayanlar' },
+  { href: '/kayip', label: 'Kayıp ve Bulunanlar' },
 ];
 
 /** Şeritteki hizmet rehberleri; ilan bağlantıları menüde ayrı bölümde. */

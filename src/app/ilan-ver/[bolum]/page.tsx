@@ -40,6 +40,30 @@ const PRESETS: Record<string, ListingPreset & { metaTitle: string; metaDescripti
     metaDescription:
       'Taklacı, posta, süs veya yerli güvercininiz için ilan verin. Uçuş videosu, halka numarası ve şecere bilgisiyle güvenle satın.',
   },
+  kayip: {
+    kind: 'kayip',
+    hideCategorySlugs: ['pet-malzemeleri'],
+    title: 'Kayıp Hayvan İlanı Ver',
+    description:
+      'Kaybolduğu yeri, tarihi ve ayırt edici özelliklerini yazın. Tasma rengi ya da çip numarası gibi bir ayrıntıyı sahiplik doğrulaması için kendinize saklamanız iyi olur.',
+    backHref: '/kayip',
+    backLabel: 'Kayıp İlanları',
+    metaTitle: 'Kayıp Hayvan İlanı Ver',
+    metaDescription:
+      'Kaybolan kedi, köpek veya kuşunuz için ücretsiz kayıp ilanı verin. Şehrinizdeki kullanıcılar görsün.',
+  },
+  bulundu: {
+    kind: 'bulundu',
+    hideCategorySlugs: ['pet-malzemeleri'],
+    title: 'Bulunan Hayvan İlanı Ver',
+    description:
+      'Bulduğunuz hayvanı sahibine ulaştırın. Bulduğunuz yeri ve tarihi yazın; sahiplik iddiasında bulunanlardan ilanda yazmadığınız bir ayrıntıyı istemeniz doğrulamayı kolaylaştırır.',
+    backHref: '/kayip?tip=bulundu',
+    backLabel: 'Bulunan Hayvanlar',
+    metaTitle: 'Bulunan Hayvan İlanı Ver',
+    metaDescription:
+      'Sokakta bulduğunuz kedi, köpek veya kuşu ücretsiz ilanla duyurun; sahibi arıyor olabilir.',
+  },
   'al-sat': {
     categorySlug: 'pet-malzemeleri',
     // İkinci el eşya satılır; "ücretsiz veriyorum" seçeneği burada

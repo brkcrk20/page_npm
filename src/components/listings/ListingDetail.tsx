@@ -107,6 +107,11 @@ function formatDate(value: string | null): string | null {
 }
 
 function formatPrice(listing: DetailListing): string {
+  if (listing.kind === 'kayip' || listing.kind === 'bulundu') {
+    const tarih = formatDate((listing as any).event_date ?? null);
+    if (!tarih) return KIND_LABELS[listing.kind]!;
+    return listing.kind === 'kayip' ? `${tarih} tarihinde kayboldu` : `${tarih} tarihinde bulundu`;
+  }
   if (listing.kind === 'sahiplendirme') return 'Ücretsiz Sahiplendirme';
   if (listing.price === null || Number(listing.price) === 0) return 'Fiyat Belirtilmemiş';
   return new Intl.NumberFormat('tr-TR', {

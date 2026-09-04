@@ -30,7 +30,7 @@ type ListingRow = Database['public']['Tables']['listings']['Row'];
  * filtreler sessizce hiçbir şey yapmıyor ve tüm ilanlar dönüyordu.
  */
 const CARD_COLUMNS = `
-  id, slug, title, kind, price, currency, is_negotiable,
+  id, slug, title, kind, price, currency, is_negotiable, event_date,
   age_months, gender, published_at,
   breeds!inner ( id, name, slug ),
   categories!inner ( id, slug, name ),
@@ -41,7 +41,7 @@ const CARD_COLUMNS = `
 
 export type ListingCard = Pick<
   ListingRow,
-  'id' | 'slug' | 'title' | 'kind' | 'price' | 'currency' | 'is_negotiable' | 'age_months' | 'gender' | 'published_at'
+  'id' | 'slug' | 'title' | 'kind' | 'price' | 'currency' | 'is_negotiable' | 'age_months' | 'gender' | 'published_at' | 'event_date'
 > & {
   breeds: { id: number; name: string; slug: string } | null;
   categories: { id: number; slug: string; name: string } | null;
@@ -65,6 +65,14 @@ export type ListingFilters = {
   cityId?: number;
   districtId?: number;
   kind?: Database['public']['Enums']['listing_kind'];
+  /**
+   * Birden çok ilan türü (kayıp + bulundu gibi).
+   *
+   * Kayıp ve bulundu ilanları normal listelerde görünmemeli: satılık kedi
+   * arayan kişiye kaybolmuş kedi göstermek işe yaramaz. O yüzden bu iki tür
+   * varsayılan olarak DIŞARIDA — ancak açıkça istendiğinde geliyor.
+   */
+  kinds?: Database['public']['Enums']['listing_kind'][];
   gender?: Database['public']['Enums']['pet_gender'];
   search?: string;
   minPrice?: number;
@@ -184,7 +192,13 @@ async function fetchListings(filters: ListingFilters = {}) {
   if (filters.breedId !== undefined) query = query.eq('breed_id', filters.breedId);
   if (filters.cityId !== undefined) query = query.eq('city_id', filters.cityId);
   if (filters.districtId !== undefined) query = query.eq('district_id', filters.districtId);
-  if (filters.kind) query = query.eq('kind', filters.kind);
+  if (filters.kinds?.length) {
+    query = query.in('kind', filters.kinds);
+  } else if (filters.kind) {
+    query = query.eq('kind', filters.kind);
+  } else {
+    query = query.not('kind', 'in', '(kayip,bulundu)');
+  }
   if (filters.gender) query = query.eq('gender', filters.gender);
 
   if (filters.minPrice !== undefined) query = query.gte('price', filters.minPrice);
