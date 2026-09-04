@@ -17,17 +17,27 @@ import type { ServiceFeature } from '@/lib/queries/services';
  * paylaşılabilir ve yer imine eklenebilir olmalı, geri tuşu da çalışmalı.
  * Ayrıca sayfa server component olarak kalabiliyor — filtreleme sunucuda
  * yapıldığı için arama motoru filtreli sayfaları da görüyor.
+ *
+ * METİNLER BÖLÜME GÖRE
+ * Panel yedi rehberin hepsinde kullanılıyor ama metinleri veterinerden
+ * kopyalanmış hâliyle sabitti: gezdirici sayfasında "Klinik Ara" ve
+ * "Yalnızca doğrulanmış klinikler" yazıyordu. Küçük bir metin hatası gibi
+ * görünüyor ama okuyan kişiye "burası bitmemiş" dedirtiyor ve bu, güven
+ * üzerine kurulu bir rehberde en pahalı izlenim.
  */
 export function ServiceFilterPanel({
   groups,
   activeFeatures,
   activeSearch,
   verifiedOnly,
+  unit,
 }: {
   groups: { group: string; features: ServiceFeature[] }[];
   activeFeatures: string[];
   activeSearch: string;
   verifiedOnly: boolean;
+  /** Bölümün tekil adı: "klinik", "otel", "salon", "gezdirici"… */
+  unit: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -35,6 +45,10 @@ export function ServiceFilterPanel({
   const [term, setTerm] = useState(activeSearch);
 
   const active = useMemo(() => new Set(activeFeatures), [activeFeatures]);
+  // "klinik" -> "Klinik". Türkçe büyük harf kuralı önemli: "işletme" -> "İşletme".
+  const Birim = unit.charAt(0).toLocaleUpperCase('tr') + unit.slice(1);
+  // "klinik" -> "klinikler", "gezdirici" -> "gezdiriciler"
+  const cogul = /[aıou]/.test(unit.slice(-3)) ? `${unit}lar` : `${unit}ler`;
   const hasFilters = active.size > 0 || activeSearch.length > 0 || verifiedOnly;
 
   function apply(next: URLSearchParams) {
@@ -73,7 +87,7 @@ export function ServiceFilterPanel({
   return (
     <div className="space-y-4">
       <div className="rounded-xl border bg-white p-4">
-        <h2 className="mb-3 font-bold">Klinik Ara</h2>
+        <h2 className="mb-3 font-bold">{Birim} Ara</h2>
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -81,15 +95,15 @@ export function ServiceFilterPanel({
             onChange={(e) => setTerm(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submitSearch()}
             onBlur={submitSearch}
-            placeholder="Klinik adı veya adres"
+            placeholder={`${Birim} adı veya adres`}
             className="pl-8"
-            aria-label="Klinik ara"
+            aria-label={`${Birim} ara`}
           />
         </div>
 
         <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm">
           <Checkbox checked={verifiedOnly} onCheckedChange={toggleVerified} />
-          Yalnızca doğrulanmış klinikler
+          Yalnızca doğrulanmış {cogul}
         </label>
 
         {hasFilters && (

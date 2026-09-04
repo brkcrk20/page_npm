@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowUpDown, Store, X } from 'lucide-react';
 
+import { SaveSearchButton } from '@/components/listings/SaveSearchButton';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -47,7 +49,24 @@ const KIMDEN = [
   { value: 'magazadan', label: 'Mağazadan' },
 ];
 
-export function ListingToolbar({ showPrice = true }: { showPrice?: boolean }) {
+export function ListingToolbar({
+  showPrice = true,
+  context,
+  aramaAdi,
+}: {
+  showPrice?: boolean;
+  /**
+   * Aramanın neyi daralttığı.
+   *
+   * Bu sitede kategori, şehir ve cins adres YOLUNDA duruyor, sorgu
+   * parametresinde değil. Kayıtlı aramanın yeni ilan sayabilmesi için bu
+   * bilginin de saklanması gerekiyor; yalnızca sorgu dizesini kaydetmek
+   * "köpek ilanları" ile "tüm ilanlar"ı aynı arama yapardı.
+   */
+  context?: { kategori?: string; sehir?: string; cins?: string };
+  /** Kayıtlı aramanın görünen adı. Verilmezse yoldan üretiliyor. */
+  aramaAdi?: string;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -94,6 +113,21 @@ export function ListingToolbar({ showPrice = true }: { showPrice?: boolean }) {
 
   const priceActive = Boolean(params.get('min') || params.get('max'));
 
+  /**
+   * Kayıtlı aramanın adı.
+   *
+   * Sayfa başlığı kullanılıyor ("Köpek İlanları", "Golden Retriever").
+   * Adres parçalarından üretmek "kopek ilanlari" gibi Türkçe karakteri
+   * düşmüş adlar veriyordu — kullanıcı listede aramasını bundan tanıyacak.
+   */
+  const aramaBasligi =
+    aramaAdi ??
+    ([context?.cins, context?.sehir, context?.kategori]
+      .filter(Boolean)
+      .map((p) => p!.replace(/-/g, ' '))
+      .join(' · ') ||
+      'Tüm ilanlar');
+
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border bg-white p-2.5">
       <div className="flex items-center gap-2">
@@ -127,6 +161,12 @@ export function ListingToolbar({ showPrice = true }: { showPrice?: boolean }) {
           </SelectContent>
         </Select>
       </div>
+
+      {context !== undefined && (
+        <div className="ml-auto">
+          <SaveSearchButton baslik={aramaBasligi} context={context} />
+        </div>
+      )}
 
       {showPrice && (
         <div className="flex flex-1 flex-wrap items-center gap-2">

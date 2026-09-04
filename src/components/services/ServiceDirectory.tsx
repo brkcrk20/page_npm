@@ -101,6 +101,7 @@ export function ServiceDirectory({
               activeFeatures={activeFeatures}
               activeSearch={activeSearch}
               verifiedOnly={verifiedOnly}
+              unit={config.unit}
             />
 
             {cities.length > 0 && (

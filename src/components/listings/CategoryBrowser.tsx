@@ -196,7 +196,15 @@ export function CategoryBrowser({
 
           <main className="min-w-0">
             {/* Sahiplendirmede fiyat yok; orada yalnızca sıralama gösteriliyor. */}
-            <ListingToolbar showPrice={category.code !== 'Other' || true} />
+            <ListingToolbar
+              showPrice
+              aramaAdi={title}
+              context={{
+                kategori: category.slug,
+                sehir: activeCitySlug,
+                cins: activeBreedSlug,
+              }}
+            />
             <ListingGrid listings={listings} emptyMessage={emptyMessage} />
           </main>
         </div>

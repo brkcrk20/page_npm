@@ -61,6 +61,20 @@ const nextConfig: NextConfig = {
   // aksi halde ilan verme sayfası ilan detayına yönlenip erişilemez hale gelir.
   async redirects() {
     return [
+      // 0) Güvercin bölümünün kısa adı.
+      //    Menüde bir dönem /guvercinler yazıyordu ve o adres yoktu; dışarıda
+      //    kalmış bağlantılar ve eski paylaşımlar 404'e düşmesin.
+      {
+        source: '/guvercinler',
+        destination: '/guvercin-ilanlari',
+        permanent: true,
+      },
+      {
+        source: '/guvercinler/:yol*',
+        destination: '/guvercin-ilanlari',
+        permanent: true,
+      },
+
       // 1) İlan verme sayfası taşındı: /ilan/yeni -> /ilan-ver
       //    Artık /ilan/* deseniyle çakışmıyor.
       {

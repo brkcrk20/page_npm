@@ -1473,6 +1473,61 @@ export type Database = {
           },
         ]
       }
+      saved_searches: {
+        Row: {
+          created_at: string
+          id: number
+          last_seen_at: string
+          name: string
+          params: Json
+          path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          last_seen_at?: string
+          name: string
+          params?: Json
+          path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          last_seen_at?: string
+          name?: string
+          params?: Json
+          path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_searches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_searches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_searches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       schema_migrations: {
         Row: {
           applied_at: string
@@ -2125,6 +2180,13 @@ export type Database = {
       report_listing: {
         Args: { p_listing_id: number; p_note?: string; p_reason: string }
         Returns: undefined
+      }
+      saved_search_counts: {
+        Args: never
+        Returns: {
+          id: number
+          yeni_ilan: number
+        }[]
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
