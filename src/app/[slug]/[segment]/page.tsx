@@ -14,7 +14,7 @@ import { getListings, parseListingParams } from '@/lib/queries/listings';
 import { getPageContent } from '@/lib/queries/page-content';
 import { cinseGoreSehirler, sehreGoreCinsler } from '@/lib/queries/cross-links';
 import { CrossLinks } from '@/components/listings/CrossLinks';
-import { seoAciklama, seoAciklamaSec, seoBaslikSec } from '@/lib/seo-metin';
+import { seoAciklama, seoAciklamaSec, seoBaslik, seoBaslikSec } from '@/lib/seo-metin';
 import { MALZEME_KATEGORISI } from '@/lib/routing';
 
 /**
@@ -88,8 +88,21 @@ export async function generateMetadata({
   const { category, resolved } = loaded;
 
   if (resolved.kind === 'breed') {
-    const kardesler = await getBreedsByCategoryId(category.id);
+    const [kardesler, icerik] = await Promise.all([
+      getBreedsByCategoryId(category.id),
+      getPageContent({ categoryId: category.id, breedId: resolved.breed.id }),
+    ]);
     const ad = breedDisplayName(resolved.breed, kardesler);
+
+    // Yönetimden yazılan başlık/açıklama şablonun önüne geçiyor. Sayfaya
+    // özgün metin yazıldıysa başlığın da ona uyması gerekiyor; kategori
+    // sayfalarında bu zaten böyleydi, cins sayfalarında unutulmuştu.
+    if (icerik?.seo_title || icerik?.seo_description) {
+      return {
+        title: seoBaslik(icerik.seo_title ?? `${ad} İlanları`),
+        description: icerik.seo_description ? seoAciklama(icerik.seo_description) : undefined,
+      };
+    }
 
     // Malzeme sayfalarında "sahiplendirme" yanlış: bir kafes sahiplendirilmiyor,
     // satılıyor ya da devrediliyor. Kategoriye göre ayrı metin gerekiyor.
