@@ -124,3 +124,49 @@ export function GuideCardList({
     </ul>
   );
 }
+
+/**
+ * İlan sayfasının altındaki rehber şeridi.
+ *
+ * GuideCardList'ten ayrı: orada yazı listesi sayfanın ASIL içeriği, burada
+ * yan bir öneri. Aynı büyüklükte kartlar kullanmak ilanın kendisiyle
+ * yarışırdı; tek satırlık, kapak görseli küçük bir liste yeterli.
+ */
+export function GuideStrip({ yazilar, baslik }: { yazilar: GuideCard[]; baslik: string }) {
+  if (yazilar.length === 0) return null;
+
+  return (
+    <section className="mt-6 overflow-hidden rounded-lg border bg-white">
+      <h2 className="border-l-4 border-primary px-4 py-3 font-bold">{baslik}</h2>
+      <ul className="divide-y border-t">
+        {yazilar.map((yazi) => {
+          const kapak = guideCoverUrl(yazi.cover_path);
+          return (
+            <li key={yazi.id}>
+              <Link
+                href={`/rehber/${yazi.slug}`}
+                className="flex items-center gap-3 p-3 transition-colors hover:bg-accent"
+              >
+                <span className="relative h-14 w-20 shrink-0 overflow-hidden rounded bg-muted">
+                  {kapak ? (
+                    <Image src={kapak} alt="" fill sizes="80px" className="object-cover" />
+                  ) : (
+                    <BookOpen className="absolute inset-0 m-auto h-5 w-5 text-muted-foreground" />
+                  )}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate font-medium">{yazi.title}</span>
+                  {yazi.excerpt && (
+                    <span className="mt-0.5 line-clamp-2 block text-sm text-muted-foreground">
+                      {yazi.excerpt}
+                    </span>
+                  )}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}

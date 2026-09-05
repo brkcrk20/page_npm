@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { SITE_URL } from '@/lib/site';
 import { listingPhotoUrl } from '@/lib/supabase/storage';
 import { listingHref } from '@/lib/listing-url';
+import { seoAciklama, seoBaslikSec } from '@/lib/seo-metin';
 
 /**
  * İlan sayfasının başlığı, açıklaması ve paylaşım kartı.
@@ -49,8 +50,25 @@ export function listingMetadata(listing: IlanMeta): Metadata {
   // "İzmir Toy Poodle — Sevimli yavrularımız". Şehir ve cins başta:
   // aranan kelimeler başlığın başında olduğunda sonuçta daha görünür.
   const onEk = [listing.cities?.name, listing.breeds?.name].filter(Boolean).join(' ');
-  const baslik = onEk ? `${onEk} — ${listing.title}` : listing.title;
-  const aciklama = listing.description.slice(0, 160);
+  const baslik = seoBaslikSec(onEk ? `${onEk} — ${listing.title}` : listing.title, listing.title);
+
+  /**
+   * Açıklama.
+   *
+   * Eskiden ilan metninin ilk 160 karakteri ham olarak alınıyordu; kesme
+   * kelimenin ortasına denk geliyor ("...aşı ve karnesi ta") ve iki
+   * kelimelik ilanlarda arama sonucunda neredeyse boş bir satır kalıyordu.
+   * Ölçüldü: iki ilanın açıklaması 70 karakterin altındaydı.
+   *
+   * Kısa metinlerde şehir/cins bağlamı ekleniyor — uydurma bir cümle değil,
+   * ilanın kendi verisi.
+   */
+  const govde = listing.description.replace(/\s+/g, ' ').trim();
+  const baglam = onEk
+    ? `${onEk} ilanı. Fiyat, fotoğraflar ve satıcı bilgileri PetSemti'de.`
+    : `İlan detayları, fotoğraflar ve satıcı bilgileri PetSemti'de.`;
+  const aciklama = seoAciklama(govde.length >= 70 ? govde : `${govde} ${baglam}`.trim());
+
   const adres = new URL(listingHref(listing), SITE_URL).toString();
 
   return {

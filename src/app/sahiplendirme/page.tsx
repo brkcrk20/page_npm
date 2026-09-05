@@ -5,7 +5,7 @@ import { animalCategories, getSidebarData, nonAnimalCategoryIds } from '@/lib/qu
 import { getListings } from '@/lib/queries/listings';
 
 export const metadata: Metadata = {
-  title: 'Sahiplendirme İlanları — Kedi, Köpek, Kuş ve Diğer Dostlar',
+  title: 'Sahiplendirme İlanları — Kedi, Köpek ve Kuş',
   description:
     'Sahiplendirme ve satılık hayvan ilanları: kedi, köpek, kuş ve diğer evcil hayvanlar. Şehrinize göre inceleyin, sahibiyle doğrudan görüşün.',
   alternates: { canonical: '/sahiplendirme' },

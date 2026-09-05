@@ -17,6 +17,9 @@
  *
  * Sayfa mantığını değiştirmek gerektiğinde buradaki şablonu düzenleyip
  * script'i yeniden çalıştırın; üretilen dosyaları elle düzenlemeyin.
+ *
+ * DİKKAT: bugün yalnızca page.tsx üretiliyor (aşağıdaki döngüye bakın).
+ * [segment], [district] ve kayit dosyaları elle bakılıyor.
  */
 
 import { writeFileSync, mkdirSync } from 'node:fs';
@@ -47,11 +50,13 @@ ${HEADER}
 const config = getServiceConfigBySlug('${slug}')!;
 
 export const metadata: Metadata = {
-  title: \\\`\\\${config.seoTitle} | PetSemti\\\`,
+  title: config.seoTitle,
   description: config.seoDescription,
 };
 
-export const dynamic = 'force-dynamic';
+// İşletme kayıtları nadiren değişiyor; beş dakikalık önbellek
+// her istekte veritabanına gitmekten çok daha hızlı.
+export const revalidate = 300;
 
 export default async function Page({
   searchParams,
@@ -76,17 +81,19 @@ export default async function Page({
       activeSearch={filters.search}
       verifiedOnly={filters.verifiedOnly}
       cities={data.cities}
-      basePath={buildServiceBasePath(\\\`/\\\${config.slug}\\\`, filters)}
-      emptyMessage={\\\`Bu kriterlere uyan \\\${config.unit} bulunamadı.\\\`}
+      basePath={buildServiceBasePath(\`/\${config.slug}\`, filters)}
+      emptyMessage={\`Bu kriterlere uyan \${config.unit} bulunamadı.\`}
     />
   );
 }
 `;
 }
 
-// Not: [segment], [district] ve kayit şablonları da aynı biçimde üretiliyor.
-// Tam metinleri repoda üretilmiş dosyalarda görülebilir; bu script onların
-// tek kaynağıdır.
+// Not: yalnızca genel rehber sayfası (page.tsx) buradan üretiliyor.
+// [segment], [district] ve kayit dosyaları bir kez üretildikten sonra elle
+// bakılıyor; script onları artık yazmıyor. Bu ayrım açıkça yazılmazsa
+// script'i çalıştırmak elle yapılmış düzeltmeleri sessizce geri alıyor —
+// bir kez oldu.
 
 for (const config of SERVICE_CONFIGS) {
   const base = resolve(ROOT, config.slug);

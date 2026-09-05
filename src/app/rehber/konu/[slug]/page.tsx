@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+
+import { seoAciklama, seoBaslik } from '@/lib/seo-metin';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { BookOpen } from 'lucide-react';
@@ -27,14 +29,30 @@ export async function generateStaticParams() {
 export const revalidate = 300;
 
 /** Konu sayfalarının arama başlığı ve açıklaması. */
+/**
+ * Konu başına açıklama.
+ *
+ * Şablon açıklama ("... konusundaki PetSemti rehber yazıları.") 49 karakter
+ * kalıyordu; arama sonucunda ayrılan yerin üçte biri bile dolmuyor ve on iki
+ * konu sayfası neredeyse aynı cümleyi paylaşıyordu. Alt konular da listeye
+ * eklendi — yalnızca üst konuların yazılmış olması, alt konuların hepsini
+ * aynı şablona düşürüyordu.
+ */
 const ACIKLAMA: Record<string, string> = {
-  kedi: 'Kedi bakımı, beslenmesi, sağlığı ve davranışı üzerine rehberler.',
-  kopek: 'Köpek bakımı, eğitimi, beslenmesi ve sağlığı üzerine rehberler.',
-  'diger-hayvanlar': 'Kuş, kemirgen, sürüngen ve akvaryum canlıları için bakım rehberleri.',
-  guvercin: 'Güvercin ırkları, yetiştiricilik, uçuş ve bakım rehberleri.',
-  'kayip-bulundu': 'Kaybolan hayvanı arama, kayıp ilanı verme ve bulunan hayvanı sahibine ulaştırma rehberleri.',
-  hizmetler: 'Veteriner, pet oteli, kuaför ve eğitmen seçerken dikkat edilmesi gerekenler.',
+  kedi: 'Kedi bakımı, beslenmesi, sağlığı ve davranışı üzerine rehberler. Yavru kedi sahiplenmekten yaşlılık bakımına, günlük hayatta işinize yarayacak bilgiler.',
+  'kedi-bakim': 'Kedi bakımının temelleri: tüy tarama, tırnak kesimi, kum kabı düzeni, banyo ve diş bakımı. Evde uygulayabileceğiniz adım adım rehberler.',
+  'kedi-beslenme': 'Kedi beslenmesi rehberleri: yaşa göre mama seçimi, yaş-kuru mama dengesi, su tüketimi, yasak besinler ve kilo takibi.',
+  'kedi-saglik': 'Kedi sağlığı rehberleri: aşı takvimi, iç ve dış parazit koruması, kısırlaştırma, sık görülen hastalıklar ve veterinere ne zaman gitmeli.',
+  kopek: 'Köpek bakımı, eğitimi, beslenmesi ve sağlığı üzerine rehberler. Yavru köpek sahiplenmekten ırka özgü ihtiyaçlara kadar pratik bilgiler.',
+  'kopek-bakim': 'Köpek bakımının temelleri: tüy bakımı, tırnak ve kulak temizliği, banyo sıklığı, tasma seçimi ve günlük yürüyüş düzeni.',
+  'kopek-egitim': 'Köpek eğitimi rehberleri: temel itaat komutları, tuvalet eğitimi, tasma alışkanlığı, yalnız kalma kaygısı ve davranış problemleri.',
+  'kopek-saglik': 'Köpek sağlığı rehberleri: aşı takvimi, parazit koruması, kısırlaştırma, ırka özgü riskler ve acil durumda ne yapmalı.',
+  'diger-hayvanlar': 'Kuş, kemirgen, sürüngen ve akvaryum canlıları için bakım rehberleri. Kafes ve teraryum düzeni, beslenme ve sağlık takibi.',
+  guvercin: 'Güvercin ırkları, yetiştiricilik, uçuş ve bakım rehberleri. Kümes düzeni, halka numarası, kuluçka ve yarış güvercini bakımı.',
+  'kayip-bulundu': 'Kaybolan hayvanı arama, kayıp ilanı verme ve bulunan hayvanı sahibine ulaştırma rehberleri. İlk 24 saatte yapılması gerekenler.',
+  hizmetler: 'Veteriner, pet oteli, kuaför, pet taksi ve eğitmen seçerken nelere dikkat etmeli. Soru listeleri ve fiyat beklentileri.',
 };
+
 
 export async function generateMetadata({
   params,
@@ -50,8 +68,8 @@ export async function generateMetadata({
     ACIKLAMA[slug] ?? `${konu.name} konusundaki PetSemti rehber yazıları.`;
 
   return {
-    title: `${konu.name} Rehberi`,
-    description: aciklama,
+    title: seoBaslik(`${konu.name} Rehberi`),
+    description: seoAciklama(aciklama),
     alternates: { canonical: `/rehber/konu/${slug}` },
     openGraph: {
       type: 'website',

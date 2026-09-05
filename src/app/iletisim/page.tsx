@@ -7,7 +7,7 @@ import { getSiteContact } from '@/lib/queries/site-settings';
 import { ContactForm } from './ContactForm';
 
 export const metadata: Metadata = {
-  title: 'İletişim',
+  title: 'İletişim — Destek, İlan Bildirimi ve Kurumsal',
   description: 'PetSemti ile iletişime geçin: destek, ilan bildirimi ve kurumsal başvurular.',
 };
 

@@ -6,6 +6,8 @@ import { ListingVideos } from '@/components/listings/ListingVideos';
 import { ListingActions } from '@/components/listings/ListingActions';
 import { SellerCard } from '@/components/listings/SellerCard';
 import { ListingGrid } from '@/components/listings/ListingGrid';
+import { GuideStrip } from '@/components/guides/GuideList';
+import type { GuideCard } from '@/lib/queries/guides';
 import type { ListingCard, SellerInfo, AdjacentListings } from '@/lib/queries/listings';
 import { JsonLd } from '@/components/JsonLd';
 import { breadcrumbSchema, listingSchema } from '@/lib/structured-data';
@@ -126,11 +128,14 @@ export function ListingDetail({
   seller,
   similar,
   adjacent,
+  rehberYazilari,
 }: {
   listing: DetailListing;
   seller: SellerInfo | null;
   similar: ListingCard[];
   adjacent: AdjacentListings;
+  /** İlanın cinsine ya da kategorisine bağlı rehber yazıları; yoksa boş. */
+  rehberYazilari: GuideCard[];
 }) {
   const category = listing.categories;
 
@@ -481,6 +486,13 @@ export function ListingDetail({
             </div>
           </section>
         )}
+
+        {/* --- İlgili rehber yazıları ---
+            Sayfanın altına makale METNİ konmuyor, yazıya bağlantı veriliyor.
+            Aynı metni her ilana basmak bin sayfayı birbirinin kopyası yapar;
+            bağlantı ise hem okuyucuya sonraki adımı gösterir hem de rehberi
+            besler. Eşleşme yoksa blok hiç çıkmıyor. */}
+        <GuideStrip yazilar={rehberYazilari} baslik="Bu İlanla İlgili Rehber Yazıları" />
       </div>
     </div>
   );

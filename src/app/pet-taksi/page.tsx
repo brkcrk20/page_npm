@@ -16,7 +16,7 @@ import {
 const config = getServiceConfigBySlug('pet-taksi')!;
 
 export const metadata: Metadata = {
-  title: `${config.seoTitle}`,
+  title: config.seoTitle,
   description: config.seoDescription,
 };
 

@@ -68,13 +68,19 @@ export type CategoryDef = {
   title: string;
 };
 
+/**
+ * Malzeme kategorisi birçok yerde diğerlerinden ayrı davranıyor: cinsi
+ * yok, eşya grubu var; "sahiplendirme" terimi burada anlamsız.
+ */
+export const MALZEME_KATEGORISI = 'pet-malzemeleri';
+
 export const CATEGORY_DEFS: CategoryDef[] = [
   { slug: 'kopek-ilanlari', type: 'Dog', title: 'Köpek İlanları' },
   { slug: 'kedi-ilanlari', type: 'Cat', title: 'Kedi İlanları' },
   { slug: 'kus-ilanlari', type: 'Bird', title: 'Kuş İlanları' },
   { slug: 'akvaryum-ilanlari', type: 'Aquarium', title: 'Akvaryum İlanları' },
   { slug: 'guvercin-ilanlari', type: 'Pigeon', title: 'Güvercin İlanları' },
-  { slug: 'pet-malzemeleri', type: 'Supply', title: 'Pet Malzemeleri' },
+  { slug: MALZEME_KATEGORISI, type: 'Supply', title: 'Pet Malzemeleri' },
   { slug: 'diger-ilanlar', type: 'Other', title: 'Diğer İlanlar' },
 ];
 

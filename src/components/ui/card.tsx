@@ -1,4 +1,5 @@
 import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
 
 import { cn } from "@/lib/utils"
 
@@ -29,19 +30,30 @@ const CardHeader = React.forwardRef<
 ))
 CardHeader.displayName = "CardHeader"
 
+/**
+ * asChild: kart başlığını doğru başlık etiketiyle render etmek için.
+ *
+ * CardTitle her zaman <div> üretiyordu. Giriş ve kayıt sayfalarında
+ * sayfanın tek görünür başlığı buydu; sonuç, h1'i olmayan bir sayfa.
+ * Görsel olarak başlık gibi duran ama belge yapısında başlık olmayan bir
+ * öğe hem arama motoru hem ekran okuyucu için sayfayı başlıksız bırakıyor.
+ */
 const CardTitle = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
-      className
-    )}
-    {...props}
-  />
-))
+  React.HTMLAttributes<HTMLDivElement> & { asChild?: boolean }
+>(({ className, asChild = false, ...props }, ref) => {
+  const Comp = asChild ? Slot : "div"
+  return (
+    <Comp
+      ref={ref}
+      className={cn(
+        "text-2xl font-semibold leading-none tracking-tight",
+        className
+      )}
+      {...props}
+    />
+  )
+})
 CardTitle.displayName = "CardTitle"
 
 const CardDescription = React.forwardRef<

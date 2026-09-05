@@ -1,6 +1,8 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
+import { seoAciklama, seoBaslik, seoBaslikSec } from '@/lib/seo-metin';
+
 import { ServiceDirectory } from '@/components/services/ServiceDirectory';
 import { ServiceDetail } from '@/components/services/ServiceDetail';
 import { getCityBySlug } from '@/lib/queries/catalog';
@@ -47,11 +49,23 @@ export async function generateMetadata({
       const location = [(data as any).cities?.name, (data as any).districts?.name]
         .filter(Boolean)
         .join(', ');
+      /**
+       * Başlık marka ekini kendisi taşımıyordu ama "| Veteriner Klinikleri"
+       * yazıyordu; kök düzenin şablonu buna bir de "| PetSemti" ekleyince
+       * başlık 78 karaktere çıkıp arama sonucunda kesiliyordu. Kategori adı
+       * işletme adının yanında zaten bilgi taşımıyor — konum taşıyor.
+       */
+      const govde = (data.description ?? '').replace(/\s+/g, ' ').trim();
       return {
-        title: `${data.name}${location ? ` — ${location}` : ''} | ${config.label}`,
-        description:
-          data.description?.slice(0, 160) ??
-          `${data.name}: adres, telefon, çalışma saatleri ve sunulan hizmetler.`,
+        title: seoBaslikSec(
+          location ? `${data.name} — ${location}` : data.name,
+          data.name
+        ),
+        description: seoAciklama(
+          govde.length >= 70
+            ? govde
+            : `${data.name}${location ? ` — ${location}` : ''}: adres, telefon, çalışma saatleri ve sunulan hizmetler.`
+        ),
       };
     }
     return { title: 'Sayfa Bulunamadı' };
@@ -61,8 +75,10 @@ export async function generateMetadata({
   if (!city) return { title: 'Sayfa Bulunamadı' };
 
   return {
-    title: `${city.name} ${config.label}`,
-    description: `${city.name} ilindeki ${config.label.toLocaleLowerCase('tr')}. Çalışma saatleri ve sunulan hizmetlere göre filtreleyin.`,
+    title: seoBaslik(`${city.name} ${config.label}`),
+    description: seoAciklama(
+      `${city.name} ve ilçelerindeki ${config.label.toLocaleLowerCase('tr')}. Adres, telefon ve çalışma saatlerini görün, hizmetlere göre filtreleyin.`
+    ),
   };
 }
 

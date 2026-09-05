@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
 import {
+  breedDisplayName,
   getBreedsByCategoryId,
   getCategories,
   getCategoryBySlug,
@@ -13,6 +14,8 @@ import { getListings, parseListingParams } from '@/lib/queries/listings';
 import { getPageContent } from '@/lib/queries/page-content';
 import { cinseGoreSehirler, sehreGoreCinsler } from '@/lib/queries/cross-links';
 import { CrossLinks } from '@/components/listings/CrossLinks';
+import { seoAciklama, seoAciklamaSec, seoBaslikSec } from '@/lib/seo-metin';
+import { MALZEME_KATEGORISI } from '@/lib/routing';
 
 /**
  * /<kategori>/<segment>
@@ -85,17 +88,52 @@ export async function generateMetadata({
   const { category, resolved } = loaded;
 
   if (resolved.kind === 'breed') {
-    const name = resolved.breed.name;
+    const kardesler = await getBreedsByCategoryId(category.id);
+    const ad = breedDisplayName(resolved.breed, kardesler);
+
+    // Malzeme sayfalarında "sahiplendirme" yanlış: bir kafes sahiplendirilmiyor,
+    // satılıyor ya da devrediliyor. Kategoriye göre ayrı metin gerekiyor.
+    if (category.slug === MALZEME_KATEGORISI) {
+      return {
+        title: seoBaslikSec(
+          `${ad} — İkinci El ve Sıfır İlanları`,
+          `${ad} — İkinci El İlanları`,
+          `${ad} İlanları`
+        ),
+        description: seoAciklamaSec(
+          `${ad} ilanları: ikinci el ve sıfır ürünler, sahibinden fiyatlarla. Semtinizdeki ${ad.toLocaleLowerCase('tr')} ilanlarını PetSemti'de karşılaştırın.`,
+          `${ad} ilanları: ikinci el ve sıfır ürünler, sahibinden fiyatlarla. Semtinizdeki satıcıları PetSemti'de karşılaştırın.`
+        ),
+      };
+    }
+
     return {
-      title: `${name} İlanları — Satılık ve Sahiplendirme`,
-      description: `${name} cinsi için güncel satılık ve ücretsiz sahiplendirme ilanları. Türkiye'nin her ilinden ${name} ilanlarına PetSemti'den ulaşın.`,
+      title: seoBaslikSec(
+        `${ad} — Satılık ve Sahiplendirme İlanları`,
+        `${ad} — Satılık ve Sahiplendirme`,
+        `${ad} İlanları`
+      ),
+      description: seoAciklamaSec(
+        `${ad} cinsi için güncel satılık ve ücretsiz sahiplendirme ilanları. Türkiye'nin her ilinden ${ad} ilanlarına PetSemti'den ulaşın.`,
+        `${ad} cinsi için güncel satılık ve ücretsiz sahiplendirme ilanları. Türkiye'nin her ilindeki ilanlara PetSemti'den ulaşın.`
+      ),
     };
   }
 
   const cityName = resolved.city.name;
+  const malzeme = category.slug === MALZEME_KATEGORISI;
   return {
-    title: `${cityName} ${category.name} — Satılık ve Sahiplendirme`,
-    description: `${cityName} ilindeki güncel ${category.name.toLowerCase()}. Semtinizdeki ilanlara PetSemti'den ulaşın.`,
+    title: seoBaslikSec(
+      malzeme
+        ? `${cityName} ${category.name} — İkinci El ve Sıfır`
+        : `${cityName} ${category.name} — Satılık ve Sahiplendirme`,
+      `${cityName} ${category.name}`
+    ),
+    description: seoAciklama(
+      malzeme
+        ? `${cityName} ve ilçelerindeki ikinci el ve sıfır ${category.name.toLocaleLowerCase('tr')}. Semtinizdeki ilanları görün, satıcıyla doğrudan görüşün.`
+        : `${cityName} ve ilçelerindeki güncel ${category.name.toLocaleLowerCase('tr')}. Semtinizdeki ilanları görün, satıcıyla doğrudan görüşün.`
+    ),
   };
 }
 

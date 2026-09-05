@@ -41,9 +41,9 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
     slug: 'veteriner',
     label: 'Veteriner Klinikleri',
     unit: 'klinik',
-    seoTitle: 'Veteriner Klinikleri — Size En Yakın Veteriner Hekim',
+    seoTitle: 'Veteriner Klinikleri — Size En Yakın Veteriner',
     seoDescription:
-      'Türkiye genelindeki veteriner klinikleri: 7/24 acil servis, röntgen, laboratuvar ve yatılı tedavi hizmeti verenler. Şehrinize göre filtreleyin, çalışma saatlerini görün.',
+      'Türkiye genelindeki veteriner klinikleri: 7/24 acil servis, röntgen, laboratuvar ve yatılı tedavi verenler. Şehrinize göre filtreleyin, saatleri görün.',
     registerCta: 'Kliniğinizi Ekleyin',
   },
   {
@@ -91,7 +91,7 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
     slug: 'egitmen',
     label: 'Pet Eğitmenleri',
     unit: 'eğitmen',
-    seoTitle: 'Köpek Eğitmenleri — Temel İtaat ve Davranış Eğitimi',
+    seoTitle: 'Köpek Eğitmenleri — İtaat ve Davranış Eğitimi',
     seoDescription:
       'Temel itaat, tuvalet eğitimi ve davranış problemleri konusunda çalışan pet eğitmenleri. Evde ders veren ve yatılı eğitim sunanları karşılaştırın.',
     registerCta: 'Hizmetinizi Ekleyin',

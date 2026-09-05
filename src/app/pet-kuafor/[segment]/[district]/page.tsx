@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
+import { seoAciklama, seoBaslikSec } from '@/lib/seo-metin';
+
 import { ServiceDirectory } from '@/components/services/ServiceDirectory';
 import { getCityBySlug, getDistrict } from '@/lib/queries/catalog';
 import { getServiceConfigBySlug } from '@/lib/services-config';
@@ -37,8 +39,15 @@ export async function generateMetadata({
 
   const { city, district } = loaded;
   return {
-    title: `${district.name} ${config.label} — ${city.name}`,
-    description: `${city.name} ${district.name} bölgesindeki ${config.label.toLocaleLowerCase('tr')}.`,
+    title: seoBaslikSec(
+      `${district.name} ${config.label} — ${city.name}`,
+      `${district.name} ${config.label}`
+    ),
+    // Tek cümle 55 karakterde bitiyordu; arama sonucundaki yerin yarısı boş
+    // kalıyor ve sayfanın ne sunduğu söylenmiyordu.
+    description: seoAciklama(
+      `${city.name} ${district.name} bölgesindeki ${config.label.toLocaleLowerCase('tr')}. Adres, telefon ve çalışma saatlerini görün, size en yakınını seçin.`
+    ),
   };
 }
 

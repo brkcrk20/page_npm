@@ -34,7 +34,9 @@ export default function LoginPage() {
       <div className="flex items-center justify-center py-12">
         <Card className="w-full max-w-md mx-4 border-0 shadow-none sm:border sm:shadow-sm">
           <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-3xl font-headline">Giriş Yap</CardTitle>
+            <CardTitle asChild className="text-3xl font-headline">
+              <h1>Giriş Yap</h1>
+            </CardTitle>
             <CardDescription>petsemti'ne tekrar hoş geldiniz</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

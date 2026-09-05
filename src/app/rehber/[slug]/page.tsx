@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+
+import { seoAciklama, seoBaslik } from '@/lib/seo-metin';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -28,10 +30,13 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   if (!yazi) return { title: 'Rehber Yazısı Bulunamadı' };
 
   const kapak = guideCoverUrl(yazi.cover_path);
-  const aciklama = yazi.seo_description ?? yazi.excerpt ?? undefined;
+  const ham = yazi.seo_description ?? yazi.excerpt ?? null;
+  const aciklama = ham ? seoAciklama(ham) : undefined;
 
   return {
-    title: yazi.seo_title ?? yazi.title,
+    // Yönetimden yazılan başlık da sınırdan geçiyor; elle yazılan metnin
+    // 60 karakteri aşması şablonun aşmasından daha olası.
+    title: seoBaslik(yazi.seo_title ?? yazi.title),
     description: aciklama,
     alternates: { canonical: `/rehber/${yazi.slug}` },
     openGraph: {

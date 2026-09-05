@@ -40,7 +40,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // İlan türüne göre listeler. "Ücretsiz sahiplendirme" yüksek niyetli bir
     // arama ve tür ayrımı yapmayan kategori sayfasına değil buraya düşmeli.
     { url: `${SITE_URL}/sahiplendirme`, lastModified: now, changeFrequency: 'hourly', priority: 0.9 },
-    { url: `${SITE_URL}/al-sat`, lastModified: now, changeFrequency: 'hourly', priority: 0.9 },
+    // /al-sat site haritasında değil: içeriği /pet-malzemeleri ile birebir
+    // aynı ve kanonik adres o. İkisini birden bildirmek Google'a aynı
+    // envanteri iki ayrı sayfa gibi göstermek olurdu. Sayfa menüde ve
+    // kullanımda duruyor, yalnızca aramaya ayrı bir sayfa olarak
+    // sunulmuyor.
     // Bilgilendirme ve sözleşme sayfaları. Nadiren değişiyorlar ama
     // indekslenmeleri gerekiyor: arama motorları bir pazaryerinde kullanım
     // şartları, gizlilik ve iletişim sayfasının varlığını güven sinyali

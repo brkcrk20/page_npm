@@ -22,6 +22,11 @@ import { getListings } from '@/lib/queries/listings';
 
 export const metadata: Metadata = {
   title: 'Arama Sonuçları',
+  // Sayfa indekslenmiyor ama açıklaması yine de kendine ait olsun:
+  // açıklama yokken kök düzenin tüm siteyi anlatan metni kullanılıyor ve
+  // paylaşım kartında "arama sonuçları" yerine ana sayfa tarifi çıkıyordu.
+  description:
+    'PetSemti’de ilan arayın: cins, şehir ve ilçeye göre filtreleyin, size en yakın satılık ve sahiplendirme ilanlarını görün.',
   // Arama sonuçları indekslenmemeli: sonsuz sayıda üretilebilir ve
   // kategori sayfalarıyla kopya içerik yaratır.
   robots: { index: false, follow: true },

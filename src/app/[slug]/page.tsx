@@ -4,7 +4,9 @@ import { listingHref } from '@/lib/listing-url';
 import { listingMetadata } from '@/lib/listing-metadata';
 import { ListingDetail } from '@/components/listings/ListingDetail';
 import { getPageContent } from '@/lib/queries/page-content';
+import { getGuidesForListing } from '@/lib/queries/guides';
 import type { Metadata } from 'next';
+import { seoAciklama, seoBaslik, seoBaslikSec } from '@/lib/seo-metin';
 
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
 import { PigeonLanding } from '@/components/listings/PigeonLanding';
@@ -77,17 +79,27 @@ export async function generateMetadata({
       const icerik = await getPageContent({ categoryId: category.id });
       if (icerik?.seo_title || icerik?.seo_description) {
         return {
-          title: icerik.seo_title ?? `${category.name} İlanları`,
-          description: icerik.seo_description ?? undefined,
+          title: seoBaslik(icerik.seo_title ?? `${category.name} İlanları`),
+          description: icerik.seo_description ? seoAciklama(icerik.seo_description) : undefined,
         };
       }
       // Kategoriye özel SEO metni varsa o kullanılıyor; güvercin gibi kendi
       // terminolojisi olan kategorilerde genel şablon yetersiz kalıyor.
+      //
+      // Yönetimden girilen metin de sınırdan geçiriliyor: elle yazılan bir
+      // başlığın 60 karakteri aşması, şablonun aşmasından daha olası.
       return {
-        title: `${category.seo_title ?? `${category.name} — Satılık ve Sahiplendirme İlanları`}`,
-        description:
+        title: category.seo_title
+          ? seoBaslik(category.seo_title)
+          : seoBaslikSec(
+              `${category.name} — Satılık ve Sahiplendirme İlanları`,
+              `${category.name} — Satılık ve Sahiplendirme`,
+              category.name
+            ),
+        description: seoAciklama(
           category.seo_description ??
-          `Türkiye genelindeki güncel ${category.name.toLowerCase()}. Semtinizdeki ilanları görün, güvenle sahiplenin.`,
+            `Türkiye genelindeki güncel ${category.name.toLocaleLowerCase('tr')}. Semtinizdeki ilanları görün, güvenle sahiplenin.`
+        ),
       };
     }
   }
@@ -172,14 +184,21 @@ export default async function RootSlugPage({
     if (kanonik !== `/${slug}`) permanentRedirect(kanonik);
 
     const detail = listing as any;
-    const [seller, similar, adjacent] = await Promise.all([
+    const [seller, similar, adjacent, rehberYazilari] = await Promise.all([
       getSellerInfo(detail.owner_id),
       getSimilarListings(detail.id, detail.breed_id ?? null, detail.category_id),
       getAdjacentListings(detail.id, detail.category_id, detail.published_at),
+      getGuidesForListing(detail.category_id ?? null, detail.breed_id ?? null),
     ]);
 
     return (
-      <ListingDetail listing={detail} seller={seller} similar={similar} adjacent={adjacent} />
+      <ListingDetail
+        listing={detail}
+        seller={seller}
+        similar={similar}
+        adjacent={adjacent}
+        rehberYazilari={rehberYazilari}
+      />
     );
   }
 

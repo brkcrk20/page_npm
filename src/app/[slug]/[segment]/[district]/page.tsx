@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
+import { seoAciklama, seoAciklamaSec, seoBaslikSec } from '@/lib/seo-metin';
+
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
 import {
   getCategoryBySlug,
@@ -92,16 +94,31 @@ export async function generateMetadata({
      * Kullanıcı arama kutusuna şehri önce yazıyor.
      */
     return {
-      title: `${city.name} ${breed.name} İlanları — Satılık ve Sahiplendirme`,
-      description: `${city.name} ilindeki güncel ${breed.name} ilanları. Sahiplendirme ve satılık ${breed.name} ilanlarını ilçeye göre inceleyin, sahibiyle doğrudan görüşün.`,
+      title: seoBaslikSec(
+        `${city.name} ${breed.name} İlanları — Satılık ve Sahiplendirme`,
+        `${city.name} ${breed.name} — Satılık ve Sahiplendirme`,
+        `${city.name} ${breed.name} İlanları`
+      ),
+      description: seoAciklamaSec(
+        `${city.name} ilindeki güncel ${breed.name} ilanları. Sahiplendirme ve satılık ${breed.name} ilanlarını ilçeye göre inceleyin, sahibiyle doğrudan görüşün.`,
+        `${city.name} ilindeki güncel ${breed.name} ilanları. Sahiplendirme ve satılık ilanları ilçeye göre inceleyin, sahibiyle doğrudan görüşün.`
+      ),
       alternates: { canonical: `/${category.slug}/${breed.slug}/${city.slug}` },
     };
   }
 
   const { city, district } = cozum;
+  const kategoriAdi = category.name.toLocaleLowerCase('tr');
   return {
-    title: `${district!.name} ${city!.name} ${category.name}`,
-    description: `${city!.name} ${district!.name} bölgesindeki güncel ${category.name.toLowerCase()}.`,
+    title: seoBaslikSec(
+      `${district!.name} ${city!.name} ${category.name}`,
+      `${district!.name} ${category.name}`
+    ),
+    // Tek cümlelik açıklama arama sonucunda yarım kalmış görünüyordu;
+    // ilçe sayfasının ne sunduğunu söyleyen ikinci cümle eklendi.
+    description: seoAciklama(
+      `${city!.name} ${district!.name} bölgesindeki güncel ${kategoriAdi}. Semtinizdeki satılık ve sahiplendirme ilanlarını görün, sahibiyle doğrudan görüşün.`
+    ),
     alternates: { canonical: `/${category.slug}/${city!.slug}/${district!.slug}` },
   };
 }

@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+
+import { seoAciklama, seoBaslikSec } from '@/lib/seo-metin';
 import {
   BadgeCheck,
   Building2,
@@ -47,8 +49,12 @@ export async function generateMetadata({
 
   const name = seller.company_title || seller.full_name || `@${seller.username}`;
   return {
-    title: `${name} — Tüm İlanları`,
-    description: `${name} kullanıcısının PetSemti'deki güncel ilanları.`,
+    title: seoBaslikSec(`${name} — Tüm İlanları`, name),
+    // Tek cümlelik açıklama ~55 karakterde bitiyordu; arama sonucunda
+    // ayrılan yerin üçte biri bile dolmuyordu.
+    description: seoAciklama(
+      `${name} kullanıcısının PetSemti'deki güncel ilanları. Satılık ve sahiplendirme ilanlarını görün, satıcıyla doğrudan iletişime geçin.`
+    ),
     alternates: { canonical: `/satici/${seller.username}` },
   };
 }

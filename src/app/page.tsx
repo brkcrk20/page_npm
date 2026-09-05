@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   // (bkz. app/layout.tsx). Buraya ayrı bir başlık yazmak, aynı sayfayı iki
   // farklı isimle tanıtmak olurdu.
   description:
-    'Kedi, köpek, kuş, akvaryum ve güvercin ilanları; kayıp-bulundu; veteriner, pet oteli ve kuaför rehberi. Irka, ile ve ilçeye göre inceleyin, sahibiyle doğrudan görüşün.',
+    'Kedi, köpek, kuş, akvaryum ve güvercin ilanları; kayıp-bulundu; veteriner ve pet oteli rehberi. Irka, ile ve ilçeye göre inceleyin, sahibiyle görüşün.',
 };
 
 /**

@@ -155,3 +155,49 @@ export async function getGuideTopics(): Promise<GuideTopic[]> {
 
   return (data ?? []) as unknown as GuideTopic[];
 }
+
+/**
+ * Bir ilana gerçekten ait rehber yazıları.
+ *
+ * İlan sayfasının altına yazı KOPYALAMAK yerine yazıya BAĞLANIYORUZ. Aynı
+ * metni binlerce ilan sayfasına basmak, arama motoru açısından her sayfayı
+ * birbirinin kopyası hâline getirir; bağlantı vermek ise hem okuyucuya
+ * gerçek bir sonraki adım sunar hem de rehber yazılarına iç bağlantı
+ * kazandırır.
+ *
+ * Eşleşme dar tutuluyor: önce cinse, sonra kategoriye bağlı yazılar.
+ * Hiçbiri yoksa boş dönüyor — alakasız yazıyla doldurmak, tam da kaçınmak
+ * istediğimiz "her sayfada aynı blok" sorununu geri getirirdi.
+ */
+export async function getGuidesForListing(
+  categoryId: number | null,
+  breedId: number | null,
+  limit = 3
+): Promise<GuideCard[]> {
+  if (!isSupabaseServerConfigured()) return [];
+  const supabase = createSupabasePublicClient();
+
+  const cek = async (alan: 'related_breed_id' | 'related_category_id', deger: number) => {
+    const { data } = await supabase
+      .from('guides')
+      .select(KART)
+      .eq('status', 'yayinda')
+      .eq(alan, deger)
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .limit(limit);
+    return (data ?? []) as unknown as GuideCard[];
+  };
+
+  const bulunan: GuideCard[] = breedId ? await cek('related_breed_id', breedId) : [];
+
+  if (bulunan.length < limit && categoryId) {
+    const gorulen = new Set(bulunan.map((g) => g.id));
+    for (const yazi of await cek('related_category_id', categoryId)) {
+      if (gorulen.has(yazi.id)) continue;
+      bulunan.push(yazi);
+      if (bulunan.length === limit) break;
+    }
+  }
+
+  return bulunan;
+}

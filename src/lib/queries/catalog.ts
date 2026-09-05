@@ -409,3 +409,31 @@ async function fetchSidebarData(): Promise<SidebarData> {
     return emptyCounts();
   }
 }
+
+/**
+ * Cins/eşya sayfasında ve başlığında kullanılacak ad.
+ *
+ * Malzeme kataloğunda "Oyuncak", "Mama ve Su Kabı", "Taşıma Çantası ve Box"
+ * ve "Tarak, Fırça ve Bakım Seti" hem Kedi hem Köpek grubunda geçiyor. Ad
+ * tek başına kullanılınca bu sayfa çiftleri birebir aynı başlığı ve aynı
+ * açıklamayı alıyor; Google ikisini yinelenen içerik sayıp birini eliyor.
+ *
+ * Ayrım kategorideki kardeşlere bakarak yapılıyor, sabit bir listeye göre
+ * değil: kataloğa yarın eklenecek bir çakışma da kendiliğinden çözülüyor.
+ * Benzersiz adlar olduğu gibi kalıyor — "Kuş Kuluçka Makinesi" demek
+ * gereksiz, "Kuluçka Makinesi" zaten tek.
+ */
+export function breedDisplayName(breed: Breed, kardesler: Breed[]): string {
+  const grup = breed.group_name?.trim();
+  if (!grup) return breed.name;
+
+  const cakisma = kardesler.some((k) => k.id !== breed.id && k.name === breed.name);
+  if (!cakisma) return breed.name;
+
+  // Ad zaten grubu içeriyorsa ("Köpek Kulübesi") tekrar etmiyoruz.
+  const ilkKelime = grup.split(' ')[0];
+  if (breed.name.toLocaleLowerCase('tr').includes(ilkKelime.toLocaleLowerCase('tr'))) {
+    return breed.name;
+  }
+  return `${ilkKelime} ${breed.name}`;
+}

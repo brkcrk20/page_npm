@@ -14,10 +14,22 @@ import {
 import { getListings } from '@/lib/queries/listings';
 
 export const metadata: Metadata = {
-  title: 'İkinci El Pet Malzemeleri — Kafes, Akvaryum, Tasma ve Fazlası',
+  title: 'İkinci El Pet Malzemeleri — Kafes, Tasma, Yatak',
   description:
-    'İkinci el ve sıfır pet malzemeleri: kafes, akvaryum, taşıma çantası, tasma, yatak, oyuncak, kuluçka makinesi ve bakım ürünleri. Şehrinize göre inceleyin, satıcıyla doğrudan görüşün.',
-  alternates: { canonical: '/al-sat' },
+    'İkinci el ve sıfır pet malzemeleri: kafes, akvaryum, taşıma çantası, tasma, oyuncak ve bakım ürünleri. Şehrinize göre inceleyin, satıcıyla doğrudan görüşün.',
+  /**
+   * Kanonik adres /pet-malzemeleri.
+   *
+   * İki sayfa da aynı ilanları listeliyor; başlıkları ve açıklamaları da
+   * aynıydı. Google böyle bir çifti yinelenen içerik sayıp birini kendi
+   * seçtiği kritere göre eliyor — hangisinin eleneceğini biz söylemezsek
+   * o seçiyor. Kategori adresi hiyerarşinin sahibi (alt sayfalar
+   * /pet-malzemeleri/kedi-oyuncak gibi onun altında), o yüzden kanonik o.
+   *
+   * Sayfanın kendisi kalıyor: menüden gelen kullanıcı için "Al & Sat"
+   * ayrı bir bölüm.
+   */
+  alternates: { canonical: '/pet-malzemeleri' },
 };
 
 export const revalidate = 60;
