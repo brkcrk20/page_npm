@@ -34,15 +34,41 @@ export function ListingGallery({
 
   return (
     <div className="overflow-hidden rounded-lg border bg-white">
-      <div className="relative aspect-[4/3] bg-muted">
+      {/**
+        * Sahne oranı ve object-contain.
+        *
+        * Kutu 4:3 ve fotoğraf object-cover ile basılıyordu. İlan
+        * fotoğraflarının neredeyse tamamı telefonla dikey çekiliyor —
+        * veritabanındaki örnekler 720×1600 (0,45) ve 1200×1600 (0,75).
+        * 0,45 oranındaki bir fotoğrafı 1,33 oranındaki kutuya "cover" ile
+        * yerleştirmek, fotoğrafın yüksekliğinin yalnızca ~%20'sini
+        * gösteriyordu: hayvanın kafası da kuyruğu da kutunun dışında
+        * kalıyordu. İlanın tek işi fotoğrafı göstermek.
+        *
+        * contain ile fotoğrafın tamamı görünüyor; kenarda kalan boşluğu
+        * aynı fotoğrafın bulanık ve büyütülmüş bir kopyası dolduruyor,
+        * böylece boş şeritler yerine fotoğrafın kendi rengi kalıyor.
+        *
+        * Mobilde sahne 3:4: dar ekranda kare kutu bile dikey fotoğrafı
+        * şeride çeviriyordu. Masaüstünde 4:3 kalıyor, orada yatay alan bol.
+        */}
+      <div className="relative aspect-[3/4] overflow-hidden bg-muted sm:aspect-[4/3]">
         {hasPhotos ? (
           <>
+            <Image
+              src={current}
+              alt=""
+              aria-hidden
+              fill
+              sizes="(max-width: 1024px) 100vw, 45vw"
+              className="scale-110 object-cover blur-2xl"
+            />
             <Image
               src={current}
               alt={`${title} — fotoğraf ${index + 1}`}
               fill
               sizes="(max-width: 1024px) 100vw, 45vw"
-              className="object-cover"
+              className="object-contain"
               priority
             />
             {urls.length > 1 && (

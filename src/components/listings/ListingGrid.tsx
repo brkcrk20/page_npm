@@ -71,15 +71,30 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
       className="group flex overflow-hidden rounded-2xl border bg-card transition-colors hover:border-primary/50 md:block"
     >
       {/* Görsel — mobilde solda kare, masaüstünde üstte dikey */}
-      <div className="relative aspect-square w-28 shrink-0 bg-muted sm:w-32 md:aspect-[4/5] md:w-full">
+      <div className="relative aspect-[3/4] w-24 shrink-0 overflow-hidden bg-muted sm:w-28 md:aspect-[4/5] md:w-full">
         {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={listing.title}
-            fill
-            sizes="(max-width: 767px) 128px, (max-width: 1280px) 33vw, 25vw"
-            className="object-cover"
-          />
+          <>
+            {/* Bulanık zemin: fotoğrafın tamamı gösterildiğinde kenarda
+                kalan boşluğu fotoğrafın kendi rengiyle dolduruyor. Aynı
+                kaynak iki kez çiziliyor ama tek istek yapılıyor. */}
+            <Image
+              src={imageUrl}
+              alt=""
+              aria-hidden
+              fill
+              sizes="(max-width: 767px) 128px, (max-width: 1280px) 33vw, 25vw"
+              className="scale-110 object-cover blur-xl"
+            />
+            {/* contain: hayvan fotoğrafları dikey çekiliyor (720×1600 gibi),
+                4:5 kutuya cover ile basılınca kafa ya da kuyruk kesiliyordu. */}
+            <Image
+              src={imageUrl}
+              alt={listing.title}
+              fill
+              sizes="(max-width: 767px) 128px, (max-width: 1280px) 33vw, 25vw"
+              className="object-contain"
+            />
+          </>
         ) : (
           <div className="flex h-full items-center justify-center px-2 text-center text-[11px] text-muted-foreground">
             Fotoğraf yok
