@@ -6,7 +6,6 @@ import { useSearchParams } from 'next/navigation';
 import {
   Ban,
   Building2,
-  CheckCircle2,
   Eye,
   Loader2,
   Search,
@@ -221,6 +220,7 @@ function AdminUsersInner() {
                             Kurumsal
                           </span>
                         )}
+                        {/* Rozet artık yalnızca kimlik doğrulamasından geliyor. */}
                         {row.is_verified && (
                           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
                             Onaylı
@@ -275,21 +275,13 @@ function AdminUsersInner() {
                           Detay
                         </Button>
 
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs"
-                          onClick={() =>
-                            patch(
-                              row,
-                              { is_verified: !row.is_verified },
-                              row.is_verified ? 'Onay kaldırıldı' : 'Onaylı üye yapıldı'
-                            )
-                          }
-                        >
-                          <CheckCircle2 className="mr-1 h-3 w-3" />
-                          {row.is_verified ? 'Onayı Kaldır' : 'Onayla'}
-                        </Button>
+                        {/* "Onayla" düğmesi KALDIRILDI.
+                            Rozet hiçbir kontrol yapılmadan verilebiliyordu;
+                            kullanıcı "Doğrulanmış" yazısını görüp güveniyordu.
+                            Artık tek kaynak kimlik doğrulaması: yönetici
+                            birini doğrulanmış yapmak istiyorsa
+                            /admin/dogrulamalar'daki başvurusunu onaylıyor —
+                            yani bakıp karar verdiği bir şey oluyor. */}
 
                         <Button
                           size="sm"
