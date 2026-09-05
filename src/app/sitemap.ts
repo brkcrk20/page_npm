@@ -158,6 +158,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .eq('status', 'yayinda')
     .limit(1000);
 
+  // Konu sayfaları: "kedi bakımı" gibi aranan konular için indekslenebilir
+  // adresler. Önce ?konu= ile süzülüyordu ve sorgu dizeli sayfalar arama
+  // motorlarında kendi başına bir sayfa sayılmıyor.
+  const { data: rehberKonulari } = await createSupabasePublicClient()
+    .from('guide_topics')
+    .select('slug')
+    .is('parent_id', null);
+
   const guideEntries: MetadataRoute.Sitemap = (
     (rehberYazilari ?? []) as { slug: string; updated_at: string }[]
   ).map((y) => ({
@@ -167,9 +175,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  const topicEntries: MetadataRoute.Sitemap = ((rehberKonulari ?? []) as { slug: string }[]).map(
+    (k) => ({
+      url: `${SITE_URL}/rehber/konu/${k.slug}`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+    })
+  );
+
   return [
     ...staticEntries,
     ...guideEntries,
+    ...topicEntries,
     ...categoryEntries,
     ...breedEntries,
     ...cityEntries,

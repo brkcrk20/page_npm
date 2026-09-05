@@ -61,7 +61,16 @@ const nextConfig: NextConfig = {
   // aksi halde ilan verme sayfası ilan detayına yönlenip erişilemez hale gelir.
   async redirects() {
     return [
-      // 0) Güvercin bölümünün kısa adı.
+      // 0) Rehber konuları sorgu parametresinden kendi adreslerine taşındı.
+      //    Dışarıda kalmış ?konu= bağlantıları kırılmasın.
+      {
+        source: '/rehber',
+        has: [{ type: 'query', key: 'konu', value: '(?<konuSlug>.*)' }],
+        destination: '/rehber/konu/:konuSlug',
+        permanent: true,
+      },
+
+      // 1) Güvercin bölümünün kısa adı.
       //    Menüde bir dönem /guvercinler yazıyordu ve o adres yoktu; dışarıda
       //    kalmış bağlantılar ve eski paylaşımlar 404'e düşmesin.
       {

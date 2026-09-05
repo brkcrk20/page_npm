@@ -42,8 +42,34 @@ function loadAttributions(): Attribution[] {
   }
 }
 
+type GuideAttribution = {
+  guide: string;
+  file: string;
+  source: string;
+  artist: string;
+  license: string;
+  licenseUrl: string;
+};
+
+/**
+ * Rehber kapakları da aynı yükümlülüğü doğuruyor.
+ *
+ * Kapaklar da Wikimedia'dan ve çoğu CC-BY / CC-BY-SA; atıf zorunlu.
+ * Ayrı bir sayfa açmak yerine burada listeleniyor: yükümlülük aynı,
+ * kullanıcının bakacağı yer de aynı.
+ */
+function loadGuideAttributions(): GuideAttribution[] {
+  try {
+    const path = resolve(process.cwd(), 'public/rehber-gorselleri/attributions.json');
+    return JSON.parse(readFileSync(path, 'utf8')) as GuideAttribution[];
+  } catch {
+    return [];
+  }
+}
+
 export default function ImageCreditsPage() {
   const attributions = loadAttributions();
+  const guideAttributions = loadGuideAttributions();
 
   const byCategory = attributions.reduce<Record<string, Attribution[]>>((acc, item) => {
     (acc[item.category] ??= []).push(item);
@@ -105,6 +131,45 @@ export default function ImageCreditsPage() {
             </ul>
           </section>
         ))
+      )}
+
+      {guideAttributions.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-3 text-lg font-bold">Rehber Kapak Görselleri</h2>
+          <ul className="space-y-2 text-sm">
+            {guideAttributions.map((item) => (
+              <li key={item.file} className="flex flex-wrap gap-x-2 text-muted-foreground">
+                <span className="font-medium text-foreground">{item.guide}</span>
+                <span>· {item.artist}</span>
+                {item.licenseUrl ? (
+                  <a
+                    href={item.licenseUrl}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="text-primary hover:underline"
+                  >
+                    {item.license}
+                  </a>
+                ) : (
+                  <span>{item.license}</span>
+                )}
+                {item.source && (
+                  <>
+                    {' · '}
+                    <a
+                      href={item.source}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="text-primary hover:underline"
+                    >
+                      kaynak
+                    </a>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

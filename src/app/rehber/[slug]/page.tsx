@@ -6,8 +6,8 @@ import { ArrowRight, BookOpen, Clock } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { JsonLd } from '@/components/JsonLd';
-import { getGuideBySlug } from '@/lib/queries/guides';
-import { businessImageUrl } from '@/lib/supabase/storage';
+import { getGuideBySlug, getRelatedGuides } from '@/lib/queries/guides';
+import { guideCoverUrl } from '@/lib/supabase/storage';
 import { getServiceConfig } from '@/lib/services-config';
 import { SITE_URL } from '@/lib/site';
 
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const yazi = await getGuideBySlug(slug);
   if (!yazi) return { title: 'Rehber Yazısı Bulunamadı' };
 
-  const kapak = businessImageUrl(yazi.cover_path);
+  const kapak = guideCoverUrl(yazi.cover_path);
   const aciklama = yazi.seo_description ?? yazi.excerpt ?? undefined;
 
   return {
@@ -51,8 +51,16 @@ export default async function GuidePage({ params }: { params: Promise<Params> })
   const yazi = await getGuideBySlug(slug);
   if (!yazi) notFound();
 
-  const kapak = businessImageUrl(yazi.cover_path);
+  const kapak = guideCoverUrl(yazi.cover_path);
   const paragraflar = yazi.body.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+
+  // Okuma süresi: dakikada ~200 kelime. Listede ve yazının başında
+  // gösteriliyor; okuyucunun yazıya girip girmeme kararını kolaylaştırıyor.
+  const kelime = yazi.body.trim().split(/\s+/).length;
+  const okumaDakika = Math.max(1, Math.round(kelime / 200));
+
+  // İlgili yazılar — iç bağlantı ağının ikinci ayağı.
+  const digerYazilar = await getRelatedGuides(yazi.slug, yazi.guide_topics?.slug);
 
   // İlgili bağlantılar yazının alanlarından üretiliyor.
   const ilgili: { label: string; href: string }[] = [];
@@ -81,16 +89,54 @@ export default async function GuidePage({ params }: { params: Promise<Params> })
   return (
     <div className="mx-auto w-full max-w-3xl px-5 py-6">
       <JsonLd
-        data={{
-          '@context': 'https://schema.org',
-          '@type': 'Article',
-          headline: yazi.title,
-          description: yazi.excerpt ?? undefined,
-          datePublished: yazi.published_at ?? undefined,
-          mainEntityOfPage: new URL(`/rehber/${yazi.slug}`, SITE_URL).toString(),
-          publisher: { '@type': 'Organization', name: 'PetSemti' },
-          ...(kapak ? { image: new URL(kapak, SITE_URL).toString() } : {}),
-        }}
+        data={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: yazi.title,
+            description: yazi.excerpt ?? undefined,
+            datePublished: yazi.published_at ?? undefined,
+            dateModified: yazi.published_at ?? undefined,
+            inLanguage: 'tr-TR',
+            wordCount: kelime,
+            articleSection: yazi.guide_topics?.name,
+            mainEntityOfPage: new URL(`/rehber/${yazi.slug}`, SITE_URL).toString(),
+            author: { '@type': 'Organization', name: 'PetSemti' },
+            publisher: {
+              '@type': 'Organization',
+              name: 'PetSemti',
+              logo: {
+                '@type': 'ImageObject',
+                url: new URL('/marka/amblem-512.png', SITE_URL).toString(),
+              },
+            },
+            ...(kapak ? { image: new URL(kapak, SITE_URL).toString() } : {}),
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Ana Sayfa', item: SITE_URL },
+              { '@type': 'ListItem', position: 2, name: 'Rehber', item: `${SITE_URL}/rehber` },
+              ...(yazi.guide_topics
+                ? [
+                    {
+                      '@type': 'ListItem',
+                      position: 3,
+                      name: yazi.guide_topics.name,
+                      item: `${SITE_URL}/rehber/konu/${yazi.guide_topics.slug}`,
+                    },
+                  ]
+                : []),
+              {
+                '@type': 'ListItem',
+                position: yazi.guide_topics ? 4 : 3,
+                name: yazi.title,
+                item: `${SITE_URL}/rehber/${yazi.slug}`,
+              },
+            ],
+          },
+        ]}
       />
 
       <nav aria-label="Kırıntı navigasyonu" className="mb-4 text-sm text-muted-foreground">
@@ -101,7 +147,7 @@ export default async function GuidePage({ params }: { params: Promise<Params> })
           <>
             <span aria-hidden className="mx-1">›</span>
             <Link
-              href={`/rehber?konu=${yazi.guide_topics.slug}`}
+              href={`/rehber/konu/${yazi.guide_topics.slug}`}
               className="hover:text-primary hover:underline"
             >
               {yazi.guide_topics.name}
@@ -112,16 +158,21 @@ export default async function GuidePage({ params }: { params: Promise<Params> })
 
       <article>
         <h1 className="text-2xl font-bold leading-tight md:text-3xl">{yazi.title}</h1>
-        {yazi.published_at && (
-          <p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground">
-            <Clock className="h-3.5 w-3.5" />
-            {new Date(yazi.published_at).toLocaleDateString('tr-TR', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}
-          </p>
-        )}
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+          {yazi.published_at && (
+            <span className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" />
+              <time dateTime={yazi.published_at}>
+                {new Date(yazi.published_at).toLocaleDateString('tr-TR', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </time>
+            </span>
+          )}
+          <span>{okumaDakika} dakikalık okuma</span>
+        </p>
 
         {kapak && (
           <div className="relative mt-5 aspect-[16/9] overflow-hidden rounded-2xl bg-muted">
@@ -161,6 +212,34 @@ export default async function GuidePage({ params }: { params: Promise<Params> })
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {digerYazilar.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-3 text-lg font-bold">
+            İlgili rehber yazıları
+          </h2>
+          <ul className="space-y-2">
+            {digerYazilar.map((d) => (
+              <li key={d.id}>
+                <Link
+                  href={`/rehber/${d.slug}`}
+                  className="flex items-center justify-between gap-3 rounded-xl border bg-card p-3.5 transition-colors hover:border-primary"
+                >
+                  <span className="min-w-0">
+                    <span className="block font-medium leading-snug">{d.title}</span>
+                    {d.excerpt && (
+                      <span className="mt-0.5 line-clamp-1 block text-sm text-muted-foreground">
+                        {d.excerpt}
+                      </span>
+                    )}
+                  </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </Link>
               </li>
             ))}
           </ul>

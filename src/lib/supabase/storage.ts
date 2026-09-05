@@ -84,3 +84,17 @@ export const BUSINESS_IMAGE_BUCKET = 'isletme-gorselleri';
 export function businessImageUrl(path: string | null | undefined): string | null {
   return publicUrl(BUSINESS_IMAGE_BUCKET, path);
 }
+
+/**
+ * Rehber kapak görseli.
+ *
+ * İki kaynak olabiliyor: betikle indirilip depoya konan yerel dosyalar
+ * (/rehber-gorselleri/...) ve ileride yönetimden yüklenecek olanlar
+ * (depolama kovası). Yol "/" ile başlıyorsa yereldir, olduğu gibi
+ * kullanılıyor.
+ */
+export function guideCoverUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  if (path.startsWith('/') || path.startsWith('http')) return path;
+  return businessImageUrl(path);
+}

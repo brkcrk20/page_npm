@@ -111,6 +111,39 @@ export type GuideTopic = {
   position: number;
 };
 
+/**
+ * Bir yazıyla ilgili diğer yazılar.
+ *
+ * Önce aynı alt konuya bakılıyor; tek yazılık bir alt konuda (ör. "Kedi
+ * Bakımı") hiçbir öneri çıkmıyordu. O durumda üst konuya çıkılıyor, orada
+ * da yoksa en yeni yazılara. Boş bir "ilgili" bloğu, iç bağlantı ağının
+ * en çok işe yarayacağı yerde hiç bağlantı olmaması demekti.
+ */
+export async function getRelatedGuides(
+  slug: string,
+  topicSlug: string | undefined,
+  limit = 3
+): Promise<GuideCard[]> {
+  const ele = (liste: GuideCard[]) => liste.filter((g) => g.slug !== slug).slice(0, limit);
+
+  if (topicSlug) {
+    const aynisi = ele(await getGuides({ topicSlug, limit: limit + 1 }));
+    if (aynisi.length >= limit) return aynisi;
+
+    const konular = await getGuideTopics();
+    const konu = konular.find((k) => k.slug === topicSlug);
+    const ust = konu?.parent_id ? konular.find((k) => k.id === konu.parent_id) : null;
+
+    if (ust) {
+      const ustten = ele(await getGuides({ topicSlug: ust.slug, limit: limit + 3 }));
+      if (ustten.length >= 1) return ustten;
+    }
+    if (aynisi.length) return aynisi;
+  }
+
+  return ele(await getGuides({ limit: limit + 1 }));
+}
+
 export async function getGuideTopics(): Promise<GuideTopic[]> {
   if (!isSupabaseServerConfigured()) return [];
   const supabase = createSupabasePublicClient();
