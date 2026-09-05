@@ -50,3 +50,53 @@ export async function getSiteContact(): Promise<SiteContact> {
     return {};
   }
 }
+
+/**
+ * İlan ayarları.
+ *
+ * Fotoğraf sınırı yönetim panelinde bir alan olarak duruyordu ama hiçbir
+ * yerde okunmuyordu: form kendi içinde 12 sabitini kullanıyor, panel ise
+ * 8 gösteriyordu. Yani ayarı değiştirmek hiçbir şey yapmıyordu. Yardım
+ * merkezinde bu sayıyı yazacaksak önce doğru sayının tek bir kaynağı
+ * olması gerekiyor.
+ */
+export type ListingSettings = {
+  maxPhotos: number;
+  durationDays: number;
+  autoApprove: boolean;
+};
+
+const VARSAYILAN_ILAN_AYARLARI: ListingSettings = {
+  maxPhotos: 12,
+  durationDays: 30,
+  autoApprove: true,
+};
+
+export async function getListingSettings(): Promise<ListingSettings> {
+  if (!isSupabaseServerConfigured()) return VARSAYILAN_ILAN_AYARLARI;
+
+  try {
+    const { data, error } = await createSupabasePublicClient()
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'listing')
+      .maybeSingle();
+
+    if (error || !data?.value) return VARSAYILAN_ILAN_AYARLARI;
+
+    const raw = data.value as Record<string, unknown>;
+    const sayi = (deger: unknown, varsayilan: number) =>
+      typeof deger === 'number' && Number.isFinite(deger) && deger > 0 ? deger : varsayilan;
+
+    return {
+      maxPhotos: sayi(raw.max_photos, VARSAYILAN_ILAN_AYARLARI.maxPhotos),
+      durationDays: sayi(raw.default_duration_days, VARSAYILAN_ILAN_AYARLARI.durationDays),
+      autoApprove:
+        typeof raw.auto_approve === 'boolean'
+          ? raw.auto_approve
+          : VARSAYILAN_ILAN_AYARLARI.autoApprove,
+    };
+  } catch {
+    return VARSAYILAN_ILAN_AYARLARI;
+  }
+}

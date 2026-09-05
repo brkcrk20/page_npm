@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
+import { getListingSettings } from '@/lib/queries/site-settings';
+
 import { CreateListingForm, type ListingPreset } from '@/app/ilan-ver/CreateListingForm';
 
 /**
@@ -138,5 +140,12 @@ export default async function Page({
       ? kategori
       : undefined;
 
-  return <CreateListingForm preset={kilitli ? { ...preset, categorySlug: kilitli } : preset} />;
+  const { maxPhotos } = await getListingSettings();
+
+  return (
+    <CreateListingForm
+      preset={kilitli ? { ...preset, categorySlug: kilitli } : preset}
+      maxPhotos={maxPhotos}
+    />
+  );
 }

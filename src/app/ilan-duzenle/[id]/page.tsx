@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { CreateListingForm } from '@/app/ilan-ver/CreateListingForm';
+import { getListingSettings } from '@/lib/queries/site-settings';
 
 export const metadata: Metadata = {
   title: 'İlanı Düzenle',
@@ -27,5 +28,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
   if (!Number.isInteger(listingId) || listingId <= 0) notFound();
 
-  return <CreateListingForm listingId={listingId} />;
+  const { maxPhotos } = await getListingSettings();
+
+  return <CreateListingForm listingId={listingId} maxPhotos={maxPhotos} />;
 }

@@ -379,7 +379,15 @@ export function ListingDetail({
         {/* --- Üç sütun --- */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
           <div className="space-y-4">
-            <ListingGallery photos={listing.listing_photos ?? []} title={listing.title} />
+            <ListingGallery
+              photos={listing.listing_photos ?? []}
+              title={listing.title}
+              // Yalnızca işlenmesi bitmiş videolar sayılıyor: video bölümü de
+              // aynı süzgeci uyguluyor, yoksa düğme boş bir çapaya atlardı.
+              videoCount={
+                (listing.listing_videos ?? []).filter((v) => v.status === 'hazir').length
+              }
+            />
             <ListingVideos videos={listing.listing_videos ?? []} title={listing.title} />
           </div>
 

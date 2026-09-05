@@ -17,10 +17,14 @@ import { listingPhotoUrl } from '@/lib/supabase/storage';
 export function ListingGallery({
   photos,
   title,
+  videoCount = 0,
 }: {
   photos: { storage_path: string; position: number }[];
   title: string;
+  /** Videosu olan ilanda galeriden video bölümüne atlama düğmesi çıkıyor. */
+  videoCount?: number;
 }) {
+  const hasVideos = videoCount > 0;
   const sorted = [...photos].sort((a, b) => a.position - b.position);
   const urls = sorted.map((p) => listingPhotoUrl(p.storage_path)).filter(Boolean) as string[];
 
@@ -96,7 +100,7 @@ export function ListingGallery({
         )}
       </div>
 
-      <div className="grid grid-cols-2 border-y text-sm">
+      <div className={cn('grid border-y text-sm', hasVideos ? 'grid-cols-2' : 'grid-cols-1')}>
         <button
           type="button"
           onClick={() => hasPhotos && window.open(current, '_blank', 'noopener')}
@@ -106,17 +110,19 @@ export function ListingGallery({
           <Maximize2 className="h-4 w-4" />
           Büyük Fotoğraf
         </button>
-        {/* Video yükleme henüz yok; düğme düzeni koruyor ama tıklanamıyor —
-            çalışmayan bir bağlantı vermektense devre dışı göstermek dürüst. */}
-        <button
-          type="button"
-          disabled
-          title="Video özelliği henüz aktif değil"
-          className="flex items-center justify-center gap-2 border-l py-2.5 font-medium text-muted-foreground disabled:opacity-40"
-        >
-          <Video className="h-4 w-4" />
-          Video
-        </button>
+        {/* Video düğmesi "henüz aktif değil" diye devre dışı duruyordu; oysa
+            video yükleme çalışıyor ve videolar aynı sayfanın altında
+            gösteriliyor. Videosu olan ilanda düğme o bölüme atlıyor, olmayan
+            ilanda hiç çıkmıyor — çalışmayan bir düğme göstermektense. */}
+        {hasVideos && (
+          <a
+            href="#ilan-videolari"
+            className="flex items-center justify-center gap-2 border-l py-2.5 font-medium text-primary transition-colors hover:bg-secondary"
+          >
+            <Video className="h-4 w-4" />
+            Video ({videoCount})
+          </a>
+        )}
       </div>
 
       {urls.length > 1 && (

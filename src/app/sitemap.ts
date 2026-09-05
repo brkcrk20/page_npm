@@ -7,6 +7,7 @@ import { getCategories, getBreedsByCategoryId, getCities } from '@/lib/queries/c
 import { getListings } from '@/lib/queries/listings';
 import { getServiceProviders, getServiceCityCounts } from '@/lib/queries/services';
 import { SERVICE_CONFIGS } from '@/lib/services-config';
+import { YARDIM_YAZILARI } from '@/lib/yardim';
 
 /**
  * sitemap.xml
@@ -37,6 +38,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/es-arayanlar`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${SITE_URL}/kayip`, lastModified: now, changeFrequency: 'hourly', priority: 0.8 },
     { url: `${SITE_URL}/rehber`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    // Yardım Merkezi. Ürünün davranışını anlatan sayfalar; "sahiplendirme
+    // ilanında para istenir mi" gibi aramaların karşılığı burası.
+    { url: `${SITE_URL}/yardim`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    ...YARDIM_YAZILARI.map((yazi) => ({
+      url: `${SITE_URL}/yardim/${yazi.slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+    })),
     // İlan türüne göre listeler. "Ücretsiz sahiplendirme" yüksek niyetli bir
     // arama ve tür ayrımı yapmayan kategori sayfasına değil buraya düşmeli.
     { url: `${SITE_URL}/sahiplendirme`, lastModified: now, changeFrequency: 'hourly', priority: 0.9 },

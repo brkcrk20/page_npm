@@ -45,7 +45,8 @@ export function ListingVideos({
   if (!url) return null;
 
   return (
-    <section className="overflow-hidden rounded-lg border bg-white">
+    // id: galerideki "Video" düğmesi buraya atlıyor.
+    <section id="ilan-videolari" className="overflow-hidden rounded-lg border bg-white">
       <h2 className="flex items-center gap-2 border-l-4 border-primary px-4 py-3 font-bold">
         <Film className="h-4 w-4" />
         Video

@@ -108,6 +108,8 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
           <div>
             <h3 className={footerTitleStyle}>Genel Bilgiler</h3>
             <ul className="space-y-2">
+              <li><Link href="/yardim" className={footerLinkStyle}>Yardım Merkezi</Link></li>
+              <li><Link href="/rehber" className={footerLinkStyle}>PetSemti Rehber</Link></li>
               <li><Link href="/hakkimizda" className={footerLinkStyle}>Hakkımızda</Link></li>
               <li><Link href="/iletisim" className={footerLinkStyle}>İletişim</Link></li>
             </ul>
@@ -175,6 +177,7 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
           <nav className="order-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 md:order-2">
             <Link href="/kullanim-sartlari" className="hover:text-primary">Kullanım Şartları</Link>
             <Link href="/gizlilik-politikasi" className="hover:text-primary">Gizlilik Politikası</Link>
+            <Link href="/yardim" className="hover:text-primary">Yardım</Link>
             <Link href="/iletisim" className="hover:text-primary">İletişim</Link>
           </nav>
         </div>

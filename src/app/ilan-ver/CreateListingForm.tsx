@@ -43,7 +43,12 @@ import { prepareVideo } from '@/lib/video-pipeline';
 import { VideoUploader, type SelectedVideo } from '@/components/listings/VideoUploader';
 import { LISTING_VIDEO_BUCKET } from '@/lib/supabase/storage';
 
-const MAX_PHOTOS = 12;
+/**
+ * Fotoğraf sınırı yönetim panelinden geliyor; burada yalnızca ayar
+ * okunamadığında kullanılan yedek değer var. Sabit 12 yazılıydı ve panelde
+ * girilen sayı hiçbir işe yaramıyordu.
+ */
+const VARSAYILAN_MAX_PHOTOS = 12;
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 const schema = z
@@ -134,7 +139,9 @@ export type ListingPreset = {
 export function CreateListingForm({
   listingId,
   preset,
-}: { listingId?: number; preset?: ListingPreset } = {}) {
+  maxPhotos = VARSAYILAN_MAX_PHOTOS,
+}: { listingId?: number; preset?: ListingPreset; maxPhotos?: number } = {}) {
+  const MAX_PHOTOS = maxPhotos;
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
