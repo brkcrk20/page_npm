@@ -83,6 +83,16 @@ export const metadata: Metadata = {
     apple: '/apple-icon.png?v=2',
   },
   alternates: { canonical: '/' },
+  /**
+   * Google Search Console doğrulaması.
+   *
+   * Ortam değişkeni tanımlıysa etiket basılıyor. DNS ile doğrulama daha
+   * kalıcı (dağıtımdan bağımsız), ama etiket yöntemi de gerekebiliyor —
+   * ikisinden biri yeterli.
+   */
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
   openGraph: {
     type: 'website',
     locale: 'tr_TR',

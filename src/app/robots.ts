@@ -27,7 +27,9 @@ export default function robots(): MetadataRoute.Robots {
           '/*/kayit',
           '/login',
           '/kayit',
-          '/gorsel-kaynaklari',
+          // /gorsel-kaynaklari BİLEREK AÇIK: CC-BY ve CC-BY-SA lisansları
+          // atfın herkese erişilebilir olmasını şart koşuyor; o sayfayı
+          // arama motoruna kapatmak yükümlülükle çelişirdi.
           // Filtre kombinasyonları
           '/*?ozellik=',
           '/*?dogrulanmis=',
