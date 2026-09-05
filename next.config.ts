@@ -61,7 +61,18 @@ const nextConfig: NextConfig = {
   // aksi halde ilan verme sayfası ilan detayına yönlenip erişilemez hale gelir.
   async redirects() {
     return [
-      // 0) Rehber konuları sorgu parametresinden kendi adreslerine taşındı.
+      // 0a) İlan adresleri kısa süre /<sehir>/<cins>/<baslik>-<no> biçiminde
+      //     yayındaydı; tek parçaya (/<sehir>-<cins>-<baslik>-<no>) taşındı.
+      //     O aralıkta paylaşılmış bağlantılar kırılmasın.
+      //     Desendeki "-<sayı>" şartı kategori/cins/şehir liste adresleriyle
+      //     çakışmayı önlüyor; onlar rakamla bitmiyor.
+      {
+        source: '/:sehir/:cins/:baslik(.*-\\d+)',
+        destination: '/:sehir-:cins-:baslik',
+        permanent: true,
+      },
+
+      // 0b) Rehber konuları sorgu parametresinden kendi adreslerine taşındı.
       //    Dışarıda kalmış ?konu= bağlantıları kırılmasın.
       {
         source: '/rehber',

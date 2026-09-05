@@ -2,21 +2,21 @@
  * İlan adresi.
  *
  * ESKİ: /sevimli-yavrularimiz-18
- * YENİ: /izmir/toy-poodle/sevimli-yavrularimiz-18
+ * YENİ: /izmir-toy-poodle-sevimli-yavrularimiz-18
  *
- * Şehir ve cins adreste geçiyor. Adres, arama sonucunda başlığın altında
- * görünen ve tıklanma kararına giren bir şey; "izmir/toy-poodle" gören
- * kullanıcı ne bulacağını biliyor.
+ * Tek parça, tire ile: şehir, cins, başlık, numara. Adres arama sonucunda
+ * başlığın altında görünen ve tıklanma kararına giren bir şey; "izmir toy
+ * poodle" arayan kişi aradığı kelimeleri adreste görüyor.
  *
- * NUMARA NEDEN DURUYOR
- * Başlık değişince adres de değişirse eski adresler kırılır. Numara
- * sabit kimlik: başlık, şehir ya da cins değişse bile ilan bulunuyor,
- * eski adres yeni adrese yönlendiriliyor.
+ * NUMARA NEDEN SONDA
+ * Başlık, şehir ya da cins değişince adres de değişiyor. Numara sabit
+ * kimlik: eski adresten hangi ilan olduğu bulunup yeni adrese
+ * yönlendiriliyor. Sonda olması ayrıştırmayı da tekilleştiriyor —
+ * "-<sayı>" ile biten kök adres her zaman ilandır.
  *
  * ÇAKIŞMA YOK
- * Üçüncü parça her zaman "-<sayı>" ile bitiyor; şehir ve ilçe adresleri
- * asla rakamla bitmiyor. Aynı desen sitenin başka yerlerinde de kullanılıyor
- * (işletme adresleri), dolayısıyla yeni bir kural getirmiyor.
+ * Kategori adresleri ("kopek-ilanlari") rakamla bitmiyor; kök segment
+ * çözümleyicisi zaten bu kurala göre çalışıyor.
  */
 
 export type IlanAdresi = {
@@ -26,14 +26,10 @@ export type IlanAdresi = {
   breeds?: { slug: string } | null;
 };
 
-/** Şehir ya da cins yoksa eski düz adres kullanılıyor; ikisi de zorunlu değil. */
+/** Şehir ya da cins yoksa o parça atlanıyor; ikisi de zorunlu değil. */
 export function listingHref(listing: IlanAdresi): string {
-  const sehir = listing.cities?.slug;
-  const cins = listing.breeds?.slug;
-  const son = `${listing.slug}-${listing.id}`;
-
-  if (sehir && cins) return `/${sehir}/${cins}/${son}`;
-  return `/${son}`;
+  const parcalar = [listing.cities?.slug, listing.breeds?.slug, listing.slug].filter(Boolean);
+  return `/${parcalar.join('-')}-${listing.id}`;
 }
 
 /** Adresin son parçasından ilan numarasını çıkarır. */

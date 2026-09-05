@@ -1,6 +1,8 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import { SITE_URL } from '@/lib/site';
 import { listingHref } from '@/lib/listing-url';
+import { listingMetadata } from '@/lib/listing-metadata';
+import { ListingDetail } from '@/components/listings/ListingDetail';
 import { getPageContent } from '@/lib/queries/page-content';
 import type { Metadata } from 'next';
 
@@ -10,6 +12,9 @@ import { getCategories, getCategoryBySlug, getSidebarData } from '@/lib/queries/
 import {
   getListings,
   getListingById,
+  getSellerInfo,
+  getSimilarListings,
+  getAdjacentListings,
   getListingsWithVideo,
   parseListingParams } from '@/lib/queries/listings';
 import { resolveRootSegment } from '@/lib/routing';
@@ -87,8 +92,10 @@ export async function generateMetadata({
     }
   }
 
-  // İlan metadata'sı artık ilanın kendi rotasında; burası yalnızca
-  // eski adresi yönlendiriyor.
+  if (resolution?.kind === 'listing') {
+    const listing = await getListingById(resolution.ilanNo);
+    if (listing) return listingMetadata(listing as never);
+  }
 
   return { title: 'Sayfa Bulunamadı' };
 }
@@ -147,19 +154,32 @@ export default async function RootSlugPage({
     );
   }
 
-  /**
-   * ESKİ İLAN ADRESLERİ
-   *
-   * İlan adresleri /<sehir>/<cins>/<baslik>-<no> biçimine taşındı; kökteki
-   * /<baslik>-<no> adresleri artık yalnızca oraya yönlendiriyor. Paylaşılmış
-   * ve indekslenmiş adresler kırılmasın diye kalıcı (308) yönlendirme:
-   * geçici yönlendirmede arama motoru eski adresi indekste tutmaya devam
-   * ederdi.
-   */
+  // --- İlan detay ---
   if (resolution.kind === 'listing') {
     const listing = await getListingById(resolution.ilanNo);
     if (!listing) notFound();
-    permanentRedirect(listingHref(listing as never));
+
+    /**
+     * Kanonik adres: /<sehir>-<cins>-<baslik>-<no>
+     *
+     * Adres bundan farklıysa (eski düz adres, düzenlenmiş başlık, değişmiş
+     * şehir ya da cins) doğru adrese yönlendiriliyor. Kalıcı (308) çünkü
+     * geçici yönlendirmede arama motoru eski adresi indekste tutmaya devam
+     * ederdi; kanonikleştirmenin işe yaraması için 308 gerekiyor.
+     */
+    const kanonik = listingHref(listing as never);
+    if (kanonik !== `/${slug}`) permanentRedirect(kanonik);
+
+    const detail = listing as any;
+    const [seller, similar, adjacent] = await Promise.all([
+      getSellerInfo(detail.owner_id),
+      getSimilarListings(detail.id, detail.breed_id ?? null, detail.category_id),
+      getAdjacentListings(detail.id, detail.category_id, detail.published_at),
+    ]);
+
+    return (
+      <ListingDetail listing={detail} seller={seller} similar={similar} adjacent={adjacent} />
+    );
   }
 
   // "-<sayı>" ile bitmeyen ve kategori de olmayan eski adresler.

@@ -1,4 +1,4 @@
-import { notFound, permanentRedirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
@@ -9,32 +9,16 @@ import {
   getDistrict,
   getBreed,
 } from '@/lib/queries/catalog';
-import {
-  getListings,
-  parseListingParams,
-  getListingById,
-  getSellerInfo,
-  getSimilarListings,
-  getAdjacentListings,
-} from '@/lib/queries/listings';
-import { ListingDetail } from '@/components/listings/ListingDetail';
-import { ilanNoAyikla, listingHref } from '@/lib/listing-url';
-import { listingMetadata } from '@/lib/listing-metadata';
+import { getListings, parseListingParams } from '@/lib/queries/listings';
 import { getPageContent } from '@/lib/queries/page-content';
 import { cinseGoreSehirler } from '@/lib/queries/cross-links';
 import { CrossLinks } from '@/components/listings/CrossLinks';
 
 /**
- * Üçüncü segment üç şeyden biri olabiliyor:
+ * Üçüncü segment iki şeyden biri olabiliyor:
  *
- *   /<kategori>/<sehir>/<ilce>          → İzmir > Konak köpek ilanları
- *   /<kategori>/<cins>/<sehir>          → İzmir Toy Poodle ilanları
- *   /<sehir>/<cins>/<baslik>-<no>       → tek ilan
- *
- * ÜÇÜNCÜSÜ NASIL AYRILIYOR
- * Son parça "-<sayı>" ile bitiyorsa ilandır. Şehir ve ilçe adresleri asla
- * rakamla bitmiyor; aynı kural sitenin başka yerlerinde de kullanılıyor
- * (işletme adresleri), yani yeni bir kural getirmiyor.
+ *   /<kategori>/<sehir>/<ilce>   → İzmir > Konak köpek ilanları
+ *   /<kategori>/<cins>/<sehir>   → İzmir Toy Poodle ilanları
  *
  * İKİNCİSİ NEDEN VAR
  * Arama kutusuna yazılan şey çoğunlukla "izmir toy poodle" ya da "denizli
@@ -96,16 +80,7 @@ export async function generateMetadata({
 }: {
   params: Promise<Params>;
 }): Promise<Metadata> {
-  const p = await params;
-
-  const ilanNo = ilanNoAyikla(p.district);
-  if (ilanNo !== null) {
-    const listing = await getListingById(ilanNo);
-    if (!listing) return { title: 'İlan Bulunamadı' };
-    return listingMetadata(listing as never);
-  }
-
-  const loaded = await load(p);
+  const loaded = await load(await params);
   if (!loaded) return { title: 'Sayfa Bulunamadı' };
 
   const { category, cozum } = loaded;
@@ -138,37 +113,7 @@ export default async function DistrictPage({
   params: Promise<Params>;
   searchParams: Promise<{ sirala?: string; min?: string; max?: string; kimden?: string }>;
 }) {
-  const p = await params;
-
-  // --- Tek ilan: /<sehir>/<cins>/<baslik>-<no> ---
-  const ilanNo = ilanNoAyikla(p.district);
-  if (ilanNo !== null) {
-    const listing = await getListingById(ilanNo);
-    if (!listing) notFound();
-
-    /**
-     * Adres kanonik hâlinden farklıysa (başlık düzenlenmiş, şehir ya da cins
-     * değişmiş) doğru adrese yönlendiriliyor. Kalıcı yönlendirme: geçici
-     * olsaydı arama motoru eski adresi indekste tutmaya devam ederdi.
-     */
-    const kanonik = listingHref(listing as never);
-    if (kanonik !== `/${p.slug}/${p.segment}/${p.district}`) {
-      permanentRedirect(kanonik);
-    }
-
-    const detail = listing as any;
-    const [seller, similar, adjacent] = await Promise.all([
-      getSellerInfo(detail.owner_id),
-      getSimilarListings(detail.id, detail.breed_id ?? null, detail.category_id),
-      getAdjacentListings(detail.id, detail.category_id, detail.published_at),
-    ]);
-
-    return (
-      <ListingDetail listing={detail} seller={seller} similar={similar} adjacent={adjacent} />
-    );
-  }
-
-  const loaded = await load(p);
+  const loaded = await load(await params);
   if (!loaded) notFound();
 
   const { category, cozum } = loaded;
