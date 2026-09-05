@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { listingHref } from '@/lib/listing-url';
 import { Plus } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -125,7 +126,7 @@ export function CategoryBrowser({
           itemListSchema(
             listings.slice(0, 20).map((l) => ({
               name: l.title,
-              url: `/${l.slug}-${l.id}`,
+              url: listingHref(l),
             }))
           ),
         ]}

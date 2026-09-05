@@ -1,4 +1,5 @@
 import { SITE_URL } from '@/lib/site';
+import { listingHref } from '@/lib/listing-url';
 
 /**
  * schema.org nesneleri.
@@ -90,6 +91,9 @@ export function listingSchema(listing: {
   districtName?: string | null;
   publishedAt?: string | null;
   sellerName?: string | null;
+  /** Kanonik adresi kurmak için; eksikse eski düz adrese düşülüyor. */
+  cities?: { slug: string } | null;
+  breeds?: { slug: string } | null;
 }) {
   const price = listing.price === null ? 0 : Number(listing.price);
   const location = [listing.districtName, listing.cityName].filter(Boolean).join(', ');
@@ -102,7 +106,7 @@ export function listingSchema(listing: {
     image: listing.images.length ? listing.images : undefined,
     category: listing.categoryName,
     brand: listing.breedName ? { '@type': 'Brand', name: listing.breedName } : undefined,
-    url: `${SITE_URL}/${listing.slug}-${listing.id}`,
+    url: `${SITE_URL}${listingHref(listing)}`,
     sku: String(listing.id),
     offers: clean({
       '@type': 'Offer',
@@ -110,7 +114,7 @@ export function listingSchema(listing: {
       priceCurrency: listing.currency || 'TRY',
       availability: 'https://schema.org/InStock',
       itemCondition: 'https://schema.org/UsedCondition',
-      url: `${SITE_URL}/${listing.slug}-${listing.id}`,
+      url: `${SITE_URL}${listingHref(listing)}`,
       availableAtOrFrom: location
         ? { '@type': 'Place', address: { '@type': 'PostalAddress', addressLocality: location, addressCountry: 'TR' } }
         : undefined,

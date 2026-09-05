@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { listingHref } from '@/lib/listing-url';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -75,7 +76,7 @@ export default function ProfileOverviewPage() {
       const [listingRows, favCount, unread, credits] = await Promise.all([
         supabase
           .from('listings')
-          .select('id, slug, title, status, view_count, favorite_count, listing_photos(storage_path, position)')
+          .select('id, slug, title, status, view_count, favorite_count, listing_photos(storage_path, position), cities(slug), breeds(slug)')
           .eq('owner_id', user.id)
           .order('created_at', { ascending: false }),
         supabase.from('favorites').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
@@ -212,7 +213,7 @@ export default function ProfileOverviewPage() {
               return (
                 <li key={listing.id}>
                   <Link
-                    href={`/${listing.slug}-${listing.id}`}
+                    href={listingHref(listing)}
                     className="flex gap-3 rounded-xl border bg-white p-3 transition-shadow hover:shadow-md"
                   >
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">

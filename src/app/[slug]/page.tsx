@@ -1,20 +1,17 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import { SITE_URL } from '@/lib/site';
+import { listingHref } from '@/lib/listing-url';
 import { getPageContent } from '@/lib/queries/page-content';
-import { listingPhotoUrl } from '@/lib/supabase/storage';
 import type { Metadata } from 'next';
 
 import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
 import { PigeonLanding } from '@/components/listings/PigeonLanding';
-import { ListingDetail } from '@/components/listings/ListingDetail';
 import { getCategories, getCategoryBySlug, getSidebarData } from '@/lib/queries/catalog';
 import {
   getListings,
   getListingById,
   getListingsWithVideo,
-  getSellerInfo,
-  getSimilarListings,
-  getAdjacentListings, parseListingParams } from '@/lib/queries/listings';
+  parseListingParams } from '@/lib/queries/listings';
 import { resolveRootSegment } from '@/lib/routing';
 
 /**
@@ -90,53 +87,8 @@ export async function generateMetadata({
     }
   }
 
-  if (resolution?.kind === 'listing') {
-    const listing = await getListingById(resolution.ilanNo);
-    if (listing) {
-      /**
-       * Paylaşım görseli.
-       *
-       * İlan sayfalarının og:image'i hiç yoktu: WhatsApp veya Facebook'ta
-       * paylaşılan bir ilan fotoğrafsız, düz bir bağlantı olarak görünüyordu.
-       * Bir ilan sitesinde paylaşımın tamamı fotoğraf üzerinden yürüyor.
-       *
-       * Ölçüler artık kayıtlı (listing_photos.width/height); ölçüsü bilinen
-       * görsel paylaşım kartında kırpılmadan çıkıyor.
-       */
-      const kapak = [...((listing.listing_photos as any[]) ?? [])].sort(
-        (a, b) => a.position - b.position
-      )[0];
-      const gorselYolu = kapak ? listingPhotoUrl(kapak.storage_path) : null;
-      const gorsel = gorselYolu
-        ? {
-            url: new URL(gorselYolu, SITE_URL).toString(),
-            width: kapak.width ?? undefined,
-            height: kapak.height ?? undefined,
-            alt: listing.title,
-          }
-        : null;
-
-      const aciklama = listing.description.slice(0, 160);
-
-      return {
-        title: `${listing.title}`,
-        description: aciklama,
-        openGraph: {
-          type: 'article',
-          title: listing.title,
-          description: aciklama,
-          url: new URL(`/${listing.slug}-${listing.id}`, SITE_URL).toString(),
-          ...(gorsel ? { images: [gorsel] } : {}),
-        },
-        twitter: {
-          card: gorsel ? 'summary_large_image' : 'summary',
-          title: listing.title,
-          description: aciklama,
-          ...(gorsel ? { images: [gorsel.url] } : {}),
-        },
-      };
-    }
-  }
+  // İlan metadata'sı artık ilanın kendi rotasında; burası yalnızca
+  // eski adresi yönlendiriyor.
 
   return { title: 'Sayfa Bulunamadı' };
 }
@@ -195,36 +147,19 @@ export default async function RootSlugPage({
     );
   }
 
-  // --- İlan detay ---
+  /**
+   * ESKİ İLAN ADRESLERİ
+   *
+   * İlan adresleri /<sehir>/<cins>/<baslik>-<no> biçimine taşındı; kökteki
+   * /<baslik>-<no> adresleri artık yalnızca oraya yönlendiriyor. Paylaşılmış
+   * ve indekslenmiş adresler kırılmasın diye kalıcı (308) yönlendirme:
+   * geçici yönlendirmede arama motoru eski adresi indekste tutmaya devam
+   * ederdi.
+   */
   if (resolution.kind === 'listing') {
     const listing = await getListingById(resolution.ilanNo);
     if (!listing) notFound();
-
-    // Başlık değişmişse slug da değişmiştir; eski adresi kanonik adrese
-    // yönlendiriyoruz ki arama motorunda tek bir sürüm kalsın.
-    //
-    // redirect() değil permanentRedirect(): redirect() 307 (geçici) döner ve
-    // arama motoru eski adresi indekste tutmaya devam eder. Kanonikleştirmenin
-    // işe yaraması için 308 gerekiyor.
-    if (listing.slug !== resolution.slug) {
-      permanentRedirect(`/${listing.slug}-${listing.id}`);
-    }
-
-    const detail = listing as any;
-    const [seller, similar, adjacent] = await Promise.all([
-      getSellerInfo(detail.owner_id),
-      getSimilarListings(detail.id, detail.breed_id ?? null, detail.category_id),
-      getAdjacentListings(detail.id, detail.category_id, detail.published_at),
-    ]);
-
-    return (
-      <ListingDetail
-        listing={detail}
-        seller={seller}
-        similar={similar}
-        adjacent={adjacent}
-      />
-    );
+    permanentRedirect(listingHref(listing as never));
   }
 
   // "-<sayı>" ile bitmeyen ve kategori de olmayan eski adresler.

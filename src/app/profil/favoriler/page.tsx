@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { listingHref } from '@/lib/listing-url';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -30,7 +31,8 @@ type FavoriteRow = {
     currency: string;
     kind: string;
     status: string;
-    cities: { name: string } | null;
+    cities: { name: string; slug: string } | null;
+    breeds: { slug: string } | null;
     districts: { name: string } | null;
     listing_photos: { storage_path: string; position: number }[];
   } | null;
@@ -67,7 +69,7 @@ export default function FavoritesPage() {
       .select(
         `listing_id, created_at,
          listings ( id, slug, title, price, currency, kind, status,
-                    cities ( name ), districts ( name ),
+                    cities ( name, slug ), districts ( name ), breeds ( slug ),
                     listing_photos ( storage_path, position ) )`
       )
       .eq('user_id', user.id)
@@ -160,7 +162,7 @@ export default function FavoritesPage() {
 
                 <div className="min-w-0 flex-1">
                   <Link
-                    href={`/${listing.slug}-${listing.id}`}
+                    href={listingHref(listing)}
                     className="line-clamp-1 font-semibold hover:text-primary"
                   >
                     {listing.title}

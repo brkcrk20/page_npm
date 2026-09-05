@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { listingHref } from '@/lib/listing-url';
 import Link from 'next/link';
 import { MapPin } from 'lucide-react';
 
@@ -66,7 +67,7 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
 
   return (
     <Link
-      href={`/${listing.slug}-${listing.id}`}
+      href={listingHref(listing)}
       className="group flex overflow-hidden rounded-2xl border bg-card transition-colors hover:border-primary/50 md:block"
     >
       {/* Görsel — mobilde solda kare, masaüstünde üstte dikey */}

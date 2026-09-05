@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { listingHref } from '@/lib/listing-url';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -67,6 +68,8 @@ type MyListing = {
   title: string;
   status: ListingStatus;
   kind: string;
+  cities: { slug: string } | null;
+  breeds: { slug: string } | null;
   price: number | null;
   created_at: string;
   expires_at: string | null;
@@ -131,7 +134,7 @@ export default function MyListingsPage() {
     getSupabaseBrowserClient()
       .from('listings')
       .select(
-        'id, slug, title, status, kind, price, created_at, expires_at, view_count, favorite_count, listing_photos(storage_path, position)'
+        'id, slug, title, status, kind, price, created_at, expires_at, view_count, favorite_count, listing_photos(storage_path, position), cities(slug), breeds(slug)'
       )
       .eq('owner_id', user.id)
       .order('created_at', { ascending: false })
@@ -299,7 +302,7 @@ export default function MyListingsPage() {
                 )}
               >
                 <Link
-                  href={`/${listing.slug}-${listing.id}`}
+                  href={listingHref(listing)}
                   className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-muted sm:h-24 sm:w-28"
                 >
                   {imageUrl ? (
@@ -314,7 +317,7 @@ export default function MyListingsPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <Link
-                      href={`/${listing.slug}-${listing.id}`}
+                      href={listingHref(listing)}
                       className="line-clamp-2 font-semibold leading-snug hover:text-primary"
                     >
                       {listing.title}
@@ -382,7 +385,7 @@ export default function MyListingsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start">
                         <DropdownMenuItem asChild>
-                          <Link href={`/${listing.slug}-${listing.id}`}>
+                          <Link href={listingHref(listing)}>
                             <Eye className="mr-2 h-4 w-4" />
                             İlanı Görüntüle
                           </Link>

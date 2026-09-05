@@ -285,9 +285,25 @@ export function ListingDetail({
     .map((p) => listingPhotoUrl(p.storage_path))
     .filter((u): u is string => Boolean(u));
 
+  /**
+   * Kırıntı yolu artık adresle aynı: kategori › cins › şehir › ilan.
+   * Adres /izmir/toy-poodle/... olduğu hâlde kırıntıda cins ve şehir
+   * görünmezse arama sonucundaki yol gösterimi sayfayla çelişiyordu.
+   */
   const schemaCrumbs = [
     { name: 'Ana Sayfa', url: '/' },
     ...(category ? [{ name: category.name, url: categoryPath }] : []),
+    ...(category && listing.breeds
+      ? [{ name: listing.breeds.name, url: `${categoryPath}/${listing.breeds.slug}` }]
+      : []),
+    ...(category && listing.breeds && listing.cities
+      ? [
+          {
+            name: listing.cities.name,
+            url: `${categoryPath}/${listing.breeds.slug}/${listing.cities.slug}`,
+          },
+        ]
+      : []),
     { name: listing.title },
   ];
 
@@ -310,6 +326,8 @@ export function ListingDetail({
             districtName: listing.districts?.name,
             publishedAt: listing.published_at,
             sellerName: seller?.full_name ?? seller?.username ?? null,
+            cities: listing.cities,
+            breeds: listing.breeds,
           }),
           breadcrumbSchema(schemaCrumbs),
         ]}

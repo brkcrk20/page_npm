@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { listingHref } from '@/lib/listing-url';
 
 import { SITE_URL } from '@/lib/site';
 import { createSupabasePublicClient } from '@/lib/supabase/server';
@@ -146,7 +147,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     for (const listing of listings) {
       listingEntries.push({
-        url: `${SITE_URL}/${listing.slug}-${listing.id}`,
+        url: `${SITE_URL}${listingHref(listing)}`,
         lastModified: listing.published_at ? new Date(listing.published_at) : now,
         changeFrequency: 'weekly',
         priority: 0.6,
