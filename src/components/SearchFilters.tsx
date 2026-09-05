@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Search, SlidersHorizontal } from 'lucide-react';
 
@@ -119,7 +119,27 @@ function SearchFiltersInner() {
    */
   const [filtrelerAcik, setFiltrelerAcik] = useState(false);
 
-  useEffect(() => {
+  /**
+   * Katalog tazelemesi ilk etkileşime kadar bekliyor.
+   *
+   * Bu üç sorgu her sayfa açılışında, hemen mount anında çalışıyordu:
+   * kategoriler, 209 ırk ve 81 il. Sunucusu Singapur'da olan bir
+   * veritabanına üç tur ve ardından ~300 satırlık JSON'un ayrıştırılması —
+   * hepsi kullanıcı henüz süzgeçlere dokunmadan, ilk boyamanın önünde.
+   * Ziyaretlerin çoğunda bu listelere hiç bakılmıyor bile.
+   *
+   * Açılır listeler zaten statik katalogla dolu geliyor (yukarıdaki
+   * başlangıç durumu), yani gecikme kullanıcıya boş liste göstermiyor.
+   * Tazeleme, kullanıcı çubuğa ilk kez dokunduğunda bir kez çalışıyor:
+   * veritabanına yeni eklenmiş bir ırk yine görünüyor, ama artık kritik
+   * yolun dışında.
+   */
+  const katalogIstendi = useRef(false);
+
+  const katalogTazele = useCallback(() => {
+    if (katalogIstendi.current) return;
+    katalogIstendi.current = true;
+
     const supabase = getSupabaseBrowserClientOrNull();
     if (!supabase) return;
 
@@ -283,7 +303,11 @@ function SearchFiltersInner() {
   }
 
   return (
+    // Katalog tazelemesi buradan tetikleniyor: kullanıcı çubuğa dokunduğu
+    // ya da klavyeyle geldiği anda, sayfa açılışında değil.
     <div
+      onPointerDown={katalogTazele}
+      onFocusCapture={katalogTazele}
       className={
         'grid w-full grid-cols-1 gap-2 ' +
         (inPigeonSection

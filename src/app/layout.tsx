@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/layout/Header';
@@ -24,6 +25,58 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.petsemti.com';
  * WhatsApp veya X'te paylaşılan her bağlantı başlıksız ve açıklamasız
  * görünüyordu. Bu sektörde paylaşım ciddi bir trafik kaynağı.
  */
+/**
+ * Yazı tipleri kendi sunucumuzdan.
+ *
+ * Fontlar Google Fonts'tan <link> ile çekiliyordu. Bunun iki ölçülmüş
+ * bedeli vardı:
+ *
+ *  - Sayfa ilk yazıyı boyayabilmek için önce fonts.googleapis.com'dan CSS,
+ *    sonra fonts.gstatic.com'dan woff2 indirmek zorundaydı. İki ayrı alan
+ *    adı, iki DNS + TLS turu, hepsi ilk boyamanın önünde. Sunucu yanıtı
+ *    10 ms olmasına rağmen ilk boyama her sayfada 3,0-3,2 saniyeydi.
+ *  - Font sonradan yerleşince yazılar kayıyordu. Lighthouse kayma
+ *    puanının (CLS) tek sebebini gösterdi: "Web font loaded". Cins
+ *    sayfasında 0,161 — Google'ın "iyi" eşiği 0,1.
+ *
+ * next/font fontları derleme sırasında indirip kendi alan adımızdan
+ * sunuyor, @font-face kuralını HTML'e gömüyor ve yedek yazı tipinin
+ * ölçülerini gerçek fonta göre ayarlıyor; font yerleşince metin kaymıyor.
+ *
+ * latin-ext açıkça isteniyor: ğ, ş, ı ve İ o alt kümede. Unutulursa
+ * Türkçe harfler yedek yazı tipinden düşer ve satır ortasında karakter
+ * değişir.
+ *
+ * Ağırlık listesi verilmiyor. İkisi de değişken yazı tipi; ağırlık
+ * sayıldığında her ağırlık ve alt küme için ayrı bir dosya üretiliyordu
+ * (aile başına altı dosya, ölçülen 181 KB). Liste kaldırılınca alt küme
+ * başına tek değişken dosya iniyor ve aradaki tüm ağırlıkları karşılıyor.
+ */
+const inter = Inter({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-body',
+  display: 'swap',
+});
+
+const outfit = Outfit({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-headline',
+  display: 'swap',
+  /**
+   * Başlık yazı tipi ön yüklenmiyor.
+   *
+   * Dört font dosyası birden ön yükleniyordu: 178 KB, sayfanın toplam
+   * ağırlığının %30'u ve hepsi ilk boyamanın önünde. Outfit yalnızca
+   * başlıklarda kullanılıyor; gövde metni Inter ile zaten okunabilir
+   * durumda boyanıyor.
+   *
+   * Yedek yazı tipinin ölçüleri gerçek fonta göre ayarlandığı için font
+   * sonradan geldiğinde satırlar kaymıyor — yalnızca harf biçimi
+   * değişiyor.
+   */
+  preload: false,
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -147,13 +200,14 @@ export default async function RootLayout({
 
   return (
     <html lang="tr" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-      </head>
       {/* Scrollbar gizleme ve responsive ayarları global.css'teydi */}
-      <body className={cn('min-h-screen bg-background font-body antialiased overflow-x-hidden w-full max-w-[100vw]')}>
+      <body
+        className={cn(
+          inter.variable,
+          outfit.variable,
+          'min-h-screen bg-background font-body antialiased overflow-x-hidden w-full max-w-[100vw]'
+        )}
+      >
         <SupabaseAuthProvider>
           <div className="relative flex min-h-dvh flex-col">
             <Header />

@@ -21,8 +21,11 @@ export default {
         // Poppins/PT Sans yaygın ve karaktersiz bir ikiliydi. Outfit
         // başlıklarda daha dar ve modern, Inter gövdede Türkçe
         // aksanlı harflerde en okunaklı seçeneklerden biri.
-        body: ['Inter', 'system-ui', 'sans-serif'],
-        headline: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
+        // Değişkenler next/font'tan geliyor (src/app/layout.tsx): fontlar
+        // kendi sunucumuzdan geliyor ve yedek yazı tipinin ölçüleri gerçek
+        // fonta göre ayarlanıyor.
+        body: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        headline: ['var(--font-headline)', 'var(--font-body)', 'system-ui', 'sans-serif'],
         code: ['ui-monospace', 'monospace'],
       },
       colors: {
