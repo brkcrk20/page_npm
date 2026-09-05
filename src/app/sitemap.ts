@@ -75,11 +75,63 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     categories.map((category) => getBreedsByCategoryId(category.id))
   );
 
+  /**
+   * BOŞ SAYFALAR SİTE HARİTASINA GİRMİYOR.
+   *
+   * 220 cins ve 81 il, yedi kategoriyle çarpılınca binlerce adres çıkıyordu
+   * ve neredeyse tamamı boş listeydi. Arama motoruna bu kadar boş sayfa
+   * göstermek sıralamayı yükseltmiyor, siteyi zayıf gösteriyor: taranan
+   * bütçenin çoğu değersiz sayfalara harcanıyor.
+   *
+   * İki koşuldan biri yeterli:
+   *   - Sayfada gerçekten ilan var
+   *   - Sayfaya özgün metin yazılmış (page_content)
+   *
+   * İkincisi önemli: ilanı olmayan ama "Golden Retriever bakımı" anlatan
+   * bir cins sayfası aramada karşılık bulabilir. İlan geldikçe liste
+   * kendiliğinden büyüyor.
+   */
+  const doluCinsler = new Set<string>();
+  const doluSehirler = new Set<string>();
+  {
+    const supabase = createSupabasePublicClient();
+    const [{ data: ilanlar }, { data: icerikler }] = await Promise.all([
+      supabase
+        .from('listings')
+        .select('categories!inner(slug), breeds!inner(slug), cities!inner(slug)')
+        .eq('status', 'yayinda')
+        .limit(5000),
+      supabase
+        .from('page_content')
+        .select('categories(slug), breeds(slug), cities(slug)')
+        .not('category_id', 'is', null),
+    ]);
+
+    for (const r of (ilanlar ?? []) as unknown as {
+      categories: { slug: string } | null;
+      breeds: { slug: string } | null;
+      cities: { slug: string } | null;
+    }[]) {
+      if (r.categories && r.breeds) doluCinsler.add(`${r.categories.slug}/${r.breeds.slug}`);
+      if (r.categories && r.cities) doluSehirler.add(`${r.categories.slug}/${r.cities.slug}`);
+    }
+
+    for (const r of (icerikler ?? []) as unknown as {
+      categories: { slug: string } | null;
+      breeds: { slug: string } | null;
+      cities: { slug: string } | null;
+    }[]) {
+      if (r.categories && r.breeds) doluCinsler.add(`${r.categories.slug}/${r.breeds.slug}`);
+      if (r.categories && r.cities) doluSehirler.add(`${r.categories.slug}/${r.cities.slug}`);
+    }
+  }
+
   const breedEntries: MetadataRoute.Sitemap = [];
   const cityEntries: MetadataRoute.Sitemap = [];
 
   categories.forEach((category, index) => {
     for (const breed of breedLists[index]) {
+      if (!doluCinsler.has(`${category.slug}/${breed.slug}`)) continue;
       breedEntries.push({
         url: `${SITE_URL}/${category.slug}/${breed.slug}`,
         lastModified: now,
@@ -89,6 +141,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     for (const city of cities) {
+      if (!doluSehirler.has(`${category.slug}/${city.slug}`)) continue;
       cityEntries.push({
         url: `${SITE_URL}/${category.slug}/${city.slug}`,
         lastModified: now,

@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { Film, MapPin, Play, Search, Trophy } from 'lucide-react';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
+import { PageBody } from '@/components/PageContentBlocks';
+import type { SayfaIcerigi } from '@/lib/queries/page-content';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
 import { Button } from '@/components/ui/button';
 import type { ListingCard } from '@/lib/queries/listings';
@@ -24,12 +26,15 @@ export function PigeonLanding({
   listings,
   withVideo,
   total,
+  icerik,
 }: {
   category: Category;
   sidebar: SidebarData;
   listings: ListingCard[];
   withVideo: ListingCard[];
   total: number;
+  /** Bölüme özgü metin ve SSS; diğer kategorilerde CategoryBrowser taşıyor. */
+  icerik?: SayfaIcerigi | null;
 }) {
   const pigeonBreeds = sidebar.categories.find((c) => c.id === category.id)?.breeds ?? [];
 
@@ -155,6 +160,7 @@ export function PigeonLanding({
               listings={listings}
               emptyMessage="Şu an yayında güvercin ilanı yok. İlk ilanı sen ver!"
             />
+            <PageBody icerik={icerik ?? null} />
           </main>
         </div>
 

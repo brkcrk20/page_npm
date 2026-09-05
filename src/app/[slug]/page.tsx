@@ -136,6 +136,7 @@ export default async function RootSlugPage({
           listings={listings}
           withVideo={withVideo}
           total={total}
+          icerik={icerik}
         />
       );
     }
