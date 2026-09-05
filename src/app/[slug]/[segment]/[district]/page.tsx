@@ -7,32 +7,61 @@ import {
   getSidebarData,
   getCityBySlug,
   getDistrict,
+  getBreed,
 } from '@/lib/queries/catalog';
 import { getListings, parseListingParams } from '@/lib/queries/listings';
 import { getPageContent } from '@/lib/queries/page-content';
+import { cinseGoreSehirler } from '@/lib/queries/cross-links';
+import { CrossLinks } from '@/components/listings/CrossLinks';
 
 /**
- * /<kategori>/<sehir>/<ilce>
+ * Üçüncü segment iki şeyden biri olabiliyor:
  *
- * Yalnızca ikinci segment bir ŞEHİR olduğunda anlamlı. Cins altında ilçe
- * kırılımı yok (/kopek-ilanlari/akbas/kadikoy gibi bir adres 404 döner),
- * çünkü böyle bir sayfa hem içerik olarak boş kalır hem de arama motorunda
- * sonsuz sayıda değersiz kombinasyon üretirdi.
+ *   /<kategori>/<sehir>/<ilce>   → İzmir > Konak köpek ilanları
+ *   /<kategori>/<cins>/<sehir>   → İzmir Toy Poodle ilanları
+ *
+ * İKİNCİSİ NEDEN VAR
+ * Arama kutusuna yazılan şey çoğunlukla "izmir toy poodle" ya da "denizli
+ * toy poodle" gibi CİNS + ŞEHİR birleşimi. Sitede cins sayfası
+ * (/kopek-ilanlari/toy-poodle) ve şehir sayfası (/kopek-ilanlari/izmir)
+ * ayrı ayrı vardı ama ikisinin kesişimi yoktu; o aramanın karşılığı olan
+ * bir sayfa hiç üretilmiyordu.
+ *
+ * Cins altında İLÇE kırılımı hâlâ yok (/kopek-ilanlari/toy-poodle/konak
+ * 404 döner): 220 cins × 973 ilçe, neredeyse tamamı boş olan iki yüz bin
+ * sayfa demek. Cins × il ise 81 ile sınırlı ve gerçekten aranan bir şey.
  */
 
 type Params = { slug: string; segment: string; district: string };
+
+type Cozum =
+  | { kind: 'sehir-ilce'; city: Awaited<ReturnType<typeof getCityBySlug>>; district: Awaited<ReturnType<typeof getDistrict>> }
+  | { kind: 'cins-sehir'; breed: NonNullable<Awaited<ReturnType<typeof getBreed>>>; city: NonNullable<Awaited<ReturnType<typeof getCityBySlug>>> };
 
 async function load(params: Params) {
   const category = await getCategoryBySlug(params.slug);
   if (!category) return null;
 
+  // Önce şehir/ilçe: mevcut adresler bozulmasın.
   const city = await getCityBySlug(params.segment);
-  if (!city) return null;
+  if (city) {
+    const district = await getDistrict(city.id, params.district);
+    if (district) {
+      return { category, cozum: { kind: 'sehir-ilce', city, district } as Cozum };
+    }
+    return null;
+  }
 
-  const district = await getDistrict(city.id, params.district);
-  if (!district) return null;
+  // Sonra cins + şehir.
+  const breed = await getBreed(category.id, params.segment);
+  if (breed) {
+    const breedCity = await getCityBySlug(params.district);
+    if (breedCity) {
+      return { category, cozum: { kind: 'cins-sehir', breed, city: breedCity } as Cozum };
+    }
+  }
 
-  return { category, city, district };
+  return null;
 }
 
 /**
@@ -54,10 +83,26 @@ export async function generateMetadata({
   const loaded = await load(await params);
   if (!loaded) return { title: 'Sayfa Bulunamadı' };
 
-  const { category, city, district } = loaded;
+  const { category, cozum } = loaded;
+
+  if (cozum.kind === 'cins-sehir') {
+    const { breed, city } = cozum;
+    /**
+     * Başlık aranan sırayla: "İzmir Toy Poodle İlanları".
+     * Kullanıcı arama kutusuna şehri önce yazıyor.
+     */
+    return {
+      title: `${city.name} ${breed.name} İlanları — Satılık ve Sahiplendirme`,
+      description: `${city.name} ilindeki güncel ${breed.name} ilanları. Sahiplendirme ve satılık ${breed.name} ilanlarını ilçeye göre inceleyin, sahibiyle doğrudan görüşün.`,
+      alternates: { canonical: `/${category.slug}/${breed.slug}/${city.slug}` },
+    };
+  }
+
+  const { city, district } = cozum;
   return {
-    title: `${district.name} ${city.name} ${category.name}`,
-    description: `${city.name} ${district.name} bölgesindeki güncel ${category.name.toLowerCase()}.`,
+    title: `${district!.name} ${city!.name} ${category.name}`,
+    description: `${city!.name} ${district!.name} bölgesindeki güncel ${category.name.toLowerCase()}.`,
+    alternates: { canonical: `/${category.slug}/${city!.slug}/${district!.slug}` },
   };
 }
 
@@ -71,38 +116,80 @@ export default async function DistrictPage({
   const loaded = await load(await params);
   if (!loaded) notFound();
 
-  const { category, city, district } = loaded;
+  const { category, cozum } = loaded;
 
-  // parseListingParams içeri alınmıştı ama hiç çağrılmıyordu: ilçe
-  // sayfasındaki sıralama ve fiyat kutuları adres çubuğunu değiştiriyor,
-  // sonuç hiç değişmiyordu. Çalışmayan bir denetim, olmayandan kötü.
+  // parseListingParams içeri alınmıştı ama hiç çağrılmıyordu: sıralama ve
+  // fiyat kutuları adres çubuğunu değiştiriyor, sonuç hiç değişmiyordu.
+  // Çalışmayan bir denetim, olmayandan kötü.
   const listeParams = parseListingParams(await searchParams);
 
+  if (cozum.kind === 'cins-sehir') {
+    const { breed, city } = cozum;
+    const [{ listings, total }, sidebar, icerik, digerSehirler] = await Promise.all([
+      getListings({
+        ...listeParams,
+        categoryId: category.id,
+        breedId: breed.id,
+        cityId: city.id,
+      }),
+      getSidebarData(),
+      getPageContent({ categoryId: category.id, breedId: breed.id, cityId: city.id }),
+      cinseGoreSehirler(category.id, breed.id),
+    ]);
+
+    return (
+      <CategoryBrowser
+        title={`${city.name} ${breed.name} İlanları`}
+        crumbs={[
+          { label: category.name, href: `/${category.slug}` },
+          { label: breed.name, href: `/${category.slug}/${breed.slug}` },
+          { label: city.name },
+        ]}
+        listings={listings}
+        total={total}
+        sidebar={sidebar}
+        category={category}
+        activeBreedSlug={breed.slug}
+        activeCitySlug={city.slug}
+        emptyMessage={`${city.name} ilinde yayında ${breed.name} ilanı yok.`}
+        icerik={icerik}
+        caprazBaglantilar={
+          <CrossLinks
+            baslik={`${breed.name} ilanı olan diğer iller`}
+            baglantilar={digerSehirler.filter((x) => x.slug !== city.slug)}
+            href={(slug) => `/${category.slug}/${breed.slug}/${slug}`}
+          />
+        }
+      />
+    );
+  }
+
+  const { city, district } = cozum;
   const [{ listings, total }, sidebar, icerik] = await Promise.all([
     getListings({
       ...listeParams,
       categoryId: category.id,
-      cityId: city.id,
-      districtId: district.id,
+      cityId: city!.id,
+      districtId: district!.id,
     }),
     getSidebarData(),
-    getPageContent({ categoryId: category.id, cityId: city.id, districtId: district.id }),
+    getPageContent({ categoryId: category.id, cityId: city!.id, districtId: district!.id }),
   ]);
 
   return (
     <CategoryBrowser
-      title={`${district.name}, ${city.name} — ${category.name}`}
+      title={`${district!.name}, ${city!.name} — ${category.name}`}
       crumbs={[
         { label: category.name, href: `/${category.slug}` },
-        { label: city.name, href: `/${category.slug}/${city.slug}` },
-        { label: district.name },
+        { label: city!.name, href: `/${category.slug}/${city!.slug}` },
+        { label: district!.name },
       ]}
       listings={listings}
       total={total}
       sidebar={sidebar}
       category={category}
-      activeCitySlug={city.slug}
-      emptyMessage={`${district.name} bölgesinde yayında ${category.name.toLowerCase()} yok.`}
+      activeCitySlug={city!.slug}
+      emptyMessage={`${district!.name} bölgesinde yayında ${category.name.toLowerCase()} yok.`}
       icerik={icerik}
     />
   );

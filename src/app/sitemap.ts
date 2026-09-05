@@ -97,6 +97,43 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   });
 
+  /**
+   * Cins × şehir sayfaları — YALNIZCA İLANI OLANLAR.
+   *
+   * "izmir toy poodle" gibi aramaların karşılığı bu sayfalar. Ama 220 cins
+   * × 81 il = 17.820 kombinasyon ve neredeyse tamamı boş; hepsini site
+   * haritasına koymak arama motoruna binlerce boş sayfa göstermek olurdu.
+   * Bu yüzden hangi cins hangi ilde gerçekten ilan taşıyorsa yalnızca o
+   * sayfa listeleniyor; ilan geldikçe kendiliğinden çoğalıyor.
+   */
+  const cinsSehirEntries: MetadataRoute.Sitemap = [];
+  {
+    const supabase = createSupabasePublicClient();
+    const { data } = await supabase
+      .from('listings')
+      .select('categories!inner(slug), breeds!inner(slug), cities!inner(slug)')
+      .eq('status', 'yayinda')
+      .limit(5000);
+
+    const gorulen = new Set<string>();
+    for (const row of (data ?? []) as unknown as {
+      categories: { slug: string };
+      breeds: { slug: string };
+      cities: { slug: string };
+    }[]) {
+      if (!row.categories || !row.breeds || !row.cities) continue;
+      const yol = `/${row.categories.slug}/${row.breeds.slug}/${row.cities.slug}`;
+      if (gorulen.has(yol)) continue;
+      gorulen.add(yol);
+      cinsSehirEntries.push({
+        url: `${SITE_URL}${yol}`,
+        lastModified: now,
+        changeFrequency: 'daily',
+        priority: 0.75,
+      });
+    }
+  }
+
   // --- İlanlar ---
   // Sayfalayarak çekiyoruz: tek istekte 40.000 satır hem Supabase tarafında
   // hem bellekte makul değil.
@@ -191,6 +228,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...categoryEntries,
     ...breedEntries,
     ...cityEntries,
+    ...cinsSehirEntries,
     ...listingEntries,
     ...serviceEntries,
   ];

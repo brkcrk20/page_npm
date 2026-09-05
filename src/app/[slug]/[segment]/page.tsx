@@ -11,6 +11,8 @@ import {
 } from '@/lib/queries/catalog';
 import { getListings, parseListingParams } from '@/lib/queries/listings';
 import { getPageContent } from '@/lib/queries/page-content';
+import { cinseGoreSehirler, sehreGoreCinsler } from '@/lib/queries/cross-links';
+import { CrossLinks } from '@/components/listings/CrossLinks';
 
 /**
  * /<kategori>/<segment>
@@ -114,13 +116,14 @@ export default async function CategorySegmentPage({
   const sidebar = await getSidebarData();
 
   if (resolved.kind === 'breed') {
-    const [{ listings, total }, icerik] = await Promise.all([
+    const [{ listings, total }, icerik, sehirler] = await Promise.all([
       getListings({
         ...listeParams,
         categoryId: category.id,
         breedId: resolved.breed.id,
       }),
       getPageContent({ categoryId: category.id, breedId: resolved.breed.id }),
+      cinseGoreSehirler(category.id, resolved.breed.id),
     ]);
 
     return (
@@ -137,17 +140,25 @@ export default async function CategorySegmentPage({
         activeBreedSlug={resolved.breed.slug}
         emptyMessage={`Şu an yayında ${resolved.breed.name} ilanı yok.`}
         icerik={icerik}
+        caprazBaglantilar={
+          <CrossLinks
+            baslik={`${resolved.breed.name} ilanı olan iller`}
+            baglantilar={sehirler}
+            href={(slug) => `/${category.slug}/${resolved.breed.slug}/${slug}`}
+          />
+        }
       />
     );
   }
 
-  const [{ listings, total }, sehirIcerigi] = await Promise.all([
+  const [{ listings, total }, sehirIcerigi, cinsler] = await Promise.all([
     getListings({
       ...listeParams,
       categoryId: category.id,
       cityId: resolved.city.id,
     }),
     getPageContent({ categoryId: category.id, cityId: resolved.city.id }),
+    sehreGoreCinsler(category.id, resolved.city.id),
   ]);
 
   return (
@@ -164,6 +175,13 @@ export default async function CategorySegmentPage({
       activeCitySlug={resolved.city.slug}
       emptyMessage={`${resolved.city.name} ilinde yayında ${category.name.toLowerCase()} yok.`}
       icerik={sehirIcerigi}
+      caprazBaglantilar={
+        <CrossLinks
+          baslik={`${resolved.city.name} ilinde ilanı olan cinsler`}
+          baglantilar={cinsler}
+          href={(slug) => `/${category.slug}/${slug}/${resolved.city.slug}`}
+        />
+      }
     />
   );
 }

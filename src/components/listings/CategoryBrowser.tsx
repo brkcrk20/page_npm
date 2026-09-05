@@ -40,6 +40,7 @@ export function CategoryBrowser({
   activeCitySlug,
   emptyMessage,
   icerik,
+  caprazBaglantilar,
 }: {
   title: string;
   description?: string;
@@ -53,6 +54,8 @@ export function CategoryBrowser({
   emptyMessage?: string;
   /** Bu sayfaya özgü metin; yoksa hiçbir şey gösterilmiyor. */
   icerik?: SayfaIcerigi | null;
+  /** Cins × şehir çapraz bağlantıları; listenin altında çıkıyor. */
+  caprazBaglantilar?: React.ReactNode;
 }) {
   /**
    * İlan verme hedefi kategoriden geliyor.
@@ -221,6 +224,7 @@ export function CategoryBrowser({
               }}
             />
             <ListingGrid listings={listings} emptyMessage={emptyMessage} />
+            {caprazBaglantilar}
             <PageBody icerik={icerik ?? null} />
           </main>
         </div>
