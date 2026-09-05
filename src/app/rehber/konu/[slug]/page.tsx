@@ -58,6 +58,10 @@ export async function generateMetadata({
       title: `${konu.name} Rehberi | PetSemti`,
       description: aciklama,
       url: new URL(`/rehber/konu/${slug}`, SITE_URL).toString(),
+      /* Kendi görseli olmayan sayfa üstteki görseli MİRAS ALMIYOR: openGraph
+         alanı çocukta tanımlanınca ebeveyndeki tümüyle yerini bırakıyor.
+         Markalı kart burada da açıkça veriliyor. */
+      images: [{ url: `${SITE_URL}/marka/paylasim-karti.png`, width: 1200, height: 630 }],
     },
   };
 }

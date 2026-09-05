@@ -31,6 +31,10 @@ export const metadata: Metadata = {
     description:
       'Kedi ve köpek bakımı, beslenme, aşı takvimi, kayıp hayvan ve hizmet seçimi rehberleri.',
     url: `${SITE_URL}/rehber`,
+    /* Kendi görseli olmayan sayfa üstteki görseli MİRAS ALMIYOR: openGraph
+       alanı çocukta tanımlanınca ebeveyndeki tümüyle yerini bırakıyor.
+       Markalı kart burada da açıkça veriliyor. */
+    images: [{ url: `${SITE_URL}/marka/paylasim-karti.png`, width: 1200, height: 630 }],
   },
 };
 

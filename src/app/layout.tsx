@@ -63,9 +63,24 @@ export const metadata: Metadata = {
    * değil onun ikonu görünüyordu. Dosya silindi; ikon artık amblemin
    * kendisi (app/icon.svg) ve Apple cihazlar için ondan üretilen PNG.
    */
+  /**
+   * Sekme ikonu.
+   *
+   * Sürüm parametresi (?v=2) bilerek duruyor: tarayıcılar favicon'u çok
+   * uzun süre önbellekte tutuyor ve amblem rengi değiştiğinde kullanıcılar
+   * eskisini görmeye devam ediyordu. Adres değişince yeniden indiriliyor.
+   *
+   * PNG boyutları da veriliyor: SVG'yi göstermeyen ortamlar (arama sonucu
+   * favicon'u, bazı uygulama içi tarayıcılar) var ve orada şeffaf zemin
+   * siyaha düşüyordu — PNG'ler beyaz zeminli.
+   */
   icons: {
-    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
-    apple: '/apple-icon.png',
+    icon: [
+      { url: '/icon.svg?v=2', type: 'image/svg+xml' },
+      { url: '/marka/ikon-32.png?v=2', sizes: '32x32', type: 'image/png' },
+      { url: '/marka/ikon-192.png?v=2', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/apple-icon.png?v=2',
   },
   alternates: { canonical: '/' },
   openGraph: {
@@ -76,9 +91,28 @@ export const metadata: Metadata = {
     title: 'PetSemti — Evcil Hayvan İlanları, Pet Hizmetleri ve Güvercin Dünyası',
     description:
       'İlanlar, yerel pet hizmetleri ve güvercin dünyası tek platformda. 81 ilde, ilan vermek ücretsiz.',
+    /**
+     * Paylaşım kartı.
+     *
+     * og:image hiç tanımlı değildi. Bu durumda Facebook ve WhatsApp
+     * sayfadaki görselleri kendi tarayıp birini seçiyor; seçtiği şey de
+     * yan menüdeki 64 pikselik bir cins küçük görseli oluyordu — büyütülünce
+     * bulanık, markayla ilgisiz bir fotoğraf. Paylaşımın ilk izlenimi buydu.
+     *
+     * 1200×630 markalı kart: her paylaşımda aynı ve okunur.
+     */
+    images: [
+      {
+        url: `${SITE_URL}/marka/paylasim-karti.png`,
+        width: 1200,
+        height: 630,
+        alt: 'PetSemti — Tüm patiler için, tek bir yer',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
+    images: [`${SITE_URL}/marka/paylasim-karti.png`],
     title: 'PetSemti — Evcil Hayvan İlanları, Pet Hizmetleri ve Güvercin Dünyası',
     description:
       'İlanlar, yerel pet hizmetleri ve güvercin dünyası tek platformda. 81 ilde, ilan vermek ücretsiz.',
