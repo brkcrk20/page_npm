@@ -43,6 +43,7 @@ export function SellerCard({
   hasPhone,
   showPhone,
   allowWhatsapp,
+  demoMu = false,
 }: {
   seller: SellerInfo | null;
   listingId: number;
@@ -50,6 +51,8 @@ export function SellerCard({
   hasPhone: boolean;
   showPhone: boolean;
   allowWhatsapp: boolean;
+  /** Vitrin için eklenmiş örnek ilan; iletişim düğmeleri gösterilmiyor. */
+  demoMu?: boolean;
 }) {
   const { toast } = useToast();
   const { user } = useSupabaseAuth();
@@ -214,6 +217,23 @@ export function SellerCard({
           </Link>
         )}
 
+        {/* Örnek ilanda iletişim düğmesi yok.
+            Düğmeyi bırakıp mesaja karşılık vermemek, ziyaretçiyi bekletmek
+            olurdu; sebebini burada söylemek daha dürüst. */}
+        {demoMu ? (
+          <div className="mt-4 rounded-lg border border-dashed bg-muted/40 p-4 text-sm">
+            <p className="font-medium">Bu bir örnek ilan</p>
+            <p className="mt-1 text-muted-foreground">
+              Site yeni açıldığı için vitrinde örnek ilanlar bulunuyor. Bu ilanın
+              arkasında gerçek bir ilan sahibi olmadığından mesaj ve telefon
+              kapalı. Gerçek ilanlara{' '}
+              <Link href="/sahiplendirme" className="text-primary hover:underline">
+                sahiplendirme
+              </Link>{' '}
+              bölümünden ulaşabilirsiniz.
+            </p>
+          </div>
+        ) : (
         <div className="mt-4 space-y-2">
           <Button className="w-full justify-center gap-2" asChild>
             <Link href={`/mesajlarim?ilan=${listingId}`}>
@@ -246,6 +266,7 @@ export function SellerCard({
             </button>
           )}
         </div>
+        )}
       </div>
 
       <Dialog open={davetAcik} onOpenChange={setDavetAcik}>

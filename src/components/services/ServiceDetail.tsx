@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { BadgeCheck, Clock, MapPin, ShieldCheck, Star } from 'lucide-react';
+import { BadgeCheck, Clock, MapPin, ShieldCheck, Star,
+  Info,
+} from 'lucide-react';
 
 import { OpenBadge } from '@/components/services/ServiceCard';
 import { ListingGrid } from '@/components/listings/ListingGrid';
@@ -44,6 +46,8 @@ type Provider = {
   address: string | null;
   license_number: string | null;
   is_verified: boolean;
+  /** Vitrin için eklenmiş örnek kayıt. */
+  is_demo?: boolean | null;
   rating_average: number;
   rating_count: number;
   view_count: number;
@@ -122,12 +126,30 @@ export async function ServiceDetail({
       </nav>
 
       <div className="mx-auto w-full max-w-7xl px-5 py-5">
+        {/* Örnek kayıt şeridi. Gerçek bir işletme olmadığı için telefon ve
+            adres alanları boş; sebebini söylemek boş alan bırakmaktan iyi. */}
+        {provider.is_demo && (
+          <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
+            <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+            <p className="text-amber-900">
+              <strong className="font-semibold">Bu bir örnek kayıt.</strong> Rehber yeni
+              açıldığı için örnek işletmeler bulunuyor; bu kaydın arkasında gerçek bir
+              işletme yok. İşletmenizi eklemek isterseniz kayıt formunu kullanabilirsiniz.
+            </p>
+          </div>
+        )}
+
         <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="flex items-center gap-2 text-xl font-bold md:text-2xl">
               {provider.name}
               {provider.is_verified && (
                 <BadgeCheck className="h-5 w-5 text-emerald-600" aria-label="Doğrulanmış işletme" />
+              )}
+              {provider.is_demo && (
+                <span className="rounded bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700">
+                  Örnek kayıt
+                </span>
               )}
             </h1>
             {location && (

@@ -2,6 +2,8 @@ import 'server-only';
 
 import { unstable_cache } from 'next/cache';
 
+import { demoIsaretiniUygula, demoIsaretiniUygulaTek } from '@/lib/demo/rozet';
+
 /**
  * İlan sorguları — sunucu tarafı.
  *
@@ -31,7 +33,7 @@ type ListingRow = Database['public']['Tables']['listings']['Row'];
  */
 const CARD_COLUMNS = `
   id, slug, title, kind, price, currency, is_negotiable, event_date,
-  age_months, gender, published_at,
+  age_months, gender, published_at, is_demo,
   breeds!inner ( id, name, slug ),
   categories!inner ( id, slug, name ),
   cities!inner ( id, name, slug ),
@@ -53,7 +55,18 @@ function suresiGecmemis(): string {
 
 export type ListingCard = Pick<
   ListingRow,
-  'id' | 'slug' | 'title' | 'kind' | 'price' | 'currency' | 'is_negotiable' | 'age_months' | 'gender' | 'published_at' | 'event_date'
+  | 'id'
+  | 'slug'
+  | 'title'
+  | 'kind'
+  | 'price'
+  | 'currency'
+  | 'is_negotiable'
+  | 'age_months'
+  | 'gender'
+  | 'published_at'
+  | 'event_date'
+  | 'is_demo'
 > & {
   breeds: { id: number; name: string; slug: string } | null;
   categories: { id: number; slug: string; name: string } | null;
@@ -189,11 +202,25 @@ function listingOrder(
  * Altmış saniye: yeni ilan bir dakika içinde listeye giriyor. İlan sahibi
  * kendi ilanını zaten kendi panelinden anında görüyor.
  */
-export const getListings = unstable_cache(
+const getListingsCached = unstable_cache(
   async (filters: ListingFilters = {}) => fetchListings(filters),
   ['listings'],
   { revalidate: 60, tags: ['listings'] }
 );
+
+/**
+ * Demo işareti önbelleğin DIŞINDA uygulanıyor.
+ *
+ * Rozetin görünürlüğü bir ayar; önbelleğin içinde uygulansaydı ayar
+ * değiştikten sonra altmış saniye boyunca eski hâliyle görünmeye devam
+ * ederdi. Veritabanı sorgusu önbellekte kalıyor, yalnızca işaretleme her
+ * istekte yeniden yapılıyor — maliyeti tek bir ayar okuması ve o da
+ * istek başına bir kez.
+ */
+export async function getListings(filters: ListingFilters = {}) {
+  const sonuc = await getListingsCached(filters);
+  return { ...sonuc, listings: await demoIsaretiniUygula(sonuc.listings) };
+}
 
 async function fetchListings(filters: ListingFilters = {}) {
   const perPage = filters.perPage ?? DEFAULT_PER_PAGE;
@@ -292,7 +319,7 @@ export async function getListingById(id: number) {
     .maybeSingle();
 
   if (error) throw new Error(`İlan getirilemedi: ${error.message}`);
-  return data;
+  return demoIsaretiniUygulaTek(data as ({ is_demo?: boolean | null } & typeof data) | null);
 }
 
 /** Ana sayfa vitrini — aktif "anasayfa_vitrin" dopingi olan ilanlar. */
@@ -312,7 +339,9 @@ export async function getFeaturedListings(limit = 8): Promise<ListingCard[]> {
     return [];
   }
 
-  return (data ?? []).map((row: any) => row.listings).filter(Boolean) as ListingCard[];
+  return demoIsaretiniUygula(
+    (data ?? []).map((row: any) => row.listings).filter(Boolean) as ListingCard[]
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -400,7 +429,7 @@ export async function getSimilarListings(
     console.error('Benzer ilanlar alınamadı:', error.message);
     return [];
   }
-  return (data ?? []) as unknown as ListingCard[];
+  return demoIsaretiniUygula((data ?? []) as unknown as ListingCard[]);
 }
 
 export type AdjacentListings = {
@@ -537,5 +566,5 @@ export async function getListingsWithVideo(categoryId: number, limit = 8): Promi
     console.error('Videolu ilanlar alınamadı:', error.message);
     return [];
   }
-  return (data ?? []) as unknown as ListingCard[];
+  return demoIsaretiniUygula((data ?? []) as unknown as ListingCard[]);
 }

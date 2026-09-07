@@ -1026,6 +1026,7 @@ export type Database = {
           has_pedigree: boolean
           has_warranty: boolean
           id: number
+          is_demo: boolean
           is_dewormed_external: boolean
           is_dewormed_internal: boolean
           is_negotiable: boolean
@@ -1078,6 +1079,7 @@ export type Database = {
           has_pedigree?: boolean
           has_warranty?: boolean
           id?: never
+          is_demo?: boolean
           is_dewormed_external?: boolean
           is_dewormed_internal?: boolean
           is_negotiable?: boolean
@@ -1130,6 +1132,7 @@ export type Database = {
           has_pedigree?: boolean
           has_warranty?: boolean
           id?: never
+          is_demo?: boolean
           is_dewormed_external?: boolean
           is_dewormed_internal?: boolean
           is_negotiable?: boolean
@@ -1711,6 +1714,7 @@ export type Database = {
           identity_status: Database["public"]["Enums"]["verification_status"]
           identity_verified_at: string | null
           is_banned: boolean
+          is_demo: boolean
           is_verified: boolean
           last_seen_at: string | null
           listing_count: number
@@ -1743,6 +1747,7 @@ export type Database = {
           identity_status?: Database["public"]["Enums"]["verification_status"]
           identity_verified_at?: string | null
           is_banned?: boolean
+          is_demo?: boolean
           is_verified?: boolean
           last_seen_at?: string | null
           listing_count?: number
@@ -1775,6 +1780,7 @@ export type Database = {
           identity_status?: Database["public"]["Enums"]["verification_status"]
           identity_verified_at?: string | null
           is_banned?: boolean
+          is_demo?: boolean
           is_verified?: boolean
           last_seen_at?: string | null
           listing_count?: number
@@ -2034,6 +2040,7 @@ export type Database = {
           district_id: number | null
           email: string | null
           id: number
+          is_demo: boolean
           is_verified: boolean
           latitude: number | null
           license_number: string | null
@@ -2069,6 +2076,7 @@ export type Database = {
           district_id?: number | null
           email?: string | null
           id?: never
+          is_demo?: boolean
           is_verified?: boolean
           latitude?: number | null
           license_number?: string | null
@@ -2104,6 +2112,7 @@ export type Database = {
           district_id?: number | null
           email?: string | null
           id?: never
+          is_demo?: boolean
           is_verified?: boolean
           latitude?: number | null
           license_number?: string | null

@@ -42,6 +42,15 @@ function loadAttributions(): Attribution[] {
   }
 }
 
+type DemoAttribution = {
+  ilan: string;
+  path: string;
+  source: string;
+  artist: string;
+  license: string;
+  licenseUrl: string;
+};
+
 type GuideAttribution = {
   guide: string;
   file: string;
@@ -67,9 +76,27 @@ function loadGuideAttributions(): GuideAttribution[] {
   }
 }
 
+/**
+ * Demo (örnek) ilanların fotoğrafları da Commons'tan.
+ *
+ * Atıf yükümlülüğü fotoğrafın nerede kullanıldığına bakmıyor: örnek bir
+ * ilanda gösterilen CC-BY fotoğraf da yazarını anmayı gerektiriyor.
+ * Dosya src/lib/demo altında çünkü demo içeriğin tanımıyla birlikte
+ * sürümleniyor.
+ */
+function loadDemoAttributions(): DemoAttribution[] {
+  try {
+    const path = resolve(process.cwd(), 'src/lib/demo/fotograf-atiflari.json');
+    return JSON.parse(readFileSync(path, 'utf8')) as DemoAttribution[];
+  } catch {
+    return [];
+  }
+}
+
 export default function ImageCreditsPage() {
   const attributions = loadAttributions();
   const guideAttributions = loadGuideAttributions();
+  const demoAttributions = loadDemoAttributions();
 
   const byCategory = attributions.reduce<Record<string, Attribution[]>>((acc, item) => {
     (acc[item.category] ??= []).push(item);
@@ -140,6 +167,50 @@ export default function ImageCreditsPage() {
             {guideAttributions.map((item) => (
               <li key={item.file} className="flex flex-wrap gap-x-2 text-muted-foreground">
                 <span className="font-medium text-foreground">{item.guide}</span>
+                <span>· {item.artist}</span>
+                {item.licenseUrl ? (
+                  <a
+                    href={item.licenseUrl}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="text-primary hover:underline"
+                  >
+                    {item.license}
+                  </a>
+                ) : (
+                  <span>{item.license}</span>
+                )}
+                {item.source && (
+                  <>
+                    {' · '}
+                    <a
+                      href={item.source}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="text-primary hover:underline"
+                    >
+                      kaynak
+                    </a>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {demoAttributions.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-3 text-lg font-bold">Örnek İlan Fotoğrafları</h2>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Site yeni açıldığı için vitrinde örnek ilanlar bulunuyor. Bu ilanların
+            fotoğrafları da Wikimedia Commons'tan alınmış, ticari kullanıma açık
+            lisanslı gerçek fotoğraflardır.
+          </p>
+          <ul className="space-y-2 text-sm">
+            {demoAttributions.map((item) => (
+              <li key={item.path} className="flex flex-wrap gap-x-2 text-muted-foreground">
+                <span className="font-medium text-foreground">{item.ilan}</span>
                 <span>· {item.artist}</span>
                 {item.licenseUrl ? (
                   <a

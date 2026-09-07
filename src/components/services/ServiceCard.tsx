@@ -58,6 +58,12 @@ export function ServiceCard({
                 aria-label="Doğrulanmış işletme"
               />
             )}
+            {/* Vitrin için eklenmiş örnek kayıt. */}
+            {provider.is_demo && (
+              <span className="shrink-0 rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-medium text-slate-700">
+                Örnek
+              </span>
+            )}
           </h3>
 
           {location && (

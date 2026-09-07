@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { demoIsaretiniUygula, demoIsaretiniUygulaTek } from '@/lib/demo/rozet';
+
 /**
  * Hizmet sağlayıcı sorguları (veteriner, pet oteli, kuaför…).
  *
@@ -44,6 +46,8 @@ export type ServiceProviderCard = {
   website: string | null;
   address: string | null;
   is_verified: boolean;
+  /** Vitrin için eklenmiş örnek işletme. */
+  is_demo?: boolean | null;
   rating_average: number;
   rating_count: number;
   view_count: number;
@@ -55,7 +59,7 @@ export type ServiceProviderCard = {
 
 const CARD_COLUMNS = `
   id, slug, name, description, phone, whatsapp, website, address,
-  is_verified, rating_average, rating_count, view_count, logo_url,
+  is_verified, rating_average, rating_count, view_count, logo_url, is_demo,
   cities!inner ( id, name, slug ),
   districts ( id, name, slug ),
   service_provider_features ( service_features ( id, slug, name, group_name, position ) ),
@@ -182,7 +186,7 @@ export async function getServiceProviders(filters: ServiceFilters) {
 
   const total = count ?? 0;
   return {
-    providers: (data ?? []) as unknown as ServiceProviderCard[],
+    providers: await demoIsaretiniUygula((data ?? []) as unknown as ServiceProviderCard[]),
     total,
     page,
     perPage,
@@ -213,7 +217,7 @@ export async function getServiceProviderById(id: number, serviceType: ServiceTyp
     console.error('Hizmet sağlayıcı alınamadı:', error.message);
     return null;
   }
-  return data;
+  return demoIsaretiniUygulaTek(data as ({ is_demo?: boolean | null } & typeof data) | null);
 }
 
 /** Filtre panelindeki özellik kataloğu, grup başlıklarına göre bölünmüş. */

@@ -14,6 +14,7 @@ import {
   Loader2,
   Receipt,
   Settings,
+  Sparkles,
   ShieldCheck,
   ShieldAlert,
   Users,
@@ -47,6 +48,7 @@ const ITEMS = [
   { href: '/admin/icerik', label: 'Sayfa İçerikleri', icon: FileText },
   { href: '/admin/rehber', label: 'Rehber Yazıları', icon: BookOpen },
   { href: '/admin/siparisler', label: 'Siparişler', icon: Receipt },
+  { href: '/admin/demo', label: 'Demo İçerik', icon: Sparkles },
   { href: '/admin/ayarlar', label: 'Ayarlar', icon: Settings },
 ] as const;
 

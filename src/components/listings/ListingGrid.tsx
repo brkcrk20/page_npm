@@ -107,6 +107,18 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
           </Badge>
         )}
 
+        {/* Örnek ilan işareti. Vitrin doldurmak için eklenen demo ilanlar
+            gerçek sanılıp mesaj alıyordu; etiket bunu baştan söylüyor.
+            Yönetim panelinden kapatılabiliyor. */}
+        {listing.is_demo && (
+          <Badge
+            variant="secondary"
+            className="absolute right-1.5 top-1.5 bg-slate-900/75 px-1.5 py-0 text-[10px] font-medium text-white md:right-2 md:top-2 md:px-2 md:py-0.5"
+          >
+            Örnek ilan
+          </Badge>
+        )}
+
         {/* Konum yalnızca masaüstünde görselin üstünde; mobilde satırın
             içinde zaten yer var ve degrade küçük görselde okunmuyor. */}
         {location && (

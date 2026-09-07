@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ChevronsLeft, ChevronsRight, Eye } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, Eye, Info } from 'lucide-react';
 
 import { ListingGallery } from '@/components/listings/ListingGallery';
 import { ListingVideos } from '@/components/listings/ListingVideos';
@@ -62,6 +62,8 @@ type DetailListing = {
   categories: { id: number; slug: string; name: string; code?: string } | null;
   /** Türe özgü alanlar; malzemede ürün durumu. */
   details?: Record<string, unknown> | null;
+  /** Vitrin için eklenmiş örnek ilan. */
+  is_demo?: boolean | null;
   cities: { id: number; name: string; slug: string } | null;
   districts: { id: number; name: string; slug: string } | null;
   listing_photos: { storage_path: string; position: number }[];
@@ -370,6 +372,19 @@ export function ListingDetail({
       </nav>
 
       <div className="mx-auto w-full max-w-7xl px-5 py-5">
+        {/* Örnek ilan şeridi. Rozet ayarı kapalıysa is_demo sorgu
+            katmanında zaten temizleniyor, burada ayrıca kontrol gerekmiyor. */}
+        {listing.is_demo && (
+          <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
+            <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+            <p className="text-amber-900">
+              <strong className="font-semibold">Bu bir örnek ilan.</strong> Site yeni
+              açıldığı için vitrinde örnek ilanlar bulunuyor; bu ilanın arkasında gerçek
+              bir ilan sahibi yok ve iletişim kapalı.
+            </p>
+          </div>
+        )}
+
         {/* --- Başlık ve işlemler --- */}
         <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <h1 className="text-xl font-bold md:text-2xl">{listing.title}</h1>
@@ -444,6 +459,7 @@ export function ListingDetail({
               hasPhone={Boolean(listing.contact_phone)}
               showPhone={listing.show_phone}
               allowWhatsapp={listing.allow_whatsapp}
+              demoMu={Boolean(listing.is_demo)}
             />
 
             {listing.view_count > 0 && (
