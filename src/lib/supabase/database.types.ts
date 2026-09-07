@@ -1317,6 +1317,76 @@ export type Database = {
           },
         ]
       }
+      notification_outbox: {
+        Row: {
+          attempts: number
+          body_html: string | null
+          body_text: string
+          created_at: string
+          dedupe_key: string | null
+          email: string
+          id: number
+          kind: string
+          last_error: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["notification_status"]
+          subject: string
+          user_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          body_html?: string | null
+          body_text: string
+          created_at?: string
+          dedupe_key?: string | null
+          email: string
+          id?: never
+          kind: string
+          last_error?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          subject: string
+          user_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          body_html?: string | null
+          body_text?: string
+          created_at?: string
+          dedupe_key?: string | null
+          email?: string
+          id?: never
+          kind?: string
+          last_error?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          subject?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_outbox_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_outbox_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_outbox_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -1643,6 +1713,21 @@ export type Database = {
           },
         ]
       }
+      private_settings: {
+        Row: {
+          key: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           code: string
@@ -1706,6 +1791,7 @@ export type Database = {
           company_type: string | null
           created_at: string
           district_id: number | null
+          email_notifications: boolean
           full_name: string | null
           id: string
           identity_birth_year: number | null
@@ -1739,6 +1825,7 @@ export type Database = {
           company_type?: string | null
           created_at?: string
           district_id?: number | null
+          email_notifications?: boolean
           full_name?: string | null
           id: string
           identity_birth_year?: number | null
@@ -1772,6 +1859,7 @@ export type Database = {
           company_type?: string | null
           created_at?: string
           district_id?: number | null
+          email_notifications?: boolean
           full_name?: string | null
           id?: string
           identity_birth_year?: number | null
@@ -2526,6 +2614,8 @@ export type Database = {
         Returns: undefined
       }
       admin_user_detail: { Args: { p_user_id: string }; Returns: Json }
+      bildirim_ilan_suresi: { Args: never; Returns: number }
+      bildirim_tetikle: { Args: never; Returns: undefined }
       confirm_order_payment: {
         Args: { p_provider_ref?: string; p_public_ref: string }
         Returns: undefined
@@ -2625,6 +2715,7 @@ export type Database = {
         | "pasif"
         | "suresi_doldu"
         | "satildi"
+      notification_status: "bekliyor" | "gonderildi" | "hata" | "iptal"
       order_status:
         | "odeme_bekleniyor"
         | "odendi"
@@ -2816,6 +2907,7 @@ export const Constants = {
         "suresi_doldu",
         "satildi",
       ],
+      notification_status: ["bekliyor", "gonderildi", "hata", "iptal"],
       order_status: [
         "odeme_bekleniyor",
         "odendi",

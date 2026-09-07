@@ -5,6 +5,7 @@ import { Loader2, Save } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BildirimDurumu } from './BildirimDurumu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -126,6 +127,9 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Site Ayarları</h1>
+
+      <BildirimDurumu />
+
 
       <Card>
         <CardHeader>
