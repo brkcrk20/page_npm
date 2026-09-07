@@ -70,6 +70,46 @@
     "height": 1488
   },
   {
+    "ilan": "bulunan-golden-atakum",
+    "path": "demo/bulunan-golden-atakum/1.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:A_Golden_Retriever-5_(Barras).JPG",
+    "artist": "Barras",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "width": 1200,
+    "height": 900
+  },
+  {
+    "ilan": "bulunan-kedi-nilufer",
+    "path": "demo/bulunan-kedi-nilufer/1.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Cat_in_%C4%B0zmir_(04092026)_03.jpg",
+    "artist": "Kadı",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "width": 1200,
+    "height": 879
+  },
+  {
+    "ilan": "bulunan-tasmali-kopek-muratpasa",
+    "path": "demo/bulunan-tasmali-kopek-muratpasa/1.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:A_dog_in_Amasra_-_02.jpg",
+    "artist": "Vikiçizer",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "width": 1200,
+    "height": 900
+  },
+  {
+    "ilan": "bulunan-yavru-kedi-selcuklu",
+    "path": "demo/bulunan-yavru-kedi-selcuklu/1.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:CatInBox.jpg",
+    "artist": "EeviLyN",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "width": 1200,
+    "height": 900
+  },
+  {
     "ilan": "buyuk-kus-kafesi-ayakli",
     "path": "demo/buyuk-kus-kafesi-ayakli/1.webp",
     "source": "https://commons.wikimedia.org/wiki/File:Red-bellied_Parrot_pair_in_a_cage.JPG",
@@ -98,6 +138,46 @@
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
     "width": 1200,
     "height": 1200
+  },
+  {
+    "ilan": "es-arayan-british-shorthair",
+    "path": "demo/es-arayan-british-shorthair/1.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:British_Shorthair._Female._18_months_old.jpg",
+    "artist": "George E. Koronaios",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "width": 1200,
+    "height": 1592
+  },
+  {
+    "ilan": "es-arayan-golden-disi",
+    "path": "demo/es-arayan-golden-disi/1.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:A_Golden_Retriever-2_(Barras).JPG",
+    "artist": "Barras",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "width": 1200,
+    "height": 900
+  },
+  {
+    "ilan": "es-arayan-sultan-papagani",
+    "path": "demo/es-arayan-sultan-papagani/1.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Cockateil.jpg",
+    "artist": "Jim Bendon",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "width": 1200,
+    "height": 1477
+  },
+  {
+    "ilan": "es-arayan-taklaci-guvercin",
+    "path": "demo/es-arayan-taklaci-guvercin/1.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Takla_T%C3%BCmmler.jpg",
+    "artist": "bilinmiyor",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "width": 1000,
+    "height": 750
   },
   {
     "ilan": "golden-yavru-yuva-ariyor",
@@ -198,6 +278,46 @@
     "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
     "width": 1200,
     "height": 900
+  },
+  {
+    "ilan": "kayip-melez-kopek-cankaya",
+    "path": "demo/kayip-melez-kopek-cankaya/1.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Street_dog_03617.JPG",
+    "artist": "Vengolis",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "width": 1200,
+    "height": 798
+  },
+  {
+    "ilan": "kayip-muhabbet-kusu-karsiyaka",
+    "path": "demo/kayip-muhabbet-kusu-karsiyaka/1.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Budgie_(8022436701).jpg",
+    "artist": "Jim Bendon from Karratha, Australia",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "width": 1200,
+    "height": 688
+  },
+  {
+    "ilan": "kayip-posta-guvercini-seyhan",
+    "path": "demo/kayip-posta-guvercini-seyhan/1.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:BaldiaAlfred1913_mit_Nationalmeistertaube.jpg",
+    "artist": "DHochmayr",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "width": 1200,
+    "height": 1366
+  },
+  {
+    "ilan": "kayip-tekir-kedi-kadikoy",
+    "path": "demo/kayip-tekir-kedi-kadikoy/1.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Cat_in_%C4%B0zmir_(04092026)_01.jpg",
+    "artist": "Kadı",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "width": 1200,
+    "height": 971
   },
   {
     "ilan": "kedi-tirmalama-tahtasi-tirmanma",

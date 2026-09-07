@@ -30,11 +30,18 @@ type ListingRow = Database['public']['Tables']['listings']['Row'];
  * tabloya `.eq('breeds.slug', ...)` uygulamak, join `!inner` değilse satırı
  * elemiyor — yalnızca gömülü nesneyi null yapıyor. Yani `!inner` olmadan
  * filtreler sessizce hiçbir şey yapmıyor ve tüm ilanlar dönüyordu.
+ *
+ * BREEDS ARTIK !inner DEĞİL. Cins süzgeci gömülü tabloya değil, ana
+ * tablodaki breed_id sütununa uygulanıyor; oradaki !inner hiçbir süzgece
+ * hizmet etmiyordu ama CİNSİ OLMAYAN İLANLARI SESSİZCE ELİYORDU. Melez
+ * bir köpek için "cins" seçilemediğinden breed_id boş kalıyor ve o ilan
+ * hiçbir listede görünmüyordu — kayıp ilanlarının çoğu bu durumda.
+ * Kategori ve şehir NOT NULL olduğu için onlarda !inner zararsız.
  */
 const CARD_COLUMNS = `
   id, slug, title, kind, price, currency, is_negotiable, event_date,
   age_months, gender, published_at, is_demo,
-  breeds!inner ( id, name, slug ),
+  breeds ( id, name, slug ),
   categories!inner ( id, slug, name ),
   cities!inner ( id, name, slug ),
   districts ( id, name, slug ),

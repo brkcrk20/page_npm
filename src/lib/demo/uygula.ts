@@ -183,6 +183,10 @@ export async function demoEkle(): Promise<{
         slug: ilan.slug,
         description: ilan.aciklama,
         price: ilan.kind === 'satilik' ? (ilan.fiyat ?? null) : null,
+        event_date:
+          ilan.olayGunOnce === undefined
+            ? null
+            : new Date(Date.now() - ilan.olayGunOnce * 86_400_000).toISOString().slice(0, 10),
         is_negotiable: ilan.pazarlik ?? false,
         age_months: ilan.yasAy ?? null,
         gender: ilan.cinsiyet ?? 'belirtilmemis',

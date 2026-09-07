@@ -30,7 +30,15 @@ export type DemoIlan = {
   kategori: string;
   cins?: string;
   cinsDiger?: string;
-  kind: 'satilik' | 'sahiplendirme';
+  kind: 'satilik' | 'sahiplendirme' | 'kayip' | 'bulundu' | 'es_arayan';
+  /**
+   * Kayıp/bulundu ilanlarında olayın kaç gün önce olduğu.
+   *
+   * Sabit tarih yazılamıyor: demo içerik aylarca durabilir ve "3 Ocak'ta
+   * kayboldu" diyen bir ilan yazın ortasında saçma görünür. Tarih
+   * uygulanırken bugünden geriye sayılarak hesaplanıyor.
+   */
+  olayGunOnce?: number;
   baslik: string;
   aciklama: string;
   fiyat?: number;
