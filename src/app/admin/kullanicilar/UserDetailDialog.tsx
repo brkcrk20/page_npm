@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+
+import { UserEditForm } from './UserEditForm';
 import Link from 'next/link';
 import { BadgeCheck, Ban, Loader2, ShieldCheck } from 'lucide-react';
 
@@ -58,10 +60,14 @@ export function UserDetailDialog({
   const { toast } = useToast();
   const [detay, setDetay] = useState<Detay | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
+  const [sekme, setSekme] = useState<'bilgi' | 'duzenle'>('bilgi');
+  const [tazele, setTazele] = useState(0);
+  const detayiYenile = () => setTazele((n) => n + 1);
 
   useEffect(() => {
     if (!userId) {
       setDetay(null);
+      setSekme('bilgi');
       return;
     }
     let iptal = false;
@@ -81,7 +87,7 @@ export function UserDetailDialog({
     return () => {
       iptal = true;
     };
-  }, [userId, toast]);
+  }, [userId, toast, tazele]);
 
   const tarih = (d: string | null | undefined) =>
     d ? new Date(d).toLocaleString('tr-TR', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
@@ -112,13 +118,43 @@ export function UserDetailDialog({
                 Yönetici
               </span>
             )}
+            {detay?.is_demo && (
+              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700">
+                Örnek hesap
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
+
+        {/* Bilgi ve düzenleme ayrı sekmelerde: tek ekranda yan yana
+            koymak, karar vermek için bakılan sayıları form alanlarının
+            arasında kaybediyordu. */}
+        {detay && (
+          <div className="flex gap-1 border-b">
+            {(['bilgi', 'duzenle'] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSekme(s)}
+                className={cn(
+                  'border-b-2 px-3 py-2 text-sm font-medium transition-colors',
+                  sekme === s
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {s === 'bilgi' ? 'Bilgiler' : 'Düzenle'}
+              </button>
+            ))}
+          </div>
+        )}
 
         {yukleniyor || !detay ? (
           <div className="flex justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
+        ) : sekme === 'duzenle' ? (
+          <UserEditForm userId={userId!} detay={detay} onSaved={detayiYenile} />
         ) : (
           <div className="space-y-5 text-sm">
             <Bolum baslik="Hesap">

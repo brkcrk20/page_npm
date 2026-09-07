@@ -436,7 +436,15 @@ export function CreateListingForm({
         setIsLoadingListing(false);
         return;
       }
-      if (data.owner_id !== user.id) {
+      /**
+       * Yönetici her ilanı düzenleyebiliyor.
+       *
+       * Veritabanı zaten buna izin veriyordu (guard_bypass is_admin'i
+       * kapsıyor); engel yalnızca buradaki kontroldü. Şikayet gelen bir
+       * ilanda yanlış fiyatı ya da yanıltıcı başlığı düzeltmek için
+       * yöneticinin ilanı silmekten başka yolu yoktu.
+       */
+      if (data.owner_id !== user.id && profile?.role !== 'admin') {
         setLoadError('Bu ilan size ait değil.');
         setIsLoadingListing(false);
         return;
@@ -471,7 +479,7 @@ export function CreateListingForm({
       );
       setIsLoadingListing(false);
     })();
-  }, [isEdit, listingId, user, form]);
+  }, [isEdit, listingId, user, profile?.role, form]);
 
   async function onSubmit(values: FormValues) {
     if (!user) return;

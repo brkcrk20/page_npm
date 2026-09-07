@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Check, Eye, Loader2, Search, Trash2, X } from 'lucide-react';
+import { Check, Eye, Loader2, Search, Trash2, X, Pencil} from 'lucide-react';
 
 import {
   AlertDialog,
@@ -48,6 +48,7 @@ type Row = {
   created_at: string;
   view_count: number;
   owner_id: string;
+  is_demo: boolean;
   listing_photos: { storage_path: string; position: number }[];
   profiles: { full_name: string | null; username: string | null } | null;
 };
@@ -94,7 +95,7 @@ function AdminListingsInner() {
     let q = supabase
       .from('listings')
       .select(
-        'id, slug, title, status, price, created_at, view_count, owner_id, listing_photos(storage_path, position), profiles!listings_owner_id_fkey(full_name, username)'
+        'id, slug, title, status, price, created_at, view_count, owner_id, is_demo, listing_photos(storage_path, position), profiles!listings_owner_id_fkey(full_name, username)'
       )
       .order('created_at', { ascending: false })
       .limit(200);
@@ -244,14 +245,24 @@ function AdminListingsInner() {
                       >
                         {row.title}
                       </Link>
-                      <span
-                        className={cn(
-                          'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                          STATUS_STYLE[row.status] ?? 'bg-slate-100 text-slate-700'
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {/* Demo ilanı gerçekten ayırmak moderasyon için şart:
+                            demo bir ilanı "onayladım" diye işaretlemenin
+                            anlamı yok. */}
+                        {row.is_demo && (
+                          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
+                            Örnek
+                          </span>
                         )}
-                      >
-                        {STATUSES.find((s) => s.key === row.status)?.label ?? row.status}
-                      </span>
+                        <span
+                          className={cn(
+                            'rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                            STATUS_STYLE[row.status] ?? 'bg-slate-100 text-slate-700'
+                          )}
+                        >
+                          {STATUSES.find((s) => s.key === row.status)?.label ?? row.status}
+                        </span>
+                      </div>
                     </div>
 
                     <p className="mt-0.5 text-xs text-muted-foreground">
@@ -302,6 +313,15 @@ function AdminListingsInner() {
                         <Link href={`/${row.slug}-${row.id}`} target="_blank">
                           <Eye className="mr-1 h-3 w-3" />
                           Gör
+                        </Link>
+                      </Button>
+                      {/* Yönetici her ilanı düzenleyebiliyor: şikayet gelen
+                          bir ilanda yanlış fiyatı düzeltmenin tek yolu
+                          ilanı silmek olmamalı. */}
+                      <Button asChild size="sm" variant="ghost" className="h-7 text-xs">
+                        <Link href={`/ilan-duzenle/${row.id}`} target="_blank">
+                          <Pencil className="mr-1 h-3 w-3" />
+                          Düzenle
                         </Link>
                       </Button>
                       <Button

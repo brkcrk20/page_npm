@@ -45,6 +45,7 @@ type Provider = {
   phone: string | null;
   address: string | null;
   is_verified: boolean;
+  is_demo: boolean;
   license_number: string | null;
   created_at: string;
   owner_id: string | null;
@@ -86,7 +87,7 @@ function AdminProvidersInner() {
     let q = getSupabaseBrowserClient()
       .from('service_providers')
       .select(
-        'id, service_type, name, slug, status, phone, address, is_verified, license_number, created_at, owner_id, cities(name, slug), districts(name, slug), profiles!service_providers_owner_id_fkey(username, company_title)'
+        'id, service_type, name, slug, status, phone, address, is_verified, is_demo, license_number, created_at, owner_id, cities(name, slug), districts(name, slug), profiles!service_providers_owner_id_fkey(username, company_title)'
       )
       .order('created_at', { ascending: false })
       .limit(200);
@@ -195,6 +196,11 @@ function AdminProvidersInner() {
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
                           <BadgeCheck className="h-3 w-3" />
                           Doğrulanmış
+                        </span>
+                      )}
+                      {row.is_demo && (
+                        <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
+                          Örnek
                         </span>
                       )}
                     </div>
