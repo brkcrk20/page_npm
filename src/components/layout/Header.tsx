@@ -50,6 +50,7 @@ import {
   NavigationMenuLink,
 } from "@/components/ui/navigation-menu"
 import { SearchFilters } from '../SearchFilters';
+import { BildirimZili } from '@/components/layout/BildirimZili';
 import { SectionNav } from './SectionNav';
 import { Logo } from '@/components/Logo';
 import { SERVICE_CONFIGS } from '@/lib/services-config';
@@ -134,7 +135,7 @@ export function Header() {
   
   // Dört dalı da aynı şeyi döndüren bir fonksiyondu ve dallardan biri artık
   // var olmayan bir adresi (/guvercinler) kontrol ediyordu.
-  const renderFilters = () => <SearchFilters />;
+  const renderFilters = (mod: 'tam' | 'sade' | 'suzgec' = 'tam') => <SearchFilters mod={mod} />;
 
   /**
    * Kategori şeridi ve arama filtreleri yalnızca ilan gezinen sayfalarda
@@ -255,7 +256,7 @@ export function Header() {
         <div className="container flex h-16 items-center px-5">
           {/* Renkli bantta tek renk amblem: iki renkli sürüm burada
               okunmuyordu. */}
-          <Link href="/" className="mr-6 flex items-center" aria-label="PetSemti ana sayfa" prefetch={false}>
+          <Link href="/" className="mr-4 flex shrink-0 items-center" aria-label="PetSemti ana sayfa" prefetch={false}>
             <Logo variant="mono" size={36} />
           </Link>
           
@@ -270,10 +271,28 @@ export function Header() {
             düğmesi olmayan sayfalardan (rehber, yardım, profil) da bir yol
             kalsın diye.
           */}
-          <div className="flex flex-1 items-center justify-end space-x-4">
-              <div className="hidden md:flex items-center space-x-4">
-                {renderAuthContent()}
-              </div>
+          {/*
+            Arama çubuğu üst bantta.
+
+            Aşağıdaki kategori şeridinin altındayken sayfanın en çok
+            kullanılan aracı, iki sıra menünün arkasında kalıyordu; mobilde
+            görmek için kaydırmak gerekiyordu. Artık logonun hemen yanında,
+            her sayfada aynı yerde.
+
+            Yalnızca ilan sayfalarında: hizmet rehberlerinin kendi arama
+            kutusu ve kendi süzgeçleri var (bkz. showListingSearch).
+          */}
+          {showListingSearch && (
+            <div className="mr-3 hidden min-w-0 max-w-xl flex-1 md:block">
+              {renderFilters('sade')}
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-1 md:gap-2">
+            <BildirimZili />
+            <div className="hidden md:flex items-center space-x-4">
+              {renderAuthContent()}
+            </div>
           </div>
 
           <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
@@ -385,14 +404,24 @@ export function Header() {
         <div className="border-b bg-white py-1">
           <div className="w-full md:container md:mx-auto">
             
-            <SectionNav />
-            
-            {/* Hizmet rehberlerinde gösterilmiyor: orada aranan ilan değil
-                işletme ve sayfanın kendi süzgeçleri var. */}
+            {/* Mobilde arama ŞERİTLERİN ÜSTÜNDE.
+
+                Üst banda tam genişlikte sığmıyor (logo, zil ve menü düğmesi
+                orada), ama sekmelerin ve bölüm ikonlarının altında kalınca da
+                sayfanın en çok kullanılan aracı üçüncü sıraya düşüyordu.
+                Buraya alınınca ilk ekranda, parmağın uzandığı yerde. */}
             {showListingSearch && (
-              <div className="px-4 md:px-0 mt-2">
-                {renderFilters()}
+              <div className="border-b px-4 pb-2 pt-1 md:hidden">
+                {renderFilters('tam')}
               </div>
+            )}
+
+            <SectionNav />
+
+            {/* Geniş ekranda arama üst banta taşındı; burada yalnızca
+                süzgeçler kalıyor. */}
+            {showListingSearch && (
+              <div className="mt-2 hidden md:block">{renderFilters('suzgec')}</div>
             )}
           </div>
         </div>

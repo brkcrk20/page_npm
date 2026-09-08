@@ -100,10 +100,10 @@ export default function DuyuruSayfasi() {
     }
 
     toast({
-      title: `${sonuc.kuyruga_alinan} kişiye kuyruğa alındı`,
+      title: `${sonuc.bildirim_gonderilen} kişiye gönderildi`,
       description: sonuc.eposta_yapilandirildi
-        ? 'Gönderim birkaç dakika içinde tamamlanır.'
-        : 'E-posta sağlayıcısı tanımlı değil; ayarlanınca kuyruktakiler gidecek.',
+        ? `Site içi bildirim anında göründü; ${sonuc.kuyruga_alinan} e-posta birkaç dakika içinde gidecek.`
+        : 'Site içi bildirim anında göründü. E-posta sağlayıcısı tanımlı olmadığı için e-postalar kuyrukta bekliyor.',
     });
     setKonu('');
     setMesaj('');
@@ -118,8 +118,10 @@ export default function DuyuruSayfasi() {
       <div>
         <h1 className="text-xl font-bold">Kullanıcılara Duyuru</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Bildirim e-postası olarak gidiyor. E-posta bildirimini kapatmış ve engellenmiş
-          hesaplara gönderilmiyor.
+          Duyuru iki kanaldan gidiyor: kullanıcının üst banttaki bildirim zilinde
+          anında görünüyor, ayrıca e-posta olarak gönderiliyor. E-posta bildirimini
+          kapatmış olanlar zilde görüyor ama e-posta almıyor; engellenmiş hesaplara
+          hiçbiri gitmiyor.
         </p>
       </div>
 

@@ -2506,6 +2506,97 @@ export type Database = {
           },
         ]
       }
+      user_notifications: {
+        Row: {
+          batch_id: string | null
+          body: string
+          created_at: string
+          dedupe_key: string | null
+          id: number
+          is_read: boolean
+          kind: string
+          level: string
+          link: string | null
+          read_at: string | null
+          sent_by: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          batch_id?: string | null
+          body: string
+          created_at?: string
+          dedupe_key?: string | null
+          id?: never
+          is_read?: boolean
+          kind?: string
+          level?: string
+          link?: string | null
+          read_at?: string | null
+          sent_by?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          batch_id?: string | null
+          body?: string
+          created_at?: string
+          dedupe_key?: string | null
+          id?: never
+          is_read?: boolean
+          kind?: string
+          level?: string
+          link?: string | null
+          read_at?: string | null
+          sent_by?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notifications_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_notifications_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_notifications_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Views: {
       active_listing_promotions: {
@@ -2687,6 +2778,7 @@ export type Database = {
       admin_user_detail: { Args: { p_user_id: string }; Returns: Json }
       bildirim_ilan_suresi: { Args: never; Returns: number }
       bildirim_tetikle: { Args: never; Returns: undefined }
+      bildirimleri_okundu_isaretle: { Args: never; Returns: number }
       confirm_order_payment: {
         Args: { p_provider_ref?: string; p_public_ref: string }
         Returns: undefined
@@ -2765,6 +2857,7 @@ export type Database = {
       tr_slugify: { Args: { value: string }; Returns: string }
       unaccent: { Args: { "": string }; Returns: string }
       unread_message_count: { Args: never; Returns: number }
+      unread_notification_count: { Args: never; Returns: number }
       username_available: { Args: { p_username: string }; Returns: boolean }
     }
     Enums: {

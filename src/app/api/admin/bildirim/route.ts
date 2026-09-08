@@ -152,6 +152,36 @@ export async function POST(request: Request) {
   }
 
   const damga = Date.now();
+  const yiginId = crypto.randomUUID();
+
+  /**
+   * Duyuru önce SİTE İÇİ bildirim olarak yazılıyor.
+   *
+   * E-posta sağlayıcısı tanımlı değilse kuyruktaki satırlar bekliyor ve
+   * duyuru kimseye ulaşmıyor. Zildeki bildirim sağlayıcıdan bağımsız:
+   * siteye giren herkes görüyor. E-posta ikinci kanal, tek kanal değil.
+   *
+   * Site içi bildirim e-posta TERCİHİNE bakmıyor: "bana e-posta atma"
+   * demek, "beni haberdar etme" demek değil. Engellenmiş hesaplar ise
+   * ikisinde de yok.
+   */
+  const siteIci = profiller.map((p) => ({
+    user_id: p.id,
+    kind: 'duyuru',
+    level: 'duyuru',
+    title: konu,
+    body: mesaj,
+    sent_by: user.id,
+    batch_id: yiginId,
+  }));
+
+  for (let i = 0; i < siteIci.length; i += 200) {
+    const { error } = await admin
+      .from('user_notifications')
+      .insert(siteIci.slice(i, i + 200) as never);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
   const satirlar = profiller
     .map((p) => ({ p, email: adresler.get(p.id) }))
     .filter((x): x is { p: (typeof profiller)[number]; email: string } => Boolean(x.email))
@@ -165,8 +195,15 @@ export async function POST(request: Request) {
       dedupe_key: `duyuru:${damga}:${p.id}`,
     }));
 
+  // E-posta adresi olmayan hesap olabilir; site içi bildirim zaten yazıldı,
+  // bu yüzden burada durmuyoruz.
   if (satirlar.length === 0) {
-    return NextResponse.json({ error: 'Seçilen kullanıcıların e-posta adresi yok.' }, { status: 400 });
+    return NextResponse.json({
+      ok: true,
+      bildirim_gonderilen: siteIci.length,
+      kuyruga_alinan: 0,
+      eposta_yapilandirildi: epostaYapilandirildiMi(),
+    });
   }
 
   // Yığın yığın yazılıyor: tek insert'te binlerce satır isteği şişiriyor.
@@ -181,6 +218,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    bildirim_gonderilen: siteIci.length,
     kuyruga_alinan: yazilan,
     eposta_yapilandirildi: epostaYapilandirildiMi(),
   });

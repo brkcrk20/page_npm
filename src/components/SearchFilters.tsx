@@ -36,10 +36,20 @@ const ALL = 'all';
  * patlıyor. Sınırı bileşenin kendi içine koyuyoruz ki her kullanıcısı
  * ayrı ayrı sarmalamak zorunda kalmasın.
  */
-export function SearchFilters() {
+/**
+ * @param mod
+ *  'tam'    — arama kutusu + süzgeçler (mobil satırı)
+ *  'sade'   — yalnızca arama kutusu (üst bant)
+ *  'suzgec' — yalnızca süzgeçler (geniş ekranda ikinci satır)
+ *
+ * Üst bandın dar olması yüzünden bölündü: dört açılır liste ve "Bul"
+ * düğmesi logoyla zilin arasına sığmıyor, sığdırılınca da hepsi bir avuç
+ * beyaz kutuya dönüşüyordu. Arama yukarı çıktı, süzgeçler yerinde kaldı.
+ */
+export function SearchFilters({ mod = 'tam' }: { mod?: 'tam' | 'sade' | 'suzgec' }) {
   return (
     <Suspense fallback={<SearchFiltersSkeleton />}>
-      <SearchFiltersInner />
+      <SearchFiltersInner mod={mod} />
     </Suspense>
   );
 }
@@ -53,7 +63,7 @@ const PIGEON_SLUG = 'guvercin-ilanlari';
 const SUPPLY_SLUG = 'pet-malzemeleri';
 const OWN_SECTION_SLUGS = [PIGEON_SLUG, SUPPLY_SLUG];
 
-function SearchFiltersInner() {
+function SearchFiltersInner({ mod }: { mod: 'tam' | 'sade' | 'suzgec' }) {
   const router = useRouter();
   /** Öneri listesi yalnızca kutu odaktayken açık. */
   const [odakli, setOdakli] = useState(false);
@@ -358,12 +368,19 @@ function SearchFiltersInner() {
       onPointerDown={katalogTazele}
       onFocusCapture={katalogTazele}
       className={
-        'grid w-full grid-cols-1 gap-2 ' +
-        (inPigeonSection
-          ? 'md:grid-cols-[1fr_auto_auto_auto_auto]'
-          : 'md:grid-cols-[1fr_auto_auto_auto_auto_auto]')
+        mod === 'sade'
+          ? 'w-full'
+          : 'grid w-full grid-cols-1 gap-2 ' +
+            (mod === 'suzgec'
+              ? inPigeonSection
+                ? 'md:grid-cols-[auto_auto_auto_auto]'
+                : 'md:grid-cols-[auto_auto_auto_auto_auto]'
+              : inPigeonSection
+                ? 'md:grid-cols-[1fr_auto_auto_auto_auto]'
+                : 'md:grid-cols-[1fr_auto_auto_auto_auto_auto]')
       }
     >
+      {mod !== 'suzgec' && (
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -442,6 +459,7 @@ function SearchFiltersInner() {
         </div>
         {/* Yalnızca mobilde: süzgeçleri aç/kapat ve ara. Masaüstünde
             süzgeçler zaten açık ve "Bul" satırın sonunda. */}
+        {mod === 'tam' && (
         <button
           type="button"
           onClick={() => setFiltrelerAcik((v) => !v)}
@@ -452,15 +470,20 @@ function SearchFiltersInner() {
           <SlidersHorizontal className="h-4 w-4" />
           Filtre
         </button>
-        <Button className="h-11 shrink-0 px-5 md:hidden" onClick={handleSearch}>
-          Bul
-        </Button>
+        )}
+        {mod === 'tam' && (
+          <Button className="h-11 shrink-0 px-5 md:hidden" onClick={handleSearch}>
+            Bul
+          </Button>
+        )}
       </div>
+      )}
 
       {/* Süzgeç grubu: mobilde katlı, masaüstünde her zaman açık. */}
+      {mod !== 'sade' && (
       <div
         className={
-          'contents ' + (filtrelerAcik ? '' : 'max-md:hidden')
+          'contents ' + (mod === 'suzgec' || filtrelerAcik ? '' : 'max-md:hidden')
         }
       >
 
@@ -543,10 +566,13 @@ function SearchFiltersInner() {
       />
 
       </div>
+      )}
 
-      <Button className="hidden h-11 px-8 md:inline-flex" onClick={handleSearch}>
-        Bul
-      </Button>
+      {mod !== 'sade' && (
+        <Button className="hidden h-11 px-8 md:inline-flex" onClick={handleSearch}>
+          Bul
+        </Button>
+      )}
     </div>
   );
 }
