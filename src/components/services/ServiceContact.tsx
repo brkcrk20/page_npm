@@ -6,6 +6,7 @@ import { Globe, MessageCircle, Navigation, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
+import { isletmeWhatsappMetni, whatsappAdresi } from '@/lib/whatsapp-mesaj';
 
 /**
  * Klinik iletişim düğmeleri.
@@ -16,6 +17,7 @@ import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
  */
 export function ServiceContact({
   providerId,
+  providerName,
   phone,
   phoneAlt,
   whatsapp,
@@ -25,6 +27,8 @@ export function ServiceContact({
   districtName,
 }: {
   providerId: number;
+  /** WhatsApp'a yazılan hazır metinde geçiyor. */
+  providerName: string;
   phone: string | null;
   phoneAlt: string | null;
   whatsapp: string | null;
@@ -73,8 +77,13 @@ export function ServiceContact({
   }
 
   const whatsappNumber = (whatsapp || phone || '').replace(/\D/g, '');
+  // Hazır metin: karşı taraf boş bir sohbet penceresi yerine hangi kayıt
+  // için ve nereden yazıldığını görüyor.
   const whatsappHref = whatsappNumber
-    ? `https://wa.me/90${whatsappNumber.replace(/^90/, '').replace(/^0/, '')}`
+    ? whatsappAdresi(
+        `90${whatsappNumber.replace(/^90/, '').replace(/^0/, '')}`,
+        isletmeWhatsappMetni(providerName)
+      )
     : null;
 
   // Yol tarifi: koordinat yerine adres araması kullanılıyor. Koordinatı olmayan

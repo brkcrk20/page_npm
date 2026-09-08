@@ -3,6 +3,7 @@
 import Image from 'next/image';
 
 import { avatarUrl } from '@/lib/supabase/storage';
+import { ilanWhatsappMetni, whatsappAdresi } from '@/lib/whatsapp-mesaj';
 import { formatTrPhone, whatsappNumber } from '@/lib/phone';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,7 @@ import type { SellerInfo } from '@/lib/queries/listings';
 export function SellerCard({
   seller,
   listingId,
+  listingTitle,
   hasPhone,
   showPhone,
   allowWhatsapp,
@@ -47,6 +49,8 @@ export function SellerCard({
 }: {
   seller: SellerInfo | null;
   listingId: number;
+  /** WhatsApp'a yazılan hazır metinde geçiyor. */
+  listingTitle: string;
   /** Numaranın kendisi DEĞİL, yalnızca var olup olmadığı. */
   hasPhone: boolean;
   showPhone: boolean;
@@ -135,7 +139,11 @@ export function SellerCard({
       return;
     }
     track('increment_listing_whatsapp');
-    window.open(`https://wa.me/${wa}`, '_blank', 'noopener,noreferrer');
+    window.open(
+      whatsappAdresi(wa, ilanWhatsappMetni(listingTitle)),
+      '_blank',
+      'noopener,noreferrer'
+    );
   }
 
   return (

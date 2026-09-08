@@ -336,6 +336,7 @@ export async function ServiceDetail({
 
               <ServiceContact
                 providerId={provider.id}
+                providerName={provider.name}
                 phone={provider.phone}
                 phoneAlt={provider.phone_alt}
                 whatsapp={provider.whatsapp}

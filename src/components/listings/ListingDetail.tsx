@@ -456,6 +456,7 @@ export function ListingDetail({
             <SellerCard
               seller={seller}
               listingId={listing.id}
+              listingTitle={listing.title}
               hasPhone={Boolean(listing.contact_phone)}
               showPhone={listing.show_phone}
               allowWhatsapp={listing.allow_whatsapp}
