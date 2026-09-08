@@ -19,7 +19,7 @@ export function ListingGallery({
   title,
   videoCount = 0,
 }: {
-  photos: { storage_path: string; position: number }[];
+  photos: { storage_path: string; thumb_path?: string | null; position: number }[];
   title: string;
   /** Videosu olan ilanda galeriden video bölümüne atlama düğmesi çıkıyor. */
   videoCount?: number;
@@ -27,6 +27,17 @@ export function ListingGallery({
   const hasVideos = videoCount > 0;
   const sorted = [...photos].sort((a, b) => a.position - b.position);
   const urls = sorted.map((p) => listingPhotoUrl(p.storage_path)).filter(Boolean) as string[];
+  /**
+   * Küçük kopyalar: alt şerit ve bulanık zemin için.
+   *
+   * Şeritteki 80 piksellik önizleme ve bulanıklaştırılan zemin, tam boy
+   * dosyaya ihtiyaç duymuyor. İyileştirici devre dışı olduğu için bu
+   * ayrımı kendimiz yapıyoruz; kopyası olmayan fotoğrafta tam boya
+   * düşülüyor.
+   */
+  const kucukUrls = sorted
+    .map((p) => listingPhotoUrl(p.thumb_path ?? p.storage_path))
+    .filter(Boolean) as string[];
 
   const [index, setIndex] = useState(0);
   const hasPhotos = urls.length > 0;
@@ -100,12 +111,11 @@ export function ListingGallery({
             {/* Zemin bulanık olduğu için küçük kopya yetiyor; tam boy
                 istemek aynı fotoğrafı ikinci kez çözdürüyordu. */}
             <Image
-              src={current}
+              src={kucukUrls[index] ?? current}
               alt=""
               aria-hidden
               fill
               sizes="48px"
-              quality={30}
               className="scale-110 object-cover blur-2xl"
             />
             <Image
@@ -179,7 +189,7 @@ export function ListingGallery({
               )}
               aria-label={`Fotoğraf ${i + 1}`}
             >
-              <Image src={url} alt="" fill sizes="80px" className="object-cover" />
+              <Image src={kucukUrls[i] ?? url} alt="" fill sizes="80px" className="object-cover" />
             </button>
           ))}
         </div>

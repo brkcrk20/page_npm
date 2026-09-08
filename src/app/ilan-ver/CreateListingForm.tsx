@@ -503,7 +503,7 @@ export function CreateListingForm({
     // Ölçüler de taşınıyor: tarayıcı yer ayıramadığı için sayfa yüklenirken
     // içerik zıplıyordu (CLS). Ölçü zaten hazırlama adımında hesaplanıyor,
     // yalnızca kaydedilmiyordu.
-    const uploadedPaths: { path: string; width: number; height: number }[] = [];
+    const uploadedPaths: { path: string; thumb: string | null; width: number; height: number }[] = [];
 
     try {
       // 1) İlan satırını önce yaz.
@@ -621,7 +621,27 @@ export function CreateListingForm({
           });
 
         if (uploadError) throw new Error(`Fotoğraf yüklenemedi: ${uploadError.message}`);
-        uploadedPaths.push({ path, width: item.width, height: item.height });
+
+        /**
+         * Küçük kopya. Başarısız olursa ilan yine yayımlanıyor: kart tam
+         * boy dosyayı gösterir, yavaş ama doğru. Fotoğrafın kendisi
+         * yüklendiği hâlde ilanı düşürmek daha kötü olurdu.
+         */
+        const thumbPath = `${user.id}/${listing.id}-${item.thumb.name}`;
+        const { error: thumbError } = await supabase.storage
+          .from(LISTING_PHOTO_BUCKET)
+          .upload(thumbPath, item.thumb, {
+            contentType: item.thumb.type,
+            upsert: true,
+            cacheControl: DEPOLAMA_ONBELLEK,
+          });
+
+        uploadedPaths.push({
+          path,
+          thumb: thumbError ? null : thumbPath,
+          width: item.width,
+          height: item.height,
+        });
       }
 
       // 4) Videolar: sıkıştır ve yükle.
@@ -691,6 +711,7 @@ export function CreateListingForm({
           uploadedPaths.map((foto, index) => ({
             listing_id: listing.id,
             storage_path: foto.path,
+            thumb_path: foto.thumb,
             width: foto.width,
             height: foto.height,
             position: offset + index,

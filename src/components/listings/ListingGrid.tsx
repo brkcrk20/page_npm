@@ -59,7 +59,18 @@ function formatPrice(listing: ListingCard): string {
  */
 function PetListingCard({ listing }: { listing: ListingCard }) {
   const cover = [...(listing.listing_photos ?? [])].sort((a, b) => a.position - b.position)[0];
-  const imageUrl = cover ? listingPhotoUrl(cover.storage_path) : null;
+  /**
+   * Kartta küçük kopya kullanılıyor.
+   *
+   * Görseller barındırma sağlayıcısının iyileştiricisinden çıkarıldıktan
+   * sonra (kota doldu, bütün fotoğraflar kırılmıştı) kart tam boy dosyayı
+   * indiriyordu: 128 piksellik bir alan için ~90 KB. Küçük kopya yükleme
+   * anında üretiliyor.
+   *
+   * Kopya yoksa tam boy dosyaya düşülüyor — eski kayıtlarda ve yüklemesi
+   * yarıda kalan fotoğraflarda kart kırık görünmesin.
+   */
+  const imageUrl = cover ? listingPhotoUrl(cover.thumb_path ?? cover.storage_path) : null;
   const age = formatAge(listing.age_months);
   const location = [listing.cities?.name, listing.districts?.name].filter(Boolean).join(' / ');
   const rozet = KIND_BADGE[listing.kind];
@@ -89,7 +100,6 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
               aria-hidden
               fill
               sizes="32px"
-              quality={30}
               className="scale-110 object-cover blur-xl"
             />
             {/* contain: hayvan fotoğrafları dikey çekiliyor (720×1600 gibi),

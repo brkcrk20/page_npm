@@ -19,10 +19,20 @@ import { slugify } from './routing';
 
 /** Uzun kenar sınırı. İlan fotoğrafı için 1600px fazlasıyla yeterli. */
 export const MAX_DIMENSION = 1600;
+/** Kart ve şerit kopyasının genişliği. */
+export const THUMB_WIDTH = 400;
 export const WEBP_QUALITY = 0.82;
 
 export type PreparedImage = {
   file: File;
+  /**
+   * Kart ve şeritler için 400 piksellik kopya.
+   *
+   * Görseller barındırma sağlayıcısının iyileştiricisinden çıkarıldı
+   * (kota doldu, bütün fotoğraflar 402 dönüyordu). Boyutlandırma artık
+   * istek anında değil burada, yükleme anında yapılıyor.
+   */
+  thumb: File;
   width: number;
   height: number;
   /** Tarayıcıda önizleme için; kullanıldıktan sonra revokeObjectURL çağrılmalı. */
@@ -130,13 +140,32 @@ export async function prepareImage(
   );
   if (!blob) throw new Error('Görsel dönüştürülemedi.');
 
-  const prepared = new File([blob], buildSeoFilename(naming, index, extension), {
-    type: mimeType,
-    lastModified: Date.now(),
-  });
+  const ad = buildSeoFilename(naming, index, extension);
+  const prepared = new File([blob], ad, { type: mimeType, lastModified: Date.now() });
+
+  // Küçük kopya: aynı görselden, yalnızca genişlik sınırı farklı.
+  const kOlcek = Math.min(1, THUMB_WIDTH / width);
+  const kCanvas = document.createElement('canvas');
+  kCanvas.width = Math.round(width * kOlcek);
+  kCanvas.height = Math.round(height * kOlcek);
+  const kContext = kCanvas.getContext('2d');
+  if (!kContext) throw new Error('Tarayıcı görsel işlemeyi desteklemiyor.');
+  kContext.imageSmoothingEnabled = true;
+  kContext.imageSmoothingQuality = 'high';
+  kContext.drawImage(image, 0, 0, kCanvas.width, kCanvas.height);
+
+  const kBlob = await new Promise<Blob | null>((resolve) =>
+    kCanvas.toBlob(resolve, mimeType, 0.74)
+  );
+  if (!kBlob) throw new Error('Görsel dönüştürülemedi.');
+
+  const nokta = ad.lastIndexOf('.');
+  const kAd = nokta === -1 ? `${ad}-k` : `${ad.slice(0, nokta)}-k${ad.slice(nokta)}`;
+  const thumb = new File([kBlob], kAd, { type: mimeType, lastModified: Date.now() });
 
   return {
     file: prepared,
+    thumb,
     width,
     height,
     previewUrl: URL.createObjectURL(prepared),
@@ -215,6 +244,8 @@ export async function prepareAvatar(file: File, userId: string): Promise<Prepare
 
   return {
     file: prepared,
+    // Profil fotoğrafı zaten kare ve küçük; ayrı kopya gerekmiyor.
+    thumb: prepared,
     width: target,
     height: target,
     previewUrl: URL.createObjectURL(prepared),

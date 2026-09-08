@@ -66,7 +66,7 @@ type DetailListing = {
   is_demo?: boolean | null;
   cities: { id: number; name: string; slug: string } | null;
   districts: { id: number; name: string; slug: string } | null;
-  listing_photos: { storage_path: string; position: number }[];
+  listing_photos: { storage_path: string; thumb_path?: string | null; position: number }[];
   listing_videos?: {
     id: number;
     provider: string;
