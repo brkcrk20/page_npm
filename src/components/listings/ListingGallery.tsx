@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Maximize2, Video } from 'lucide-react';
 
@@ -36,6 +36,40 @@ export function ListingGallery({
     setIndex((prev) => (prev + delta + urls.length) % urls.length);
   };
 
+  /**
+   * Parmakla kaydırma.
+   *
+   * Fotoğraflar arasında geçmenin tek yolu ok düğmeleriydi. Telefonda
+   * galeriye ilk tepki parmağı yana kaydırmak; düğmeler ekranın
+   * kenarında ve küçük olduğu için çoğu kullanıcı ikinci fotoğrafın
+   * varlığını fark etmiyordu.
+   *
+   * Dikey kaydırma korunuyor: hareket yataydan daha dikeyse sayfa normal
+   * şekilde kayıyor. Eşik 45 piksel — daha küçük bir değerde sayfayı
+   * aşağı kaydırmak isterken fotoğraf değişiyordu.
+   */
+  const dokunus = useRef<{ x: number; y: number } | null>(null);
+
+  const dokunusBasla = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    dokunus.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const dokunusBitti = (e: React.TouchEvent) => {
+    const bas = dokunus.current;
+    dokunus.current = null;
+    if (!bas || urls.length < 2) return;
+
+    const t = e.changedTouches[0];
+    const dx = t.clientX - bas.x;
+    const dy = t.clientY - bas.y;
+
+    if (Math.abs(dx) < 45 || Math.abs(dx) <= Math.abs(dy)) return;
+    // Sola kaydırmak sonraki fotoğrafa gidiyor: içerik parmakla
+    // birlikte sola akıyor, kitap sayfası çevirmek gibi.
+    go(dx < 0 ? 1 : -1);
+  };
+
   return (
     <div className="overflow-hidden rounded-lg border bg-white">
       {/**
@@ -56,7 +90,11 @@ export function ListingGallery({
         * Mobilde sahne 3:4: dar ekranda kare kutu bile dikey fotoğrafı
         * şeride çeviriyordu. Masaüstünde 4:3 kalıyor, orada yatay alan bol.
         */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-muted sm:aspect-[4/3]">
+      <div
+        className="relative aspect-[3/4] overflow-hidden bg-muted sm:aspect-[4/3]"
+        onTouchStart={dokunusBasla}
+        onTouchEnd={dokunusBitti}
+      >
         {hasPhotos ? (
           <>
             <Image
