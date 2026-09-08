@@ -5,6 +5,7 @@ import { ServiceCard } from '@/components/services/ServiceCard';
 import { Suspense } from 'react';
 
 import { ServiceFilterPanel } from '@/components/services/ServiceFilterPanel';
+import { MobilFiltreler } from '@/components/services/MobilFiltreler';
 import { Button } from '@/components/ui/button';
 import type { ServiceFeature, ServiceProviderCard } from '@/lib/queries/services';
 import type { ServiceConfig } from '@/lib/services-config';
@@ -140,8 +141,13 @@ export async function ServiceDirectory({
 
         <PageIntro icerik={icerik} />
 
+        {/*
+          Filtre içeriği tek yerde: geniş ekranda yandaki sütunda, mobilde
+          çekmecenin içinde aynı işaretleme çiziliyor. İkiye kopyalanırsa
+          biri eklenen filtreden habersiz kalır.
+        */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-[280px_1fr]">
-          <aside className="space-y-4">
+          <aside className="hidden space-y-4 md:block">
             {/*
               Suspense ŞART.
 
@@ -162,43 +168,27 @@ export async function ServiceDirectory({
               />
             </Suspense>
 
-            {cities.length > 0 && (
-              <div className="rounded-xl border bg-white p-4">
-                <h2 className="mb-3 font-bold">Şehirler</h2>
-                <ul className="max-h-72 space-y-0.5 overflow-y-auto pr-1">
-                  <li>
-                    <Link
-                      href={`/${config.slug}`}
-                      className={
-                        !activeCitySlug
-                          ? 'flex justify-between rounded px-2 py-1 text-sm font-semibold text-primary'
-                          : 'flex justify-between rounded px-2 py-1 text-sm text-muted-foreground hover:bg-secondary hover:text-primary'
-                      }
-                    >
-                      Tüm Türkiye
-                    </Link>
-                  </li>
-                  {cities.map((city) => (
-                    <li key={city.slug}>
-                      <Link
-                        href={`/${config.slug}/${city.slug}`}
-                        className={
-                          city.slug === activeCitySlug
-                            ? 'flex justify-between rounded px-2 py-1 text-sm font-semibold text-primary'
-                            : 'flex justify-between rounded px-2 py-1 text-sm text-muted-foreground hover:bg-secondary hover:text-primary'
-                        }
-                      >
-                        <span>{city.name}</span>
-                        <span className="text-xs">{city.count}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <SehirListesi config={config} cities={cities} activeCitySlug={activeCitySlug} />
           </aside>
 
           <main>
+            <MobilFiltreler etkinSayisi={activeFeatures.length + (verifiedOnly ? 1 : 0) + (activeSearch ? 1 : 0)}>
+              <Suspense fallback={<div className="h-64 rounded-xl border bg-white" />}>
+                <ServiceFilterPanel
+                  groups={featureGroups}
+                  activeFeatures={activeFeatures}
+                  activeSearch={activeSearch}
+                  verifiedOnly={verifiedOnly}
+                  unit={config.unit}
+                />
+              </Suspense>
+              <SehirListesi
+                config={config}
+                cities={cities}
+                activeCitySlug={activeCitySlug}
+              />
+            </MobilFiltreler>
+
             {providers.length === 0 ? (
               <div className="rounded-xl border border-dashed bg-white py-16 text-center">
                 <p className="text-muted-foreground">{emptyMessage}</p>
@@ -266,5 +256,57 @@ function Pagination({
         </span>
       ))}
     </nav>
+  );
+}
+
+
+/**
+ * Şehir kırılımı. Hem yandaki sütunda hem mobil çekmecede kullanılıyor,
+ * bu yüzden ayrı bileşen.
+ */
+function SehirListesi({
+  config,
+  cities,
+  activeCitySlug,
+}: {
+  config: ServiceConfig;
+  cities: { slug: string; name: string; count: number }[];
+  activeCitySlug?: string;
+}) {
+  if (cities.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border bg-white p-4">
+      <h2 className="mb-3 font-bold">Şehirler</h2>
+      <ul className="max-h-72 space-y-0.5 overflow-y-auto pr-1">
+        <li>
+          <Link
+            href={`/${config.slug}`}
+            className={
+              !activeCitySlug
+                ? 'flex justify-between rounded px-2 py-1 text-sm font-semibold text-primary'
+                : 'flex justify-between rounded px-2 py-1 text-sm text-muted-foreground hover:bg-secondary hover:text-primary'
+            }
+          >
+            Tüm Türkiye
+          </Link>
+        </li>
+        {cities.map((city) => (
+          <li key={city.slug}>
+            <Link
+              href={`/${config.slug}/${city.slug}`}
+              className={
+                city.slug === activeCitySlug
+                  ? 'flex justify-between rounded px-2 py-1 text-sm font-semibold text-primary'
+                  : 'flex justify-between rounded px-2 py-1 text-sm text-muted-foreground hover:bg-secondary hover:text-primary'
+              }
+            >
+              <span>{city.name}</span>
+              <span className="text-xs">{city.count}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

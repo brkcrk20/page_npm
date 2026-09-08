@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+
+import { onbellegiTazele } from '@/lib/onbellek-tazele';
 import { listingHref } from '@/lib/listing-url';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -177,6 +179,8 @@ export default function MyListingsPage() {
 
     setBusyId(null);
 
+    if (!error) await onbellegiTazele(listing.id);
+
     if (error) {
       toast({ variant: 'destructive', title: 'İşlem başarısız', description: error.message });
       return;
@@ -210,6 +214,8 @@ export default function MyListingsPage() {
       .from('listings')
       .delete()
       .eq('id', target.id);
+
+    if (!error) await onbellegiTazele();
 
     if (error) {
       toast({ variant: 'destructive', title: 'İlan silinemedi', description: error.message });

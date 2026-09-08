@@ -1,6 +1,8 @@
 'use client';
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+
+import { onbellegiTazele } from '@/lib/onbellek-tazele';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -138,6 +140,8 @@ function AdminListingsInner() {
       .eq('id', row.id);
     setBusyId(null);
 
+    if (!error) await onbellegiTazele(row.id);
+
     if (error) {
       toast({ variant: 'destructive', title: 'İşlem başarısız', description: error.message });
       return;
@@ -156,6 +160,7 @@ function AdminListingsInner() {
     setPendingDelete(null);
 
     const { error } = await getSupabaseBrowserClient().from('listings').delete().eq('id', target.id);
+    if (!error) await onbellegiTazele();
     if (error) {
       toast({ variant: 'destructive', title: 'Silinemedi', description: error.message });
       return;

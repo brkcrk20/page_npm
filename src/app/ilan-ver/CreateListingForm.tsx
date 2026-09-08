@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+
+import { onbellegiTazele } from '@/lib/onbellek-tazele';
 import { usePathname, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -719,6 +721,18 @@ export function CreateListingForm({
         );
         if (photoError) throw new Error(`Fotoğraflar kaydedilemedi: ${photoError.message}`);
       }
+
+      /**
+       * Önbelleği tazele.
+       *
+       * Liste sayfaları CDN'de duruyor; haber vermezsek kullanıcı yeni
+       * ilanını listede iki dakikaya kadar göremiyor ve "yayınlanmadı"
+       * sanıyor. Fotoğraflar yüklendikten SONRA çağrılıyor: daha erken
+       * tazelenirse sayfa ilanı fotoğrafsız yakalar. Hata yutuluyor —
+       * tazeleme başarısız olsa bile ilan kaydedilmiş durumda, kullanıcıyı
+       * bir uyarıyla korkutmanın anlamı yok.
+       */
+      await onbellegiTazele(listing.id);
 
       toast({
         title: isEdit ? 'İlanınız güncellendi' : 'İlanınız oluşturuldu',
