@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { listingHref } from '@/lib/listing-url';
+import { listingPhotoUrl } from '@/lib/supabase/storage';
 
 import { SITE_URL } from '@/lib/site';
 import { createSupabasePublicClient } from '@/lib/supabase/server';
@@ -213,11 +214,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (listings.length === 0) break;
 
     for (const listing of listings) {
+      /**
+       * İlan fotoğrafları da haritaya giriyor.
+       *
+       * Google Görseller bir pazaryeri için küçümsenecek bir kaynak değil:
+       * "kangal yavrusu" araması görsel sekmesinde de yapılıyor ve oradan
+       * gelen ziyaretçi doğrudan ilana düşüyor. Fotoğraflar sayfada zaten
+       * var ama site haritasında bildirilmeleri taranmalarını hızlandırıyor.
+       *
+       * Kapak fotoğrafı yeterli: aynı ilanın on fotoğrafını bildirmek
+       * tarama bütçesini bölüyor, ek karşılık getirmiyor.
+       */
+      const kapak = [...(listing.listing_photos ?? [])].sort(
+        (a, b) => a.position - b.position
+      )[0];
+      const gorsel = kapak ? listingPhotoUrl(kapak.storage_path) : null;
+
       listingEntries.push({
         url: `${SITE_URL}${listingHref(listing)}`,
         lastModified: listing.published_at ? new Date(listing.published_at) : now,
         changeFrequency: 'weekly',
         priority: 0.6,
+        ...(gorsel ? { images: [`${SITE_URL}${gorsel}`] } : {}),
       });
     }
 
