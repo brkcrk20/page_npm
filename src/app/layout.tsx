@@ -56,6 +56,21 @@ const inter = Inter({
   subsets: ['latin', 'latin-ext'],
   variable: '--font-body',
   display: 'swap',
+  /**
+   * Gövde yazı tipi de ön yüklenmiyor.
+   *
+   * ÖLÇÜM: yavaş 4G'de iki font dosyası (83 + 47 KB) sayfanın en başında
+   * inmeye başlayıp hattı dolduruyordu. 13,9 KB'lık stil dosyası ancak
+   * 1341 ms'de tamamlanıyor, ilk boyama da onu beklediği için 1,5 saniyeye
+   * kayıyordu. Yani fontlar kendileri için değil, ÖNÜNE geçtikleri stil
+   * dosyası için gecikme yaratıyordu.
+   *
+   * Ön yükleme kalkınca stil dosyası hattı tek başına buluyor, metin yedek
+   * yazı tipiyle hemen boyanıyor ve font gelince yerine geçiyor. Yedeğin
+   * ölçüleri gerçek fonta göre ayarlandığı için (adjustFontFallback)
+   * satırlar kaymıyor, yalnızca harf biçimi değişiyor.
+   */
+  preload: false,
 });
 
 const outfit = Outfit({
