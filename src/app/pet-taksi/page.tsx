@@ -18,6 +18,7 @@ const config = getServiceConfigBySlug('pet-taksi')!;
 export const metadata: Metadata = {
   title: config.seoTitle,
   description: config.seoDescription,
+  alternates: { canonical: `/${config.slug}` },
 };
 
 // İşletme kayıtları nadiren değişiyor; beş dakikalık önbellek

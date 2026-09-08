@@ -101,6 +101,7 @@ export async function generateMetadata({
       return {
         title: seoBaslik(icerik.seo_title ?? `${ad} İlanları`),
         description: icerik.seo_description ? seoAciklama(icerik.seo_description) : undefined,
+        alternates: { canonical: `/${category.slug}/${resolved.breed.slug}` },
       };
     }
 
@@ -117,6 +118,7 @@ export async function generateMetadata({
           `${ad} ilanları: ikinci el ve sıfır ürünler, sahibinden fiyatlarla. Semtinizdeki ${ad.toLocaleLowerCase('tr')} ilanlarını PetSemti'de karşılaştırın.`,
           `${ad} ilanları: ikinci el ve sıfır ürünler, sahibinden fiyatlarla. Semtinizdeki satıcıları PetSemti'de karşılaştırın.`
         ),
+        alternates: { canonical: `/${category.slug}/${resolved.breed.slug}` },
       };
     }
 
@@ -142,6 +144,7 @@ export async function generateMetadata({
         `${ad} fiyatları ve güncel ilanları: satılık ve ücretsiz sahiplendirme. Türkiye'nin her ilinden ${ad} ilanlarına PetSemti'den ulaşın.`,
         `${ad} fiyatları ve güncel ilanları: satılık ve ücretsiz sahiplendirme. Her ildeki ilanlara PetSemti'den ulaşın.`
       ),
+      alternates: { canonical: `/${category.slug}/${resolved.breed.slug}` },
     };
   }
 
@@ -159,6 +162,7 @@ export async function generateMetadata({
         ? `${cityName} ve ilçelerindeki ikinci el ve sıfır ${category.name.toLocaleLowerCase('tr')}. Semtinizdeki ilanları görün, satıcıyla doğrudan görüşün.`
         : `${cityName} ve ilçelerindeki güncel ${category.name.toLocaleLowerCase('tr')}. Semtinizdeki ilanları görün, satıcıyla doğrudan görüşün.`
     ),
+    alternates: { canonical: `/${category.slug}/${resolved.city.slug}` },
   };
 }
 

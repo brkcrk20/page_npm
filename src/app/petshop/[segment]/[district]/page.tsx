@@ -48,6 +48,7 @@ export async function generateMetadata({
     description: seoAciklama(
       `${city.name} ${district.name} bölgesindeki ${config.label.toLocaleLowerCase('tr')}. Adres, telefon ve çalışma saatlerini görün, size en yakınını seçin.`
     ),
+    alternates: { canonical: `/${config.slug}/${city.slug}/${district.slug}` },
   };
 }
 

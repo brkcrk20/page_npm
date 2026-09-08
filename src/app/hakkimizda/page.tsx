@@ -7,6 +7,7 @@ import { getSiteContact } from '@/lib/queries/site-settings';
 import { SERVICE_CONFIGS } from '@/lib/services-config';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/hakkimizda' },
   title: 'Hakkımızda',
   description:
     'PetSemti; evcil hayvan sahiplerini ilanlar, yerel pet hizmetleri ve güvercin dünyasıyla buluşturan Türkiye geneli pet yaşam platformudur.',

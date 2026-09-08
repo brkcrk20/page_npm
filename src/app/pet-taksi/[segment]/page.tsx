@@ -66,6 +66,7 @@ export async function generateMetadata({
             ? govde
             : `${data.name}${location ? ` — ${location}` : ''}: adres, telefon, çalışma saatleri ve sunulan hizmetler.`
         ),
+        alternates: { canonical: `/${config.slug}/${data.slug}-${data.id}` },
       };
     }
     return { title: 'Sayfa Bulunamadı' };
@@ -79,6 +80,7 @@ export async function generateMetadata({
     description: seoAciklama(
       `${city.name} ve ilçelerindeki ${config.label.toLocaleLowerCase('tr')}. Adres, telefon ve çalışma saatlerini görün, hizmetlere göre filtreleyin.`
     ),
+    alternates: { canonical: `/${config.slug}/${city.slug}` },
   };
 }
 

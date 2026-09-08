@@ -142,7 +142,6 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-icon.png?v=2',
   },
-  alternates: { canonical: '/' },
   /**
    * Google Search Console doğrulaması.
    *

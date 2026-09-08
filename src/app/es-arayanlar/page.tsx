@@ -14,6 +14,7 @@ import { getListings } from '@/lib/queries/listings';
  */
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/es-arayanlar' },
   title: 'Eş Arayan İlanları — Çiftleştirme',
   description:
     'Kedi ve köpekler için eş arayan ilanları. Cins, yaş ve şehre göre uygun eşi bulun.',

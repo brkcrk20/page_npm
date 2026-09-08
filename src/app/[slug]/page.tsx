@@ -83,6 +83,7 @@ export async function generateMetadata({
         return {
           title: seoBaslik(icerik.seo_title ?? `${category.name} İlanları`),
           description: icerik.seo_description ? seoAciklama(icerik.seo_description) : undefined,
+          alternates: { canonical: `/${category.slug}` },
         };
       }
       // Kategoriye özel SEO metni varsa o kullanılıyor; güvercin gibi kendi
@@ -102,6 +103,7 @@ export async function generateMetadata({
           category.seo_description ??
             `Türkiye genelindeki güncel ${category.name.toLocaleLowerCase('tr')}. Semtinizdeki ilanları görün, güvenle sahiplenin.`
         ),
+        alternates: { canonical: `/${category.slug}` },
       };
     }
   }

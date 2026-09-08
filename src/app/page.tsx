@@ -21,6 +21,7 @@ import { getListings, getFeaturedListings } from '@/lib/queries/listings';
  */
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/' },
   // Ana sayfanın kendi başlığı yok: kök adres marka başlığını kullanıyor
   // (bkz. app/layout.tsx). Buraya ayrı bir başlık yazmak, aynı sayfayı iki
   // farklı isimle tanıtmak olurdu.

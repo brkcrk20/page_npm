@@ -5,6 +5,7 @@ import { Clause, LegalPage } from '@/components/LegalPage';
 import { getSiteContact } from '@/lib/queries/site-settings';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/kullanim-sartlari' },
   title: 'Kullanım Şartları',
   description:
     'PetSemti kullanım şartları: üyelik, ilan verme kuralları, yasaklı içerikler, sorumluluk sınırları ve hesap kapatma.',
