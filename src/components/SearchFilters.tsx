@@ -2,11 +2,12 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Building2, Package, PawPrint, Search, SlidersHorizontal } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { oneriUret, type AramaOnerisi } from '@/lib/akilli-arama';
 import {
   staticCategories,
   staticBreeds,
@@ -54,6 +55,10 @@ const OWN_SECTION_SLUGS = [PIGEON_SLUG, SUPPLY_SLUG];
 
 function SearchFiltersInner() {
   const router = useRouter();
+  /** Öneri listesi yalnızca kutu odaktayken açık. */
+  const [odakli, setOdakli] = useState(false);
+  /** Klavyeyle gezinen satır; -1 = hiçbiri. */
+  const [vurgulu, setVurgulu] = useState(-1);
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
@@ -272,7 +277,40 @@ function SearchFiltersInner() {
   /** Cins seçilebilir mi: kendi dikeyindeyiz ya da tür seçilmiş. */
   const cinsSecilebilir = inPigeonSection || inSupplySection || categorySlug !== ALL;
 
+  /**
+   * Yazılan metnin anlaşılmış hâli.
+   *
+   * Kullanıcı "denizli golden retriever" yazdığında aradığı şey bir metin
+   * değil bir sayfa. Öneriler tarayıcıda üretiliyor; şehir, ilçe, cins ve
+   * tür listeleri zaten paketin içinde, sunucuya gitmeye gerek yok.
+   */
+  const oneriler = useMemo(() => (odakli ? oneriUret(term) : []), [term, odakli]);
+
+  function oneriyeGit(oneri: AramaOnerisi) {
+    setOdakli(false);
+    setVurgulu(-1);
+    router.push(oneri.href);
+  }
+
   function handleSearch() {
+    /**
+     * Metin yazılmışsa Enter öneriye gidiyor.
+     *
+     * Eskiden yazılan metin, seçili kategorinin adresine `?q=` diye
+     * ekleniyordu — ama liste sayfaları `q` parametresini hiç okumuyor.
+     * Yani kategori sayfasındayken arama kutusuna bir şey yazıp Enter'a
+     * basmak HİÇBİR ŞEY yapmıyordu: adres değişiyor, sonuç aynı kalıyordu.
+     *
+     * Artık anlaşılan en iyi sayfaya gidiliyor. Hiçbir şey anlaşılmadıysa
+     * listenin en altındaki düz metin araması zaten tek seçenek olarak ilk
+     * sıraya çıkıyor. Aşağıdaki açılır liste yolu yalnızca metin
+     * yazılmadığında, yani salt süzgeçle gezinirken çalışıyor.
+     */
+    if (term.trim() && oneriler.length > 0) {
+      oneriyeGit(oneriler[vurgulu >= 0 ? vurgulu : 0]);
+      return;
+    }
+
     // Kategori seçiliyse yapısal URL'e git: /kopek-ilanlari/toy-poodle gibi.
     // Bu adresler hem SEO'da hem paylaşımda anlamlı; ana sayfaya sorgu
     // parametresiyle gitmek ikisini de kaybettiriyordu.
@@ -331,11 +369,76 @@ function SearchFiltersInner() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={term}
-            onChange={(e) => setTerm(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Ne arıyorsun?"
+            onChange={(e) => {
+              setTerm(e.target.value);
+              setVurgulu(-1);
+            }}
+            onFocus={() => setOdakli(true)}
+            // Tıklama önerinin üstüne düşmeden liste kapanmasın; blur
+            // click'ten önce geliyor.
+            onBlur={() => setTimeout(() => setOdakli(false), 150)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSearch();
+                return;
+              }
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setVurgulu((v) => Math.min(v + 1, oneriler.length - 1));
+              }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setVurgulu((v) => Math.max(v - 1, -1));
+              }
+              if (e.key === 'Escape') setOdakli(false);
+            }}
+            placeholder="Ne arıyorsun? (ör. denizli golden retriever)"
             className="h-11 pl-9"
+            role="combobox"
+            aria-expanded={oneriler.length > 0}
+            aria-autocomplete="list"
           />
+
+          {oneriler.length > 0 && (
+            <ul className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 overflow-hidden rounded-lg border bg-white shadow-lg">
+              {oneriler.map((oneri, i) => (
+                <li key={oneri.href}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => oneriyeGit(oneri)}
+                    onMouseEnter={() => setVurgulu(i)}
+                    className={
+                      'flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm ' +
+                      (i === vurgulu ? 'bg-secondary' : 'hover:bg-secondary/60')
+                    }
+                  >
+                    <span className="shrink-0 text-muted-foreground">
+                      {oneri.tip === 'hizmet' ? (
+                        <Building2 className="h-4 w-4" />
+                      ) : oneri.tip === 'urun' ? (
+                        <Package className="h-4 w-4" />
+                      ) : oneri.tip === 'metin' ? (
+                        <Search className="h-4 w-4" />
+                      ) : (
+                        <PawPrint className="h-4 w-4" />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium text-foreground">
+                        {oneri.baslik}
+                      </span>
+                      {oneri.aciklama && (
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {oneri.aciklama}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         {/* Yalnızca mobilde: süzgeçleri aç/kapat ve ara. Masaüstünde
             süzgeçler zaten açık ve "Bul" satırın sonunda. */}

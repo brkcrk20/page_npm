@@ -259,13 +259,21 @@ export function Header() {
             <Logo variant="mono" size={36} />
           </Link>
           
+          {/*
+            Üst bantta "İlan Ver" düğmesi YOK.
+
+            Her bölümün kendi ilan verme düğmesi var ve o düğmeler doğru
+            akışa götürüyor: kategori sayfasında o kategorinin formuna,
+            güvercinde güvercin formuna, malzemede malzeme formuna. Üstteki
+            genel düğme bunların yanında ikinci bir yol açıyor ve nereye
+            gittiği belli olmuyordu. Menüdeki giriş duruyor — ilan verme
+            düğmesi olmayan sayfalardan (rehber, yardım, profil) da bir yol
+            kalsın diye.
+          */}
           <div className="flex flex-1 items-center justify-end space-x-4">
               <div className="hidden md:flex items-center space-x-4">
                 {renderAuthContent()}
               </div>
-            <Button asChild variant="secondary" className="bg-white text-primary hover:bg-white/90">
-              <Link href={user ? ilanVerHref(pathname) : '/login'} prefetch={false}>İlan Ver</Link>
-            </Button>
           </div>
 
           <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
