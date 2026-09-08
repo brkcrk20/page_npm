@@ -3,18 +3,11 @@ import type { Metadata } from 'next';
 
 import { seoAciklama, seoAciklamaSec, seoBaslikSec } from '@/lib/seo-metin';
 
-import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
 import {
-  getCategoryBySlug,
-  getSidebarData,
-  getCityBySlug,
-  getDistrict,
-  getBreed,
-} from '@/lib/queries/catalog';
-import { getListings, parseListingParams } from '@/lib/queries/listings';
-import { getPageContent } from '@/lib/queries/page-content';
-import { cinseGoreSehirler } from '@/lib/queries/cross-links';
-import { CrossLinks } from '@/components/listings/CrossLinks';
+  SUZGECSIZ,
+  UcuncuSegmentListesi,
+  ucuncuSegmentiCoz,
+} from '@/components/pages/ListeSayfalari';
 
 /**
  * Üçüncü segment iki şeyden biri olabiliyor:
@@ -36,35 +29,8 @@ import { CrossLinks } from '@/components/listings/CrossLinks';
 
 type Params = { slug: string; segment: string; district: string };
 
-type Cozum =
-  | { kind: 'sehir-ilce'; city: Awaited<ReturnType<typeof getCityBySlug>>; district: Awaited<ReturnType<typeof getDistrict>> }
-  | { kind: 'cins-sehir'; breed: NonNullable<Awaited<ReturnType<typeof getBreed>>>; city: NonNullable<Awaited<ReturnType<typeof getCityBySlug>>> };
-
-async function load(params: Params) {
-  const category = await getCategoryBySlug(params.slug);
-  if (!category) return null;
-
-  // Önce şehir/ilçe: mevcut adresler bozulmasın.
-  const city = await getCityBySlug(params.segment);
-  if (city) {
-    const district = await getDistrict(city.id, params.district);
-    if (district) {
-      return { category, cozum: { kind: 'sehir-ilce', city, district } as Cozum };
-    }
-    return null;
-  }
-
-  // Sonra cins + şehir.
-  const breed = await getBreed(category.id, params.segment);
-  if (breed) {
-    const breedCity = await getCityBySlug(params.district);
-    if (breedCity) {
-      return { category, cozum: { kind: 'cins-sehir', breed, city: breedCity } as Cozum };
-    }
-  }
-
-  return null;
-}
+/** Çözümleme gövdeyle ortak; iki yerde ayrı kural kalmasın. */
+const load = (params: Params) => ucuncuSegmentiCoz(params.slug, params.segment, params.district);
 
 /**
  * 60 saniyelik önbellek.
@@ -76,6 +42,20 @@ async function load(params: Params) {
  * görüyor, o sayfalar önbelleğe alınmıyor.
  */
 export const revalidate = 60;
+
+/**
+ * Boş liste, ama gerekli.
+ *
+ * generateStaticParams olmadan Next bu rotayı "her istekte yeniden çiz"
+ * kabul ediyor ve revalidate'i hiç uygulamıyor. Boş dizi + dynamicParams
+ * (varsayılan açık) istenen davranışı veriyor: derlemede hiçbir ilçe
+ * sayfası üretilmiyor — 973 ilçe × kategori sayısı kadar sayfayı önceden
+ * çizmenin anlamı yok — ilk isteyen üretiyor, sonrakiler önbellekten
+ * alıyor.
+ */
+export async function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({
   params,
@@ -122,91 +102,14 @@ export async function generateMetadata({
   };
 }
 
-export default async function DistrictPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<Params>;
-  searchParams: Promise<{ sirala?: string; min?: string; max?: string; kimden?: string }>;
-}) {
-  const loaded = await load(await params);
-  if (!loaded) notFound();
-
-  const { category, cozum } = loaded;
-
-  // parseListingParams içeri alınmıştı ama hiç çağrılmıyordu: sıralama ve
-  // fiyat kutuları adres çubuğunu değiştiriyor, sonuç hiç değişmiyordu.
-  // Çalışmayan bir denetim, olmayandan kötü.
-  const listeParams = parseListingParams(await searchParams);
-
-  if (cozum.kind === 'cins-sehir') {
-    const { breed, city } = cozum;
-    const [{ listings, total }, sidebar, icerik, digerSehirler] = await Promise.all([
-      getListings({
-        ...listeParams,
-        categoryId: category.id,
-        breedId: breed.id,
-        cityId: city.id,
-      }),
-      getSidebarData(),
-      getPageContent({ categoryId: category.id, breedId: breed.id, cityId: city.id }),
-      cinseGoreSehirler(category.id, breed.id),
-    ]);
-
-    return (
-      <CategoryBrowser
-        title={`${city.name} ${breed.name} İlanları`}
-        crumbs={[
-          { label: category.name, href: `/${category.slug}` },
-          { label: breed.name, href: `/${category.slug}/${breed.slug}` },
-          { label: city.name },
-        ]}
-        listings={listings}
-        total={total}
-        sidebar={sidebar}
-        category={category}
-        activeBreedSlug={breed.slug}
-        activeCitySlug={city.slug}
-        emptyMessage={`${city.name} ilinde yayında ${breed.name} ilanı yok.`}
-        icerik={icerik}
-        caprazBaglantilar={
-          <CrossLinks
-            baslik={`${breed.name} ilanı olan diğer iller`}
-            baglantilar={digerSehirler.filter((x) => x.slug !== city.slug)}
-            href={(slug) => `/${category.slug}/${breed.slug}/${slug}`}
-          />
-        }
-      />
-    );
-  }
-
-  const { city, district } = cozum;
-  const [{ listings, total }, sidebar, icerik] = await Promise.all([
-    getListings({
-      ...listeParams,
-      categoryId: category.id,
-      cityId: city!.id,
-      districtId: district!.id,
-    }),
-    getSidebarData(),
-    getPageContent({ categoryId: category.id, cityId: city!.id, districtId: district!.id }),
-  ]);
-
+export default async function DistrictPage({ params }: { params: Promise<Params> }) {
+  const { slug, segment, district } = await params;
   return (
-    <CategoryBrowser
-      title={`${district!.name}, ${city!.name} — ${category.name}`}
-      crumbs={[
-        { label: category.name, href: `/${category.slug}` },
-        { label: city!.name, href: `/${category.slug}/${city!.slug}` },
-        { label: district!.name },
-      ]}
-      listings={listings}
-      total={total}
-      sidebar={sidebar}
-      category={category}
-      activeCitySlug={city!.slug}
-      emptyMessage={`${district!.name} bölgesinde yayında ${category.name.toLowerCase()} yok.`}
-      icerik={icerik}
+    <UcuncuSegmentListesi
+      slug={slug}
+      segment={segment}
+      district={district}
+      listeParams={SUZGECSIZ}
     />
   );
 }

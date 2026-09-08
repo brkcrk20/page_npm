@@ -1,27 +1,11 @@
-import { notFound, permanentRedirect } from 'next/navigation';
-import { SITE_URL } from '@/lib/site';
-import { listingHref } from '@/lib/listing-url';
-import { listingMetadata } from '@/lib/listing-metadata';
-import { ListingDetail } from '@/components/listings/ListingDetail';
+import { notFound } from 'next/navigation';
 import { getPageContent } from '@/lib/queries/page-content';
-import { getGuidesForListing } from '@/lib/queries/guides';
 import type { Metadata } from 'next';
 import { seoAciklama, seoBaslik, seoBaslikSec } from '@/lib/seo-metin';
 
-import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
-import { PigeonLanding } from '@/components/listings/PigeonLanding';
-import { getCategories, getCategoryBySlug, getSidebarData } from '@/lib/queries/catalog';
-import {
-  getListings,
-  getListingById,
-  getSellerInfo,
-  getSimilarListings,
-  getAdjacentListings,
-  getListingsWithVideo,
-  parseListingParams } from '@/lib/queries/listings';
+import { KategoriListesi, SUZGECSIZ } from '@/components/pages/ListeSayfalari';
+import { getCategories, getCategoryBySlug } from '@/lib/queries/catalog';
 import { resolveRootSegment } from '@/lib/routing';
-import { CrossLinks } from '@/components/listings/CrossLinks';
-import { kategoriyeGoreSehirler, kategoriyeGoreCinsler } from '@/lib/queries/cross-links';
 
 /**
  * Kökteki tek segment: /<kategori> VEYA /<baslik-slug>-<ilanNo>
@@ -108,137 +92,16 @@ export async function generateMetadata({
     }
   }
 
-  if (resolution?.kind === 'listing') {
-    const listing = await getListingById(resolution.ilanNo);
-    if (listing) return listingMetadata(listing as never);
-  }
-
   return { title: 'Sayfa Bulunamadı' };
 }
 
-export default async function RootSlugPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<Params>;
-  searchParams: Promise<{ sirala?: string; min?: string; max?: string; kimden?: string }>;
-}) {
+export default async function RootSlugPage({ params }: { params: Promise<Params> }) {
   const { slug } = await params;
   const resolution = resolveRootSegment(slug);
 
-  if (!resolution) notFound();
+  // İlan detayları buraya hiç gelmiyor: "-<sayı>" ile biten adresler
+  // next.config'teki rewrite ile /ilan/[slug] rotasına gidiyor.
+  if (resolution?.kind !== 'category') notFound();
 
-  // --- Kategori sayfası ---
-  if (resolution.kind === 'category') {
-    /**
-     * searchParams'a BURADA bakılıyor, fonksiyonun başında değil.
-     *
-     * searchParams dinamik bir API: okunduğu anda o istek dinamik
-     * işaretleniyor ve yanıt "no-store" ile çıkıyor. Aynı dosya hem
-     * kategori hem ilan detayı çizdiği için, en başta okumak ilan
-     * sayfalarının da her tıklamada sıfırdan üretilmesine yol açıyordu —
-     * ilan detayında süzgeç parametresi zaten kullanılmıyor. Aşağıya
-     * taşınınca ilan sayfaları revalidate ile önbelleğe giriyor.
-     */
-    const listeParams = parseListingParams(await searchParams);
-    const category = await getCategoryBySlug(slug);
-    if (!category) notFound();
-
-    const [{ listings, total }, sidebar, icerik, sehirler, cinsler] = await Promise.all([
-      getListings({ ...listeParams, categoryId: category.id }),
-      getSidebarData(),
-      getPageContent({ categoryId: category.id }),
-      kategoriyeGoreSehirler(category.id),
-      kategoriyeGoreCinsler(category.id),
-    ]);
-
-    // Güvercin kategorisinin kendine özgü giriş sayfası var: alıcı fotoğrafa
-    // değil uçuşa bakıyor, bu yüzden videolu ilanlar öne çıkarılıyor ve ırk
-    // seçimi görünür kılınıyor. Veri katmanı diğer kategorilerle ortak.
-    if (category.code === 'Pigeon') {
-      const withVideo = await getListingsWithVideo(category.id);
-      return (
-        <PigeonLanding
-          category={category}
-          sidebar={sidebar}
-          listings={listings}
-          withVideo={withVideo}
-          total={total}
-          icerik={icerik}
-        />
-      );
-    }
-
-    return (
-      <CategoryBrowser
-        title={category.name}
-        crumbs={[{ label: category.name }]}
-        listings={listings}
-        total={total}
-        sidebar={sidebar}
-        category={category}
-        emptyMessage={`Şu an yayında ${category.name.toLowerCase()} yok. İlk ilanı sen ver!`}
-        icerik={icerik}
-        caprazBaglantilar={
-          /**
-           * Kategori sayfası siteden en çok bağlantı ALAN ama en az
-           * bağlantı VEREN sayfaydı. Buradaki iki liste hem kullanıcıyı
-           * aradığı şehre/cinse götürüyor hem de cins ve şehir sayfalarına
-           * site içinden gerçek bağlantı veriyor — o sayfalar daha önce
-           * yalnızca site haritasından bulunuyordu.
-           */
-          <>
-            <CrossLinks
-              baslik={`${category.name} olan iller`}
-              baglantilar={sehirler}
-              href={(sehirSlug) => `/${category.slug}/${sehirSlug}`}
-            />
-            <CrossLinks
-              baslik={`${category.name.replace(' İlanları', '')} cinsleri`}
-              baglantilar={cinsler}
-              href={(cinsSlug) => `/${category.slug}/${cinsSlug}`}
-            />
-          </>
-        }
-      />
-    );
-  }
-
-  // --- İlan detay ---
-  if (resolution.kind === 'listing') {
-    const listing = await getListingById(resolution.ilanNo);
-    if (!listing) notFound();
-
-    /**
-     * Kanonik adres: /<sehir>-<cins>-<baslik>-<no>
-     *
-     * Adres bundan farklıysa (eski düz adres, düzenlenmiş başlık, değişmiş
-     * şehir ya da cins) doğru adrese yönlendiriliyor. Kalıcı (308) çünkü
-     * geçici yönlendirmede arama motoru eski adresi indekste tutmaya devam
-     * ederdi; kanonikleştirmenin işe yaraması için 308 gerekiyor.
-     */
-    const kanonik = listingHref(listing as never);
-    if (kanonik !== `/${slug}`) permanentRedirect(kanonik);
-
-    const detail = listing as any;
-    const [seller, similar, adjacent, rehberYazilari] = await Promise.all([
-      getSellerInfo(detail.owner_id),
-      getSimilarListings(detail.id, detail.breed_id ?? null, detail.category_id),
-      getAdjacentListings(detail.id, detail.category_id, detail.published_at),
-      getGuidesForListing(detail.category_id ?? null, detail.breed_id ?? null),
-    ]);
-
-    return (
-      <ListingDetail
-        listing={detail}
-        seller={seller}
-        similar={similar}
-        adjacent={adjacent}
-        rehberYazilari={rehberYazilari}
-      />
-    );
-  }
-
-  // "-<sayı>" ile bitmeyen ve kategori de olmayan eski adresler.
-  notFound();
+  return <KategoriListesi slug={slug} listeParams={SUZGECSIZ} />;
 }

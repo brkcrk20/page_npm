@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { Building2 } from 'lucide-react';
 
 import { ServiceCard } from '@/components/services/ServiceCard';
+import { Suspense } from 'react';
+
 import { ServiceFilterPanel } from '@/components/services/ServiceFilterPanel';
 import { Button } from '@/components/ui/button';
 import type { ServiceFeature, ServiceProviderCard } from '@/lib/queries/services';
@@ -140,13 +142,25 @@ export async function ServiceDirectory({
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-[280px_1fr]">
           <aside className="space-y-4">
-            <ServiceFilterPanel
-              groups={featureGroups}
-              activeFeatures={activeFeatures}
-              activeSearch={activeSearch}
-              verifiedOnly={verifiedOnly}
-              unit={config.unit}
-            />
+            {/*
+              Suspense ŞART.
+
+              Süzgeç paneli seçili kutuları adres çubuğundan okuyor
+              (useSearchParams). Rehber sayfaları artık önceden üretilip
+              önbelleğe alındığı için üretim anında adres çubuğu yok;
+              sınır olmadan Next bütün sayfayı statikleştirmekten
+              vazgeçiyor. Sınırla sayfanın geri kalanı önbellekten
+              geliyor, panel tarayıcıda kendi değerini buluyor.
+            */}
+            <Suspense fallback={<div className="h-64 rounded-xl border bg-white" />}>
+              <ServiceFilterPanel
+                groups={featureGroups}
+                activeFeatures={activeFeatures}
+                activeSearch={activeSearch}
+                verifiedOnly={verifiedOnly}
+                unit={config.unit}
+              />
+            </Suspense>
 
             {cities.length > 0 && (
               <div className="rounded-xl border bg-white p-4">

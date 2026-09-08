@@ -1,19 +1,13 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import { CategoryBrowser } from '@/components/listings/CategoryBrowser';
+import { SegmentListesi, SUZGECSIZ, segmentiCoz } from '@/components/pages/ListeSayfalari';
 import {
   breedDisplayName,
   getBreedsByCategoryId,
   getCategories,
-  getCategoryBySlug,
-  getSidebarData,
-  resolveCategorySegment,
 } from '@/lib/queries/catalog';
-import { getListings, parseListingParams } from '@/lib/queries/listings';
 import { getPageContent } from '@/lib/queries/page-content';
-import { cinseGoreSehirler, sehreGoreCinsler } from '@/lib/queries/cross-links';
-import { CrossLinks } from '@/components/listings/CrossLinks';
 import { seoAciklama, seoAciklamaSec, seoBaslik, seoBaslikSec } from '@/lib/seo-metin';
 import { MALZEME_KATEGORISI } from '@/lib/routing';
 
@@ -30,15 +24,8 @@ import { MALZEME_KATEGORISI } from '@/lib/routing';
 
 type Params = { slug: string; segment: string };
 
-async function load(params: Params) {
-  const category = await getCategoryBySlug(params.slug);
-  if (!category) return null;
-
-  const resolved = await resolveCategorySegment(category, params.segment);
-  if (resolved.kind === 'unknown') return null;
-
-  return { category, resolved };
-}
+/** Çözümleme gövdeyle ortak; iki yerde ayrı kural kalmasın. */
+const load = (params: Params) => segmentiCoz(params.slug, params.segment);
 
 /**
  * 60 saniyelik önbellek.
@@ -166,89 +153,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function CategorySegmentPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<Params>;
-  searchParams: Promise<{ sirala?: string; min?: string; max?: string; kimden?: string }>;
-}) {
-  const resolvedParams = await params;
-  const listeParams = parseListingParams(await searchParams);
-  const loaded = await load(resolvedParams);
-  if (!loaded) notFound();
-
-  const { category, resolved } = loaded;
-
-  const sidebar = await getSidebarData();
-
-  if (resolved.kind === 'breed') {
-    const [{ listings, total }, icerik, sehirler] = await Promise.all([
-      getListings({
-        ...listeParams,
-        categoryId: category.id,
-        breedId: resolved.breed.id,
-      }),
-      getPageContent({ categoryId: category.id, breedId: resolved.breed.id }),
-      cinseGoreSehirler(category.id, resolved.breed.id),
-    ]);
-
-    return (
-      <CategoryBrowser
-        title={`${resolved.breed.name} İlanları`}
-        crumbs={[
-          { label: category.name, href: `/${category.slug}` },
-          { label: resolved.breed.name },
-        ]}
-        listings={listings}
-        total={total}
-        sidebar={sidebar}
-        category={category}
-        activeBreedSlug={resolved.breed.slug}
-        emptyMessage={`Şu an yayında ${resolved.breed.name} ilanı yok.`}
-        icerik={icerik}
-        caprazBaglantilar={
-          <CrossLinks
-            baslik={`${resolved.breed.name} ilanı olan iller`}
-            baglantilar={sehirler}
-            href={(slug) => `/${category.slug}/${resolved.breed.slug}/${slug}`}
-          />
-        }
-      />
-    );
-  }
-
-  const [{ listings, total }, sehirIcerigi, cinsler] = await Promise.all([
-    getListings({
-      ...listeParams,
-      categoryId: category.id,
-      cityId: resolved.city.id,
-    }),
-    getPageContent({ categoryId: category.id, cityId: resolved.city.id }),
-    sehreGoreCinsler(category.id, resolved.city.id),
-  ]);
-
-  return (
-    <CategoryBrowser
-      title={`${resolved.city.name} ${category.name}`}
-      crumbs={[
-        { label: category.name, href: `/${category.slug}` },
-        { label: resolved.city.name },
-      ]}
-      listings={listings}
-      total={total}
-      sidebar={sidebar}
-      category={category}
-      activeCitySlug={resolved.city.slug}
-      emptyMessage={`${resolved.city.name} ilinde yayında ${category.name.toLowerCase()} yok.`}
-      icerik={sehirIcerigi}
-      caprazBaglantilar={
-        <CrossLinks
-          baslik={`${resolved.city.name} ilinde ilanı olan cinsler`}
-          baglantilar={cinsler}
-          href={(slug) => `/${category.slug}/${slug}/${resolved.city.slug}`}
-        />
-      }
-    />
-  );
+export default async function CategorySegmentPage({ params }: { params: Promise<Params> }) {
+  const { slug, segment } = await params;
+  return <SegmentListesi slug={slug} segment={segment} listeParams={SUZGECSIZ} />;
 }

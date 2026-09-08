@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
+import { Suspense } from 'react';
+
 import { ListingToolbar } from '@/components/listings/ListingToolbar';
 import { JsonLd } from '@/components/JsonLd';
 import { PageBody, PageIntro } from '@/components/PageContentBlocks';
@@ -215,15 +217,28 @@ export function CategoryBrowser({
           <main className="min-w-0">
             {/* Sahiplendirmede fiyat yok; orada yalnızca sıralama gösteriliyor. */}
             <PageIntro icerik={icerik ?? null} />
-            <ListingToolbar
-              showPrice
-              aramaAdi={title}
-              context={{
-                kategori: category.slug,
-                sehir: activeCitySlug,
-                cins: activeBreedSlug,
-              }}
-            />
+            {/*
+              Suspense ŞART.
+
+              Araç çubuğu sıralama ve fiyat kutularını adres çubuğundan
+              okuyor (useSearchParams). Liste sayfaları artık önceden
+              üretilip önbelleğe alındığı için, üretim anında adres
+              çubuğu diye bir şey yok; Suspense olmadan Next bütün sayfayı
+              statikleştirmeyi bırakıyor. Sınır konunca sayfanın geri kalanı
+              önbellekten geliyor, araç çubuğu tarayıcıda kendi değerini
+              buluyor.
+            */}
+            <Suspense fallback={<div className="mb-4 h-[52px] rounded-lg border bg-white" />}>
+              <ListingToolbar
+                showPrice
+                aramaAdi={title}
+                context={{
+                  kategori: category.slug,
+                  sehir: activeCitySlug,
+                  cins: activeBreedSlug,
+                }}
+              />
+            </Suspense>
             <ListingGrid listings={listings} emptyMessage={emptyMessage} />
             {caprazBaglantilar}
             <PageBody icerik={icerik ?? null} />

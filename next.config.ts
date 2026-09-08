@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next';
 
+import { SERVICE_CONFIGS } from './src/lib/services-config';
+
 const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
@@ -101,8 +103,61 @@ const nextConfig: NextConfig = {
      * yani önce dosya sistemi ve dinamik rotalar deneniyor. /[slug] zaten
      * eşleştiği için ilan kuralı hiç çalışmazdı.
      */
+    /**
+     * Süzgeçli liste adresleri /filtre altına.
+     *
+     * Sıralama ve fiyat kutuları adrese ?sirala=/?min=/?max=/?kimden=
+     * ekliyor. searchParams okuyan rota önbelleğe giremediği için liste
+     * sayfaları bunları okumayı bıraktı; parametre TAŞIYAN istekler ise
+     * aynı gövdeyi çizen /filtre rotalarına yönleniyor. Kullanıcının
+     * adresi değişmiyor.
+     *
+     * Bu dört anahtar yalnızca ilan listelerinde kullanılıyor (arama ve
+     * yönetim sayfaları q/sayfa kullanıyor), o yüzden kural yanlış yere
+     * düşmüyor.
+     */
+    const suzgecAnahtarlari = ['sirala', 'min', 'max', 'kimden'];
+    // İlk segmentteki "filtre" dışlaması ŞART: kural yeniden yazılmış yola
+    // da uyuyor ve /filtre/filtre/... diye ikinci kez yazıyordu. Dışlamada
+    // "$" kullanılamaz — path-to-regexp'te o, segmentin değil bütün yolun
+    // sonu demek; /filtre/kopek-ilanlari onu geçip tekrar yazılıyordu.
+    const ilkSegment = ':a((?!filtre)[^/]+)';
+    const suzgecRewrites = [
+      [`/${ilkSegment}`, '/filtre/:a'],
+      [`/${ilkSegment}/:b`, '/filtre/:a/:b'],
+      [`/${ilkSegment}/:b/:c`, '/filtre/:a/:b/:c'],
+    ].flatMap(([source, destination]) =>
+      suzgecAnahtarlari.map((anahtar) => ({
+        source,
+        has: [{ type: 'query' as const, key: anahtar }],
+        destination,
+      }))
+    );
+
+    /**
+     * Süzgeçli hizmet rehberi adresleri /hizmet-filtre altına.
+     *
+     * Aynı gerekçe: ozellik/q/dogrulanmis/sayfa okuyan rota önbelleğe
+     * giremiyor. Burada anahtarlar siteye özel değil (arama sayfası da q
+     * kullanıyor, yönetim sayfaları da sayfa), o yüzden kural yediye
+     * kapalı bir hizmet listesiyle sınırlandı.
+     */
+    const hizmetSluglari = SERVICE_CONFIGS.map((c) => c.slug).join('|');
+    const hizmetAnahtarlari = ['ozellik', 'q', 'dogrulanmis', 'sayfa'];
+    const hizmetRewrites = [
+      [`/:h(${hizmetSluglari})`, '/hizmet-filtre/:h'],
+      [`/:h(${hizmetSluglari})/:b`, '/hizmet-filtre/:h/:b'],
+      [`/:h(${hizmetSluglari})/:b/:c`, '/hizmet-filtre/:h/:b/:c'],
+    ].flatMap(([source, destination]) =>
+      hizmetAnahtarlari.map((anahtar) => ({
+        source,
+        has: [{ type: 'query' as const, key: anahtar }],
+        destination,
+      }))
+    );
+
     return {
-      beforeFiles: [ilanRewrite],
+      beforeFiles: [ilanRewrite, ...suzgecRewrites, ...hizmetRewrites],
       afterFiles: supabase
         ? [
             {
