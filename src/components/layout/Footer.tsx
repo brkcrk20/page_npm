@@ -1,7 +1,6 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+
+import { BasaDon } from './BasaDon';
 
 /**
  * Bağlantılarda prefetch={false}.
@@ -29,36 +28,13 @@ import {
   Phone,
   Mail,
   MessageCircle,
-  ArrowUp,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 // A simple SVG placeholder for logos like iyzico, visa, etc.
 
 
 export function Footer({ contact = {} }: { contact?: SiteContact }) {
-  const [isVisible, setIsVisible] = useState(false);
 
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
-
-  useEffect(() => {
-    const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
-    };
-
-    window.addEventListener('scroll', toggleVisibility);
-
-    return () => window.removeEventListener('scroll', toggleVisibility);
-  }, []);
 
   const footerLinkStyle = "text-sm text-gray-600 hover:text-primary transition-colors";
   const footerTitleStyle = "text-base font-bold text-gray-800 mb-4";
@@ -197,16 +173,8 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
         </div>
       </div>
       
-       {/* Scroll to Top Button */}
-      {isVisible && (
-        <Button
-          onClick={scrollToTop}
-          className="fixed bottom-5 right-5 h-12 w-12 rounded-full bg-gray-800 text-white shadow-lg hover:bg-gray-900"
-          aria-label="Go to top"
-        >
-          <ArrowUp className="h-6 w-6" />
-        </Button>
-      )}
+       {/* Sayfanın başına dönme düğmesi — kendi istemci bileşeninde. */}
+      <BasaDon />
     </footer>
   );
 }
