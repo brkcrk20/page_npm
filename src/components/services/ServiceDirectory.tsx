@@ -9,6 +9,7 @@ import { MobilFiltreler } from '@/components/services/MobilFiltreler';
 import { Button } from '@/components/ui/button';
 import type { ServiceFeature, ServiceProviderCard } from '@/lib/queries/services';
 import type { ServiceConfig } from '@/lib/services-config';
+import type { KatalogSatiri } from '@/lib/katalog';
 import { PageBody, PageIntro } from '@/components/PageContentBlocks';
 import { getPageContent } from '@/lib/queries/page-content';
 import { JsonLd } from '@/components/JsonLd';
@@ -37,6 +38,7 @@ export async function ServiceDirectory({
   featureGroups,
   activeFeatures,
   activeSearch,
+  eslesenKatalog,
   verifiedOnly,
   cities,
   activeCitySlug,
@@ -54,6 +56,8 @@ export async function ServiceDirectory({
   featureGroups: { group: string; features: ServiceFeature[] }[];
   activeFeatures: string[];
   activeSearch: string;
+  /** Aramada eşleşen katalog satırları (işletme numarasına göre). */
+  eslesenKatalog?: Map<number, KatalogSatiri[]>;
   verifiedOnly: boolean;
   cities: { slug: string; name: string; count: number }[];
   activeCitySlug?: string;
@@ -201,7 +205,12 @@ export async function ServiceDirectory({
                 <ul className="space-y-4">
                   {providers.map((provider) => (
                     <li key={provider.id}>
-                      <ServiceCard provider={provider} config={config} />
+                      <ServiceCard
+                        provider={provider}
+                        config={config}
+                        eslesenler={eslesenKatalog?.get(provider.id)}
+                        aranan={activeSearch}
+                      />
                     </li>
                   ))}
                 </ul>

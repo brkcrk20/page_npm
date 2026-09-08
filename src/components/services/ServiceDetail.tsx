@@ -16,6 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { getOpenState, normalizeWeek, formatTime, WEEKDAY_NAMES } from '@/lib/opening-hours';
 import type { ServiceReview } from '@/lib/queries/services';
 import type { ServiceConfig } from '@/lib/services-config';
+import { Katalog } from '@/components/services/Katalog';
+import { getKatalog } from '@/lib/queries/katalog';
 import { businessImageUrl } from '@/lib/supabase/storage';
 import { cn } from '@/lib/utils';
 
@@ -82,6 +84,7 @@ export async function ServiceDetail({
   nearby: { id: number; slug: string; name: string; districts: { name: string } | null }[];
 }) {
   const storefront = await getProviderStorefront(provider.owner_id);
+  const katalog = await getKatalog(provider.id);
   const fotolar = [...(provider.service_provider_photos ?? [])].sort(
     (a, b) => a.position - b.position
   );
@@ -216,6 +219,10 @@ export async function ServiceDetail({
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
           <div className="space-y-5">
+            {/* Katalog en üstte: sayfaya gelen kişinin ilk sorusu "ne
+                satıyor / kaça", işletmenin kendini anlattığı metin değil. */}
+            <Katalog satirlar={katalog} ayar={config.katalog} />
+
             {provider.description && (
               <section className="overflow-hidden rounded-lg border bg-white">
                 <h2 className="border-l-4 border-primary px-4 py-3 font-bold">Hakkında</h2>

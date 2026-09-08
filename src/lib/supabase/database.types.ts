@@ -2019,6 +2019,71 @@ export type Database = {
         }
         Relationships: []
       }
+      service_items: {
+        Row: {
+          brand: string | null
+          category: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: number
+          is_active: boolean
+          kind: Database["public"]["Enums"]["service_item_kind"]
+          name: string
+          photo_path: string | null
+          position: number
+          price: number | null
+          provider_id: number
+          stock: number | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: never
+          is_active?: boolean
+          kind: Database["public"]["Enums"]["service_item_kind"]
+          name: string
+          photo_path?: string | null
+          position?: number
+          price?: number | null
+          provider_id: number
+          stock?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: never
+          is_active?: boolean
+          kind?: Database["public"]["Enums"]["service_item_kind"]
+          name?: string
+          photo_path?: string | null
+          position?: number
+          price?: number | null
+          provider_id?: number
+          stock?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_items_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_provider_features: {
         Row: {
           feature_id: number
@@ -2748,6 +2813,7 @@ export type Database = {
         | "tekrar_ilan"
         | "diger"
       report_status: "acik" | "inceleniyor" | "kapatildi" | "reddedildi"
+      service_item_kind: "urun" | "hizmet"
       service_status:
         | "taslak"
         | "onay_bekliyor"
@@ -2943,6 +3009,7 @@ export const Constants = {
         "diger",
       ],
       report_status: ["acik", "inceleniyor", "kapatildi", "reddedildi"],
+      service_item_kind: ["urun", "hizmet"],
       service_status: [
         "taslak",
         "onay_bekliyor",

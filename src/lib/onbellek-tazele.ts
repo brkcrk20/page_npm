@@ -20,3 +20,16 @@ export async function onbellegiTazele(ilanNo?: number): Promise<void> {
     // sessiz
   }
 }
+
+/** İşletme sayfası ve içinde göründüğü rehber listeleri. */
+export async function isletmeOnbelleginiTazele(isletmeNo: number): Promise<void> {
+  try {
+    await fetch('/api/tazele', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isletmeNo }),
+    });
+  } catch {
+    // sessiz
+  }
+}

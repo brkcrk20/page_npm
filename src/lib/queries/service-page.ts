@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { eslesenKatalogSatirlari } from '@/lib/queries/katalog';
+
 /**
  * Hizmet rehberi sayfalarının ortak yükleme mantığı.
  *
@@ -61,8 +63,20 @@ export async function loadServicePage(
     getServiceCityCounts(serviceType),
   ]);
 
+  /**
+   * Aramada eşleşen katalog satırları.
+   *
+   * Kullanıcı "royal canin" arayıp beş mağaza görünce hangisinde hangi
+   * paketin, kaça olduğunu da görmeli; yoksa mağazaları tek tek açmak
+   * zorunda kalıyor. Arama yoksa sorgu hiç çalışmıyor.
+   */
+  const eslesenler = filters.search
+    ? await eslesenKatalogSatirlari(result.providers.map((p) => p.id), filters.search)
+    : new Map();
+
   return {
     ...result,
+    eslesenKatalog: eslesenler,
     featureGroups,
     // Kaydı olmayan 81 ilin tamamını listelemek yan menüyü kullanılmaz hale
     // getiriyor; yalnızca kayıt bulunan iller gösteriliyor.

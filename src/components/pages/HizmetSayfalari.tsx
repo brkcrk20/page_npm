@@ -65,6 +65,7 @@ export async function HizmetRehberi({
       featureGroups={data.featureGroups}
       activeFeatures={filters.featureSlugs}
       activeSearch={filters.search}
+      eslesenKatalog={data.eslesenKatalog}
       verifiedOnly={filters.verifiedOnly}
       cities={data.cities}
       basePath={buildServiceBasePath(`/${c.slug}`, filters)}
@@ -149,6 +150,7 @@ export async function HizmetSegmenti({
       featureGroups={data.featureGroups}
       activeFeatures={filters.featureSlugs}
       activeSearch={filters.search}
+      eslesenKatalog={data.eslesenKatalog}
       verifiedOnly={filters.verifiedOnly}
       cities={data.cities}
       activeCitySlug={city.slug}
@@ -208,6 +210,7 @@ export async function HizmetIlcesi({
       featureGroups={data.featureGroups}
       activeFeatures={filters.featureSlugs}
       activeSearch={filters.search}
+      eslesenKatalog={data.eslesenKatalog}
       verifiedOnly={filters.verifiedOnly}
       cities={data.cities}
       activeCitySlug={city.slug}

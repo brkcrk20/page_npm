@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+
+import { KatalogYonetimi } from '@/components/services/KatalogYonetimi';
 import Link from 'next/link';
 import {
   AlertCircle,
@@ -304,6 +306,18 @@ export default function MyBusinessPage() {
                         }
                       />
                     </div>
+                  </div>
+                )}
+
+                {/* Katalog. Petshopta stoklu ürün, diğerlerinde fiyat
+                    listesi; hangisi olduğunu bölümün ayarı söylüyor. */}
+                {user && config && (
+                  <div className="mt-4">
+                    <KatalogYonetimi
+                      providerId={row.id}
+                      userId={user.id}
+                      ayar={config.katalog}
+                    />
                   </div>
                 )}
 

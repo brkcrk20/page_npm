@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { BadgeCheck, MapPin, Star } from 'lucide-react';
 
 import type { ServiceConfig } from '@/lib/services-config';
+import type { KatalogSatiri } from '@/lib/katalog';
 
 import { Badge } from '@/components/ui/badge';
 import { getOpenState } from '@/lib/opening-hours';
@@ -20,9 +21,15 @@ import { cn } from '@/lib/utils';
 export function ServiceCard({
   provider,
   config,
+  eslesenler,
+  aranan,
 }: {
   provider: ServiceProviderCard;
   config: ServiceConfig;
+  /** Aramada bu işletmenin kataloğunda eşleşen satırlar. */
+  eslesenler?: KatalogSatiri[];
+  /** Aranan metin; eşleşme rozetinde geçiyor. */
+  aranan?: string;
 }) {
   const openState = getOpenState(provider.service_provider_hours ?? []);
   const location = [provider.cities?.name, provider.districts?.name].filter(Boolean).join(' / ');
@@ -99,6 +106,48 @@ export function ServiceCard({
             </li>
           ))}
         </ul>
+      )}
+
+      {/*
+        Aramada eşleşen katalog satırları.
+
+        "royal canin" arayan kişi beş mağaza görünce hangisinde hangi
+        paketin kaça olduğunu da görmeli; yoksa mağazaları tek tek açmak
+        zorunda kalıyor. Yalnızca aramada çıkıyor, normal listede kart
+        şişmesin.
+      */}
+      {eslesenler && eslesenler.length > 0 && (
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+          <p className="mb-2 text-xs font-semibold text-amber-900">
+            {/* Ek almayan bir kalıp: "mağaza" + "-te" = "mağazate". Bölüme
+                göre değişen birim adına Türkçe hâl eki takmak yedi bölümün
+                hepsinde doğru sonuç vermiyor. */}
+            {aranan ? `"${aranan}" için burada:` : 'Bu işletmede:'}
+          </p>
+          <ul className="space-y-1.5">
+            {eslesenler.map((satir) => (
+              <li key={satir.id} className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="min-w-0 truncate">
+                  {satir.brand && <span className="font-medium">{satir.brand} </span>}
+                  {satir.name}
+                  {satir.unit && (
+                    <span className="text-muted-foreground"> · {satir.unit}</span>
+                  )}
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  {satir.stock === 0 && (
+                    <span className="text-xs text-muted-foreground">Tükendi</span>
+                  )}
+                  {satir.price !== null && (
+                    <span className="font-semibold text-primary">
+                      ₺{new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 }).format(satir.price)}
+                    </span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       <Link

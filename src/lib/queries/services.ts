@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { katalogdaAra } from '@/lib/queries/katalog';
+
 import { demoIsaretiniUygula, demoIsaretiniUygulaTek } from '@/lib/demo/rozet';
 
 /**
@@ -162,11 +164,34 @@ export async function getServiceProviders(filters: ServiceFilters) {
   if (filters.minRating !== undefined) query = query.gte('rating_average', filters.minRating);
   if (filters.verifiedOnly) query = query.eq('is_verified', true);
 
+  /**
+   * Arama hem işletmeyi hem kataloğu tarıyor.
+   *
+   * Eskiden yalnızca ada ve adrese bakılıyordu: "royal canin" yazan kişi
+   * hiçbir şey bulamıyordu, oysa mamayı satan mağaza rehberde duruyordu.
+   * İki küme ayrı sorguyla alınıp birleştiriliyor — PostgREST'te tam metin
+   * araması ile "şu numaralardan biri" koşulunu tek OR ifadesinde güvenle
+   * birleştirmek, kullanıcı metnini sorgu diline gömmeyi gerektiriyor.
+   */
   if (filters.search) {
-    query = query.textSearch('search_vector', filters.search, {
-      type: 'websearch',
-      config: 'turkish',
-    });
+    const [isletmeEslesmeleri, katalogEslesmeleri] = await Promise.all([
+      supabase
+        .from('service_providers')
+        .select('id')
+        .eq('service_type', filters.serviceType)
+        .eq('status', 'yayinda')
+        .textSearch('search_vector', filters.search, { type: 'websearch', config: 'turkish' })
+        .limit(500),
+      katalogdaAra(filters.search, { cityId: filters.cityId, districtId: filters.districtId }),
+    ]);
+
+    const bulunan = new Set<number>([
+      ...((isletmeEslesmeleri.data ?? []).map((r: any) => r.id as number)),
+      ...katalogEslesmeleri,
+    ]);
+
+    if (bulunan.size === 0) return empty;
+    query = query.in('id', [...bulunan]);
   }
 
   const from = (page - 1) * perPage;

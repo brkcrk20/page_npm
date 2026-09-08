@@ -31,13 +31,59 @@ import { createSupabaseAdminClient } from '@/lib/supabase/server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+/** service_type -> adres bölümü. services-config'teki slug'ların aynısı. */
+const HIZMET_YOLU: Record<string, string> = {
+  veteriner: 'veteriner',
+  pet_oteli: 'pet-oteli',
+  kuafor: 'pet-kuafor',
+  pet_taksi: 'pet-taksi',
+  gezdirici: 'gezdirici',
+  egitmen: 'egitmen',
+  petshop: 'petshop',
+};
+
 export async function POST(request: Request) {
   let ilanNo: number | null = null;
+  let isletmeNo: number | null = null;
   try {
     const govde = await request.json();
-    ilanNo = Number(govde?.ilanNo);
+    ilanNo = Number(govde?.ilanNo) || null;
+    isletmeNo = Number(govde?.isletmeNo) || null;
   } catch {
     ilanNo = null;
+  }
+
+  /**
+   * İşletme kataloğu değiştiğinde işletmenin sayfası.
+   *
+   * Rehber sayfaları beş dakika önbellekte duruyor; ürün ekleyen mağaza
+   * sahibi kendi sayfasına bakıp değişikliği göremeyince ekleme
+   * yapılmadığını sanıyor.
+   */
+  if (isletmeNo) {
+    const supabase = createSupabaseAdminClient();
+    const { data } = await supabase
+      .from('service_providers')
+      .select('id, slug, service_type, cities ( slug ), districts ( slug )')
+      .eq('id', isletmeNo)
+      .maybeSingle();
+
+    const yollar = new Set<string>();
+    if (data) {
+      const bolum = HIZMET_YOLU[(data as any).service_type as string];
+      if (bolum) {
+        yollar.add(`/${bolum}/${(data as any).slug}-${data.id}`);
+        yollar.add(`/${bolum}`);
+        const sehir = (data as any).cities?.slug as string | undefined;
+        const ilce = (data as any).districts?.slug as string | undefined;
+        if (sehir) {
+          yollar.add(`/${bolum}/${sehir}`);
+          if (ilce) yollar.add(`/${bolum}/${sehir}/${ilce}`);
+        }
+      }
+    }
+    for (const yol of yollar) revalidatePath(yol);
+    return NextResponse.json({ ok: true, yollar: [...yollar] });
   }
 
   // Veri önbelleği her durumda tazeleniyor: ilan silinmiş de olabilir.
