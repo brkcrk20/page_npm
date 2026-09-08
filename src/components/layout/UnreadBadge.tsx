@@ -2,7 +2,6 @@
 
 import { useEffect, useId, useState } from 'react';
 
-import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 
 /**
@@ -27,28 +26,42 @@ export function UnreadBadge() {
   const instanceId = useId();
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClientOrNull();
-    if (!supabase || !user) {
+    if (!user) {
       setCount(0);
       return;
     }
 
-    const refresh = () => {
-      supabase.rpc('unread_message_count').then(({ data }) => setCount(Number(data ?? 0)));
-    };
-    refresh();
+    let temizle: (() => void) | null = null;
 
-    const channel = supabase
-      .channel(`okunmamis-mesaj-${instanceId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages' },
-        refresh
-      )
-      .subscribe();
+    // Dinamik içe aktarma: rozet başlıkta, yani her sayfada. Yukarıdan
+    // içe aktarıldığında Supabase paketi oturum açmamış ziyaretçiye de
+    // iniyordu; oysa rozet yalnızca oturum varken bir şey yapıyor.
+    (async () => {
+      const { getSupabaseBrowserClientOrNull } = await import('@/lib/supabase/client');
+      const supabase = getSupabaseBrowserClientOrNull();
+      if (!supabase) return;
+
+      const refresh = () => {
+        supabase.rpc('unread_message_count').then(({ data }) => setCount(Number(data ?? 0)));
+      };
+      refresh();
+
+      const channel = supabase
+        .channel(`okunmamis-mesaj-${instanceId}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'messages' },
+          refresh
+        )
+        .subscribe();
+
+      temizle = () => {
+        supabase.removeChannel(channel);
+      };
+    })();
 
     return () => {
-      supabase.removeChannel(channel);
+      temizle?.();
     };
   }, [user, instanceId]);
 

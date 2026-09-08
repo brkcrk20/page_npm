@@ -12,15 +12,33 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { getSupabaseBrowserClientOrNull } from './client';
 import type { Database } from './database.types';
+
+/** İstemci dinamik yükleniyor; tipi buradan geliyor. */
+type SupabaseIstemci = NonNullable<
+  ReturnType<typeof import('./client')['getSupabaseBrowserClientOrNull']>
+>;
+
+/**
+ * Tarayıcıda oturum çerezi var mı?
+ *
+ * Supabase oturumu "sb-<proje>-auth-token" adlı çerezde tutuluyor. Çerez
+ * yoksa oturum da yok; bunu anlamak için Supabase istemcisini indirmeye
+ * gerek kalmıyor.
+ */
+function oturumCereziVarMi(): boolean {
+  if (typeof document === 'undefined') return false;
+  return /(^|;\s*)sb-[^=]*-auth-token(\.\d+)?=/.test(document.cookie);
+}
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -32,15 +50,54 @@ type AuthContextValue = {
   isProfileLoading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  /**
+   * Girişten hemen sonra çağrılıyor.
+   *
+   * Oturum açılınca sayfa yeniden yüklenmiyor (router.push), yani bu
+   * sağlayıcı yeniden kurulmuyor. Anonim ziyaretçide istemci hiç
+   * yüklenmediği için oturum değişikliğini dinleyen de yok; giriş yapan
+   * kullanıcı başlıkta hâlâ "Giriş Yap" görürdü.
+   */
+  oturumuYenile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
-  // Yapılandırma eksikse null gelir. Bu durumda sağlayıcı oturumsuz çalışır:
-  // site açılmaya devam eder, yalnızca giriş yapılamaz. Eksik bir ortam
-  // değişkeninin tüm siteyi düşürmesini istemiyoruz.
-  const supabase = getSupabaseBrowserClientOrNull();
+  /**
+   * Supabase istemcisi yalnızca gerektiğinde indiriliyor.
+   *
+   * Bu sağlayıcı kök düzende, yani her sayfada. İstemci yukarıdan içe
+   * aktarıldığında @supabase/supabase-js ilk yüklenen paket yığınına
+   * giriyordu: ölçülen 55 KB (sıkıştırılmış) ve ana sayfada bu kodun
+   * %83'ü hiç çalışmıyordu. Ziyaretçilerin çoğu oturum açmamış oluyor —
+   * arama motorundan gelen ilk ziyaret her zaman öyle.
+   *
+   * Çerez yoksa oturum da yoktur; istemci hiç indirilmiyor. Çerez varsa
+   * indirilip her şey eskisi gibi çalışıyor.
+   *
+   * Yapılandırma eksikse istemci null gelir; site açılmaya devam eder,
+   * yalnızca giriş yapılamaz.
+   */
+  const [supabase, setSupabase] = useState<SupabaseIstemci | null>(null);
+  const istemciYuklendi = useRef(false);
+
+  const istemciYukle = useCallback(async (): Promise<SupabaseIstemci | null> => {
+    if (istemciYuklendi.current) return supabase;
+    istemciYuklendi.current = true;
+
+    const { getSupabaseBrowserClientOrNull } = await import('./client');
+    const c = getSupabaseBrowserClientOrNull();
+    if (!c) {
+      console.error(
+        'Supabase yapılandırılmamış: NEXT_PUBLIC_SUPABASE_URL ve ' +
+          'NEXT_PUBLIC_SUPABASE_ANON_KEY tanımlı değil. Giriş devre dışı.'
+      );
+      return null;
+    }
+    setSupabase(c);
+    return c;
+  }, [supabase]);
 
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -49,17 +106,18 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   const user = session?.user ?? null;
 
+  // Çerez yoksa hiçbir şey indirmiyoruz: oturum yok, yükleme de bitti.
   useEffect(() => {
-    let active = true;
-
-    if (!supabase) {
-      console.error(
-        'Supabase yapılandırılmamış: NEXT_PUBLIC_SUPABASE_URL ve ' +
-          'NEXT_PUBLIC_SUPABASE_ANON_KEY tanımlı değil. Giriş devre dışı.'
-      );
+    if (!oturumCereziVarMi()) {
       setIsUserLoading(false);
       return;
     }
+    istemciYukle();
+  }, [istemciYukle]);
+
+  useEffect(() => {
+    let active = true;
+    if (!supabase) return;
 
     // İlk yükleme: sunucudan doğrulanmış kullanıcıyı al.
     // getSession() yerine getUser() çünkü getSession çerezdeki veriyi
@@ -125,7 +183,10 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       isUserLoading,
       isProfileLoading,
       async signOut() {
-        if (supabase) await supabase.auth.signOut();
+        // İstemci hiç yüklenmediyse burada yükleniyor: aksi hâlde çıkış
+        // yalnızca ekranı temizler, oturum çerezi sunucuda kalırdı.
+        const istemci = supabase ?? (await istemciYukle());
+        if (istemci) await istemci.auth.signOut();
         setSession(null);
         setProfile(null);
       },
@@ -135,8 +196,16 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
         setProfile((data as Profile) ?? null);
       },
+      async oturumuYenile() {
+        const istemci = supabase ?? (await istemciYukle());
+        if (!istemci) return;
+        setIsUserLoading(true);
+        const { data } = await istemci.auth.getSession();
+        setSession(data.session);
+        setIsUserLoading(false);
+      },
     }),
-    [supabase, user, session, profile, isUserLoading, isProfileLoading]
+    [supabase, istemciYukle, user, session, profile, isUserLoading, isProfileLoading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

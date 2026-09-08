@@ -7,7 +7,6 @@ import { Search, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SearchableSelect } from '@/components/ui/searchable-select';
-import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
 import {
   staticCategories,
   staticBreeds,
@@ -140,10 +139,14 @@ function SearchFiltersInner() {
     if (katalogIstendi.current) return;
     katalogIstendi.current = true;
 
-    const supabase = getSupabaseBrowserClientOrNull();
-    if (!supabase) return;
-
     (async () => {
+      // Dinamik: süzgeç çubuğu başlıkta, yani her sayfada. Yukarıdan içe
+      // aktarıldığında Supabase paketi hiç süzgece dokunmayan ziyaretçiye
+      // de iniyordu.
+      const { getSupabaseBrowserClientOrNull } = await import('@/lib/supabase/client');
+      const supabase = getSupabaseBrowserClientOrNull();
+      if (!supabase) return;
+
       const [cats, brs, cits] = await Promise.all([
         supabase.from('categories').select('id, name, slug').eq('is_active', true).order('position'),
         supabase.from('breeds').select('id, name, slug, category_id, group_name').eq('is_active', true).order('position'),
@@ -173,17 +176,25 @@ function SearchFiltersInner() {
     // Önce yedekten doldur, sonra veritabanı cevap verirse tazele.
     setDistricts(staticDistrictsFor(selectedCity.slug));
 
-    const supabase = getSupabaseBrowserClientOrNull();
-    if (!supabase) return;
+    let active = true;
+    (async () => {
+      const { getSupabaseBrowserClientOrNull } = await import('@/lib/supabase/client');
+      const supabase = getSupabaseBrowserClientOrNull();
+      if (!supabase) return;
 
-    supabase
-      .from('districts')
-      .select('id, name, slug')
-      .eq('city_id', selectedCity.id)
-      .order('name')
-      .then(({ data }) => {
-        if (data?.length) setDistricts(data as Option[]);
-      });
+      const { data } = await supabase
+        .from('districts')
+        .select('id, name, slug')
+        .eq('city_id', selectedCity.id)
+        .order('name');
+
+      // Şehir bu arada değiştiyse eski cevabı yazmıyoruz.
+      if (active && data?.length) setDistricts(data as Option[]);
+    })();
+
+    return () => {
+      active = false;
+    };
   }, [selectedCity]);
 
   const pigeonCategory = useMemo(

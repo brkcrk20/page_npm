@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 
-import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 
 /**
@@ -24,17 +23,28 @@ export function PresenceTracker() {
   useEffect(() => {
     if (!user) return;
 
-    const supabase = getSupabaseBrowserClientOrNull();
-    if (!supabase) return;
+    let timer: ReturnType<typeof setInterval> | null = null;
 
-    // .then() ŞART: Supabase sorgu oluşturucusu tembel bir thenable,
-    // await edilmezse istek hiç gönderilmiyor.
-    const ping = () => void supabase.rpc('touch_last_seen').then(() => {});
+    // Dinamik içe aktarma: bu bileşen kök düzende, yani her sayfada.
+    // Yukarıdan içe aktarıldığında Supabase paketi oturum açmamış
+    // ziyaretçiye de iniyordu; oysa burası yalnızca oturum varken çalışıyor.
+    (async () => {
+      const { getSupabaseBrowserClientOrNull } = await import('@/lib/supabase/client');
+      const supabase = getSupabaseBrowserClientOrNull();
+      if (!supabase) return;
 
-    ping();
-    // Sekme açık kalırsa da çevrimiçi sayılsın.
-    const timer = setInterval(ping, 5 * 60 * 1000);
-    return () => clearInterval(timer);
+      // .then() ŞART: Supabase sorgu oluşturucusu tembel bir thenable,
+      // await edilmezse istek hiç gönderilmiyor.
+      const ping = () => void supabase.rpc('touch_last_seen').then(() => {});
+
+      ping();
+      // Sekme açık kalırsa da çevrimiçi sayılsın.
+      timer = setInterval(ping, 5 * 60 * 1000);
+    })();
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, [user]);
 
   return null;

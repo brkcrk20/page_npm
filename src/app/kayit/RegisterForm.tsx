@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -162,6 +163,7 @@ function translateSignUpError(message: string): { title: string; description: st
 
 export function RegisterForm() {
   const router = useRouter();
+  const { oturumuYenile } = useSupabaseAuth();
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
@@ -306,6 +308,9 @@ export function RegisterForm() {
        * açık yönlendirme açığı olurdu.
        */
       const donus = searchParams.get('donus');
+      // Girişteki ile aynı sebeple: bkz. login/LoginForm.tsx
+      await oturumuYenile();
+
       router.push(donus && donus.startsWith('/') && !donus.startsWith('//') ? donus : '/');
       router.refresh();
     } catch (error: any) {

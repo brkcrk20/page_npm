@@ -18,6 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import React, { useState } from 'react';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -31,6 +32,7 @@ const formSchema = z.object({
 export function LoginForm() {
   const supabase = getSupabaseBrowserClient();
   const router = useRouter();
+  const { oturumuYenile } = useSupabaseAuth();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -164,6 +166,12 @@ export function LoginForm() {
      */
     const donus = searchParams.get('donus');
     const guvenli = donus && donus.startsWith('/') && !donus.startsWith('//') ? donus : '/';
+
+    // Oturum sağlayıcısına haber ver: sayfa yeniden yüklenmediği için
+    // (router.push) sağlayıcı kurulu kalıyor ve anonim ziyaretçide
+    // Supabase istemcisi hiç yüklenmemiş oluyor. Bu çağrı olmadan giriş
+    // yapan kullanıcı başlıkta hâlâ "Giriş Yap" görürdü.
+    await oturumuYenile();
 
     // refresh(): sunucu component'leri yeni oturum çerezini görsün.
     router.push(guvenli);
