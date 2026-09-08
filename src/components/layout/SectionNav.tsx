@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Award,
   BookOpen,
@@ -100,6 +100,7 @@ function baslangicObegi(pathname: string): ObekAnahtari {
 
 export function SectionNav() {
   const pathname = usePathname() ?? '/';
+  const router = useRouter();
   const [acik, setAcik] = useState<ObekAnahtari>(() => baslangicObegi(pathname));
 
   const secili = OBEKLER.find((o) => o.key === acik) ?? OBEKLER[0];
@@ -135,6 +136,21 @@ export function SectionNav() {
             <Link
               key={b.href}
               href={b.href}
+              /**
+               * Otomatik ön yükleme KAPALI.
+               *
+               * Bu dört bağlantı ekranda görünür görünmez Next kendi
+               * sayfalarını ve JS paketlerini indirmeye başlıyordu: ölçümde
+               * 54 KB'lık bir paketin 50 KB'ı hiç çalışmadan iniyor, ana
+               * iş parçacığını da meşgul ediyordu. Ziyaretçi bu bölümlerin
+               * hepsine değil, en fazla birine gidiyor.
+               *
+               * Karttaki çözümün aynısı: hazırlık, ilgilenildiği anda
+               * yapılıyor — imleç üzerine gelince ya da parmak değince.
+               */
+              prefetch={false}
+              onMouseEnter={() => router.prefetch(b.href)}
+              onTouchStart={() => router.prefetch(b.href)}
               className={cn(
                 'flex min-w-[74px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 transition-colors md:min-w-0 md:px-3',
                 aktif ? 'bg-primary/8 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-primary'
