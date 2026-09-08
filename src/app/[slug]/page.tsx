@@ -124,13 +124,23 @@ export default async function RootSlugPage({
   searchParams: Promise<{ sirala?: string; min?: string; max?: string; kimden?: string }>;
 }) {
   const { slug } = await params;
-  const listeParams = parseListingParams(await searchParams);
   const resolution = resolveRootSegment(slug);
 
   if (!resolution) notFound();
 
   // --- Kategori sayfası ---
   if (resolution.kind === 'category') {
+    /**
+     * searchParams'a BURADA bakılıyor, fonksiyonun başında değil.
+     *
+     * searchParams dinamik bir API: okunduğu anda o istek dinamik
+     * işaretleniyor ve yanıt "no-store" ile çıkıyor. Aynı dosya hem
+     * kategori hem ilan detayı çizdiği için, en başta okumak ilan
+     * sayfalarının da her tıklamada sıfırdan üretilmesine yol açıyordu —
+     * ilan detayında süzgeç parametresi zaten kullanılmıyor. Aşağıya
+     * taşınınca ilan sayfaları revalidate ile önbelleğe giriyor.
+     */
+    const listeParams = parseListingParams(await searchParams);
     const category = await getCategoryBySlug(slug);
     if (!category) notFound();
 

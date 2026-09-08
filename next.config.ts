@@ -77,15 +77,42 @@ const nextConfig: NextConfig = {
    * (RLS) yolun ilk parçasının kullanıcı kimliği olmasına dayanıyor.
    */
   async rewrites() {
-    const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (!supabase) return [];
+    /**
+     * İlan detayı kendi rotasına.
+     *
+     * Adres kullanıcıda /<sehir>-<cins>-<baslik>-<no> olarak kalıyor ama
+     * sayfayı /ilan/[slug] çiziyor. Neden ayrıldığı o dosyanın başında
+     * yazıyor: aynı rotada duran kategori sayfası süzgeç için searchParams
+     * okuyor ve bu, ilan sayfalarını da önbelleğe alınamaz hale getiriyordu.
+     *
+     * Kalıp tek segment ve "-<sayı>" ile bitiyor; kategori slug'ları asla
+     * rakamla bitmediği için çakışma yok. Statik yollar (/veteriner,
+     * /ilan-ver) rewrite'tan önce eşleştiği için buraya düşmüyor.
+     */
+    const ilanRewrite = {
+      source: '/:slug((?!api/|_next/|ilan/)[^/]+-\\d+)',
+      destination: '/ilan/:slug',
+    };
 
-    return [
-      {
-        source: '/gorsel/:bucket/:path*',
-        destination: `${supabase}/storage/v1/object/public/:bucket/:path*`,
-      },
-    ];
+    const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+    /**
+     * beforeFiles ŞART: dizi döndürüldüğünde kurallar "afterFiles" sayılıyor,
+     * yani önce dosya sistemi ve dinamik rotalar deneniyor. /[slug] zaten
+     * eşleştiği için ilan kuralı hiç çalışmazdı.
+     */
+    return {
+      beforeFiles: [ilanRewrite],
+      afterFiles: supabase
+        ? [
+            {
+              source: '/gorsel/:bucket/:path*',
+              destination: `${supabase}/storage/v1/object/public/:bucket/:path*`,
+            },
+          ]
+        : [],
+      fallback: [],
+    };
   },
 
   /**

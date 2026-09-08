@@ -3,6 +3,8 @@ import { listingHref } from '@/lib/listing-url';
 import Link from 'next/link';
 import { BadgeCheck, Images, MapPin, Store } from 'lucide-react';
 
+import { KartBagi } from '@/components/listings/KartBagi';
+
 import { Badge } from '@/components/ui/badge';
 import type { ListingCard } from '@/lib/queries/listings';
 import { listingPhotoUrl } from '@/lib/supabase/storage';
@@ -98,10 +100,10 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
   const zaman = tazelik(listing.published_at);
 
   return (
-    <Link
+    <KartBagi
       href={listingHref(listing)}
       className="group flex overflow-hidden rounded-2xl border bg-card transition-colors hover:border-primary/50 md:block"
-     prefetch={false}>
+    >
       {/* Görsel — mobilde solda kare, masaüstünde üstte dikey */}
       <div className="relative aspect-[3/4] w-28 shrink-0 overflow-hidden bg-muted sm:w-32 md:aspect-[4/5] md:w-full">
         {imageUrl ? (
@@ -242,7 +244,7 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
           </div>
         )}
       </div>
-    </Link>
+    </KartBagi>
   );
 }
 

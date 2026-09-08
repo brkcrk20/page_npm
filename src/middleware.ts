@@ -19,6 +19,19 @@ export async function middleware(request: NextRequest) {
   // isteği olduğu gibi geçirmeli; burada patlamak tüm siteyi kapatır.
   if (!url || !key) return response;
 
+  /**
+   * Oturum çerezi yoksa tazelenecek jeton da yok.
+   *
+   * Ziyaretçilerin büyük bölümü giriş yapmamış oluyor; onlar için
+   * getUser() çağrısı her sayfa isteğine boşuna iş ekliyordu. Çerez
+   * varlığına bakmak yetiyor: Supabase oturum çerezleri "sb-" önekiyle
+   * yazılıyor.
+   */
+  const oturumCerezi = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith('sb-'));
+  if (!oturumCerezi) return response;
+
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll() {
