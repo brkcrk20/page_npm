@@ -75,7 +75,12 @@ export function BusinessImageUploader({
         const yol = `${userId}/${providerId}-${logo ? 'logo' : Date.now() + '-' + i}.webp`;
         const { error } = await supabase.storage
           .from(BUSINESS_IMAGE_BUCKET)
-          .upload(yol, item.file, { contentType: item.file.type, upsert: logo });
+          .upload(yol, item.file, {
+            contentType: item.file.type,
+            upsert: logo,
+            // Supabase varsayılanı no-cache; bkz. CreateListingForm.
+            cacheControl: '2592000',
+          });
 
         if (error) throw new Error(error.message);
 

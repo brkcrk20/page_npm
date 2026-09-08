@@ -289,7 +289,11 @@ async function main() {
 
         const { error } = await supabase.storage
           .from(KOVA)
-          .upload(yol, govde, { contentType: 'image/webp', upsert: true });
+          .upload(yol, govde, {
+            contentType: 'image/webp',
+            upsert: true,
+            cacheControl: '2592000',
+          });
         if (error) throw new Error(error.message);
 
         const olcu = await sharp(govde).metadata();

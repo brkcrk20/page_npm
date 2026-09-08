@@ -8,6 +8,23 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
+    /**
+     * İyileştirilmiş görsellerin önbellek süresi.
+     *
+     * Next, üretilen görselin Cache-Control'ünü kaynağınkinden türetiyor.
+     * Supabase depolaması "no-cache" gönderdiği için bizim görsellerimiz
+     * "max-age=0, must-revalidate" ile çıkıyordu: her sayfa görüntülemesinde
+     * her görsel yeniden doğrulanıyordu. Karşılaştırma için bakılan
+     * patibul.com görselleri bir gün önbellekleniyor.
+     *
+     * Yükleme tarafında da düzeltildi (cacheControl), ama bu ayar mevcut
+     * dosyaları da kapsıyor: iyileştirici kendi çıktısını en az bu süre
+     * boyunca saklıyor ve tarayıcıya da o süreyi bildiriyor.
+     *
+     * Otuz gün: ilan fotoğrafı değiştiğinde depolama yolu da değişiyor,
+     * yani eski adresin önbellekte kalması yanlış görsel göstermiyor.
+     */
+    minimumCacheTTL: 2592000,
     // Kullanıcı görselleri artık kendi alan adımızdan servis ediliyor
     // (aşağıdaki /gorsel yeniden yazma kuralı), bu yüzden Supabase deseni
     // gerekmiyor. Eski kayıtlarda tam Supabase adresi saklanmış olabilir
@@ -48,6 +65,32 @@ const nextConfig: NextConfig = {
       {
         source: '/gorsel/:bucket/:path*',
         destination: `${supabase}/storage/v1/object/public/:bucket/:path*`,
+      },
+    ];
+  },
+
+  /**
+   * Doğrudan görsel adreslerinin önbelleği.
+   *
+   * /gorsel/... adresleri paylaşım kartlarında (og:image) ve "Büyük
+   * Fotoğraf" bağlantısında kullanılıyor; bunlar görsel iyileştiriciden
+   * geçmiyor, doğrudan depolamadan geliyor.
+   *
+   * NOT: Bu kural dış yeniden yazmalarda kaynağın başlığını geçemiyor —
+   * Supabase "no-cache" gönderdiği sürece o kazanıyor. Dosyaların kendi
+   * önbellek üstverisi düzeltildi (scripts/onbellek-basliklarini-duzelt.ts)
+   * ve yeni yüklemeler de doğru başlıkla gidiyor; sağlayıcı tarafındaki
+   * davranış değişirse bu kural devreye girer. Kullanıcının gördüğü kart ve
+   * galeri görselleri zaten iyileştiriciden geçiyor, onları yukarıdaki
+   * minimumCacheTTL çözüyor.
+   */
+  async headers() {
+    return [
+      {
+        source: '/gorsel/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' },
+        ],
       },
     ];
   },

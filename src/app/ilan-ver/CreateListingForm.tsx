@@ -48,6 +48,20 @@ import { LISTING_VIDEO_BUCKET } from '@/lib/supabase/storage';
  * okunamadığında kullanılan yedek değer var. Sabit 12 yazılıydı ve panelde
  * girilen sayı hiçbir işe yaramıyordu.
  */
+/**
+ * Depolama önbellek süresi.
+ *
+ * Supabase yüklenen dosyalara varsayılan olarak "no-cache" veriyor.
+ * Sonuç: her görsel, her sayfa görüntülemesinde yeniden doğrulanıyor —
+ * hem ziyaretçinin bağlantısını hem de görsel iyileştiricinin
+ * önbelleğini boşa harcıyor. Ölçüldü: petsemti görselleri
+ * "max-age=0, must-revalidate" ile geliyordu.
+ *
+ * Otuz gün: ilan fotoğrafı değiştiğinde yol da değiştiği için eski
+ * adresin önbellekte kalması sorun çıkarmıyor.
+ */
+const DEPOLAMA_ONBELLEK = '2592000';
+
 const VARSAYILAN_MAX_PHOTOS = 12;
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
@@ -600,7 +614,11 @@ export function CreateListingForm({
 
         const { error: uploadError } = await supabase.storage
           .from(LISTING_PHOTO_BUCKET)
-          .upload(path, item.file, { contentType: item.file.type, upsert: false });
+          .upload(path, item.file, {
+            contentType: item.file.type,
+            upsert: false,
+            cacheControl: DEPOLAMA_ONBELLEK,
+          });
 
         if (uploadError) throw new Error(`Fotoğraf yüklenemedi: ${uploadError.message}`);
         uploadedPaths.push({ path, width: item.width, height: item.height });

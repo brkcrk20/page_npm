@@ -59,7 +59,12 @@ export function AvatarUploader() {
 
       const { error: uploadError } = await supabase.storage
         .from(AVATAR_BUCKET)
-        .upload(path, prepared.file, { contentType: prepared.file.type, upsert: true });
+        .upload(path, prepared.file, {
+          contentType: prepared.file.type,
+          upsert: true,
+          // Supabase varsayılanı no-cache; bkz. CreateListingForm.
+          cacheControl: '2592000',
+        });
       if (uploadError) throw new Error(uploadError.message);
 
       const previous = profile?.avatar_url;
