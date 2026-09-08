@@ -153,11 +153,31 @@ export function listingSchema(listing: {
   });
 }
 
+/**
+ * Hizmet türüne karşılık gelen schema.org tipi.
+ *
+ * Genel "LocalBusiness" yerine daha dar tip vermek, Google'ın işletmeyi
+ * doğru kategoride değerlendirmesini sağlıyor: veteriner kliniği için
+ * VeterinaryCare, pet oteli için ayrı bir tip var. Karşılığı olmayan
+ * türlerde LocalBusiness'ta kalınıyor — uydurma bir tip vermek
+ * işaretlemeyi geçersiz kılar.
+ */
+const HIZMET_SEMA_TIPI: Record<string, string> = {
+  veteriner: 'VeterinaryCare',
+  pet_oteli: 'AnimalShelter',
+  petshop: 'PetStore',
+  kuafor: 'HealthAndBeautyBusiness',
+};
+
 /** İşletme kaydı → LocalBusiness. Harita ve yerel sonuçlar için. */
 export function localBusinessSchema(p: {
   name: string;
   slug: string;
   serviceSlug: string;
+  serviceType?: string;
+  id?: number;
+  image?: string | null;
+  openingHours?: { weekday: number; opens_at: string | null; closes_at: string | null; is_closed: boolean; is_24h: boolean }[];
   description?: string | null;
   phone?: string | null;
   address?: string | null;
@@ -168,12 +188,29 @@ export function localBusinessSchema(p: {
   ratingAverage?: number | null;
   ratingCount?: number | null;
 }) {
+  // Gün numarası → schema.org gün adı. Pazartesi 1, pazar 7.
+  const GUNLER = [
+    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
+  ];
+  const saatler = (p.openingHours ?? [])
+    .filter((h) => !h.is_closed && (h.is_24h || (h.opens_at && h.closes_at)))
+    .map((h) =>
+      clean({
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: `https://schema.org/${GUNLER[(h.weekday - 1 + 7) % 7]}`,
+        opens: h.is_24h ? '00:00' : (h.opens_at ?? '').slice(0, 5),
+        closes: h.is_24h ? '23:59' : (h.closes_at ?? '').slice(0, 5),
+      })
+    );
+
   return clean({
     '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
+    '@type': HIZMET_SEMA_TIPI[p.serviceType ?? ''] ?? 'LocalBusiness',
     name: p.name,
     description: p.description ?? undefined,
-    url: `${SITE_URL}/${p.serviceSlug}/${p.slug}`,
+    url: `${SITE_URL}/${p.serviceSlug}/${p.slug}${p.id ? `-${p.id}` : ''}`,
+    image: p.image ?? undefined,
+    openingHoursSpecification: saatler.length ? saatler : undefined,
     telephone: p.phone ?? undefined,
     address: clean({
       '@type': 'PostalAddress',

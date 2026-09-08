@@ -8,6 +8,8 @@ import type { ServiceFeature, ServiceProviderCard } from '@/lib/queries/services
 import type { ServiceConfig } from '@/lib/services-config';
 import { PageBody, PageIntro } from '@/components/PageContentBlocks';
 import { getPageContent } from '@/lib/queries/page-content';
+import { JsonLd } from '@/components/JsonLd';
+import { breadcrumbSchema, itemListSchema } from '@/lib/structured-data';
 import { getCityBySlug } from '@/lib/queries/catalog';
 
 /**
@@ -71,6 +73,29 @@ export async function ServiceDirectory({
 
   return (
     <div className="bg-secondary/30">
+      {/**
+        * Rehber sayfalarında hiç yapısal veri yoktu: ne kırıntı navigasyonu
+        * ne de liste işaretlemesi. Kırıntı, arama sonucunda adresin yerine
+        * "petsemti.com › Veteriner Klinikleri › İstanbul" yolunu
+        * gösteriyor; liste ise sonuçların bir derleme olduğunu söylüyor.
+        */}
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: 'Ana Sayfa', url: '/' },
+          ...crumbs.map((c) => ({ name: c.label, url: c.href })),
+        ])}
+      />
+      {providers.length > 0 && (
+        <JsonLd
+          data={itemListSchema(
+            providers.map((p) => ({
+              name: p.name,
+              url: `/${config.slug}/${p.slug}-${p.id}`,
+            }))
+          )}
+        />
+      )}
+
       <div className="mx-auto w-full max-w-7xl px-5 pb-10 pt-4">
         <nav aria-label="Kırıntı navigasyonu" className="mb-4 text-sm text-muted-foreground">
           <ol className="flex flex-wrap items-center gap-1">

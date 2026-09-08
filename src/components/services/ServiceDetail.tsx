@@ -8,6 +8,9 @@ import { OpenBadge } from '@/components/services/ServiceCard';
 import { ListingGrid } from '@/components/listings/ListingGrid';
 import { getProviderStorefront } from '@/lib/queries/services';
 import { ServiceContact } from '@/components/services/ServiceContact';
+import { JsonLd } from '@/components/JsonLd';
+import { SITE_URL } from '@/lib/site';
+import { breadcrumbSchema, localBusinessSchema } from '@/lib/structured-data';
 import { ServiceReviewForm } from '@/components/services/ServiceReviewForm';
 import { Badge } from '@/components/ui/badge';
 import { getOpenState, normalizeWeek, formatTime, WEEKDAY_NAMES } from '@/lib/opening-hours';
@@ -48,6 +51,8 @@ type Provider = {
   is_verified: boolean;
   /** Vitrin için eklenmiş örnek kayıt. */
   is_demo?: boolean | null;
+  latitude?: number | null;
+  longitude?: number | null;
   rating_average: number;
   rating_count: number;
   view_count: number;
@@ -124,6 +129,53 @@ export async function ServiceDetail({
           </li>
         </ol>
       </nav>
+
+      {/**
+        * İşletme işaretlemesi.
+        *
+        * Bu sayfalarda hiç yapısal veri yoktu: veteriner, pet oteli ve
+        * kuaför sayfaları yerel aramanın tam hedefi olmasına rağmen
+        * Google'a "burada bir işletme var" demiyorlardı. Çalışma saatleri,
+        * adres ve puan işaretlendiğinde sonuçta açık/kapalı bilgisi ve
+        * yıldız çıkabiliyor.
+        *
+        * Örnek (demo) kayıtlarda işaretleme yapılmıyor: arkasında gerçek
+        * bir işletme olmayan kaydı yerel sonuçlara sokmak yanıltıcı olur.
+        */}
+      {!provider.is_demo && (
+        <JsonLd
+          data={localBusinessSchema({
+            name: provider.name,
+            slug: provider.slug,
+            id: provider.id,
+            serviceSlug: config.slug,
+            serviceType: config.type,
+            description: provider.description,
+            phone: provider.phone,
+            address: provider.address,
+            cityName: provider.cities?.name,
+            districtName: provider.districts?.name,
+            latitude: provider.latitude,
+            longitude: provider.longitude,
+            ratingAverage: provider.rating_average,
+            ratingCount: provider.rating_count,
+            image: businessImageUrl(provider.logo_url)
+              ? `${SITE_URL}${businessImageUrl(provider.logo_url)}`
+              : null,
+            openingHours: provider.service_provider_hours ?? [],
+          })}
+        />
+      )}
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: 'Ana Sayfa', url: '/' },
+          { name: config.label, url: `/${config.slug}` },
+          ...(provider.cities
+            ? [{ name: provider.cities.name, url: `/${config.slug}/${provider.cities.slug}` }]
+            : []),
+          { name: provider.name },
+        ])}
+      />
 
       <div className="mx-auto w-full max-w-7xl px-5 py-5">
         {/* Örnek kayıt şeridi. Gerçek bir işletme olmadığı için telefon ve
