@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Facebook, Flag, Star, Send } from 'lucide-react';
+import { Facebook, Flag, Instagram, Star, Send } from 'lucide-react';
 
 import { useToast } from '@/hooks/use-toast';
 import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
@@ -101,6 +101,48 @@ export function ListingActions({
   const encoded = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
 
+  /**
+   * Instagram paylaşımı.
+   *
+   * Instagram'ın diğerleri gibi bir paylaşım adresi YOK: dışarıdan bir
+   * bağlantıyla gönderi ya da hikâye açtırmanın desteklenen bir yolu
+   * bulunmuyor. Bu yüzden düğme iki yoldan biriyle çalışıyor:
+   *
+   *  - Telefonda: işletim sisteminin paylaş sayfası açılıyor ve Instagram
+   *    orada bir seçenek olarak çıkıyor (Web Share API). Kullanıcı
+   *    Instagram'ı seçtiğinde bağlantı hikâyesine/DM'ine gidiyor.
+   *  - Masaüstünde: paylaş sayfası olmadığı için bağlantı panoya
+   *    kopyalanıyor ve ne yapılacağı söyleniyor.
+   *
+   * Çalışmayan bir "Instagram'da paylaş" bağlantısı koymak, kullanıcıyı
+   * boş bir Instagram sayfasına göndermek olurdu.
+   */
+  async function instagramPaylas() {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title, url: shareUrl });
+        return;
+      } catch {
+        // Kullanıcı vazgeçti ya da paylaşım engellendi; panoya düşüyoruz.
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: 'Bağlantı kopyalandı',
+        description:
+          'Instagram dışarıdan bağlantıyla paylaşıma izin vermiyor. Bağlantıyı hikâyenize, gönderinize ya da mesajınıza yapıştırabilirsiniz.',
+      });
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: 'Kopyalanamadı',
+        description: 'Adres çubuğundaki bağlantıyı elle kopyalayabilirsiniz.',
+      });
+    }
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <button
@@ -150,6 +192,22 @@ export function ListingActions({
         >
           <Send className="h-3.5 w-3.5" />
         </ShareButton>
+
+        {/* Instagram bağlantıyla paylaşımı desteklemediği için düğme,
+            bağlantı değil. Davranışı instagramPaylas() anlatıyor. */}
+        <button
+          type="button"
+          onClick={instagramPaylas}
+          aria-label="Instagram'da paylaş"
+          title="Instagram'da paylaş"
+          className="flex h-7 w-7 items-center justify-center rounded text-white transition-opacity hover:opacity-85"
+          style={{
+            background:
+              'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+          }}
+        >
+          <Instagram className="h-3.5 w-3.5" />
+        </button>
       </div>
     </div>
   );
