@@ -52,7 +52,7 @@ import {
 import { SearchFilters } from '../SearchFilters';
 import { BildirimZili } from '@/components/layout/BildirimZili';
 import { SectionNav } from './SectionNav';
-import { Logo } from '@/components/Logo';
+import { Logo, LogoMark } from '@/components/Logo';
 import { SERVICE_CONFIGS } from '@/lib/services-config';
 import { ilanVerHref } from '@/lib/ilan-ver-href';
 import { Skeleton } from '../ui/skeleton';
@@ -256,8 +256,29 @@ export function Header() {
         <div className="container flex h-16 items-center px-5">
           {/* Renkli bantta tek renk amblem: iki renkli sürüm burada
               okunmuyordu. */}
-          <Link href="/" className="mr-4 flex shrink-0 items-center" aria-label="PetSemti ana sayfa" prefetch={false}>
-            <Logo variant="mono" size={36} />
+          {/* Mobilde yalnızca amblem: arama kutusu üst banda girince
+              "petsemti" yazısı ile zil ve menü düğmesi aynı satıra
+              sığmıyordu. */}
+          <Link
+            href="/"
+            className="mr-3 flex shrink-0 items-center md:mr-4"
+            aria-label="PetSemti ana sayfa"
+            prefetch={false}
+          >
+            {showListingSearch ? (
+              <>
+                <span className="md:hidden">
+                  <LogoMark variant="mono" size={32} />
+                </span>
+                <span className="hidden md:block">
+                  <Logo variant="mono" size={36} />
+                </span>
+              </>
+            ) : (
+              // Arama kutusu olmayan sayfalarda (hizmet rehberleri, hesap,
+              // formlar) yer bol; marka yazısı mobilde de görünüyor.
+              <Logo variant="mono" size={36} />
+            )}
           </Link>
           
           {/*
@@ -283,16 +304,17 @@ export function Header() {
             kutusu ve kendi süzgeçleri var (bkz. showListingSearch).
           */}
           {showListingSearch && (
-            <div className="mr-3 hidden min-w-0 max-w-xl flex-1 md:block">
+            <div className="mr-2 min-w-0 flex-1 md:mr-3 md:max-w-xl">
               {renderFilters('sade')}
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-1 md:gap-2">
-            <BildirimZili />
+          <div className="flex flex-1 items-center justify-end gap-1 md:gap-2">
             <div className="hidden md:flex items-center space-x-4">
               {renderAuthContent()}
             </div>
+            {/* Zil, menü düğmesinin solunda. */}
+            <BildirimZili />
           </div>
 
           <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
@@ -404,24 +426,13 @@ export function Header() {
         <div className="border-b bg-white py-1">
           <div className="w-full md:container md:mx-auto">
             
-            {/* Mobilde arama ŞERİTLERİN ÜSTÜNDE.
-
-                Üst banda tam genişlikte sığmıyor (logo, zil ve menü düğmesi
-                orada), ama sekmelerin ve bölüm ikonlarının altında kalınca da
-                sayfanın en çok kullanılan aracı üçüncü sıraya düşüyordu.
-                Buraya alınınca ilk ekranda, parmağın uzandığı yerde. */}
-            {showListingSearch && (
-              <div className="border-b px-4 pb-2 pt-1 md:hidden">
-                {renderFilters('tam')}
-              </div>
-            )}
-
             <SectionNav />
 
-            {/* Geniş ekranda arama üst banta taşındı; burada yalnızca
-                süzgeçler kalıyor. */}
+            {/* Arama üst banta taşındı; burada yalnızca süzgeçler kaldı —
+                eskiden olduğu gibi bölüm şeridinin altında. Mobilde
+                "Filtrele" düğmesinin arkasında katlı duruyor. */}
             {showListingSearch && (
-              <div className="mt-2 hidden md:block">{renderFilters('suzgec')}</div>
+              <div className="mt-2 px-4 md:px-0">{renderFilters('suzgec')}</div>
             )}
           </div>
         </div>

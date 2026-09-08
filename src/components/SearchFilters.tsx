@@ -373,13 +373,30 @@ function SearchFiltersInner({ mod }: { mod: 'tam' | 'sade' | 'suzgec' }) {
           : 'grid w-full grid-cols-1 gap-2 ' +
             (mod === 'suzgec'
               ? inPigeonSection
-                ? 'md:grid-cols-[auto_auto_auto_auto]'
-                : 'md:grid-cols-[auto_auto_auto_auto_auto]'
+                ? 'md:grid-cols-[repeat(3,minmax(0,1fr))_auto]'
+                : 'md:grid-cols-[repeat(4,minmax(0,1fr))_auto]'
               : inPigeonSection
                 ? 'md:grid-cols-[1fr_auto_auto_auto_auto]'
                 : 'md:grid-cols-[1fr_auto_auto_auto_auto_auto]')
       }
     >
+      {/* Süzgeç modunda mobilde aç/kapat düğmesi.
+
+          Arama kutusu üst banta taşındı ama süzgeçler burada kaldı; dört
+          açılır listeyi telefonda hep açık bırakmak ilan listesini ekranın
+          dışına itiyor. Geniş ekranda düğme yok, süzgeçler zaten açık. */}
+      {mod === 'suzgec' && (
+        <button
+          type="button"
+          onClick={() => setFiltrelerAcik((v) => !v)}
+          aria-expanded={filtrelerAcik}
+          className="flex h-11 w-full items-center justify-center gap-1.5 rounded-md border bg-white px-3 text-sm font-medium md:hidden"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          {filtrelerAcik ? 'Filtreleri Gizle' : 'Filtrele'}
+        </button>
+      )}
+
       {mod !== 'suzgec' && (
       <div className="flex gap-2">
         <div className="relative flex-1">
@@ -482,9 +499,7 @@ function SearchFiltersInner({ mod }: { mod: 'tam' | 'sade' | 'suzgec' }) {
       {/* Süzgeç grubu: mobilde katlı, masaüstünde her zaman açık. */}
       {mod !== 'sade' && (
       <div
-        className={
-          'contents ' + (mod === 'suzgec' || filtrelerAcik ? '' : 'max-md:hidden')
-        }
+        className={'contents ' + (filtrelerAcik ? '' : 'max-md:hidden')}
       >
 
       {/* Güvercin bölümünde tür seçici yok: ziyaretçi zaten güvercinde ve
@@ -569,7 +584,14 @@ function SearchFiltersInner({ mod }: { mod: 'tam' | 'sade' | 'suzgec' }) {
       )}
 
       {mod !== 'sade' && (
-        <Button className="hidden h-11 px-8 md:inline-flex" onClick={handleSearch}>
+        <Button
+          className={
+            mod === 'suzgec' && filtrelerAcik
+              ? 'h-11 px-8'
+              : 'hidden h-11 px-8 md:inline-flex'
+          }
+          onClick={handleSearch}
+        >
           Bul
         </Button>
       )}
