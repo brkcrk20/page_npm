@@ -28,7 +28,7 @@ export function BasaDon() {
   return (
     <Button
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      className="fixed bottom-5 right-5 h-12 w-12 rounded-full bg-gray-800 text-white shadow-lg hover:bg-gray-900"
+      className="fixed bottom-20 right-4 h-12 w-12 md:bottom-5 md:right-5 rounded-full bg-gray-800 text-white shadow-lg hover:bg-gray-900"
       aria-label="Sayfanın başına dön"
     >
       <ArrowUp className="h-6 w-6" />

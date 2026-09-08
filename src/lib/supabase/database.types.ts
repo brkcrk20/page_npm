@@ -1039,6 +1039,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["listing_kind"]
           owner_account_type: Database["public"]["Enums"]["account_type"]
           owner_id: string
+          owner_is_verified: boolean
           phone_count: number
           price: number | null
           published_at: string | null
@@ -1092,6 +1093,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["listing_kind"]
           owner_account_type?: Database["public"]["Enums"]["account_type"]
           owner_id: string
+          owner_is_verified?: boolean
           phone_count?: number
           price?: number | null
           published_at?: string | null
@@ -1145,6 +1147,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["listing_kind"]
           owner_account_type?: Database["public"]["Enums"]["account_type"]
           owner_id?: string
+          owner_is_verified?: boolean
           phone_count?: number
           price?: number | null
           published_at?: string | null

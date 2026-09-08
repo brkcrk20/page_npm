@@ -41,6 +41,7 @@ type ListingRow = Database['public']['Tables']['listings']['Row'];
 const CARD_COLUMNS = `
   id, slug, title, kind, price, currency, is_negotiable, event_date,
   age_months, gender, published_at, is_demo,
+  owner_account_type, owner_is_verified,
   breeds ( id, name, slug ),
   categories!inner ( id, slug, name ),
   cities!inner ( id, name, slug ),
@@ -74,6 +75,15 @@ export type ListingCard = Pick<
   | 'published_at'
   | 'event_date'
   | 'is_demo'
+  /**
+   * İlan sahibinin hesap türü ve doğrulama durumu.
+   *
+   * listings üzerinde tutuluyor, profiles'tan gömülmüyor: profiles
+   * üzerindeki RLS anonim ziyaretçiye başkasının satırını göstermediği
+   * için gömme her zaman null dönüyordu (bkz. göç 0065).
+   */
+  | 'owner_account_type'
+  | 'owner_is_verified'
 > & {
   breeds: { id: number; name: string; slug: string } | null;
   categories: { id: number; slug: string; name: string } | null;

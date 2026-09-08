@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ChevronsLeft, ChevronsRight, Eye, Info } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, Info } from 'lucide-react';
 
 import { ListingGallery } from '@/components/listings/ListingGallery';
 import { ListingVideos } from '@/components/listings/ListingVideos';
@@ -451,8 +451,10 @@ export function ListingDetail({
             </dl>
           </div>
 
-          {/* Satıcı kartı */}
-          <div className="space-y-3">
+          {/* Satıcı kartı.
+              Geniş ekranda üçüncü sütunda kayıtlı duruyor: açıklama uzun
+              olduğunda iletişim düğmeleri ekrandan çıkıyordu. */}
+          <div className="space-y-3 lg:sticky lg:top-4 lg:self-start">
             <SellerCard
               seller={seller}
               listingId={listing.id}
@@ -462,13 +464,6 @@ export function ListingDetail({
               allowWhatsapp={listing.allow_whatsapp}
               demoMu={Boolean(listing.is_demo)}
             />
-
-            {listing.view_count > 0 && (
-              <p className="flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-3 text-sm text-primary">
-                <Eye className="h-4 w-4 shrink-0" />
-                Bu ilan {listing.view_count} kez görüntülendi
-              </p>
-            )}
 
             {(adjacent.previous || adjacent.next) && (
               <div className="grid grid-cols-2 gap-2">

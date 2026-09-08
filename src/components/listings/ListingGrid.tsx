@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { listingHref } from '@/lib/listing-url';
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
+import { BadgeCheck, Images, MapPin, Store } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import type { ListingCard } from '@/lib/queries/listings';
@@ -22,6 +22,24 @@ const KIND_BADGE: Record<string, { label: string; className: string }> = {
   kayip: { label: 'KAYIP', className: 'bg-red-600 hover:bg-red-600' },
   bulundu: { label: 'BULUNDU', className: 'bg-blue-600 hover:bg-blue-600' },
 };
+
+/**
+ * "Bugün", "3 gün önce" gibi tazelik bilgisi.
+ *
+ * İlan tarihinin kendisi ("07.09.2026") kartta yer kaplıyor ama hiçbir
+ * karar değiştirmiyor; kullanıcının bilmek istediği şey ilanın taze olup
+ * olmadığı. Bir aydan eski ilanlarda gün sayısı da anlamını yitirdiği
+ * için tarih gösterilmiyor.
+ */
+function tazelik(tarih: string | null): string | null {
+  if (!tarih) return null;
+  const gun = Math.floor((Date.now() - new Date(tarih).getTime()) / 86_400_000);
+  if (gun < 0) return null;
+  if (gun === 0) return 'Bugün';
+  if (gun === 1) return 'Dün';
+  if (gun < 30) return `${gun} gün önce`;
+  return null;
+}
 
 function formatPrice(listing: ListingCard): string {
   // Kayıp/bulundu ilanında fiyat diye bir kavram yok; o satırda tarih daha
@@ -74,7 +92,10 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
   const age = formatAge(listing.age_months);
   const location = [listing.cities?.name, listing.districts?.name].filter(Boolean).join(' / ');
   const rozet = KIND_BADGE[listing.kind];
-  const altBilgi = [listing.breeds?.name, age].filter(Boolean).join(' · ');
+  const fotografSayisi = listing.listing_photos?.length ?? 0;
+  const dogrulanmis = Boolean(listing.owner_is_verified);
+  const kurumsal = listing.owner_account_type === 'kurumsal';
+  const zaman = tazelik(listing.published_at);
 
   return (
     <Link
@@ -82,7 +103,7 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
       className="group flex overflow-hidden rounded-2xl border bg-card transition-colors hover:border-primary/50 md:block"
      prefetch={false}>
       {/* Görsel — mobilde solda kare, masaüstünde üstte dikey */}
-      <div className="relative aspect-[3/4] w-24 shrink-0 overflow-hidden bg-muted sm:w-28 md:aspect-[4/5] md:w-full">
+      <div className="relative aspect-[3/4] w-28 shrink-0 overflow-hidden bg-muted sm:w-32 md:aspect-[4/5] md:w-full">
         {imageUrl ? (
           <>
             {/* Bulanık zemin: fotoğrafın tamamı gösterildiğinde kenarda
@@ -118,8 +139,12 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
           </div>
         )}
 
+        {/* Tür rozeti yalnızca masaüstünde görselin üstünde.
+            Mobilde küçük görsel 96 piksel genişliğinde ve "Sahiplendirme"
+            oraya sığmıyordu: rozet "Sal" diye kesiliyordu. Mobilde aynı
+            bilgi metin sütununun başında, tam hâliyle veriliyor. */}
         {rozet && (
-          <Badge className={`absolute left-1.5 top-1.5 px-1.5 py-0 text-[10px] md:left-2 md:top-2 md:px-2 md:py-0.5 md:text-xs ${rozet.className}`}>
+          <Badge className={`absolute left-2 top-2 hidden px-2 py-0.5 text-xs md:inline-flex ${rozet.className}`}>
             {rozet.label}
           </Badge>
         )}
@@ -130,10 +155,20 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
         {listing.is_demo && (
           <Badge
             variant="secondary"
-            className="absolute right-1.5 top-1.5 bg-slate-900/75 px-1.5 py-0 text-[10px] font-medium text-white md:right-2 md:top-2 md:px-2 md:py-0.5"
+            className="absolute left-1.5 top-1.5 bg-slate-900/75 px-1.5 py-0 text-[10px] font-medium text-white md:left-auto md:right-2 md:top-2 md:px-2 md:py-0.5"
           >
-            Örnek ilan
+            Örnek
           </Badge>
+        )}
+
+        {/* Fotoğraf sayısı. Birden çok fotoğrafı olan ilan daha güvenilir
+            görünüyor ve kullanıcı hangisine tıklayacağını buna göre de
+            seçiyor; tek fotoğraflı ilanda sayı göstermenin anlamı yok. */}
+        {fotografSayisi > 1 && (
+          <span className="pointer-events-none absolute bottom-1.5 right-1.5 z-10 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white md:bottom-2 md:right-2">
+            <Images className="h-3 w-3" />
+            {fotografSayisi}
+          </span>
         )}
 
         {/* Konum yalnızca masaüstünde görselin üstünde; mobilde satırın
@@ -150,11 +185,31 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
 
       {/* Bilgi */}
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 p-3 md:justify-start md:gap-1">
+        {/* Mobilde tür rozeti burada: görselin üstünde kesiliyordu. */}
+        {rozet && (
+          <span
+            className={`mb-0.5 inline-flex w-fit rounded-full px-2 py-0.5 text-[10px] font-semibold md:hidden ${rozet.className}`}
+          >
+            {rozet.label}
+          </span>
+        )}
+
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug group-hover:text-primary">
           {listing.title}
         </h3>
 
-        {altBilgi && <p className="truncate text-xs text-muted-foreground">{altBilgi}</p>}
+        {/* Cins öne çıkıyor, yaş yanında soluk kalıyor. Önceki hâlde ikisi
+            aynı gri tonda yan yanaydı ve göz hangisinin ne olduğunu
+            ayırmadan geçiyordu. */}
+        {(listing.breeds?.name || age) && (
+          <p className="truncate text-xs">
+            {listing.breeds?.name && (
+              <span className="font-medium text-foreground/80">{listing.breeds.name}</span>
+            )}
+            {listing.breeds?.name && age && <span className="text-muted-foreground"> · </span>}
+            {age && <span className="text-muted-foreground">{age}</span>}
+          </p>
+        )}
 
         {location && (
           <p className="flex items-center gap-1 truncate text-xs text-muted-foreground md:hidden">
@@ -164,6 +219,28 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
         )}
 
         <p className="pt-0.5 text-sm font-bold text-primary md:pt-1">{formatPrice(listing)}</p>
+
+        {/* Güven ve tazelik satırı.
+            Kullanıcı hangi ilana tıklayacağına, ilanı açmadan karar
+            veriyor: kimin verdiği ve ne kadar taze olduğu bu kararın iki
+            girdisi. İkisi de yoksa satır hiç çizilmiyor. */}
+        {(dogrulanmis || kurumsal || zaman) && (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-[11px]">
+            {dogrulanmis && (
+              <span className="inline-flex items-center gap-1 font-medium text-emerald-700">
+                <BadgeCheck className="h-3.5 w-3.5" />
+                Onaylı üye
+              </span>
+            )}
+            {!dogrulanmis && kurumsal && (
+              <span className="inline-flex items-center gap-1 font-medium text-slate-600">
+                <Store className="h-3.5 w-3.5" />
+                Kurumsal
+              </span>
+            )}
+            {zaman && <span className="text-muted-foreground">{zaman}</span>}
+          </div>
+        )}
       </div>
     </Link>
   );
