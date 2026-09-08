@@ -46,7 +46,7 @@ const CARD_COLUMNS = `
   categories!inner ( id, slug, name ),
   cities!inner ( id, name, slug ),
   districts ( id, name, slug ),
-  listing_photos ( storage_path, thumb_path, position )
+  listing_photos ( storage_path, thumb_path, thumb_sm_path, position )
 `;
 
 /**
@@ -89,7 +89,13 @@ export type ListingCard = Pick<
   categories: { id: number; slug: string; name: string } | null;
   cities: { id: number; name: string; slug: string } | null;
   districts: { id: number; name: string; slug: string } | null;
-  listing_photos: { storage_path: string; thumb_path: string | null; position: number }[];
+  listing_photos: {
+    storage_path: string;
+    thumb_path: string | null;
+    /** Mobil kopya (~200 piksel); eski kayıtlarda boş olabilir. */
+    thumb_sm_path: string | null;
+    position: number;
+  }[];
 };
 
 export type ListingFilters = {
@@ -327,7 +333,7 @@ export async function getListingById(id: number) {
        categories ( id, slug, name, code ),
        cities ( id, name, slug ),
        districts ( id, name, slug ),
-       listing_photos ( storage_path, thumb_path, position ),
+       listing_photos ( storage_path, thumb_path, thumb_sm_path, position ),
        listing_videos ( id, provider, storage_path, playback_url, duration_seconds, width, height, position, title, status )`
     )
     .eq('id', id)

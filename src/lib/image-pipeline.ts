@@ -19,8 +19,17 @@ import { slugify } from './routing';
 
 /** Uzun kenar sınırı. İlan fotoğrafı için 1600px fazlasıyla yeterli. */
 export const MAX_DIMENSION = 1600;
-/** Kart ve şerit kopyasının genişliği. */
+/** Kart ve şerit kopyasının genişliği (masaüstü). */
 export const THUMB_WIDTH = 400;
+/**
+ * Kart kopyasının mobil genişliği.
+ *
+ * Telefonda kart görseli ~134 piksele çiziliyor; 400 piksellik kopyayı
+ * indirtmek yavaş bağlantıda LCP'yi bir saniyeden fazla geciktiriyordu
+ * (ölçüm: 21,8 KB'lık dosyanın inmesi 1,4 sn). 200 piksel hem yeterli hem
+ * de tabletlerde pay bırakıyor.
+ */
+export const THUMB_SM_WIDTH = 200;
 export const WEBP_QUALITY = 0.82;
 
 export type PreparedImage = {
@@ -33,6 +42,8 @@ export type PreparedImage = {
    * istek anında değil burada, yükleme anında yapılıyor.
    */
   thumb: File;
+  /** Aynı kopyanın mobil boyu (~200 piksel). */
+  thumbSm: File;
   width: number;
   height: number;
   /** Tarayıcıda önizleme için; kullanıldıktan sonra revokeObjectURL çağrılmalı. */
@@ -163,9 +174,29 @@ export async function prepareImage(
   const kAd = nokta === -1 ? `${ad}-k` : `${ad.slice(0, nokta)}-k${ad.slice(nokta)}`;
   const thumb = new File([kBlob], kAd, { type: mimeType, lastModified: Date.now() });
 
+  // Mobil kopya: aynı yol, yalnızca genişlik ve ad soneki farklı.
+  const sOlcek = Math.min(1, THUMB_SM_WIDTH / width);
+  const sCanvas = document.createElement('canvas');
+  sCanvas.width = Math.round(width * sOlcek);
+  sCanvas.height = Math.round(height * sOlcek);
+  const sContext = sCanvas.getContext('2d');
+  if (!sContext) throw new Error('Tarayıcı görsel işlemeyi desteklemiyor.');
+  sContext.imageSmoothingEnabled = true;
+  sContext.imageSmoothingQuality = 'high';
+  sContext.drawImage(image, 0, 0, sCanvas.width, sCanvas.height);
+
+  const sBlob = await new Promise<Blob | null>((resolve) =>
+    sCanvas.toBlob(resolve, mimeType, 0.74)
+  );
+  if (!sBlob) throw new Error('Görsel dönüştürülemedi.');
+
+  const sAd = nokta === -1 ? `${ad}-s` : `${ad.slice(0, nokta)}-s${ad.slice(nokta)}`;
+  const thumbSm = new File([sBlob], sAd, { type: mimeType, lastModified: Date.now() });
+
   return {
     file: prepared,
     thumb,
+    thumbSm,
     width,
     height,
     previewUrl: URL.createObjectURL(prepared),
@@ -246,6 +277,7 @@ export async function prepareAvatar(file: File, userId: string): Promise<Prepare
     file: prepared,
     // Profil fotoğrafı zaten kare ve küçük; ayrı kopya gerekmiyor.
     thumb: prepared,
+    thumbSm: prepared,
     width: target,
     height: target,
     previewUrl: URL.createObjectURL(prepared),

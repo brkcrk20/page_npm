@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { listingHref } from '@/lib/listing-url';
 import Link from 'next/link';
 import { BadgeCheck, Images, MapPin, Store } from 'lucide-react';
@@ -97,6 +96,8 @@ function PetListingCard({
    * yarıda kalan fotoğraflarda kart kırık görünmesin.
    */
   const imageUrl = cover ? listingPhotoUrl(cover.thumb_path ?? cover.storage_path) : null;
+  /** Telefonlara giden küçük kopya; eski kayıtlarda yok. */
+  const kucukUrl = cover?.thumb_sm_path ? listingPhotoUrl(cover.thumb_sm_path) : null;
   const age = formatAge(listing.age_months);
   const location = [listing.cities?.name, listing.districts?.name].filter(Boolean).join(' / ');
   const rozet = KIND_BADGE[listing.kind];
@@ -114,37 +115,82 @@ function PetListingCard({
       <div className="relative aspect-[3/4] w-28 shrink-0 overflow-hidden bg-muted sm:w-32 md:aspect-[4/5] md:w-full">
         {imageUrl ? (
           <>
-            {/* Bulanık zemin: fotoğrafın tamamı gösterildiğinde kenarda
-                kalan boşluğu fotoğrafın kendi rengiyle dolduruyor.
+            {/*
+              Öncelikli kartta ÖN YÜKLEME.
 
-                sizes="32px": zemin zaten bulanıklaştırılıyor, tam çözünürlük
-                gözle görülmüyor. Ana fotoğrafla aynı ölçüde istendiğinde her
-                kart iki tam boy görsel çözüyor ve 24 piksellik bir bulanıklık
-                filtresi uyguluyordu — ana sayfada 26 kart, 52 görsel. 32
-                piksellik kopya aynı görüntüyü veriyor, çözme ve boyama
-                maliyetinin neredeyse tamamını kaldırıyor. */}
-            <Image
-              src={imageUrl}
-              alt=""
-              aria-hidden
-              fill
-              sizes="32px"
-              className="scale-110 object-cover blur-xl"
-              // Aynı adresi kullanıyor: tek istek gidiyor ve önceliğini DOM'da
-              // önce gelen bu etiket belirliyor. Öncelikli kartta bunu düşük
-              // öncelikli bırakmak, LCP görselini düşük öncelikli yapardı.
-              priority={oncelikli}
-            />
+              next/image bunu kendisi basıyordu; düz <img>'e geçince o iş de
+              bize kaldı. React bu etiketleri <head>'e taşıyor. Media
+              sorgusu şart: telefonun büyük kopyayı boşuna indirmemesi için
+              iki ayrı satır gerekiyor.
+            */}
+            {oncelikli && (
+              <>
+                {kucukUrl && (
+                  <link
+                    rel="preload"
+                    as="image"
+                    href={kucukUrl}
+                    media="(max-width: 767px)"
+                    fetchPriority="high"
+                  />
+                )}
+                <link
+                  rel="preload"
+                  as="image"
+                  href={imageUrl}
+                  media={kucukUrl ? '(min-width: 768px)' : undefined}
+                  fetchPriority="high"
+                />
+              </>
+            )}
+
+            {/*
+              MOBİLDE KÜÇÜK KOPYA — next/image DEĞİL, düz <picture>.
+
+              Görsel iyileştirici kapalı (bkz. next.config: images.unoptimized),
+              o yüzden next/image tek bir adres basıyor ve srcset üretmiyor.
+              Kart görseli 400 piksel; telefonda ~134 piksele çiziliyor ve
+              yavaş 4G'de inmesi 1,4 saniye sürüyordu — LCP'nin büyük kısmı
+              buradan geliyordu.
+
+              srcset yerine media sorgusu kullanılıyor: `sizes` görselin
+              KUTUSUNU tarif ediyor (112 piksel), oysa fotoğraflar dikey
+              olduğu için object-contain ile çizilen genişlik bunun yarısı.
+              srcset ile tarayıcı 112×2 = 224 piksel hesaplayıp yine büyük
+              dosyayı seçiyordu. Media sorgusu kararı bize bırakıyor.
+            */}
+            {/* Bulanık zemin: fotoğrafın tamamı gösterildiğinde kenarda
+                kalan boşluğu fotoğrafın kendi rengiyle dolduruyor. Ana
+                fotoğrafla AYNI adresleri kullanıyor, bu yüzden tek istek
+                gidiyor. */}
+            <picture>
+              {kucukUrl && <source media="(max-width: 767px)" srcSet={kucukUrl} />}
+              <img
+                src={imageUrl}
+                alt=""
+                aria-hidden
+                decoding="async"
+                className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl"
+                {...(oncelikli
+                  ? { fetchPriority: 'high' as const }
+                  : { loading: 'lazy' as const })}
+              />
+            </picture>
+
             {/* contain: hayvan fotoğrafları dikey çekiliyor (720×1600 gibi),
                 4:5 kutuya cover ile basılınca kafa ya da kuyruk kesiliyordu. */}
-            <Image
-              src={imageUrl}
-              alt={listing.title}
-              fill
-              sizes="(max-width: 767px) 128px, (max-width: 1280px) 33vw, 25vw"
-              className="object-contain"
-              priority={oncelikli}
-            />
+            <picture>
+              {kucukUrl && <source media="(max-width: 767px)" srcSet={kucukUrl} />}
+              <img
+                src={imageUrl}
+                alt={listing.title}
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-contain"
+                {...(oncelikli
+                  ? { fetchPriority: 'high' as const }
+                  : { loading: 'lazy' as const })}
+              />
+            </picture>
           </>
         ) : (
           <div className="flex h-full items-center justify-center px-2 text-center text-[11px] text-muted-foreground">

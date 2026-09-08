@@ -505,7 +505,7 @@ export function CreateListingForm({
     // Ölçüler de taşınıyor: tarayıcı yer ayıramadığı için sayfa yüklenirken
     // içerik zıplıyordu (CLS). Ölçü zaten hazırlama adımında hesaplanıyor,
     // yalnızca kaydedilmiyordu.
-    const uploadedPaths: { path: string; thumb: string | null; width: number; height: number }[] = [];
+    const uploadedPaths: { path: string; thumb: string | null; thumbSm: string | null; width: number; height: number }[] = [];
 
     try {
       // 1) İlan satırını önce yaz.
@@ -638,9 +638,26 @@ export function CreateListingForm({
             cacheControl: DEPOLAMA_ONBELLEK,
           });
 
+        /**
+         * Mobil kopya. Telefonda kart görseli ~134 piksele çiziliyor;
+         * 400 piksellik kopyayı indirtmek yavaş bağlantıda sayfanın en
+         * büyük görselini bir saniyeden fazla geciktiriyordu. Bu da
+         * başarısız olabilir: yoksa kart 400 piksellikle çalışmaya devam
+         * ediyor.
+         */
+        const thumbSmPath = `${user.id}/${listing.id}-${item.thumbSm.name}`;
+        const { error: thumbSmError } = await supabase.storage
+          .from(LISTING_PHOTO_BUCKET)
+          .upload(thumbSmPath, item.thumbSm, {
+            contentType: item.thumbSm.type,
+            upsert: true,
+            cacheControl: DEPOLAMA_ONBELLEK,
+          });
+
         uploadedPaths.push({
           path,
           thumb: thumbError ? null : thumbPath,
+          thumbSm: thumbSmError ? null : thumbSmPath,
           width: item.width,
           height: item.height,
         });
@@ -714,6 +731,7 @@ export function CreateListingForm({
             listing_id: listing.id,
             storage_path: foto.path,
             thumb_path: foto.thumb,
+            thumb_sm_path: foto.thumbSm,
             width: foto.width,
             height: foto.height,
             position: offset + index,
