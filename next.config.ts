@@ -96,8 +96,6 @@ const nextConfig: NextConfig = {
       destination: '/ilan/:slug',
     };
 
-    const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
     /**
      * beforeFiles ŞART: dizi döndürüldüğünde kurallar "afterFiles" sayılıyor,
      * yani önce dosya sistemi ve dinamik rotalar deneniyor. /[slug] zaten
@@ -158,42 +156,11 @@ const nextConfig: NextConfig = {
 
     return {
       beforeFiles: [ilanRewrite, ...suzgecRewrites, ...hizmetRewrites],
-      afterFiles: supabase
-        ? [
-            {
-              source: '/gorsel/:bucket/:path*',
-              destination: `${supabase}/storage/v1/object/public/:bucket/:path*`,
-            },
-          ]
-        : [],
+      // /gorsel artık bir rota (src/app/gorsel/...): yeniden yazma
+      // kuralının yanıtı Vercel kenar ağında önbelleğe girmiyordu.
+      afterFiles: [],
       fallback: [],
     };
-  },
-
-  /**
-   * Doğrudan görsel adreslerinin önbelleği.
-   *
-   * /gorsel/... adresleri paylaşım kartlarında (og:image) ve "Büyük
-   * Fotoğraf" bağlantısında kullanılıyor; bunlar görsel iyileştiriciden
-   * geçmiyor, doğrudan depolamadan geliyor.
-   *
-   * NOT: Bu kural dış yeniden yazmalarda kaynağın başlığını geçemiyor —
-   * Supabase "no-cache" gönderdiği sürece o kazanıyor. Dosyaların kendi
-   * önbellek üstverisi düzeltildi (scripts/onbellek-basliklarini-duzelt.ts)
-   * ve yeni yüklemeler de doğru başlıkla gidiyor; sağlayıcı tarafındaki
-   * davranış değişirse bu kural devreye girer. Kullanıcının gördüğü kart ve
-   * galeri görselleri zaten iyileştiriciden geçiyor, onları yukarıdaki
-   * minimumCacheTTL çözüyor.
-   */
-  async headers() {
-    return [
-      {
-        source: '/gorsel/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' },
-        ],
-      },
-    ];
   },
 
   // ESKİ URL YAPISINDAN YENİ YAPIYA YÖNLENDİRMELER
