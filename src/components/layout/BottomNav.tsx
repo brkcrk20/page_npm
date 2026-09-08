@@ -3,7 +3,7 @@
 import { UnreadBadge } from './UnreadBadge';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Home, Heart, MessageSquare, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
  */
 export function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const navItems = [
     {
@@ -52,6 +53,20 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              /**
+               * Otomatik ön yükleme KAPALI.
+               *
+               * Alt menü her sayfada ve ekranda hep görünür; Next dört
+               * bağlantının üçünü (favoriler, mesajlar, profil) sayfa
+               * açılır açılmaz indiriyordu — ölçümde 3×18 KB veri ve
+               * yanında 54 KB'lık bir paket. Üstelik üçü de giriş
+               * gerektiriyor, yani oturumsuz ziyaretçi için tamamen boşa.
+               *
+               * Parmak değdiği anda hazırlanıyor.
+               */
+              prefetch={false}
+              onTouchStart={() => router.prefetch(item.href)}
+              onMouseEnter={() => router.prefetch(item.href)}
               // DÜZELTME BURADA: px-5'i kaldırdık, w-full ve h-full verdik.
               className="inline-flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 transition-colors group"
             >
