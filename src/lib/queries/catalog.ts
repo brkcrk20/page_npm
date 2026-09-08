@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { ONBELLEK_SURUMU } from '@/lib/onbellek-surumu';
+
 import { unstable_cache } from 'next/cache';
 
 /**
@@ -99,7 +101,7 @@ export async function getCategories(): Promise<Category[]> {
  */
 export const getCategoryBySlug = unstable_cache(
   async (slug: string): Promise<Category | null> => fetchCategoryBySlug(slug),
-  ['category-by-slug'],
+  ['category-by-slug', ONBELLEK_SURUMU],
   { revalidate: 300, tags: ['catalog'] }
 );
 
@@ -334,7 +336,7 @@ function byCountThenName<T extends { name: string; count: number }>(items: T[]):
  */
 export const getSidebarData = unstable_cache(
   async (): Promise<SidebarData> => fetchSidebarData(),
-  ['sidebar-data'],
+  ['sidebar-data', ONBELLEK_SURUMU],
   { revalidate: 120, tags: ['catalog'] }
 );
 

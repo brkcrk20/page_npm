@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { ONBELLEK_SURUMU } from '@/lib/onbellek-surumu';
+
 import { unstable_cache } from 'next/cache';
 
 import {
@@ -76,10 +78,10 @@ function topla<T extends 'cities' | 'breeds'>(
  * 5 dakikalık önbellek: bu sorgular her liste sayfasında çalışıyor ve
  * sonuçları ilan eklendikçe değişiyor ama dakikalar ölçeğinde.
  */
-export const cinseGoreSehirler = unstable_cache(cinseGoreSehirlerHam, ['cins-sehirler'], {
+export const cinseGoreSehirler = unstable_cache(cinseGoreSehirlerHam, ['cins-sehirler', ONBELLEK_SURUMU], {
   revalidate: 300,
 });
-export const sehreGoreCinsler = unstable_cache(sehreGoreCinslerHam, ['sehir-cinsler'], {
+export const sehreGoreCinsler = unstable_cache(sehreGoreCinslerHam, ['sehir-cinsler', ONBELLEK_SURUMU], {
   revalidate: 300,
 });
 
@@ -125,12 +127,12 @@ async function kategoriyeGoreCinslerHam(categoryId: number): Promise<CaprazBagla
 
 export const kategoriyeGoreSehirler = unstable_cache(
   kategoriyeGoreSehirlerHam,
-  ['kategori-sehirler'],
+  ['kategori-sehirler', ONBELLEK_SURUMU],
   { revalidate: 300, tags: ['listings'] }
 );
 
 export const kategoriyeGoreCinsler = unstable_cache(
   kategoriyeGoreCinslerHam,
-  ['kategori-cinsler'],
+  ['kategori-cinsler', ONBELLEK_SURUMU],
   { revalidate: 300, tags: ['listings'] }
 );

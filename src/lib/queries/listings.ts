@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { ONBELLEK_SURUMU } from '@/lib/onbellek-surumu';
+
 import { unstable_cache } from 'next/cache';
 
 import { demoIsaretiniUygula, demoIsaretiniUygulaTek } from '@/lib/demo/rozet';
@@ -227,7 +229,7 @@ function listingOrder(
  */
 const getListingsCached = unstable_cache(
   async (filters: ListingFilters = {}) => fetchListings(filters),
-  ['listings'],
+  ['listings', ONBELLEK_SURUMU],
   { revalidate: 60, tags: ['listings'] }
 );
 
