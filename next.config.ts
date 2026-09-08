@@ -163,6 +163,26 @@ const nextConfig: NextConfig = {
     };
   },
 
+  /**
+   * Yazı tipi dosyaları kalıcı önbellekte.
+   *
+   * public/ altındaki dosyalar varsayılan olarak "max-age=0" ile
+   * gidiyor; yani her ziyaret fontu yeniden indiriyordu.
+   *
+   * Bir yıl güvenli ÇÜNKÜ adres sürümlü: içerik değişirse dosya adındaki
+   * sürüm de artıyor (bkz. scripts/yazi-tipi-kirp.py ve globals.css).
+   */
+  async headers() {
+    return [
+      {
+        source: '/fontlar/:dosya*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+    ];
+  },
+
   // ESKİ URL YAPISINDAN YENİ YAPIYA YÖNLENDİRMELER
   // Site canlıda olduğu için eski linkler kırılmasın diye 308 kalıcı yönlendirme.
   //

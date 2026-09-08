@@ -3,6 +3,68 @@
 @tailwind utilities;
 
 /**
+ * Yazı tipi: kendi kırptığımız Inter.
+ *
+ * NEDEN next/font DEĞİL
+ * Google'ın hazır alt kümeleri fazla geniş: "latin" 48 KB, "latin-ext" 85 KB
+ * ve Türkçe bir sayfa ikisini de indiriyor (ğ, ş, İ latin-ext'te). Ölçümde
+ * bu 130 KB, yavaş 4G'de 13,9 KB'lık stil dosyasının önüne geçip ilk
+ * boyamayı 1,5 saniyeye itiyordu.
+ *
+ * Dosya adındaki -v1: fontlar bir yıllık "immutable" başlıkla gidiyor.
+ * Kırpma betiğini farklı bir harf kümesiyle çalıştırırsan sürümü artır ve
+ * buradaki adresleri de güncelle; yoksa ziyaretçilerde eski font kalır.
+ *
+ * Dosyalar scripts/yazi-tipi-kirp.py ile siteye gereken harflere kırpıldı:
+ * temel latin + Latin-1 + Latin Extended-A (Türkçe ve Orta Avrupa) ile
+ * 130 KB -> 53 KB. unicode-range'ler Google'ınkiyle aynı, yani tarayıcı
+ * yalnızca sayfada geçen harflerin dosyasını indiriyor.
+ *
+ * ÖN YÜKLEME YOK
+ * Metin önce yedek yazı tipiyle boyanıyor, font gelince yerine geçiyor.
+ * Fontu ön yüklemek stil dosyasıyla yarışmak demekti.
+ *
+ * YEDEK ÖLÇÜLERİ
+ * Aşağıdaki ascent/descent/size-adjust değerleri Inter'in kendi ölçüleri;
+ * yedek yazı tipi aynı yeri kapladığı için font sonradan geldiğinde satırlar
+ * kaymıyor (CLS 0 kalıyor), yalnızca harf biçimi değişiyor.
+ */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fontlar/inter-latin-ext-v1.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fontlar/inter-latin-v1.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial');
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+  size-adjust: 107.12%;
+}
+
+:root {
+  --font-body: 'Inter', 'Inter Fallback';
+}
+
+/**
  * Renk sistemi.
  *
  * TEK GÜÇLÜ RENK, BEYAZ ZEMİN
