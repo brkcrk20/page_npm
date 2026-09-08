@@ -74,7 +74,7 @@ export function KindBrowser({
           </aside>
 
           <main>
-            <ListingGrid listings={listings} emptyMessage={emptyMessage} />
+            <ListingGrid listings={listings} emptyMessage={emptyMessage} oncelikliSayisi={2} />
           </main>
         </div>
 

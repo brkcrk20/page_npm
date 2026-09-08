@@ -129,14 +129,18 @@ export default async function HomePage() {
             {featured.length > 0 && (
               <section>
                 <h2 className="mb-4 text-2xl font-bold">Vitrin İlanları</h2>
-                <ListingGrid listings={featured} />
+                {/* İlk iki kart LCP adayı: mobilde kartlar tek sütun ve ilk
+                    ekranda ikisi birden görünüyor — ölçüm de LCP'yi ikinci
+                    kartın görselinde yakalıyor. Daha fazlası tarayıcıyı aynı
+                    anda onlarca görsele boğup asıl önemliyi geciktirir. */}
+                <ListingGrid listings={featured} oncelikliSayisi={2} />
               </section>
             )}
 
 
             {categorySections
               .filter((section) => section.listings.length > 0)
-              .map(({ category, listings, total }) => (
+              .map(({ category, listings, total }, sirasi) => (
                 <section key={category.id}>
                   {/* Kategori kendi rengini taşıyor: sayfa tek düze siyah-beyaz
                       bir liste olmaktan çıkıyor ve kullanıcı hangi bölüme
@@ -155,7 +159,12 @@ export default async function HomePage() {
                       </Link>
                     </Button>
                   </div>
-                  <ListingGrid listings={listings} />
+                  {/* Vitrin boşsa ilk kategori bloğunun kartları LCP adayı
+                      oluyor; öncelik oraya kayıyor. */}
+                  <ListingGrid
+                    listings={listings}
+                    oncelikliSayisi={featured.length === 0 && sirasi === 0 ? 2 : 0}
+                  />
                 </section>
               ))}
 

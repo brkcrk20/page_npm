@@ -239,7 +239,8 @@ export function CategoryBrowser({
                 }}
               />
             </Suspense>
-            <ListingGrid listings={listings} emptyMessage={emptyMessage} />
+            {/* İlk iki kart LCP adayı (mobilde tek sütun, masaüstünde ilk satır). */}
+            <ListingGrid listings={listings} emptyMessage={emptyMessage} oncelikliSayisi={2} />
             {caprazBaglantilar}
             <PageBody icerik={icerik ?? null} />
           </main>

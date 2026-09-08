@@ -77,7 +77,13 @@ function formatPrice(listing: ListingCard): string {
  * bilgisi görselin üstünde, degrade şeridin içinde — bilgi ile fotoğraf
  * arasındaki kopukluğu kaldırıyor.
  */
-function PetListingCard({ listing }: { listing: ListingCard }) {
+function PetListingCard({
+  listing,
+  oncelikli = false,
+}: {
+  listing: ListingCard;
+  oncelikli?: boolean;
+}) {
   const cover = [...(listing.listing_photos ?? [])].sort((a, b) => a.position - b.position)[0];
   /**
    * Kartta küçük kopya kullanılıyor.
@@ -124,6 +130,10 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
               fill
               sizes="32px"
               className="scale-110 object-cover blur-xl"
+              // Aynı adresi kullanıyor: tek istek gidiyor ve önceliğini DOM'da
+              // önce gelen bu etiket belirliyor. Öncelikli kartta bunu düşük
+              // öncelikli bırakmak, LCP görselini düşük öncelikli yapardı.
+              priority={oncelikli}
             />
             {/* contain: hayvan fotoğrafları dikey çekiliyor (720×1600 gibi),
                 4:5 kutuya cover ile basılınca kafa ya da kuyruk kesiliyordu. */}
@@ -133,6 +143,7 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
               fill
               sizes="(max-width: 767px) 128px, (max-width: 1280px) 33vw, 25vw"
               className="object-contain"
+              priority={oncelikli}
             />
           </>
         ) : (
@@ -251,9 +262,22 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
 export function ListingGrid({
   listings,
   emptyMessage = 'Bu kriterlere uyan ilan bulunamadı.',
+  oncelikliSayisi = 0,
 }: {
   listings: ListingCard[];
   emptyMessage?: string;
+  /**
+   * Baştan kaç kartın fotoğrafı öncelikli yüklensin.
+   *
+   * Sayfanın en büyük görseli (LCP) genellikle ilk kartın fotoğrafı oluyor.
+   * Bütün kart fotoğrafları tembel yükleniyordu; tarayıcı bunu ancak
+   * düzeni kurduktan sonra keşfediyor ve mobil bağlantıda LCP saniyelerce
+   * gecikiyordu (PageSpeed: "LCP istek keşfi").
+   *
+   * Yalnızca ilk ekrandaki karta verilmeli: hepsine verilirse tarayıcı
+   * yirmi görseli aynı anda çekmeye kalkıp asıl önemli olanı yavaşlatır.
+   */
+  oncelikliSayisi?: number;
 }) {
   if (listings.length === 0) {
     return (
@@ -266,8 +290,12 @@ export function ListingGrid({
   // Mobilde tek sütun (yatay satırlar), masaüstünde ızgara.
   return (
     <div className="grid grid-cols-1 gap-2.5 md:grid-cols-3 md:gap-5 xl:grid-cols-4">
-      {listings.map((listing) => (
-        <PetListingCard key={listing.id} listing={listing} />
+      {listings.map((listing, sira) => (
+        <PetListingCard
+          key={listing.id}
+          listing={listing}
+          oncelikli={sira < oncelikliSayisi}
+        />
       ))}
     </div>
   );
