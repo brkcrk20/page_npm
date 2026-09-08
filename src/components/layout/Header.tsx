@@ -304,12 +304,20 @@ export function Header() {
             kutusu ve kendi süzgeçleri var (bkz. showListingSearch).
           */}
           {showListingSearch && (
-            <div className="mr-2 min-w-0 flex-1 md:mr-3 md:max-w-xl">
+            <div className="min-w-0 flex-1 md:mr-3 md:max-w-xl">
               {renderFilters('sade')}
             </div>
           )}
 
-          <div className="flex flex-1 items-center justify-end gap-1 md:gap-2">
+          {/*
+            Sağ blok flex-1 ALMIYOR.
+
+            Aldığında arama kutusuyla boş alanı yarı yarıya paylaşıyor ve
+            mobilde kutu, zil ile arasında bir avuç boşluk bırakarak yarıya
+            iniyordu. Burada yalnızca kendi genişliği kadar yer kaplıyor;
+            arama kutusu olmayan sayfalarda ml-auto sağa yaslıyor.
+          */}
+          <div className="ml-auto flex shrink-0 items-center gap-0.5 md:gap-2">
             <div className="hidden md:flex items-center space-x-4">
               {renderAuthContent()}
             </div>

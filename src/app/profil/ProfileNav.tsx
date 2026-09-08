@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  Bell,
   BellPlus,
   Building2,
   ChevronLeft,
@@ -50,6 +51,7 @@ const ITEMS = [
   { href: '/profil/ilanlarim', label: 'İlanlarım', icon: List },
   { href: '/profil/dogrulama', label: 'Profil Doğrulama', icon: ShieldCheck },
   { href: '/mesajlarim', label: 'Mesajlarım', icon: MessageSquare, badge: true },
+  { href: '/profil/bildirimler', label: 'Bildirimlerim', icon: Bell },
   { href: '/profil/favoriler', label: 'Favorilerim', icon: Heart },
   { href: '/profil/aramalarim', label: 'Kayıtlı Aramalarım', icon: BellPlus },
   { href: '/doping', label: 'Öne Çıkar', icon: Rocket },

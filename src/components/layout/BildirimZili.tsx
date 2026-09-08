@@ -52,10 +52,15 @@ function ne_zaman(tarih: string): string {
 export function BildirimZili() {
   const { user } = useSupabaseAuth();
   const [bildirimler, setBildirimler] = useState<Bildirim[]>([]);
+  /**
+   * Rozetteki sayı ayrı sorgudan geliyor.
+   *
+   * Liste yalnızca son on beş satırı çekiyor; rozet ona bakarsa on beşten
+   * fazla okunmamış bildirimi olan kullanıcıda eksik sayı gösterir.
+   */
+  const [okunmamis, setOkunmamis] = useState(0);
   const [acik, setAcik] = useState(false);
   const kanalId = useId();
-
-  const okunmamis = bildirimler.filter((b) => !b.is_read).length;
 
   const getir = useCallback(async () => {
     // Dinamik içe aktarma: zil her sayfada, ama Supabase paketi yalnızca
@@ -64,13 +69,17 @@ export function BildirimZili() {
     const supabase = getSupabaseBrowserClientOrNull();
     if (!supabase) return;
 
-    const { data } = await supabase
-      .from('user_notifications')
-      .select('id, title, body, link, level, is_read, created_at')
-      .order('created_at', { ascending: false })
-      .limit(15);
+    const [liste, sayi] = await Promise.all([
+      supabase
+        .from('user_notifications')
+        .select('id, title, body, link, level, is_read, created_at')
+        .order('created_at', { ascending: false })
+        .limit(15),
+      supabase.rpc('okunmamis_bildirim_sayisi'),
+    ]);
 
-    setBildirimler((data as Bildirim[]) ?? []);
+    setBildirimler((liste.data as Bildirim[]) ?? []);
+    setOkunmamis(Number(sayi.data ?? 0));
   }, []);
 
   useEffect(() => {
@@ -91,7 +100,14 @@ export function BildirimZili() {
         .channel(`bildirim-${kanalId}`)
         .on(
           'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'user_notifications' },
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'user_notifications',
+            // Süzgeç sunucuda: filtresiz abonelikte sunucu her satırı
+            // gönderip istemcinin elemesini bekliyor.
+            filter: `user_id=eq.${user.id}`,
+          },
           () => void getir()
         )
         .subscribe();
@@ -110,6 +126,7 @@ export function BildirimZili() {
     if (!supabase) return;
     await supabase.rpc('bildirimleri_okundu_isaretle');
     setBildirimler((prev) => prev.map((b) => ({ ...b, is_read: true })));
+    setOkunmamis(0);
   }
 
   if (!user) return null;
@@ -161,6 +178,7 @@ export function BildirimZili() {
             Henüz bildiriminiz yok.
           </p>
         ) : (
+          <>
           <ul className="max-h-96 divide-y overflow-y-auto">
             {bildirimler.map((b) => {
               const icerik = (
@@ -188,6 +206,17 @@ export function BildirimZili() {
               );
             })}
           </ul>
+          {/* Zil yalnızca son on beşi gösteriyor; geçmişin tamamı ayrı
+              sayfada. */}
+          <Link
+            href="/profil/bildirimler"
+            onClick={() => setAcik(false)}
+            className="block border-t px-3 py-2 text-center text-sm font-medium text-primary hover:bg-secondary/60"
+            prefetch={false}
+          >
+            Tüm bildirimler
+          </Link>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

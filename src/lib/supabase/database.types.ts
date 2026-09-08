@@ -2830,6 +2830,7 @@ export type Database = {
       }
       monetization_enabled: { Args: never; Returns: boolean }
       normalize_tr_phone: { Args: { p_raw: string }; Returns: string }
+      okunmamis_bildirim_sayisi: { Args: never; Returns: number }
       remaining_listing_credits: { Args: never; Returns: number }
       report_listing: {
         Args: { p_listing_id: number; p_note?: string; p_reason: string }
