@@ -9,6 +9,25 @@ const nextConfig: NextConfig = {
   },
   images: {
     /**
+     * Görseller Next'in iyileştiricisinden GEÇMİYOR.
+     *
+     * Sebep ölçülmüş bir arıza: /_next/image istekleri canlıda 402
+     * dönmeye başladı — barındırma sağlayıcısının görsel iyileştirme
+     * kotası doldu ve sitedeki bütün fotoğraflar kırıldı. Kota her
+     * fotoğrafın her genişlik ve kalite varyasyonunu ayrı sayıyor;
+     * kart, galeri ve bulanık zemin çarpınca sayı hızla büyüyor.
+     *
+     * Buna ihtiyacımız yok: fotoğraflar yüklenirken zaten tarayıcıda
+     * 1600 pikselin altına indirilip WebP'ye çevriliyor
+     * (src/lib/image-pipeline.ts). İyileştirici, zaten iyileştirilmiş
+     * bir dosyayı yeniden işliyordu.
+     *
+     * Kart ve yan menü gibi küçük alanlar için yüklemede ayrıca 400
+     * piksellik küçük kopya üretiliyor; boyut farkı oradan geliyor.
+     */
+    unoptimized: true,
+
+    /**
      * İyileştirilmiş görsellerin önbellek süresi.
      *
      * Next, üretilen görselin Cache-Control'ünü kaynağınkinden türetiyor.
