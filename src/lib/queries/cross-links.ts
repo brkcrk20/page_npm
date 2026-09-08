@@ -82,3 +82,55 @@ export const cinseGoreSehirler = unstable_cache(cinseGoreSehirlerHam, ['cins-seh
 export const sehreGoreCinsler = unstable_cache(sehreGoreCinslerHam, ['sehir-cinsler'], {
   revalidate: 300,
 });
+
+/**
+ * Kategori sayfası için çapraz bağlantılar.
+ *
+ * Kategori sayfası siteden en çok bağlantı ALAN ama en az bağlantı VEREN
+ * sayfaydı: ilan kartları ve yan menü dışında hiçbir yere gitmiyordu.
+ * Ölçüm: karşılaştırdığımız rakip kategori sayfasında 154 iç bağlantı
+ * varken bizde 50 vardı.
+ *
+ * Buradaki iki liste, o kategoride gerçekten ilan olan illeri ve cinsleri
+ * veriyor. Boş kombinasyona bağlantı verilmiyor; kullanıcıyı boş listeye
+ * götürmek hem işe yaramıyor hem arama motoruna değersiz sayfa gösteriyor.
+ */
+async function kategoriyeGoreSehirlerHam(categoryId: number): Promise<CaprazBaglanti[]> {
+  if (!isSupabaseServerConfigured()) return [];
+  const supabase = createSupabasePublicClient();
+
+  const { data } = await supabase
+    .from('listings')
+    .select('cities!inner(slug, name)')
+    .eq('status', 'yayinda')
+    .eq('category_id', categoryId)
+    .limit(1000);
+
+  return topla(data as unknown as { cities: { slug: string; name: string } }[] | null, 'cities');
+}
+
+async function kategoriyeGoreCinslerHam(categoryId: number): Promise<CaprazBaglanti[]> {
+  if (!isSupabaseServerConfigured()) return [];
+  const supabase = createSupabasePublicClient();
+
+  const { data } = await supabase
+    .from('listings')
+    .select('breeds!inner(slug, name)')
+    .eq('status', 'yayinda')
+    .eq('category_id', categoryId)
+    .limit(1000);
+
+  return topla(data as unknown as { breeds: { slug: string; name: string } }[] | null, 'breeds');
+}
+
+export const kategoriyeGoreSehirler = unstable_cache(
+  kategoriyeGoreSehirlerHam,
+  ['kategori-sehirler'],
+  { revalidate: 300, tags: ['listings'] }
+);
+
+export const kategoriyeGoreCinsler = unstable_cache(
+  kategoriyeGoreCinslerHam,
+  ['kategori-cinsler'],
+  { revalidate: 300, tags: ['listings'] }
+);

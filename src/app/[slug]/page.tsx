@@ -20,6 +20,8 @@ import {
   getListingsWithVideo,
   parseListingParams } from '@/lib/queries/listings';
 import { resolveRootSegment } from '@/lib/routing';
+import { CrossLinks } from '@/components/listings/CrossLinks';
+import { kategoriyeGoreSehirler, kategoriyeGoreCinsler } from '@/lib/queries/cross-links';
 
 /**
  * Kökteki tek segment: /<kategori> VEYA /<baslik-slug>-<ilanNo>
@@ -130,10 +132,12 @@ export default async function RootSlugPage({
     const category = await getCategoryBySlug(slug);
     if (!category) notFound();
 
-    const [{ listings, total }, sidebar, icerik] = await Promise.all([
+    const [{ listings, total }, sidebar, icerik, sehirler, cinsler] = await Promise.all([
       getListings({ ...listeParams, categoryId: category.id }),
       getSidebarData(),
       getPageContent({ categoryId: category.id }),
+      kategoriyeGoreSehirler(category.id),
+      kategoriyeGoreCinsler(category.id),
     ]);
 
     // Güvercin kategorisinin kendine özgü giriş sayfası var: alıcı fotoğrafa
@@ -163,6 +167,27 @@ export default async function RootSlugPage({
         category={category}
         emptyMessage={`Şu an yayında ${category.name.toLowerCase()} yok. İlk ilanı sen ver!`}
         icerik={icerik}
+        caprazBaglantilar={
+          /**
+           * Kategori sayfası siteden en çok bağlantı ALAN ama en az
+           * bağlantı VEREN sayfaydı. Buradaki iki liste hem kullanıcıyı
+           * aradığı şehre/cinse götürüyor hem de cins ve şehir sayfalarına
+           * site içinden gerçek bağlantı veriyor — o sayfalar daha önce
+           * yalnızca site haritasından bulunuyordu.
+           */
+          <>
+            <CrossLinks
+              baslik={`${category.name} olan iller`}
+              baglantilar={sehirler}
+              href={(sehirSlug) => `/${category.slug}/${sehirSlug}`}
+            />
+            <CrossLinks
+              baslik={`${category.name.replace(' İlanları', '')} cinsleri`}
+              baglantilar={cinsler}
+              href={(cinsSlug) => `/${category.slug}/${cinsSlug}`}
+            />
+          </>
+        }
       />
     );
   }

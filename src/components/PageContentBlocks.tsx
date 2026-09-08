@@ -27,10 +27,27 @@ export function PageIntro({ icerik }: { icerik: SayfaIcerigi | null }) {
 export function PageBody({ icerik }: { icerik: SayfaIcerigi | null }) {
   if (!icerik) return null;
 
-  const paragraflar = (icerik.body ?? '')
+  /**
+   * "## " ile başlayan satır alt başlık oluyor.
+   *
+   * Metin tek düze paragraf yığınıydı: hem okunması zor hem de sayfada
+   * yalnızca bir başlık (h1) vardı. Karşılaştırdığımız rakip kategori
+   * sayfasında 21 alt başlık varken bizde bir tane bile yoktu — başlık
+   * yapısı hem okuyucuya hem arama motoruna metnin neyi anlattığını
+   * söylüyor.
+   *
+   * Markdown'ın tamamı desteklenmiyor; yalnızca bu tek işaret. Yönetimden
+   * metin yazan kişinin öğrenmesi gereken tek kural bu.
+   */
+  const bloklar = (icerik.body ?? '')
     .split(/\n{2,}/)
     .map((p) => p.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((p) =>
+      p.startsWith('## ') ? { tur: 'baslik' as const, metin: p.slice(3).trim() } : { tur: 'paragraf' as const, metin: p }
+    );
+
+  const paragraflar = bloklar;
 
   if (paragraflar.length === 0 && icerik.faq.length === 0) return null;
 
@@ -53,9 +70,15 @@ export function PageBody({ icerik }: { icerik: SayfaIcerigi | null }) {
       <section className="mt-10 space-y-6 rounded-xl border bg-white p-6">
         {paragraflar.length > 0 && (
           <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
-            {paragraflar.map((p) => (
-              <p key={p.slice(0, 40)}>{p}</p>
-            ))}
+            {paragraflar.map((b) =>
+              b.tur === 'baslik' ? (
+                <h2 key={b.metin} className="pt-2 text-base font-bold text-foreground">
+                  {b.metin}
+                </h2>
+              ) : (
+                <p key={b.metin.slice(0, 40)}>{b.metin}</p>
+              )
+            )}
           </div>
         )}
 

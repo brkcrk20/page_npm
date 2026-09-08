@@ -36,6 +36,26 @@ export default function robots(): MetadataRoute.Robots {
           '/*?sayfa=',
         ],
       },
+      /**
+       * Yapay zekâ arama botlarına açık izin.
+       *
+       * Varsayılan zaten "izinli" ama bu botların bir kısmı açık bir kural
+       * bulamadığında temkinli davranıyor. Sohbet tabanlı aramalar
+       * ("İzmir'de toy poodle sahiplendirme nereden bulurum") giderek daha
+       * çok trafik getiriyor; bu sorulara cevap veren kaynaklardan biri
+       * olmak indekslenmekle aynı şey değil, ayrıca izin gerektiriyor.
+       */
+      ...[
+        'GPTBot',
+        'OAI-SearchBot',
+        'ChatGPT-User',
+        'ClaudeBot',
+        'Claude-Web',
+        'PerplexityBot',
+        'Google-Extended',
+        'CCBot',
+        'Applebot-Extended',
+      ].map((userAgent) => ({ userAgent, allow: '/' })),
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
     host: SITE_URL,

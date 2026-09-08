@@ -33,9 +33,39 @@ export function organizationSchema(contact: {
     name: 'PetSemti',
     legalName: contact.legal_name,
     url: SITE_URL,
-    logo: `${SITE_URL}/marka/amblem.svg`,
+    /**
+     * Logo ImageObject olarak veriliyor.
+     *
+     * Google logo için ölçüsü belli bir raster görsel istiyor; SVG'de
+     * genişlik ve yükseklik olmadığı için "logo" alanı çoğu zaman
+     * yok sayılıyordu. Bilgi panelinde ve arama sonucunda marka
+     * görselinin çıkabilmesi için gerekli.
+     */
+    logo: {
+      '@type': 'ImageObject',
+      url: `${SITE_URL}/marka/ikon-1024.png`,
+      width: 1024,
+      height: 1024,
+    },
+    image: `${SITE_URL}/marka/paylasim-karti.png`,
+    description:
+      'PetSemti; evcil hayvan ilanları, yerel pet hizmetleri ve güvercin dünyası tek platformda.',
     email: contact.email,
     telephone: contact.phone,
+    // İletişim noktası ayrıca veriliyor: Google bunu "müşteri hizmetleri"
+    // olarak ayrı bir alan sayıyor ve e-posta/telefon alanlarından
+    // bağımsız değerlendiriyor.
+    contactPoint:
+      contact.email || contact.phone
+        ? clean({
+            '@type': 'ContactPoint',
+            contactType: 'customer support',
+            email: contact.email,
+            telephone: contact.phone,
+            areaServed: 'TR',
+            availableLanguage: ['Turkish'],
+          })
+        : undefined,
     sameAs: sameAs.length ? sameAs : undefined,
     areaServed: { '@type': 'Country', name: 'Türkiye' },
   });

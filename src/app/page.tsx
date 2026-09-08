@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 
 import { Button } from '@/components/ui/button';
 import { ListingGrid } from '@/components/listings/ListingGrid';
+import { AnaSayfaSSS } from '@/components/home/AnaSayfaSSS';
 import { CategorySidebar } from '@/components/layout/CategorySidebar';
 import { animalCategories, getSidebarData } from '@/lib/queries/catalog';
 import { createSupabasePublicClient } from '@/lib/supabase/server';
@@ -157,6 +158,7 @@ export default async function HomePage() {
                 </section>
               ))}
 
+            <AnaSayfaSSS />
           </main>
         </div>
       </div>
