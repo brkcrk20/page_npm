@@ -97,12 +97,15 @@ export function ListingGallery({
       >
         {hasPhotos ? (
           <>
+            {/* Zemin bulanık olduğu için küçük kopya yetiyor; tam boy
+                istemek aynı fotoğrafı ikinci kez çözdürüyordu. */}
             <Image
               src={current}
               alt=""
               aria-hidden
               fill
-              sizes="(max-width: 1024px) 100vw, 45vw"
+              sizes="48px"
+              quality={30}
               className="scale-110 object-cover blur-2xl"
             />
             <Image

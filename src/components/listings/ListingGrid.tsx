@@ -75,14 +75,21 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
         {imageUrl ? (
           <>
             {/* Bulanık zemin: fotoğrafın tamamı gösterildiğinde kenarda
-                kalan boşluğu fotoğrafın kendi rengiyle dolduruyor. Aynı
-                kaynak iki kez çiziliyor ama tek istek yapılıyor. */}
+                kalan boşluğu fotoğrafın kendi rengiyle dolduruyor.
+
+                sizes="32px": zemin zaten bulanıklaştırılıyor, tam çözünürlük
+                gözle görülmüyor. Ana fotoğrafla aynı ölçüde istendiğinde her
+                kart iki tam boy görsel çözüyor ve 24 piksellik bir bulanıklık
+                filtresi uyguluyordu — ana sayfada 26 kart, 52 görsel. 32
+                piksellik kopya aynı görüntüyü veriyor, çözme ve boyama
+                maliyetinin neredeyse tamamını kaldırıyor. */}
             <Image
               src={imageUrl}
               alt=""
               aria-hidden
               fill
-              sizes="(max-width: 767px) 128px, (max-width: 1280px) 33vw, 25vw"
+              sizes="32px"
+              quality={30}
               className="scale-110 object-cover blur-xl"
             />
             {/* contain: hayvan fotoğrafları dikey çekiliyor (720×1600 gibi),
