@@ -120,15 +120,27 @@ export async function generateMetadata({
       };
     }
 
+    /**
+     * Başlıkta "fiyatları" geçiyor.
+     *
+     * Türkiye'de bu sayfalara gelen aramanın baskın kalıbı
+     * "<cins> fiyatları": kullanıcı önce fiyat aralığını öğrenmek
+     * istiyor, sonra ilana bakıyor. Başlık "Satılık ve Sahiplendirme"
+     * derken aranan kelime hiç geçmiyordu.
+     *
+     * Yanıltıcı değil: sayfada fiyatlı satılık ilanlar da ücretsiz
+     * sahiplendirme ilanları da listeleniyor.
+     */
     return {
       title: seoBaslikSec(
-        `${ad} — Satılık ve Sahiplendirme İlanları`,
+        `${ad} Fiyatları ve Satılık İlanları`,
+        `${ad} Fiyatları ve İlanları`,
         `${ad} — Satılık ve Sahiplendirme`,
         `${ad} İlanları`
       ),
       description: seoAciklamaSec(
-        `${ad} cinsi için güncel satılık ve ücretsiz sahiplendirme ilanları. Türkiye'nin her ilinden ${ad} ilanlarına PetSemti'den ulaşın.`,
-        `${ad} cinsi için güncel satılık ve ücretsiz sahiplendirme ilanları. Türkiye'nin her ilindeki ilanlara PetSemti'den ulaşın.`
+        `${ad} fiyatları ve güncel ilanları: satılık ve ücretsiz sahiplendirme. Türkiye'nin her ilinden ${ad} ilanlarına PetSemti'den ulaşın.`,
+        `${ad} fiyatları ve güncel ilanları: satılık ve ücretsiz sahiplendirme. Her ildeki ilanlara PetSemti'den ulaşın.`
       ),
     };
   }

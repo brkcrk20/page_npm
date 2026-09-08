@@ -95,8 +95,7 @@ export async function generateMetadata({
      */
     return {
       title: seoBaslikSec(
-        `${city.name} ${breed.name} İlanları — Satılık ve Sahiplendirme`,
-        `${city.name} ${breed.name} — Satılık ve Sahiplendirme`,
+        `${city.name} ${breed.name} Fiyatları ve İlanları`,
         `${city.name} ${breed.name} İlanları`
       ),
       description: seoAciklamaSec(
