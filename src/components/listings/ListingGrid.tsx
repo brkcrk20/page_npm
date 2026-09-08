@@ -69,7 +69,7 @@ function PetListingCard({ listing }: { listing: ListingCard }) {
     <Link
       href={listingHref(listing)}
       className="group flex overflow-hidden rounded-2xl border bg-card transition-colors hover:border-primary/50 md:block"
-    >
+     prefetch={false}>
       {/* Görsel — mobilde solda kare, masaüstünde üstte dikey */}
       <div className="relative aspect-[3/4] w-24 shrink-0 overflow-hidden bg-muted sm:w-28 md:aspect-[4/5] md:w-full">
         {imageUrl ? (

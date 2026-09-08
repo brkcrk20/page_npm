@@ -103,7 +103,7 @@ function MobileLink({
       href={href}
       onClick={onNavigate}
       className="flex items-center justify-between border-b px-3 py-2.5 text-sm font-medium last:border-b-0 hover:bg-secondary"
-    >
+     prefetch={false}>
       {label}
       <ChevronRight className="h-4 w-4 text-muted-foreground" />
     </Link>
@@ -171,14 +171,14 @@ export function Header() {
       return (
         <div className="hidden md:flex items-center space-x-2">
           <Button variant="ghost" asChild className="hover:bg-white/15 hover:text-white">
-            <Link href="/login" className="text-sm font-medium">Giriş Yap</Link>
+            <Link href="/login" className="text-sm font-medium" prefetch={false}>Giriş Yap</Link>
           </Button>
           <Button
             variant="outline"
             asChild
             className="border-white/50 bg-transparent text-white hover:bg-white/15 hover:text-white"
           >
-            <Link href="/kayit">
+            <Link href="/kayit" prefetch={false}>
               <UserPlus className="mr-2 h-4 w-4" />
               Kayıt Ol
             </Link>
@@ -209,21 +209,21 @@ export function Header() {
                 /yorumlar ve /kredi-hareketleri vardı; hiçbiri mevcut değildi
                 ve tıklayan herkes 404 sayfasına düşüyordu. */}
             <DropdownMenuGroup>
-              <DropdownMenuItem asChild><Link href="/profil"><User className="mr-2 h-4 w-4" /><span>Hesabım</span></Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/profil/ilanlarim"><FileText className="mr-2 h-4 w-4" /><span>İlanlarım</span></Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/mesajlarim"><MessageSquare className="mr-2 h-4 w-4" /><span>Mesajlarım</span><span className="relative ml-2"><UnreadBadge /></span></Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/profil/favoriler"><Heart className="mr-2 h-4 w-4" /><span>Favori İlanlarım</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/profil" prefetch={false}><User className="mr-2 h-4 w-4" /><span>Hesabım</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/profil/ilanlarim" prefetch={false}><FileText className="mr-2 h-4 w-4" /><span>İlanlarım</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/mesajlarim" prefetch={false}><MessageSquare className="mr-2 h-4 w-4" /><span>Mesajlarım</span><span className="relative ml-2"><UnreadBadge /></span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/profil/favoriler" prefetch={false}><Heart className="mr-2 h-4 w-4" /><span>Favori İlanlarım</span></Link></DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem asChild><Link href="/doping"><Package className="mr-2 h-4 w-4" /><span>İlanımı Öne Çıkar</span></Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/profil/siparislerim"><ShoppingBag className="mr-2 h-4 w-4" /><span>Siparişlerim</span></Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/profil/fatura"><CreditCard className="mr-2 h-4 w-4" /><span>Fatura Bilgileri</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/doping" prefetch={false}><Package className="mr-2 h-4 w-4" /><span>İlanımı Öne Çıkar</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/profil/siparislerim" prefetch={false}><ShoppingBag className="mr-2 h-4 w-4" /><span>Siparişlerim</span></Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/profil/fatura" prefetch={false}><CreditCard className="mr-2 h-4 w-4" /><span>Fatura Bilgileri</span></Link></DropdownMenuItem>
             </DropdownMenuGroup>
             {isAdmin && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link href="/admin"><Shield className="mr-2 h-4 w-4" /><span>Admin Paneli</span></Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/admin" prefetch={false}><Shield className="mr-2 h-4 w-4" /><span>Admin Paneli</span></Link></DropdownMenuItem>
               </>
             )}
             <DropdownMenuSeparator />
@@ -235,7 +235,7 @@ export function Header() {
         </DropdownMenu>
 
         <Button variant="ghost" size="icon" asChild className="hover:bg-white/15 hover:text-white">
-          <Link href="/mesajlarim">
+          <Link href="/mesajlarim" prefetch={false}>
             <MessageSquare className="h-5 w-5" />
             <span className="sr-only">Mesajlar</span>
           </Link>
@@ -255,7 +255,7 @@ export function Header() {
         <div className="container flex h-16 items-center px-5">
           {/* Renkli bantta tek renk amblem: iki renkli sürüm burada
               okunmuyordu. */}
-          <Link href="/" className="mr-6 flex items-center" aria-label="PetSemti ana sayfa">
+          <Link href="/" className="mr-6 flex items-center" aria-label="PetSemti ana sayfa" prefetch={false}>
             <Logo variant="mono" size={36} />
           </Link>
           
@@ -264,7 +264,7 @@ export function Header() {
                 {renderAuthContent()}
               </div>
             <Button asChild variant="secondary" className="bg-white text-primary hover:bg-white/90">
-              <Link href={user ? ilanVerHref(pathname) : '/login'}>İlan Ver</Link>
+              <Link href={user ? ilanVerHref(pathname) : '/login'} prefetch={false}>İlan Ver</Link>
             </Button>
           </div>
 
@@ -337,16 +337,16 @@ export function Header() {
 
                 <div className="mt-4 flex flex-col gap-2 border-t pt-4">
                   <Button asChild onClick={() => setSheetOpen(false)}>
-                    <Link href={user ? ilanVerHref(pathname) : '/login'}>İlan Ver</Link>
+                    <Link href={user ? ilanVerHref(pathname) : '/login'} prefetch={false}>İlan Ver</Link>
                   </Button>
 
                   {!isLoading && !user && (
                     <>
                       <Button variant="outline" asChild onClick={() => setSheetOpen(false)}>
-                        <Link href="/login">Giriş Yap</Link>
+                        <Link href="/login" prefetch={false}>Giriş Yap</Link>
                       </Button>
                       <Button variant="secondary" asChild onClick={() => setSheetOpen(false)}>
-                        <Link href="/kayit">Kayıt Ol</Link>
+                        <Link href="/kayit" prefetch={false}>Kayıt Ol</Link>
                       </Button>
                     </>
                   )}

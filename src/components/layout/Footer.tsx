@@ -3,6 +3,20 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+/**
+ * Bağlantılarda prefetch={false}.
+ *
+ * Next varsayılan olarak görünen her bağlantının sunucu bileşen yükünü
+ * önden indiriyor. Alt bilgide otuz, yan menüde ve kartlarda onlarca
+ * bağlantı var; ölçümde ana sayfa açılışında 14 ek istek ve bunları
+ * ayrıştırmanın ana iş parçacığındaki maliyeti çıktı.
+ *
+ * Kapatmak tıklama hızını düşürmüyor: Next bağlantının üzerine
+ * gelindiğinde (dokunmatikte parmak değdiğinde) yine önden indiriyor.
+ * Kaybedilen tek şey, kullanıcının hiç tıklamayacağı bağlantılar için
+ * yapılan hazırlık.
+ */
+
 import type { SiteContact } from '@/lib/queries/site-settings';
 import { Logo } from '@/components/Logo';
 import {
@@ -56,7 +70,7 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Column 1: Brand */}
           <div className="col-span-1 lg:col-span-1">
-            <Link href="/" className="mb-4 inline-flex" aria-label="PetSemti ana sayfa">
+            <Link href="/" className="mb-4 inline-flex" aria-label="PetSemti ana sayfa" prefetch={false}>
               <Logo size={40} showTagline />
             </Link>
             {/* Marka cümlesi site geneliyle aynı; bkz. app/layout.tsx. */}
@@ -71,11 +85,11 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
           <div>
             <h3 className={footerTitleStyle}>Köpek İlanları</h3>
             <ul className="space-y-2">
-              <li><Link href="/kopek-ilanlari/pomeranian-boo" className={footerLinkStyle}>Pomeranian Boo</Link></li>
-              <li><Link href="/kopek-ilanlari/maltipoo" className={footerLinkStyle}>Maltipoo</Link></li>
-              <li><Link href="/kopek-ilanlari/maltese-terrier" className={footerLinkStyle}>Maltese Terrier</Link></li>
-              <li><Link href="/kopek-ilanlari/golden-retriever" className={footerLinkStyle}>Golden Retriever</Link></li>
-              <li><Link href="/kopek-ilanlari/toy-poodle" className={footerLinkStyle}>Toy Poodle</Link></li>
+              <li><Link href="/kopek-ilanlari/pomeranian-boo" className={footerLinkStyle} prefetch={false}>Pomeranian Boo</Link></li>
+              <li><Link href="/kopek-ilanlari/maltipoo" className={footerLinkStyle} prefetch={false}>Maltipoo</Link></li>
+              <li><Link href="/kopek-ilanlari/maltese-terrier" className={footerLinkStyle} prefetch={false}>Maltese Terrier</Link></li>
+              <li><Link href="/kopek-ilanlari/golden-retriever" className={footerLinkStyle} prefetch={false}>Golden Retriever</Link></li>
+              <li><Link href="/kopek-ilanlari/toy-poodle" className={footerLinkStyle} prefetch={false}>Toy Poodle</Link></li>
             </ul>
           </div>
 
@@ -83,11 +97,11 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
           <div>
             <h3 className={footerTitleStyle}>Kedi İlanları</h3>
             <ul className="space-y-2">
-              <li><Link href="/kedi-ilanlari/british-shorthair" className={footerLinkStyle}>British Shorthair</Link></li>
-              <li><Link href="/kedi-ilanlari/scottish-fold" className={footerLinkStyle}>Scottish Fold</Link></li>
-              <li><Link href="/kedi-ilanlari/iran-kedisi" className={footerLinkStyle}>İran Kedisi</Link></li>
-              <li><Link href="/kedi-ilanlari/siyam" className={footerLinkStyle}>Siyam</Link></li>
-              <li><Link href="/kedi-ilanlari/van-kedisi" className={footerLinkStyle}>Van Kedisi</Link></li>
+              <li><Link href="/kedi-ilanlari/british-shorthair" className={footerLinkStyle} prefetch={false}>British Shorthair</Link></li>
+              <li><Link href="/kedi-ilanlari/scottish-fold" className={footerLinkStyle} prefetch={false}>Scottish Fold</Link></li>
+              <li><Link href="/kedi-ilanlari/iran-kedisi" className={footerLinkStyle} prefetch={false}>İran Kedisi</Link></li>
+              <li><Link href="/kedi-ilanlari/siyam" className={footerLinkStyle} prefetch={false}>Siyam</Link></li>
+              <li><Link href="/kedi-ilanlari/van-kedisi" className={footerLinkStyle} prefetch={false}>Van Kedisi</Link></li>
             </ul>
           </div>
 
@@ -95,12 +109,12 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
           <div>
             <h3 className={footerTitleStyle}>Kurumsal</h3>
             <ul className="space-y-2">
-              <li><Link href="/gizlilik-politikasi" className={footerLinkStyle}>Gizlilik Politikası</Link></li>
-              <li><Link href="/ilan-kurallari" className={footerLinkStyle}>İlan Verme Kuralları</Link></li>
-              <li><Link href="/kullanim-sartlari" className={footerLinkStyle}>Kullanım Şartları</Link></li>
+              <li><Link href="/gizlilik-politikasi" className={footerLinkStyle} prefetch={false}>Gizlilik Politikası</Link></li>
+              <li><Link href="/ilan-kurallari" className={footerLinkStyle} prefetch={false}>İlan Verme Kuralları</Link></li>
+              <li><Link href="/kullanim-sartlari" className={footerLinkStyle} prefetch={false}>Kullanım Şartları</Link></li>
               {/* CC BY / CC BY-SA lisanslı cins görselleri atıf zorunlu tutuyor;
                   bu bağlantı yasal yükümlülüğün parçası, kaldırılmamalı. */}
-              <li><Link href="/gorsel-kaynaklari" className={footerLinkStyle}>Görsel Kaynakları</Link></li>
+              <li><Link href="/gorsel-kaynaklari" className={footerLinkStyle} prefetch={false}>Görsel Kaynakları</Link></li>
             </ul>
           </div>
 
@@ -108,10 +122,10 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
           <div>
             <h3 className={footerTitleStyle}>Genel Bilgiler</h3>
             <ul className="space-y-2">
-              <li><Link href="/yardim" className={footerLinkStyle}>Yardım Merkezi</Link></li>
-              <li><Link href="/rehber" className={footerLinkStyle}>PetSemti Rehber</Link></li>
-              <li><Link href="/hakkimizda" className={footerLinkStyle}>Hakkımızda</Link></li>
-              <li><Link href="/iletisim" className={footerLinkStyle}>İletişim</Link></li>
+              <li><Link href="/yardim" className={footerLinkStyle} prefetch={false}>Yardım Merkezi</Link></li>
+              <li><Link href="/rehber" className={footerLinkStyle} prefetch={false}>PetSemti Rehber</Link></li>
+              <li><Link href="/hakkimizda" className={footerLinkStyle} prefetch={false}>Hakkımızda</Link></li>
+              <li><Link href="/iletisim" className={footerLinkStyle} prefetch={false}>İletişim</Link></li>
             </ul>
           </div>
         </div>
@@ -128,12 +142,12 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
                   <h3 className="hidden text-base font-bold md:block">BİZE ULAŞIN</h3>
                 )}
                 {contact.phone && (
-                  <Link href={`tel:${contact.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 hover:text-primary">
+                  <Link href={`tel:${contact.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 hover:text-primary" prefetch={false}>
                     <Phone className="h-4 w-4" /> {contact.phone}
                   </Link>
                 )}
                 {contact.email && (
-                  <Link href={`mailto:${contact.email}`} className="flex items-center gap-2 hover:text-primary">
+                  <Link href={`mailto:${contact.email}`} className="flex items-center gap-2 hover:text-primary" prefetch={false}>
                     <Mail className="h-4 w-4" /> {contact.email}
                   </Link>
                 )}
@@ -142,23 +156,23 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
                     href={`https://wa.me/${contact.whatsapp.replace(/\D/g, '')}`}
                     target="_blank"
                     className="flex items-center gap-2 hover:text-primary"
-                  >
+                   prefetch={false}>
                     <MessageCircle className="h-4 w-4" /> WhatsApp
                   </Link>
                 )}
             </div>
             <div className="flex space-x-2">
                 {contact.facebook && (
-                  <Link href={contact.facebook} target="_blank" aria-label="Facebook" className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white hover:opacity-80"><Facebook className="h-5 w-5" /></Link>
+                  <Link href={contact.facebook} target="_blank" aria-label="Facebook" className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white hover:opacity-80" prefetch={false}><Facebook className="h-5 w-5" /></Link>
                 )}
                 {contact.x && (
-                  <Link href={contact.x} target="_blank" aria-label="X" className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500 text-white hover:opacity-80"><Twitter className="h-5 w-5" /></Link>
+                  <Link href={contact.x} target="_blank" aria-label="X" className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500 text-white hover:opacity-80" prefetch={false}><Twitter className="h-5 w-5" /></Link>
                 )}
                 {contact.instagram && (
-                  <Link href={contact.instagram} target="_blank" aria-label="Instagram" className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-500 text-white hover:opacity-80"><Instagram className="h-5 w-5" /></Link>
+                  <Link href={contact.instagram} target="_blank" aria-label="Instagram" className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-500 text-white hover:opacity-80" prefetch={false}><Instagram className="h-5 w-5" /></Link>
                 )}
                 {contact.youtube && (
-                  <Link href={contact.youtube} target="_blank" aria-label="YouTube" className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white hover:opacity-80"><Youtube className="h-5 w-5" /></Link>
+                  <Link href={contact.youtube} target="_blank" aria-label="YouTube" className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white hover:opacity-80" prefetch={false}><Youtube className="h-5 w-5" /></Link>
                 )}
             </div>
         </div>
@@ -175,10 +189,10 @@ export function Footer({ contact = {} }: { contact?: SiteContact }) {
               yöntemini göstermek tüketiciyi yanıltır. Gerçek belgeler ve ödeme
               sağlayıcısı geldiğinde buraya eklenmeli. */}
           <nav className="order-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 md:order-2">
-            <Link href="/kullanim-sartlari" className="hover:text-primary">Kullanım Şartları</Link>
-            <Link href="/gizlilik-politikasi" className="hover:text-primary">Gizlilik Politikası</Link>
-            <Link href="/yardim" className="hover:text-primary">Yardım</Link>
-            <Link href="/iletisim" className="hover:text-primary">İletişim</Link>
+            <Link href="/kullanim-sartlari" className="hover:text-primary" prefetch={false}>Kullanım Şartları</Link>
+            <Link href="/gizlilik-politikasi" className="hover:text-primary" prefetch={false}>Gizlilik Politikası</Link>
+            <Link href="/yardim" className="hover:text-primary" prefetch={false}>Yardım</Link>
+            <Link href="/iletisim" className="hover:text-primary" prefetch={false}>İletişim</Link>
           </nav>
         </div>
       </div>

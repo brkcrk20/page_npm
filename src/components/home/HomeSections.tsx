@@ -34,7 +34,7 @@ export function PopularBreeds({ sidebar }: { sidebar: SidebarData }) {
             <Link
               href={`/${b.categorySlug}/${b.slug}`}
               className="flex items-center gap-2 rounded-xl border bg-white p-2.5 transition-colors hover:border-primary"
-            >
+             prefetch={false}>
               <BreedAvatar
                 breedName={b.name}
                 breedSlug={b.slug}
@@ -70,7 +70,7 @@ export function ServiceDirectories() {
             <Link
               href={`/${s.slug}`}
               className="flex h-full flex-col justify-center rounded-xl border bg-white p-3 text-center transition-colors hover:border-primary hover:text-primary"
-            >
+             prefetch={false}>
               {/* Etiket olduğu gibi: kısaltmaya çalışmak "Pet Otelleri" ve
                   "Pet Kuaförleri"ni ikisi de "Pet"e indiriyordu. */}
               <span className="text-sm font-semibold leading-tight">{s.label}</span>
@@ -109,7 +109,7 @@ export function CityLinks({ sidebar }: { sidebar: SidebarData }) {
             <Link
               href={`/${mainCategory.slug}/${city.slug}`}
               className="inline-flex items-center gap-1.5 rounded-full border bg-white px-3 py-1.5 text-sm transition-colors hover:border-primary hover:text-primary"
-            >
+             prefetch={false}>
               {city.name}
               {city.count > 0 && (
                 <span className="text-xs font-semibold text-muted-foreground">{city.count}</span>
@@ -163,7 +163,7 @@ export function SafetyStrip() {
       <p className="mt-3 text-xs text-amber-800">
         PetSemti bir yer sağlayıcıdır; doğrudan hayvan satışı yapmaz ve ilanların tarafı
         değildir. Kurallara aykırı bir ilan gördüğünüzde{' '}
-        <Link href="/iletisim" className="font-medium underline">
+        <Link href="/iletisim" className="font-medium underline" prefetch={false}>
           bize bildirin
         </Link>
         .

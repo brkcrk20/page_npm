@@ -28,7 +28,7 @@ export function GuideTopicStrip({
           'shrink-0 rounded-full border px-3.5 py-1.5 text-sm transition-colors',
           !aktif ? 'border-primary bg-primary text-primary-foreground' : 'hover:border-primary'
         )}
-      >
+       prefetch={false}>
         Tümü
       </Link>
       {konular.map((k) => (
@@ -41,7 +41,7 @@ export function GuideTopicStrip({
               ? 'border-primary bg-primary text-primary-foreground'
               : 'hover:border-primary'
           )}
-        >
+         prefetch={false}>
           {k.name}
         </Link>
       ))}
@@ -77,7 +77,7 @@ export function GuideCardList({
             <Link
               href={`/rehber/${y.slug}`}
               className="group flex h-full flex-col overflow-hidden rounded-2xl border bg-card transition-colors hover:border-primary/50"
-            >
+             prefetch={false}>
               <div className="relative aspect-[16/9] bg-muted">
                 {kapak ? (
                   <Image
@@ -146,7 +146,7 @@ export function GuideStrip({ yazilar, baslik }: { yazilar: GuideCard[]; baslik: 
               <Link
                 href={`/rehber/${yazi.slug}`}
                 className="flex items-center gap-3 p-3 transition-colors hover:bg-accent"
-              >
+               prefetch={false}>
                 <span className="relative h-14 w-20 shrink-0 overflow-hidden rounded bg-muted">
                   {kapak ? (
                     <Image src={kapak} alt="" fill sizes="80px" className="object-cover" />

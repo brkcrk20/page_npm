@@ -219,7 +219,7 @@ export function CategorySidebar({
                             ? 'bg-primary/5 font-semibold text-primary'
                             : 'hover:bg-secondary/50'
                         )}
-                      >
+                       prefetch={false}>
                         <span className="min-w-0 flex-1 truncate">{item.name}</span>
                         {item.count > 0 && (
                           <span className="shrink-0 text-xs text-muted-foreground">
@@ -256,7 +256,7 @@ export function CategorySidebar({
                   <Link
                     href={`/${category.slug}`}
                     className="flex flex-1 items-center justify-between px-3 py-2.5 text-sm font-bold hover:text-primary"
-                  >
+                   prefetch={false}>
                     <span>{category.name}</span>
                     <span className="text-xs font-semibold text-muted-foreground">
                       {category.count}
@@ -318,7 +318,7 @@ export function CategorySidebar({
                                   ? 'bg-primary/8 font-semibold text-primary'
                                   : 'text-foreground'
                               )}
-                            >
+                             prefetch={false}>
                               <BreedAvatar
                                 breedName={breed.name}
                                 breedSlug={breed.slug}
@@ -390,7 +390,7 @@ export function CategorySidebar({
                         ? 'bg-primary/5 font-semibold text-primary'
                         : 'text-foreground'
                     )}
-                  >
+                   prefetch={false}>
                     <span>{city.name}</span>
                     <span className="text-xs text-muted-foreground">{city.count}</span>
                   </Link>

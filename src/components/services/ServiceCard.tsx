@@ -49,7 +49,7 @@ export function ServiceCard({
         )}
         <div className="min-w-0 flex-1">
           <h3 className="flex items-center gap-1.5 text-base font-bold">
-            <Link href={`/${config.slug}/${provider.slug}-${provider.id}`} className="hover:text-primary">
+            <Link href={`/${config.slug}/${provider.slug}-${provider.id}`} className="hover:text-primary" prefetch={false}>
               {provider.name}
             </Link>
             {provider.is_verified && (
@@ -104,7 +104,7 @@ export function ServiceCard({
       <Link
         href={`/${config.slug}/${provider.slug}-${provider.id}`}
         className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
-      >
+       prefetch={false}>
         Detayları Gör →
       </Link>
     </article>

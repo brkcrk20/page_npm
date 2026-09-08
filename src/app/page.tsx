@@ -94,7 +94,7 @@ export default async function HomePage() {
             </p>
           </div>
           <Button asChild>
-            <Link href="/ilan-ver/sahiplendirme">
+            <Link href="/ilan-ver/sahiplendirme" prefetch={false}>
               <Plus className="mr-1.5 h-4 w-4" />
               Hayvan İlanı Ver
             </Link>
@@ -119,7 +119,7 @@ export default async function HomePage() {
                   PetSemti yeni yayında. İlk ilanı vererek başlayabilirsin.
                 </p>
                 <Button asChild className="mt-6">
-                  <Link href="/ilan-ver/sahiplendirme">Hemen İlan Ver</Link>
+                  <Link href="/ilan-ver/sahiplendirme" prefetch={false}>Hemen İlan Ver</Link>
                 </Button>
               </section>
             )}
@@ -148,7 +148,7 @@ export default async function HomePage() {
                       {category.name}
                     </h2>
                     <Button variant="link" asChild className="text-primary">
-                      <Link href={`/${category.slug}`}>
+                      <Link href={`/${category.slug}`} prefetch={false}>
                         Tümünü Gör ({total}) <ArrowRight className="ml-1 h-4 w-4" />
                       </Link>
                     </Button>

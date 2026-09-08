@@ -29,7 +29,7 @@ export function CrossLinks({
             <Link
               href={href(b.slug)}
               className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors hover:border-primary hover:text-primary"
-            >
+             prefetch={false}>
               {b.name}
               <span className="text-xs text-muted-foreground">{b.count}</span>
             </Link>
