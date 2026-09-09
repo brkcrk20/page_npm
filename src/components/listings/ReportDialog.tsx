@@ -18,7 +18,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 
 /**
@@ -60,6 +59,9 @@ export function ReportDialog({ listingId }: { listingId: number }) {
     }
 
     setIsSending(true);
+    // Şikayet nadir bir eylem; Supabase istemcisi ilk pakete girmesin diye
+    // tıklama anında iniyor.
+    const { getSupabaseBrowserClient } = await import('@/lib/supabase/client');
     const { error } = await getSupabaseBrowserClient().rpc('report_listing', {
       p_listing_id: listingId,
       p_reason: reason,

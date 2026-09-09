@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { Facebook, Flag, Instagram, Star, Send } from 'lucide-react';
 
 import { useToast } from '@/hooks/use-toast';
-import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
 import { ReportDialog } from '@/components/listings/ReportDialog';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import { cn } from '@/lib/utils';
@@ -34,10 +33,15 @@ export function ListingActions({
 
   // Görüntülenme sayacı. Oturum başına bir kez: aynı ilanı yenileyip sayacı
   // şişirmenin önüne geçiyor.
+  /**
+   * Supabase istemcisi statik değil, gerektiğinde iniyor.
+   *
+   * Yukarıdan içe aktarıldığında @supabase/supabase-js ilan sayfasının
+   * ilk paketine giriyordu (ölçümde 188 KB). Buradaki işler — sayaç,
+   * favori durumu — ilk boyamadan sonra çalışıyor; paketi de o zaman
+   * indirmek yeterli. Oturum sağlayıcısında aynı çözüm zaten var.
+   */
   useEffect(() => {
-    const supabase = getSupabaseBrowserClientOrNull();
-    if (!supabase) return;
-
     const key = `ilan-goruntulendi-${listingId}`;
     try {
       if (sessionStorage.getItem(key)) return;
@@ -46,30 +50,40 @@ export function ListingActions({
       // Gizli sekmede sessionStorage erişimi hata verebilir; sayaç kritik
       // değil, sessizce devam ediyoruz.
     }
-    // .then() ŞART: Supabase istemcisinin sorgu oluşturucusu tembel bir
-    // "thenable". await edilmez ya da .then() çağrılmazsa istek HİÇ
-    // gönderilmiyor ve hata da vermiyor. Sayaçların hep sıfır kalmasının
-    // sebebi buydu.
-    void supabase.rpc('increment_listing_view', { p_listing_id: listingId }).then(() => {});
+    void (async () => {
+      const { getSupabaseBrowserClientOrNull } = await import('@/lib/supabase/client');
+      const supabase = getSupabaseBrowserClientOrNull();
+      if (!supabase) return;
+      // .then() ŞART: Supabase istemcisinin sorgu oluşturucusu tembel bir
+      // "thenable". await edilmez ya da .then() çağrılmazsa istek HİÇ
+      // gönderilmiyor ve hata da vermiyor. Sayaçların hep sıfır kalmasının
+      // sebebi buydu.
+      await supabase.rpc('increment_listing_view', { p_listing_id: listingId }).then(() => {});
+    })();
   }, [listingId]);
 
   // Kullanıcının bu ilanı favorilemiş olup olmadığı.
   useEffect(() => {
-    const supabase = getSupabaseBrowserClientOrNull();
-    if (!supabase || !user) {
+    if (!user) {
       setIsFavorite(false);
       return;
     }
-    supabase
-      .from('favorites')
-      .select('listing_id')
-      .eq('listing_id', listingId)
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data }) => setIsFavorite(Boolean(data)));
+    void (async () => {
+      const { getSupabaseBrowserClientOrNull } = await import('@/lib/supabase/client');
+      const supabase = getSupabaseBrowserClientOrNull();
+      if (!supabase) return;
+      const { data } = await supabase
+        .from('favorites')
+        .select('listing_id')
+        .eq('listing_id', listingId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      setIsFavorite(Boolean(data));
+    })();
   }, [user, listingId]);
 
   async function toggleFavorite() {
+    const { getSupabaseBrowserClientOrNull } = await import('@/lib/supabase/client');
     const supabase = getSupabaseBrowserClientOrNull();
     if (!supabase) return;
 

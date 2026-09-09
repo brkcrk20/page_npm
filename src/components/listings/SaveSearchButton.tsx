@@ -7,7 +7,6 @@ import { BellPlus, Check, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 
 /**
@@ -39,7 +38,9 @@ export function SaveSearchButton({
   if (!user) {
     return (
       <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
-        <Link href="/login">
+        {/* Ön yükleme kapalı: giriş sayfası her kategori sayfasında
+            boşuna indiriliyordu (ölçümde 86 KB). */}
+        <Link href="/login" prefetch={false}>
           <BellPlus className="mr-1.5 h-4 w-4" />
           Aramayı Kaydet
         </Link>
@@ -57,6 +58,15 @@ export function SaveSearchButton({
       if (deger) params[anahtar] = deger;
     }
 
+    /**
+     * Supabase istemcisi tıklama anında iniyor.
+     *
+     * Yukarıdan içe aktarıldığında @supabase/supabase-js kategori
+     * sayfasının paketine giriyordu: ölçümde kategoriye geçişte inen
+     * 630 KB'ın 188 KB'ı buydu ve ziyaretçilerin çoğu bu düğmeye hiç
+     * dokunmuyor. Oturum sağlayıcıda aynı çözüm zaten var.
+     */
+    const { getSupabaseBrowserClient } = await import('@/lib/supabase/client');
     const supabase = getSupabaseBrowserClient();
     const { error } = await supabase.from('saved_searches').insert({
       user_id: user!.id,

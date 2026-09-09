@@ -20,7 +20,6 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getSupabaseBrowserClientOrNull } from '@/lib/supabase/client';
 import { useSupabaseAuth } from '@/lib/supabase/auth-provider';
 import { usePathname } from 'next/navigation';
 import {
@@ -96,7 +95,13 @@ export function SellerCard({
   const telefonVar = showPhone && hasPhone;
   const whatsappVar = allowWhatsapp && hasPhone;
 
-  function track(rpc: 'increment_listing_phone' | 'increment_listing_whatsapp') {
+  /**
+   * Supabase istemcisi gerektiğinde iniyor; ilan sayfasının ilk paketine
+   * girmesin diye (ölçümde 188 KB). Ziyaretçilerin çoğu telefon ya da
+   * WhatsApp düğmesine hiç dokunmuyor.
+   */
+  async function track(rpc: 'increment_listing_phone' | 'increment_listing_whatsapp') {
+    const { getSupabaseBrowserClientOrNull } = await import('@/lib/supabase/client');
     const supabase = getSupabaseBrowserClientOrNull();
     // .then() ŞART — bkz. ListingActions'taki açıklama: tembel thenable
     // await edilmezse istek gönderilmiyor.
@@ -114,6 +119,7 @@ export function SellerCard({
       return null;
     }
 
+    const { getSupabaseBrowserClientOrNull } = await import('@/lib/supabase/client');
     const supabase = getSupabaseBrowserClientOrNull();
     if (!supabase) return null;
 
@@ -138,7 +144,7 @@ export function SellerCard({
     }
 
     setPhone(data as string);
-    track('increment_listing_phone');
+    void track('increment_listing_phone');
     return data as string;
   }
 
@@ -160,7 +166,7 @@ export function SellerCard({
       toast({ title: 'WhatsApp numarası yok' });
       return;
     }
-    track('increment_listing_whatsapp');
+    void track('increment_listing_whatsapp');
     window.open(
       whatsappAdresi(wa, ilanWhatsappMetni(listingTitle)),
       '_blank',
