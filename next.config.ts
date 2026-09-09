@@ -2,18 +2,6 @@ import type { NextConfig } from 'next';
 
 import { SERVICE_CONFIGS } from './src/lib/services-config';
 
-/**
- * Süzgeçli görünümlerin kenar ağı önbelleği.
- *
- * Sıralama ve süzgeç istekleri searchParams okuyan rotalara gidiyor; Next
- * onları dinamik sayıp "no-store" gönderiyor. Ölçümde her sıralama
- * tıklaması 0,6-1,0 saniye sürüyordu, önbelleğe giren sayfalar 0,09 saniye.
- *
- * Önbellek anahtarı sorgu dizesini de içerdiği için her kombinasyon ayrı
- * saklanıyor. Bu sayfalarda kullanıcıya özel hiçbir şey çizilmiyor; oturum
- * bilgisi tarayıcıda hidrasyonla geliyor.
- */
-const SUZGEC_ONBELLEGI = 'public, s-maxage=60, stale-while-revalidate=300';
 
 const nextConfig: NextConfig = {
   /**
@@ -214,65 +202,14 @@ const nextConfig: NextConfig = {
    * Bir yıl güvenli ÇÜNKÜ adres sürümlü: içerik değişirse dosya adındaki
    * sürüm de artıyor (bkz. scripts/yazi-tipi-kirp.py ve globals.css).
    */
+  /**
+   * NOT: Sayfa yanıtlarının Cache-Control'ü buradan AYARLANAMIYOR.
+   * Next üretimde kendi başlığını yazıyor; süzgeçli görünümleri buradan
+   * önbelleğe almayı denedim, yerelde çalıştı ama Vercel'de yok sayıldı.
+   * Dinamik sayfaların yavaşlığı bölge ayarıyla çözüldü (vercel.json).
+   */
   async headers() {
     return [
-      /**
-       * Süzgeçli görünümler de kenar ağında dursun.
-       *
-       * Sıralama ve süzgeç istekleri /filtre, /hizmet-filtre ve
-       * /kayip-filtre rotalarına yeniden yazılıyor. Bu rotalar searchParams
-       * okuduğu için Next onları dinamik sayıyor ve "no-store" gönderiyor;
-       * ölçümde her sıralama tıklaması 0,5-0,76 saniye sürüyordu, oysa
-       * önbelleğe giren sayfalar 0,09 saniye.
-       *
-       * KURAL YENİDEN YAZILAN HEDEFE DEĞİL, TARAYICININ İSTEDİĞİ ADRESE
-       * BAKAR. Başlık kuralları yönlendirme öncesindeki yolla eşleşiyor;
-       * /filtre/... yazmak hiçbir zaman tutmuyordu.
-       *
-       * DESENLER DAR TUTULDU. "Şu sorgu anahtarı varsa önbelleğe al" demek
-       * kolay ama tehlikeli: /profil/ilanlarim?sayfa=2 ya da
-       * /admin/kullanicilar?sayfa=2 de o kurala uyar ve kişiye özel bir
-       * sayfa paylaşımlı önbelleğe girerdi. Bu yüzden her kural, karşılık
-       * geldiği rewrite kuralıyla aynı yolu hedefliyor: ilan listeleri,
-       * yedi hizmet rehberi, /kayip ve /arama. Hesap ve yönetim
-       * sayfalarının hiçbiri bu desenlere uymuyor.
-       *
-       * İçerik herkese aynı: bu sayfalarda kullanıcıya özel hiçbir şey
-       * çizilmiyor, oturum bilgisi tarayıcıda hidrasyonla geliyor.
-       * Bir dakika: ilan listesi zaten bu sıklıkta tazeleniyor.
-       */
-      ...(() => {
-        const onbellek = [{ key: 'Cache-Control', value: SUZGEC_ONBELLEGI }];
-        const hizmetler = SERVICE_CONFIGS.map((c) => c.slug).join('|');
-        const kurallar: { source: string; has: { type: 'query'; key: string }[]; headers: typeof onbellek }[] = [];
-
-        // İlan listeleri: /<kategori>[/<cins|il>[/<il|ilçe>]]
-        const ilkSegment = ':a((?!filtre|profil|admin|mesajlarim|ilan-ver|arama)[^/]+)';
-        for (const yol of [`/${ilkSegment}`, `/${ilkSegment}/:b`, `/${ilkSegment}/:b/:c`]) {
-          for (const key of ['sirala', 'min', 'max', 'kimden']) {
-            kurallar.push({ source: yol, has: [{ type: 'query', key }], headers: onbellek });
-          }
-        }
-
-        // Hizmet rehberi: yalnızca yedi bölüm.
-        for (const yol of [`/:h(${hizmetler})`, `/:h(${hizmetler})/:b`, `/:h(${hizmetler})/:b/:c`]) {
-          for (const key of ['ozellik', 'dogrulanmis', 'q', 'sayfa']) {
-            kurallar.push({ source: yol, has: [{ type: 'query', key }], headers: onbellek });
-          }
-        }
-
-        // Kayıp & bulundu sekmesi ve şehir süzgeci.
-        for (const key of ['tip', 'sehir']) {
-          kurallar.push({ source: '/kayip', has: [{ type: 'query', key }], headers: onbellek });
-        }
-
-        // Site içi arama sonuçları.
-        for (const key of ['q', 'city', 'district']) {
-          kurallar.push({ source: '/arama', has: [{ type: 'query', key }], headers: onbellek });
-        }
-
-        return kurallar;
-      })(),
       {
         source: '/fontlar/:dosya*',
         headers: [
