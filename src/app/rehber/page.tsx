@@ -21,7 +21,9 @@ import { SITE_URL } from '@/lib/site';
  */
 
 export const metadata: Metadata = {
-  title: 'PetSemti Rehber — Bakım, Beslenme ve Sağlık',
+  // Marka ekini şablon koyuyor; başlıkta ayrıca "PetSemti" yazınca
+  // arama sonucunda ad iki kez görünüyordu.
+  title: 'Evcil Hayvan Rehberi — Bakım, Beslenme ve Sağlık',
   description:
     'Kedi ve köpek bakımı, beslenme, aşı takvimi, sahiplenme öncesi bilinmesi gerekenler, kayıp hayvan rehberi ve hizmet seçimi. PetSemti Rehber.',
   alternates: { canonical: '/rehber' },

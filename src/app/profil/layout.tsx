@@ -4,7 +4,9 @@ import { ProfileBackLink, ProfileIdentity, ProfileMenu } from './ProfileNav';
 import { ProfileGuard } from './ProfileGuard';
 
 export const metadata: Metadata = {
-  title: 'Hesabım | PetSemti',
+  title: 'Hesabım',
+  // Marka ekini şablon koyuyor (kök düzendeki template: '%s | PetSemti');
+  // burada tekrar yazınca başlık "... | PetSemti | PetSemti" oluyordu.
   // Kişiye özel panel; arama sonuçlarında yeri yok.
   robots: { index: false, follow: false },
 };

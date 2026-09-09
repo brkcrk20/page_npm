@@ -175,6 +175,43 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * Bu yüzden hangi cins hangi ilde gerçekten ilan taşıyorsa yalnızca o
    * sayfa listeleniyor; ilan geldikçe kendiliğinden çoğalıyor.
    */
+  /**
+   * İlçe sayfaları: /<kategori>/<sehir>/<ilce>
+   *
+   * Bunlar site haritasında hiç yoktu ama "Denizli Merkezefendi köpek
+   * ilanları" gibi aramaların karşılığı tam olarak bu sayfalar — yerel
+   * aramada en çok değeri olan kırılım. Yalnızca ilan BULUNAN ilçeler
+   * ekleniyor; boş bir ilçe sayfasını haritaya koymak arama motoruna
+   * boş sayfa göstermek olurdu.
+   */
+  const ilceEntries: MetadataRoute.Sitemap = [];
+  {
+    const supabase = createSupabasePublicClient();
+    const { data } = await supabase
+      .from('listings')
+      .select('categories!inner(slug), cities!inner(slug), districts!inner(slug)')
+      .eq('status', 'yayinda')
+      .limit(5000);
+
+    const gorulen = new Set<string>();
+    for (const row of (data ?? []) as unknown as {
+      categories: { slug: string };
+      cities: { slug: string };
+      districts: { slug: string };
+    }[]) {
+      if (!row.categories || !row.cities || !row.districts) continue;
+      const yol = `/${row.categories.slug}/${row.cities.slug}/${row.districts.slug}`;
+      if (gorulen.has(yol)) continue;
+      gorulen.add(yol);
+      ilceEntries.push({
+        url: `${SITE_URL}${yol}`,
+        lastModified: now,
+        changeFrequency: 'daily',
+        priority: 0.7,
+      });
+    }
+  }
+
   const cinsSehirEntries: MetadataRoute.Sitemap = [];
   {
     const supabase = createSupabasePublicClient();
@@ -315,6 +352,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...breedEntries,
     ...cityEntries,
     ...cinsSehirEntries,
+    ...ilceEntries,
     ...listingEntries,
     ...serviceEntries,
   ];
