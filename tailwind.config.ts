@@ -1,4 +1,6 @@
 import type {Config} from 'tailwindcss';
+// Dosya ESM olarak yükleniyor; require() burada tanımlı değil (Node 24).
+import tailwindcssAnimate from 'tailwindcss-animate';
 
 export default {
   darkMode: ['class'],
@@ -157,5 +159,5 @@ export default {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

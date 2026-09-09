@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { AlertCircle, KeyRound, Loader2, MailCheck } from 'lucide-react';
 
@@ -22,6 +23,22 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client';
  * getiren bir araca dönüşürdü.
  */
 export default function ForgotPasswordPage() {
+  // useSearchParams Suspense sınırı istiyor; sayfa önceden üretiliyor.
+  return (
+    <Suspense fallback={null}>
+      <SifremiUnuttumIcerik />
+    </Suspense>
+  );
+}
+
+function SifremiUnuttumIcerik() {
+  const params = useSearchParams();
+  /**
+   * Bağlantısı çalışmayan kullanıcı buraya yönleniyor (bkz.
+   * /auth/dogrula). Neden geri geldiğini söylemezsek aynı bağlantıya
+   * tekrar tıklamayı deniyor.
+   */
+  const baglantiHatasi = params.get('hata') === 'baglanti';
   const [email, setEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -39,7 +56,15 @@ export default function ForgotPasswordPage() {
     setIsSending(true);
     const { error: sendError } = await getSupabaseBrowserClient().auth.resetPasswordForEmail(
       email.trim(),
-      { redirectTo: `${window.location.origin}/sifre-yenile` }
+      {
+        /**
+         * Bağlantı önce /auth/dogrula'ya iniyor: oradaki uç koddan oturumu
+         * kuruyor, sonra şifre belirleme sayfasına geçiyor. Doğrudan
+         * /sifre-yenile'ye inildiğinde oturum kurulmuyordu ve sayfa
+         * "bağlantı geçersiz" diyordu.
+         */
+        redirectTo: `${window.location.origin}/auth/dogrula?next=/sifre-yenile`,
+      }
     );
     setIsSending(false);
 
@@ -90,6 +115,17 @@ export default function ForgotPasswordPage() {
           Hesabınızın e-posta adresini girin; şifrenizi yenilemeniz için bir bağlantı
           gönderelim.
         </p>
+
+        {baglantiHatasi && (
+          <Alert className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Bağlantı çalışmadı</AlertTitle>
+            <AlertDescription>
+              Şifre sıfırlama bağlantıları kısa süre geçerli ve yalnızca bir kez
+              kullanılabiliyor. Aşağıdan yeni bir bağlantı isteyin.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
           <div className="space-y-1.5">

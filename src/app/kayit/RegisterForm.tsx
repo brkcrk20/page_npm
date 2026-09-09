@@ -264,7 +264,17 @@ export function RegisterForm() {
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
-        options: { data: metadata },
+        options: {
+          data: metadata,
+          /**
+           * Doğrulama bağlantısının döneceği adres.
+           *
+           * Hiç gönderilmiyordu; e-posta doğrulama açıldığında bağlantı
+           * Supabase'in varsayılan adresine (localhost) düşüyordu.
+           * /auth/dogrula bağlantıdaki kodu oturuma çeviriyor.
+           */
+          emailRedirectTo: `${window.location.origin}/auth/dogrula?next=/`,
+        },
       });
 
       if (error) {
