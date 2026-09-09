@@ -146,6 +146,38 @@ export default async function RootLayout({
 
   return (
     <html lang="tr" suppressHydrationWarning>
+      <head>
+        {/*
+          Yazı tipi dosyaları ilk boyamadan SONRA.
+
+          ÖLÇÜM: 52 KB'lık iki font dosyası, 7,9 KB'lık LCP görseliyle aynı
+          hattı paylaşıyordu; görselin inmesi 1,3 saniyeyi buluyordu. Font
+          tanımları belgenin içindeyken tarayıcı onları sayfanın en başında
+          istiyor.
+
+          media="print": dosya indiriliyor ama uygulanmıyor, yani içindeki
+          font dosyaları istenmiyor. Sayfa yüklenince media="all" olup
+          devreye giriyor. Metin bu arada ölçüleri Inter'e ayarlanmış yedek
+          yazı tipiyle çiziliyor, sonra kayma olmadan yerine geçiyor.
+
+          noscript: JavaScript kapalıysa font normal şekilde yükleniyor.
+        */}
+        <link
+          id="yazi-tipi"
+          rel="stylesheet"
+          href="/fontlar/yazi-tipi.css"
+          media="print"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "addEventListener('load',function(){var l=document.getElementById('yazi-tipi');if(l)l.media='all'})",
+          }}
+        />
+        <noscript>
+          <link rel="stylesheet" href="/fontlar/yazi-tipi.css" />
+        </noscript>
+      </head>
       {/* Scrollbar gizleme ve responsive ayarları global.css'teydi */}
       <body
         className={cn(
