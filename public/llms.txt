@@ -1,0 +1,65 @@
+# PetSemti
+
+> Türkiye'de evcil hayvan ilanları, yerel pet hizmetleri rehberi ve güvercin
+> bölümünü tek yerde toplayan platform. İlan vermek ve sahiplenmek ücretsiz.
+
+PetSemti üç işi bir arada yapıyor: sahiplendirme ve satılık ilanları, semte
+göre pet hizmeti rehberi (veteriner, otel, kuaför, taksi, eğitmen, gezdirici,
+petshop) ve güvercinciliğe ayrılmış bağımsız bir bölüm.
+
+Yasal not: Türkiye'de 5199 sayılı kanun gereği kedi, köpek ve gelinciklerin
+bireysel satışı 14 Temmuz 2022'den beri yasak. Bu türlerde yalnızca ücretsiz
+sahiplendirme ilanı verilebiliyor; güvercin ve pet malzemeleri bu kapsamda
+değil.
+
+## İlanlar
+
+- [Sahiplendirme](https://www.petsemti.com/sahiplendirme): ücretsiz yuva arayan hayvanlar
+- [Köpek ilanları](https://www.petsemti.com/kopek-ilanlari): ırk, il ve ilçeye göre
+- [Kedi ilanları](https://www.petsemti.com/kedi-ilanlari): ırk, il ve ilçeye göre
+- [Kuş ilanları](https://www.petsemti.com/kus-ilanlari)
+- [Akvaryum ilanları](https://www.petsemti.com/akvaryum-ilanlari)
+- [Güvercin ilanları](https://www.petsemti.com/guvercin-ilanlari): ırk ayrımı ve videolu ilanlar
+- [Pet malzemeleri](https://www.petsemti.com/pet-malzemeleri): ikinci el ve sıfır ürünler
+- [Kayıp ve bulundu](https://www.petsemti.com/kayip): kaybolan ve bulunan hayvanlar
+- [Eş arayanlar](https://www.petsemti.com/es-arayanlar)
+
+Adres yapısı: `/<kategori>/<cins>`, `/<kategori>/<il>`, `/<kategori>/<cins>/<il>`
+ve `/<kategori>/<il>/<ilce>`. İlan detayı: `/<il>-<cins>-<baslik>-<ilan-no>`.
+
+## Hizmet rehberi
+
+İşletmeler adres, telefon, çalışma saatleri, sundukları hizmetler ve fiyat
+listeleriyle listeleniyor. Petshoplarda ayrıca stoklu ürün kataloğu var; bir
+ürünü arayan kişi o ürünü satan yakınındaki mağazayı bulabiliyor.
+
+- [Veteriner klinikleri](https://www.petsemti.com/veteriner)
+- [Pet otelleri](https://www.petsemti.com/pet-oteli)
+- [Pet kuaförleri](https://www.petsemti.com/pet-kuafor)
+- [Pet taksiler](https://www.petsemti.com/pet-taksi)
+- [Köpek eğitmenleri](https://www.petsemti.com/egitmen)
+- [Köpek gezdiriciler](https://www.petsemti.com/gezdirici)
+- [Petshoplar](https://www.petsemti.com/petshop)
+
+Adres yapısı: `/<hizmet>`, `/<hizmet>/<il>`, `/<hizmet>/<il>/<ilce>` ve
+işletme sayfası `/<hizmet>/<isletme-adi>-<no>`.
+
+## Bilgi kaynakları
+
+- [Rehber](https://www.petsemti.com/rehber): bakım, beslenme, aşı takvimi, ırk yazıları
+- [Yardım merkezi](https://www.petsemti.com/yardim): ilan verme, hesap, güvenlik
+- [İlan kuralları](https://www.petsemti.com/ilan-kurallari)
+- [Güvenli alışveriş](https://www.petsemti.com/yardim/guvenli-alisveris)
+
+## Kurumsal
+
+- [Hakkımızda](https://www.petsemti.com/hakkimizda)
+- [İletişim](https://www.petsemti.com/iletisim)
+- [Kullanım şartları](https://www.petsemti.com/kullanim-sartlari)
+- [Gizlilik politikası](https://www.petsemti.com/gizlilik-politikasi)
+
+## Notlar
+
+- Site tek dilli (Türkçe) ve Türkiye geneline hizmet veriyor.
+- Tam adres listesi: https://www.petsemti.com/sitemap.xml
+- Tarama kuralları: https://www.petsemti.com/robots.txt
