@@ -1,20 +1,16 @@
 'use client';
 
-import { RegisterForm } from './RegisterForm';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import Link from 'next/link';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useUser } from '@/lib/supabase/auth-provider';
-import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
+import { RegisterForm } from './RegisterForm';
+import { KimlikDuzeni } from '@/components/kimlik/KimlikDuzeni';
+import { useUser } from '@/lib/supabase/auth-provider';
 
 export default function RegisterPage() {
-   const registerImage = PlaceHolderImages.find((img) => img.id === 'register-hero');
-   const { user, isUserLoading } = useUser();
-   const router = useRouter();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -24,44 +20,28 @@ export default function RegisterPage() {
 
   if (isUserLoading || user) {
     return (
-      <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-     <div className="w-full lg:grid lg:min-h-[calc(100vh-4rem)] lg:grid-cols-2 xl:min-h-[calc(100vh-4rem)]">
-      <div className="flex items-center justify-center py-12">
-        <Card className="w-full max-w-md mx-4 border-0 shadow-none sm:border sm:shadow-sm">
-          <CardHeader className="text-center space-y-2">
-            <CardTitle asChild className="text-3xl font-headline">
-              <h1>Hesap Oluştur</h1>
-            </CardTitle>
-            <CardDescription>petsemti ailesine katılın</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <RegisterForm />
-            <div className="mt-4 text-center text-sm">
-              Zaten hesabın var mı?{' '}
-              <Link href="/login" className="underline font-semibold text-primary">
-                Giriş Yap
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-       <div className="hidden bg-muted lg:block relative">
-        {registerImage && (
-          <Image
-            src={registerImage.imageUrl}
-            alt={registerImage.description}
-            data-ai-hint={registerImage.imageHint}
-            fill
-            className="object-cover"
-          />
-        )}
-      </div>
-    </div>
+    <KimlikDuzeni
+      baslik="Hesap Oluştur"
+      aciklama="Birkaç saniye sürer, ilan vermek ücretsiz."
+      panelBaslik="Evcil hayvan dünyasının tamamı tek hesapta"
+      panelMaddeler={[
+        'Ücretsiz ilan verin, sahibiyle doğrudan mesajlaşın',
+        '81 ilde veteriner, otel, kuaför ve petshop rehberi',
+        'Kayıp ilanınızı semtinizde duyurun',
+        'Beğendiğiniz ilanları favorilerinize ekleyin',
+      ]}
+      altMetin="Zaten hesabınız var mı?"
+      altBaglantiMetni="Giriş yapın"
+      altBaglantiAdresi="/login"
+    >
+      <RegisterForm />
+    </KimlikDuzeni>
   );
 }

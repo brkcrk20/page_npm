@@ -329,6 +329,10 @@ export function RegisterForm() {
   if (accountType === null) {
     return (
       <div className="space-y-4">
+        {/* İki adımlı bir akış ama kullanıcı kaç adım olduğunu bilmiyordu;
+            form uzun olduğu için "daha ne kadar var" sorusu doğuyor. */}
+        <AdimGostergesi adim={1} />
+
         <div>
           <h2 className="text-lg font-bold">Nasıl kullanacaksınız?</h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -388,12 +392,6 @@ export function RegisterForm() {
           </div>
         </button>
 
-        <p className="pt-2 text-center text-sm text-muted-foreground">
-          Zaten hesabınız var mı?{' '}
-          <Link href="/login" className="font-medium text-primary hover:underline">
-            Giriş yapın
-          </Link>
-        </p>
       </div>
     );
   }
@@ -403,6 +401,8 @@ export function RegisterForm() {
 
   return (
     <div className="space-y-4">
+      <AdimGostergesi adim={2} />
+
       <button
         type="button"
         onClick={() => setAccountType(null)}
@@ -534,16 +534,41 @@ export function RegisterForm() {
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isCorporate ? 'Kurumsal Hesap Oluştur' : 'Ücretsiz Hesap Oluştur'}
           </Button>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Zaten hesabınız var mı?{' '}
-            <Link href="/login" className="font-medium text-primary hover:underline">
-              Giriş yapın
-            </Link>
-          </p>
         </form>
       </Form>
     </div>
+  );
+}
+
+/** "1 Hesap türü — 2 Bilgiler" şeridi. */
+function AdimGostergesi({ adim }: { adim: 1 | 2 }) {
+  const adimlar = ['Hesap türü', 'Bilgileriniz'];
+  return (
+    <ol className="flex items-center gap-2 text-xs font-medium">
+      {adimlar.map((ad, i) => {
+        const sira = i + 1;
+        const tamam = sira < adim;
+        const aktif = sira === adim;
+        return (
+          <li key={ad} className="flex items-center gap-2">
+            <span
+              className={
+                'flex h-6 w-6 items-center justify-center rounded-full text-[11px] ' +
+                (aktif
+                  ? 'bg-primary text-primary-foreground'
+                  : tamam
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-secondary text-muted-foreground')
+              }
+            >
+              {tamam ? <Check className="h-3.5 w-3.5" /> : sira}
+            </span>
+            <span className={aktif ? 'text-foreground' : 'text-muted-foreground'}>{ad}</span>
+            {sira < adimlar.length && <span aria-hidden className="mx-1 h-px w-5 bg-border" />}
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
