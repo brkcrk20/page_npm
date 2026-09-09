@@ -65,7 +65,11 @@ export const metadata: Metadata = {
   /**
    * Sekme ikonu.
    *
-   * app/favicon.ico proje iskeletiyle gelen üretici ikonuydu ve Next.js onu
+   * app/favicon.ico bir dönem proje iskeletiyle gelen üretici ikonuydu ve
+   * silinmişti; ama boş bırakınca /favicon.ico 404 döndü. Google'ın favicon
+   * tarayıcısı önce o klasik adrese baktığı için arama sonucunda sitenin
+   * ESKİ ikonu görünmeye devam ediyordu. Dosya artık marka ikonundan
+   * üretiliyor (scripts/favicon-uret.mjs). Next.js onu
    * /favicon.ico olarak servis ettiği için tarayıcı sekmesinde markanın
    * değil onun ikonu görünüyordu. Dosya silindi; ikon artık amblemin
    * kendisi (app/icon.svg) ve Apple cihazlar için ondan üretilen PNG.
@@ -73,7 +77,7 @@ export const metadata: Metadata = {
   /**
    * Sekme ikonu.
    *
-   * Sürüm parametresi (?v=2) bilerek duruyor: tarayıcılar favicon'u çok
+   * Sürüm parametresi (?v=3) bilerek duruyor: tarayıcılar favicon'u çok
    * uzun süre önbellekte tutuyor ve amblem rengi değiştiğinde kullanıcılar
    * eskisini görmeye devam ediyordu. Adres değişince yeniden indiriliyor.
    *
@@ -83,11 +87,11 @@ export const metadata: Metadata = {
    */
   icons: {
     icon: [
-      { url: '/icon.svg?v=2', type: 'image/svg+xml' },
-      { url: '/marka/ikon-32.png?v=2', sizes: '32x32', type: 'image/png' },
-      { url: '/marka/ikon-192.png?v=2', sizes: '192x192', type: 'image/png' },
+      { url: '/icon.svg?v=3', type: 'image/svg+xml' },
+      { url: '/marka/ikon-32.png?v=3', sizes: '32x32', type: 'image/png' },
+      { url: '/marka/ikon-192.png?v=3', sizes: '192x192', type: 'image/png' },
     ],
-    apple: '/apple-icon.png?v=2',
+    apple: '/apple-icon.png?v=3',
   },
   /**
    * Google Search Console doğrulaması.
