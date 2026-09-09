@@ -171,8 +171,20 @@ const nextConfig: NextConfig = {
       }))
     );
 
+    /**
+     * Kayıp & bulundu sekmesi ve şehir süzgeci.
+     *
+     * Aynı gerekçe: tip/sehir okuyan rota önbelleğe giremiyordu (ölçüm:
+     * TTFB 503 ms, önbelleğe giren sayfalarda 70-100 ms).
+     */
+    const kayipRewrites = ['tip', 'sehir'].map((anahtar) => ({
+      source: '/kayip',
+      has: [{ type: 'query' as const, key: anahtar }],
+      destination: '/kayip-filtre',
+    }));
+
     return {
-      beforeFiles: [ilanRewrite, ...suzgecRewrites, ...hizmetRewrites],
+      beforeFiles: [ilanRewrite, ...suzgecRewrites, ...hizmetRewrites, ...kayipRewrites],
       // /gorsel artık bir rota (src/app/gorsel/...): yeniden yazma
       // kuralının yanıtı Vercel kenar ağında önbelleğe girmiyordu.
       afterFiles: [],
