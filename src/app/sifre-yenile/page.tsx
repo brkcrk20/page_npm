@@ -39,9 +39,44 @@ export default function ResetPasswordPage() {
       if (session) setReady(true);
     });
 
-    supabase.auth.getSession().then(({ data }) => {
+    /**
+     * Adresin # kısmındaki oturumu elle kur.
+     *
+     * Supabase'in e-posta bağlantısı, panelde tanımlı bir dönüş adresi
+     * bulamadığında oturumu #access_token=...&type=recovery biçiminde
+     * gönderiyor — yani "implicit" akış. Bizim tarayıcı istemcimiz ise
+     * @supabase/ssr varsayılanı gereği "pkce" akışında. auth-js bu ikisi
+     * uyuşmadığında fragment'ı işlemeyi açıkça reddediyor
+     * ("Not a valid PKCE flow url"), oturum kurulmuyor ve kullanıcı
+     * "bağlantı geçersiz" ekranında kalıyordu.
+     *
+     * Jetonlar elimizde olduğuna göre oturumu doğrudan kurabiliriz.
+     */
+    async function oturumuHazirla() {
+      const parca = window.location.hash;
+      if (parca.length > 1) {
+        const alanlar = new URLSearchParams(parca.slice(1));
+        const erisim = alanlar.get('access_token');
+        const tazeleme = alanlar.get('refresh_token');
+        if (erisim && tazeleme) {
+          const { data } = await supabase.auth.setSession({
+            access_token: erisim,
+            refresh_token: tazeleme,
+          });
+          // Jetonlar adres çubuğunda ve geçmişte kalmasın.
+          window.history.replaceState(null, '', window.location.pathname);
+          if (data.session) {
+            setReady(true);
+            return;
+          }
+        }
+      }
+
+      const { data } = await supabase.auth.getSession();
       setReady((prev) => prev ?? Boolean(data.session));
-    });
+    }
+
+    void oturumuHazirla();
 
     return () => sub.subscription.unsubscribe();
   }, []);

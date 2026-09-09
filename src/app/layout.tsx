@@ -3,6 +3,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/layout/Header';
 import { GezinmeCubugu } from '@/components/layout/GezinmeCubugu';
+import { KurtarmaYakalayici } from '@/components/kimlik/KurtarmaYakalayici';
 import { Footer } from '@/components/layout/Footer';
 import { BottomNav } from '@/components/layout/BottomNav'; // YENİ EKLENDİ
 import { Toaster } from '@/components/ui/toaster';
@@ -191,6 +192,7 @@ export default async function RootLayout({
       >
         <SupabaseAuthProvider>
           {/* Dokunuşa anında geri bildirim; gerekçesi bileşende. */}
+          <KurtarmaYakalayici />
           <GezinmeCubugu />
           <div className="relative flex min-h-dvh flex-col">
             <Header />
