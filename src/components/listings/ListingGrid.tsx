@@ -1,3 +1,5 @@
+import { preload } from 'react-dom';
+
 import { listingHref } from '@/lib/listing-url';
 import Link from 'next/link';
 import { BadgeCheck, Images, MapPin, Store } from 'lucide-react';
@@ -98,6 +100,26 @@ function PetListingCard({
   const imageUrl = cover ? listingPhotoUrl(cover.thumb_path ?? cover.storage_path) : null;
   /** Telefonlara giden küçük kopya; eski kayıtlarda yok. */
   const kucukUrl = cover?.thumb_sm_path ? listingPhotoUrl(cover.thumb_sm_path) : null;
+
+  /**
+   * Öncelikli kartın ön yüklemesi <link> ETİKETİ OLARAK DEĞİL, ReactDOM ile.
+   *
+   * JSX'te yazılan link, React tarafından bulunduğu yerde head'e taşınıyordu:
+   * satır içi CSS'in (69 KB) arkasına, belgenin 72.500'üncü baytına. Tarayıcı
+   * ön yükleme tarayıcısıyla oraya ulaşana kadar görseli istemiyor —
+   * PageSpeed'in "kaynak yükleme gecikmesi 350 ms" dediği şey buydu.
+   *
+   * ReactDOM.preload kaynağı belgenin en başına yazdırıyor, yani görsel
+   * isteği HTML'in ilk baytlarıyla birlikte başlıyor.
+   */
+  if (oncelikli && imageUrl) {
+    if (kucukUrl) {
+      preload(kucukUrl, { as: 'image', fetchPriority: 'high', media: '(max-width: 767px)' });
+      preload(imageUrl, { as: 'image', fetchPriority: 'high', media: '(min-width: 768px)' });
+    } else {
+      preload(imageUrl, { as: 'image', fetchPriority: 'high' });
+    }
+  }
   const age = formatAge(listing.age_months);
   const location = [listing.cities?.name, listing.districts?.name].filter(Boolean).join(' / ');
   const rozet = KIND_BADGE[listing.kind];
@@ -115,35 +137,6 @@ function PetListingCard({
       <div className="relative aspect-[3/4] w-28 shrink-0 overflow-hidden bg-muted sm:w-32 md:aspect-[4/5] md:w-full">
         {imageUrl ? (
           <>
-            {/*
-              Öncelikli kartta ÖN YÜKLEME.
-
-              next/image bunu kendisi basıyordu; düz <img>'e geçince o iş de
-              bize kaldı. React bu etiketleri <head>'e taşıyor. Media
-              sorgusu şart: telefonun büyük kopyayı boşuna indirmemesi için
-              iki ayrı satır gerekiyor.
-            */}
-            {oncelikli && (
-              <>
-                {kucukUrl && (
-                  <link
-                    rel="preload"
-                    as="image"
-                    href={kucukUrl}
-                    media="(max-width: 767px)"
-                    fetchPriority="high"
-                  />
-                )}
-                <link
-                  rel="preload"
-                  as="image"
-                  href={imageUrl}
-                  media={kucukUrl ? '(min-width: 768px)' : undefined}
-                  fetchPriority="high"
-                />
-              </>
-            )}
-
             {/*
               MOBİLDE KÜÇÜK KOPYA — next/image DEĞİL, düz <picture>.
 
