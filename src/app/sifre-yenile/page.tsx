@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { AlertCircle, KeyRound, Loader2 } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -22,7 +21,6 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client';
  * gönderiyor ve anlamsız bir hata alıyordu.
  */
 export default function ResetPasswordPage() {
-  const router = useRouter();
   const { toast } = useToast();
 
   const [ready, setReady] = useState<boolean | null>(null);
@@ -106,8 +104,19 @@ export default function ResetPasswordPage() {
     }
 
     toast({ title: 'Şifreniz yenilendi', description: 'Artık yeni şifrenizle giriş yapabilirsiniz.' });
-    router.push('/profil');
-    router.refresh();
+
+    /**
+     * Tam sayfa geçişi; router.push değil.
+     *
+     * Şifre değiştikten hemen sonra router.push('/profil') yapılınca sunucu
+     * tazelenmiş oturum çerezini henüz görmüyor ve kullanıcıyı /login'e
+     * atıyordu. Şifre aslında değişmiş oluyordu ama kullanıcı giriş
+     * ekranında uyandığı için "değişmedi" ya da "site beni attı" sanıyordu.
+     *
+     * Tam geçişte çerez istekle birlikte gittiği için sunucu oturumu
+     * doğru görüyor.
+     */
+    window.location.assign('/profil');
   }
 
   if (ready === null) {
